@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Título de tu Página - GAD
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
-  <style>
-   body {
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAD - Subir y Guardar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
             display: flex;
@@ -30,14 +27,14 @@
             text-align: center;
         }
         .gad-logo-header {
-            width: 160px; /* Tamaño del logo del index.html */
-            height: 160px; /* Tamaño del logo del index.html */
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .main-header {
-            background-color: #1d4ed8; /* Color de fondo del index */
+            background-color: #1d4ed8;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -96,44 +93,67 @@
         .yellow-button:hover {
             background-color: #eab308;
         }
-  </style>
- </head>
- <body class="bg-gray-100">
-  <header class="main-header">
-   <div class="gad-logo-header">
-    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
-   </div>
-  </header>
-  <main>
-   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+
+        /* Estilos específicos para la zona de arrastrar y soltar */
+        .drop-zone {
+            border: 2px dashed #9ca3af;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            background-color: #f9fafb;
+        }
+        .drop-zone:hover {
+            background-color: #f1f5f9;
+            border-color: #6b7280;
+        }
+        .file-input {
+            display: none;
+        }
+        #saveButton {
+            display: none; /* Oculto por defecto */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="main-header">
+        <div class="gad-logo-header">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
     <main>
-     <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center" id="mainContentWrapper">
-      <h2 class="text-2xl font-bold text-gray-800">
-       Arrastra y suelta un archivo HTML aquí
-      </h2>
-      <p class="mt-4 text-gray-600">
-       El contenido del archivo se mostrará en este recuadro y se aplicará tu diseño.
-      </p>
-      <label class="drop-zone mt-6 block" for="fileInput">
-       <i class="fas fa-upload text-4xl text-gray-400">
-       </i>
-       <p class="mt-2 text-gray-500 font-semibold">
-        Haz clic para seleccionar o arrastra y suelta tu archivo.
-       </p>
-       <input accept=".html" class="file-input" id="fileInput" type="file"/>
-      </label>
-     </div>
-     <div class="navigation-buttons-row">
-      <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
-       Atrás
-      </button>
-      <button class="yellow-button navigation-button w-40" id="saveButton">
-       Guardar
-      </button>
-     </div>
+        <div id="mainContentWrapper" class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+            <h2 class="text-2xl font-bold text-gray-800">Arrastra y suelta un archivo HTML aquí</h2>
+            <p class="mt-4 text-gray-600">El contenido del archivo se mostrará en este recuadro y se aplicará tu diseño.</p>
+            
+            <label for="fileInput" class="drop-zone mt-6 block">
+                <i class="fas fa-upload text-4xl text-gray-400"></i>
+                <p class="mt-2 text-gray-500 font-semibold">Haz clic para seleccionar o arrastra y suelta tu archivo.</p>
+                <input type="file" id="fileInput" class="file-input" accept=".html">
+            </label>
+        </div>
+
+        <div class="navigation-buttons-row">
+            <a href="index.html" class="yellow-button navigation-button w-40">Menú Principal</a>
+            <button onclick="window.history.back()" class="yellow-button navigation-button w-40">Atrás</button>
+            <button id="saveButton" class="yellow-button navigation-button w-40">Guardar</button>
+        </div>
     </main>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200">
+        <div class="flex flex-col items-center">
+            <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+            <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+            <p>&copy; GAD - Todos los derechos reservados</p>
+        </div>
+    </footer>
+
     <script>
-     const dropZone = document.querySelector('.drop-zone');
+        const dropZone = document.querySelector('.drop-zone');
         const fileInput = document.getElementById('fileInput');
         const mainContentWrapper = document.getElementById('mainContentWrapper');
         const saveButton = document.getElementById('saveButton');
@@ -243,29 +263,5 @@
             }
         });
     </script>
-   </div>
-   <div class="navigation-buttons-row">
-    <a class="yellow-button navigation-button w-40" href="index.html">
-     Menú Principal
-    </a>
-    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
-     Atrás
-    </button>
-   </div>
-  </main>
-  <footer class="mt-auto text-center py-6 bg-gray-200">
-   <div class="flex flex-col items-center">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
-    <p class="font-bold">
-     GRUPO DE ANÁLISIS DOCUMENTAL
-    </p>
-    <p class="font-bold">
-     POLICÍA LOCAL DE ALICANTE
-    </p>
-    <p>
-     © GAD - Todos los derechos reservados
-    </p>
-   </div>
-  </footer>
- </body>
+</body>
 </html>

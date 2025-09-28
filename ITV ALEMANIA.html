@@ -1,133 +1,101 @@
 <!DOCTYPE html>
 <html lang="es">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Título de tu Página - GAD
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación de Pegatina TÜV Alemania</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-   body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            text-align: center;
-        }
-        .gad-logo-header {
-            width: 160px; /* Tamaño del logo del index.html */
-            height: 160px; /* Tamaño del logo del index.html */
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .main-header {
-            background-color: #1d4ed8; /* Color de fondo del index */
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0.5rem 0;
-        }
-        .gad-logo-header img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .main-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex-grow: 1;
-            width: 100%;
-            padding: 0px;
-            box-sizing: border-box;
-        }
-
-        /* Estilos del pie de página */
-        footer {
-            text-align: center;
-            width: 100%;
-            padding: 1.5rem 0;
-            background-color: #e5e7eb;
-        }
-        
-        /* Estilos de los botones de navegación */
-        .navigation-buttons-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            padding: 1rem 0;
-            margin-top: 0.75rem;
-            gap: 0.75rem;
-        }
-        .navigation-button {
-            padding: 0.5rem 0.5rem;
-            font-size: 1rem;
-            flex-grow: 0;
-        }
-        .yellow-button {
-            background-color: #facc15;
-            color: #333;
-            font-weight: bold;
-            padding: 10px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background-color 0.2s;
-            text-align: center;
-        }
-        .yellow-button:hover {
-            background-color: #eab308;
-        }
+    .listado-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    /* Estilo para el contenedor del logo y el texto del año */
+    .logo-container {
+      position: relative;
+      display: inline-block;
+      width: 96px; /* Ancho del logo */
+      height: auto;
+      margin: 10px auto;
+    }
+    .logo-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .logo-container .year-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 900; /* Negrita intensa */
+      color: black;
+      font-size: 1rem; /* Tamaño de fuente reducido para un ajuste perfecto */
+      line-height: 1; /* Asegura un buen centrado vertical */
+      font-family: 'Arial Black', 'Helvetica', sans-serif; /* Fuente similar a la de la pegatina */
+    }
+    .arrow {
+        cursor: pointer;
+        display: inline-block;
+        font-size: 2rem;
+        user-select: none;
+        padding: 0 10px;
+        color: #3B82F6; /* blue-500 */
+    }
+    .arrow:hover {
+        color: #2563EB; /* blue-600 */
+    }
   </style>
- </head>
- <body class="bg-gray-100">
-  <header class="main-header">
-   <div class="gad-logo-header">
-    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
-   </div>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-800 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
   </header>
-  <main>
-   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
-    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
-     Verificación de Pegatina TÜV Alemania
-    </h1>
-    <h2 class="text-gray-700 text-center mt-2 px-4">
-     Consulta el color de la pegatina por año
-    </h2>
-    <div class="w-11/12 max-w-md mx-auto mt-4 flex justify-center">
-     <img alt="Logo ITV Alemania" class="w-full h-auto" src="logoitvalemania.png"/>
-    </div>
-    <div class="bg-white shadow-md rounded-lg p-6 mt-6 text-center w-11/12 max-w-md mx-auto">
-     <h3 class="text-lg font-semibold mb-4">
-      Consultar por Año
-     </h3>
-     <input class="block mx-auto p-3 text-base w-full border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500" id="inputAnio" placeholder="Ej: 2025" type="number"/>
-     <button class="block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition" onclick="consultarPorAnio()">
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Verificación de Pegatina TÜV Alemania
+  </h1>
+  <h2 class="text-gray-700 text-center mt-2 px-4">
+    Consulta el color de la pegatina por año
+  </h2>
+  
+  <div class="w-11/12 max-w-md mx-auto mt-4 flex justify-center">
+    <img src="logoitvalemania.png" alt="Logo ITV Alemania" class="w-full h-auto">
+  </div>
+
+  <div class="bg-white shadow-md rounded-lg p-6 mt-6 text-center w-11/12 max-w-md mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Consultar por Año</h3>
+    <input 
+      type="number" 
+      id="inputAnio" 
+      placeholder="Ej: 2025" 
+      class="block mx-auto p-3 text-base w-full border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <button 
+      onclick="consultarPorAnio()" 
+      class="block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition"
+    >
       Consultar Color
-     </button>
-     <div class="mt-4 text-gray-700 text-center w-full mx-auto font-bold" id="outputColor">
-     </div>
-    </div>
-    <script>
-     const coloresAnios = {
+    </button>
+    <div id="outputColor" class="mt-4 text-gray-700 text-center w-full mx-auto font-bold"></div>
+  </div>
+  
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    const coloresAnios = {
       2023: { color: "Rosa", hex: "#e75480" },
       2024: { color: "Verde", hex: "#008000" },
       2025: { color: "Naranja", hex: "#ffa500" },
@@ -207,30 +175,6 @@
     window.onload = function() {
         renderResult(currentAnio);
     };
-    </script>
-   </div>
-   <div class="navigation-buttons-row">
-    <a class="yellow-button navigation-button w-40" href="index.html">
-     Menú Principal
-    </a>
-    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
-     Atrás
-    </button>
-   </div>
-  </main>
-  <footer class="mt-auto text-center py-6 bg-gray-200">
-   <div class="flex flex-col items-center">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
-    <p class="font-bold">
-     GRUPO DE ANÁLISIS DOCUMENTAL
-    </p>
-    <p class="font-bold">
-     POLICÍA LOCAL DE ALICANTE
-    </p>
-    <p>
-     © GAD - Todos los derechos reservados
-    </p>
-   </div>
-  </footer>
- </body>
+  </script>
+</body>
 </html>

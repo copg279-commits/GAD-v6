@@ -193,11 +193,16 @@
             font-size: 1rem;
             flex-grow: 0;
         }
+
+        /* Nuevo estilo para el área de drop de textarea */
+        .drop-area-highlight {
+            border: 2px dashed #667eea !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
-<header class="main-header flex justify-center items-center py-2 relative">
+<header class="main-header flex justify-center items-center py-2 relative bg-blue-600">
     <div class="gad-logo-header w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-full overflow-hidden shadow-lg">
         <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
     </div>
@@ -266,7 +271,11 @@
             <input type="text" id="edit-button-text" placeholder="Texto del botón" />
             <div id="edit-link-fields">
                 <input type="text" id="edit-button-href" placeholder="Enlace (ej: vehiculos.html)" />
-                <textarea id="edit-button-html-code" rows="5" placeholder="Código HTML"></textarea>
+                <textarea id="edit-button-html-code" rows="5" placeholder="Código HTML (también puedes arrastrar y soltar un archivo .html aquí)"></textarea>
+                <div class="flex justify-end mt-2">
+                    <button id="clear-html-code" class="btn-admin" style="background-color: #dc3545;">Borrar Código HTML</button>
+                </div>
+                <p id="edit-html-message" class="success-message" style="margin-top: 5px;"></p>
             </div>
             <div class="flex flex-col gap-4 mt-4">
                 <p>Elige el tamaño del botón:</p>
@@ -322,6 +331,7 @@
             </div>
             <div id="new-link-fields" class="mt-4">
                 <input type="text" id="new-button-href" placeholder="Enlace (ej: vehiculos.html)" />
+                <textarea id="new-button-html-code" rows="5" placeholder="O pega o arrastra un archivo .html aquí"></textarea>
             </div>
         </div>
         <button id="save-new-button">Guardar Botón</button>
@@ -475,10 +485,32 @@
                     newWindow.document.close();
                 }
             });
-        } else if (buttonData.href) {
-            link.href = isEditMode ? 'javascript:void(0);' : buttonData.href;
-            if (!isEditMode) link.target = "_blank";
+} else if (buttonData.href) {
+    link.href = 'javascript:void(0);';
+    link.addEventListener('click', () => {
+        if (!isEditMode) {
+            // 📌 Simular que entramos en un submenú
+            currentMenuPath.push(key);
+            renderMenuButtons();
+
+            // 📌 Abrir el archivo en la misma pestaña
+            fetch(buttonData.href)
+                .then(resp => resp.text())
+                .then(htmlContent => {
+                    const newWindow = window.open('', '_self');
+                    const baseTag = `<base href="${window.location.origin}${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1)}">`;
+                    newWindow.document.write(baseTag + htmlContent);
+                    newWindow.document.close();
+                })
+                .catch(err => {
+                    alert("No se pudo cargar el archivo: " + buttonData.href);
+                });
         }
+    });
+}
+
+
+
 
         if (buttonData.logo) {
             link.classList.add('btn-con-logo');
@@ -664,7 +696,9 @@
     dragDropZoneMainMenu.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dragDropZoneMainMenu.classList.add('drag-over-container');
+        if(isEditMode) {
+            dragDropZoneMainMenu.classList.add('drag-over-container');
+        }
     });
 
     dragDropZoneMainMenu.addEventListener('dragleave', (e) => {
@@ -677,6 +711,8 @@
         e.preventDefault();
         e.stopPropagation();
         dragDropZoneMainMenu.classList.remove('drag-over-container');
+        
+        // Manejar el arrastre de un elemento interno (reordenación)
         if (draggedItem) {
             const afterElement = getDragAfterElement(mainMenuGrid, e.clientY);
             if (afterElement == null) {
@@ -685,6 +721,17 @@
                 mainMenuGrid.insertBefore(draggedItem, afterElement);
             }
             updateButtonOrder();
+            draggedItem = null;
+            return;
+        }
+
+        // Manejar la carga de archivos (nuevo)
+        if (e.dataTransfer.items) {
+            const files = [...e.dataTransfer.items].filter(item => item.kind === 'file').map(item => item.getAsFile());
+            
+            if (files.length > 0) {
+                handleDroppedFiles(files);
+            }
         }
     });
 
@@ -706,6 +753,72 @@
         });
         db.ref().update(updates);
     }
+    
+    // Función para manejar los archivos soltados
+    function handleDroppedFiles(files) {
+        const dropMessageEl = document.getElementById('drop-message') || createDropMessageElement();
+        dropMessageEl.textContent = 'Cargando archivo...';
+        dropMessageEl.style.color = '#1e40af';
+
+        files.forEach(file => {
+            if (file.type === 'text/html') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const fileContent = e.target.result;
+                    const fileName = file.name.replace(/\.html$/i, '');
+
+                    // Comprobar si ya existe un botón con el mismo nombre
+                    const existingButton = Object.values(menuButtonsData).find(btn => btn.text === fileName);
+                    if (existingButton) {
+                        dropMessageEl.textContent = `Ya existe un botón con el nombre "${fileName}".`;
+                        dropMessageEl.style.color = '#dc3545';
+                        return;
+                    }
+
+                    const newButtonData = {
+                        text: fileName,
+                        htmlCode: fileContent,
+                        type: 'main',
+                        size: 'normal',
+                        color: "#f59e0b" // Color por defecto para HTML cargado
+                    };
+                    
+                    const parentId = currentMenuPath.length > 0 ? currentMenuPath[currentMenuPath.length - 1] : null;
+                    const dbRef = db.ref(BUTTONS_NODE).orderByChild('parent').equalTo(parentId);
+                    dbRef.once('value').then(snapshot => {
+                        const newOrder = snapshot.exists() ? Object.values(snapshot.val()).length + 1 : 1;
+                        newButtonData.order = newOrder;
+                        if (parentId) { newButtonData.parent = parentId; }
+                        
+                        db.ref(BUTTONS_NODE).push(newButtonData)
+                            .then(() => {
+                                dropMessageEl.textContent = `Archivo "${file.name}" cargado con éxito.`;
+                                dropMessageEl.style.color = '#16a34a';
+                                setTimeout(() => { dropMessageEl.remove(); }, 3000);
+                            })
+                            .catch(error => {
+                                dropMessageEl.textContent = `Error al cargar el archivo: ${error.message}`;
+                                dropMessageEl.style.color = '#dc3545';
+                            });
+                    });
+                };
+                reader.readAsText(file);
+            } else {
+                dropMessageEl.textContent = `El archivo "${file.name}" no es un archivo HTML.`;
+                dropMessageEl.style.color = '#dc3545';
+                setTimeout(() => { dropMessageEl.remove(); }, 3000);
+            }
+        });
+    }
+
+    function createDropMessageElement() {
+        const div = document.createElement('div');
+        div.id = 'drop-message';
+        div.className = 'w-full text-center p-2 rounded-lg mt-2 font-bold';
+        dragDropZoneMainMenu.appendChild(div);
+        return div;
+    }
+
 
     // --- LÓGICA DE AUTENTICACIÓN Y SESIÓN ---
     function loginSuccess(userId) {
@@ -748,6 +861,11 @@
         showEditMenuBtn.textContent = isEditMode ? 'Finalizar Edición' : 'Editar Menú';
         addButtonContainer.style.display = isEditMode ? 'block' : 'none';
         editTitleIcon.style.display = isEditMode && currentUser === ADMIN_USER_KEY ? 'inline-block' : 'none';
+        if (isEditMode) {
+            dragDropZoneMainMenu.classList.add('drop-area');
+        } else {
+            dragDropZoneMainMenu.classList.remove('drop-area');
+        }
         renderMenuButtons();
     }
     showEditMenuBtn.addEventListener('click', () => { toggleEditModeUI(); });
@@ -821,6 +939,7 @@
     addNewButtonBtn.addEventListener('click', () => {
         document.getElementById('new-button-text').value = '';
         document.getElementById('new-button-href').value = '';
+        document.getElementById('new-button-html-code').value = '';
         document.getElementById('add-button-message').textContent = '';
         newLinkFields.style.display = 'block';
         document.querySelector('input[name="button-type"][value="link"]').checked = true;
@@ -854,12 +973,14 @@
         
         if (buttonType === 'link') {
             const href = document.getElementById('new-button-href').value.trim();
-            if (!href) {
-                messageEl.textContent = 'El enlace es obligatorio para un botón de enlace.';
+            const htmlCode = document.getElementById('new-button-html-code').value.trim();
+            if (!href && !htmlCode) {
+                messageEl.textContent = 'Debes proporcionar un enlace o un código HTML.';
                 messageEl.style.color = '#dc3545';
                 return;
             }
             newButtonData.href = href;
+            newButtonData.htmlCode = htmlCode;
             newButtonData.type = "main";
             newButtonData.color = "#16a34a"; // Verde por defecto para enlaces
         } else {
@@ -1128,6 +1249,72 @@
         
         loadUsers();
     }
+
+    // Lógica para arrastrar y soltar y borrar en los campos de código HTML
+    const editHtmlCodeTextarea = document.getElementById('edit-button-html-code');
+    const newHtmlCodeTextarea = document.getElementById('new-button-html-code');
+    const clearHtmlCodeBtn = document.getElementById('clear-html-code');
+
+    function setupDragAndDropForTextarea(textarea, messageId) {
+        textarea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            textarea.classList.add('drop-area-highlight');
+        });
+
+        textarea.addEventListener('dragleave', (e) => {
+            e.stopPropagation();
+            textarea.classList.remove('drop-area-highlight');
+        });
+
+        textarea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            textarea.classList.remove('drop-area-highlight');
+
+            const files = e.dataTransfer.files;
+            const messageEl = document.getElementById(messageId);
+
+            if (files.length > 0 && files[0].type === 'text/html') {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    textarea.value = event.target.result;
+                    messageEl.textContent = 'Archivo cargado con éxito.';
+                    messageEl.style.color = '#16a34a';
+                    setTimeout(() => messageEl.textContent = '', 2000);
+                };
+                reader.readAsText(file);
+            } else {
+                messageEl.textContent = 'Por favor, suelta un archivo HTML válido.';
+                messageEl.style.color = '#dc3545';
+                setTimeout(() => messageEl.textContent = '', 2000);
+            }
+        });
+    }
+
+    setupDragAndDropForTextarea(editHtmlCodeTextarea, 'edit-html-message');
+    setupDragAndDropForTextarea(newHtmlCodeTextarea, 'add-button-message');
+
+    if (clearHtmlCodeBtn) {
+        clearHtmlCodeBtn.addEventListener('click', () => {
+            editHtmlCodeTextarea.value = '';
+            document.getElementById('edit-html-message').textContent = 'Código HTML borrado.';
+            document.getElementById('edit-html-message').style.color = '#16a34a';
+            setTimeout(() => document.getElementById('edit-html-message').textContent = '', 2000);
+        });
+    }
+
+    // Asegúrate de que los campos de href y htmlCode sean visibles cuando el tipo de botón sea "link"
+    document.querySelectorAll('input[name="button-type"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'link') {
+                newLinkFields.style.display = 'block';
+            } else {
+                newLinkFields.style.display = 'none';
+            }
+        });
+    });
 </script>
 
 </body>

@@ -1,230 +1,160 @@
 <!DOCTYPE html>
 <html lang="es">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Título de tu Página - GAD
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grupo de Análisis Documental</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-   body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            text-align: center;
-        }
-        .gad-logo-header {
-            width: 160px; /* Tamaño del logo del index.html */
-            height: 160px; /* Tamaño del logo del index.html */
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .main-header {
-            background-color: #1d4ed8; /* Color de fondo del index */
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0.5rem 0;
-        }
-        .gad-logo-header img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .main-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex-grow: 1;
-            width: 100%;
-            padding: 0px;
-            box-sizing: border-box;
-        }
-
-        /* Estilos del pie de página */
-        footer {
-            text-align: center;
-            width: 100%;
-            padding: 1.5rem 0;
-            background-color: #e5e7eb;
-        }
-        
-        /* Estilos de los botones de navegación */
-        .navigation-buttons-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            padding: 1rem 0;
-            margin-top: 0.75rem;
-            gap: 0.75rem;
-        }
-        .navigation-button {
-            padding: 0.5rem 0.5rem;
-            font-size: 1rem;
-            flex-grow: 0;
-        }
-        .yellow-button {
-            background-color: #facc15;
-            color: #333;
-            font-weight: bold;
-            padding: 10px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: background-color 0.2s;
-            text-align: center;
-        }
-        .yellow-button:hover {
-            background-color: #eab308;
-        }
+    .flag-button-spain {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    .cpi-table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .delete-icon {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .delete-icon:hover {
+        transform: scale(1.1);
+        color: #ef4444;
+    }
   </style>
- </head>
- <body class="bg-gray-100">
-  <header class="main-header">
-   <div class="gad-logo-header">
-    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
-   </div>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
   </header>
-  <main>
-   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
-    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
-     Consulta Fecha Expedición CPI
-    </h1>
-    <div class="w-11/12 max-w-md mx-auto mt-4">
-     <img alt="Logo CPI" class="w-full" src="logocpi.png"/>
+  
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Consulta Fecha Expedición CPI
+  </h1>
+
+  <div class="w-11/12 max-w-md mx-auto mt-4">
+    <img src="logocpi.png" alt="Logo CPI" class="w-full">
+  </div>
+  
+  <p class="text-center mt-2 px-4">
+    Ingresa un número de orden para estimar la fecha más aproximada.
+  </p>
+
+  <div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto">
+    <h2 class="text-lg font-semibold mb-4">Verifique la fecha de expedición</h2>
+    <div class="mb-4">
+      <label for="documento" class="block text-sm font-bold text-gray-700 mb-1">Número de orden</label>
+      <input type="number" id="documento" placeholder="Ej: 10402260107" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
-    <p class="text-center mt-2 px-4">
-     Ingresa un número de orden para estimar la fecha más aproximada.
-    </p>
-    <div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto">
-     <h2 class="text-lg font-semibold mb-4">
-      Verifique la fecha de expedición
-     </h2>
-     <div class="mb-4">
-      <label class="block text-sm font-bold text-gray-700 mb-1" for="documento">
-       Número de orden
-      </label>
-      <input class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="documento" placeholder="Ej: 10402260107" type="number"/>
-     </div>
-     <button class="w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700" onclick="calcularFecha()">
+    <button onclick="calcularFecha()"
+            class="w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">
       Calcular fecha
-     </button>
-     <div class="mt-4 text-sm font-medium" id="resultado">
-     </div>
+    </button>
+    <div id="resultado" class="mt-4 text-sm font-medium"></div>
+  </div>
+
+  <div class="bg-white shadow-md rounded-lg p-6 mt-2 text-center w-11/12 max-w-md mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Añadir nuevos datos</h3>
+    
+    <div class="flex flex-col space-y-2">
+      <button id="mostrarFormularioBtn" class="w-full bg-green-600 text-white py-2 rounded-md shadow hover:bg-green-700">
+        Introduzca nuevo número de CPI
+      </button>
+      <button id="toggleCpiListBtn" class="w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">
+        Consultar lista completa
+      </button>
+      <button id="toggleEstadisticasBtn" class="w-full bg-purple-600 text-white py-2 rounded-md shadow hover:bg-purple-700">
+        Ver Estadísticas
+      </button>
     </div>
-    <div class="bg-white shadow-md rounded-lg p-6 mt-2 text-center w-11/12 max-w-md mx-auto">
-     <h3 class="text-lg font-semibold mb-4">
-      Añadir nuevos datos
-     </h3>
-     <div class="flex flex-col space-y-2">
-      <button class="w-full bg-green-600 text-white py-2 rounded-md shadow hover:bg-green-700" id="mostrarFormularioBtn">
-       Introduzca nuevo número de CPI
-      </button>
-      <button class="w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700" id="toggleCpiListBtn">
-       Consultar lista completa
-      </button>
-      <button class="w-full bg-purple-600 text-white py-2 rounded-md shadow hover:bg-purple-700" id="toggleEstadisticasBtn">
-       Ver Estadísticas
-      </button>
-     </div>
-     <div class="mt-4 hidden" id="formularioCpi">
-      <div class="mb-4">
-       <label class="block text-sm font-bold text-gray-700 mb-1" for="nuevoNumeroCpi">
-        Número de orden:
-       </label>
-       <input class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="nuevoNumeroCpi" placeholder="Ej: 10402260107" type="number"/>
-      </div>
-      <div class="mb-4">
-       <label class="block text-sm font-bold text-gray-700 mb-1" for="nuevaFechaCpi">
-        Fecha de expedición:
-       </label>
-       <input class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="nuevaFechaCpi" type="date"/>
-      </div>
-      <div class="flex space-x-2">
-       <button class="w-1/2 bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700" onclick="guardarNuevoCpi()">
-        Guardar
-       </button>
-       <button class="w-1/2 bg-gray-400 text-white py-2 rounded-md shadow hover:bg-gray-500" onclick="limpiarCampos()">
-        Limpiar campos
-       </button>
-      </div>
-      <div class="mt-4 text-sm font-medium" id="mensajeGuardado">
-      </div>
-     </div>
-     <div class="mt-4 hidden" id="cpiDataTable">
-      <h3 class="text-lg font-semibold mb-4 text-center">
-       Listado Completo
-      </h3>
-      <div class="cpi-table-container">
-       <table class="w-full text-sm text-left text-gray-500">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
-         <tr>
-          <th class="px-6 py-3" scope="col">
-           Número de orden
-          </th>
-          <th class="px-6 py-3" scope="col">
-           Fecha
-          </th>
-          <th class="px-6 py-3" scope="col">
-          </th>
-         </tr>
-        </thead>
-        <tbody id="cpiList">
-        </tbody>
-       </table>
-      </div>
-     </div>
-     <div class="mt-4 hidden" id="estadisticasCpi">
-      <h3 class="text-lg font-semibold mb-4 text-center">
-       Estimación de Certificados Expedidos
-      </h3>
-      <div class="flex flex-col space-y-4">
-       <div class="p-4 bg-gray-100 rounded-lg" id="resumenEstadisticas">
-       </div>
-       <div class="flex flex-col space-y-2">
-        <label class="block text-sm font-bold text-gray-700" for="mesSelector">
-         Seleccionar Mes:
-        </label>
-        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="mesSelector">
-        </select>
-       </div>
-       <div class="flex flex-col space-y-2">
-        <label class="block text-sm font-bold text-gray-700" for="anioSelector">
-         Seleccionar Año Completo:
-        </label>
-        <select class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="anioSelector">
-        </select>
-       </div>
-       <div class="mt-4 text-center" id="resultadosEstadisticas">
-       </div>
-      </div>
-     </div>
+
+    <div id="formularioCpi" class="mt-4 hidden">
+        <div class="mb-4">
+            <label for="nuevoNumeroCpi" class="block text-sm font-bold text-gray-700 mb-1">Número de orden:</label>
+            <input type="number" id="nuevoNumeroCpi" placeholder="Ej: 10402260107" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="mb-4">
+            <label for="nuevaFechaCpi" class="block text-sm font-bold text-gray-700 mb-1">Fecha de expedición:</label>
+            <input type="date" id="nuevaFechaCpi" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="guardarNuevoCpi()" class="w-1/2 bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">
+                Guardar
+            </button>
+            <button onclick="limpiarCampos()" class="w-1/2 bg-gray-400 text-white py-2 rounded-md shadow hover:bg-gray-500">
+                Limpiar campos
+            </button>
+        </div>
+        <div id="mensajeGuardado" class="mt-4 text-sm font-medium"></div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js">
-    </script>
-    <script>
-     const firebaseConfig = {
+    
+    <div id="cpiDataTable" class="mt-4 hidden">
+        <h3 class="text-lg font-semibold mb-4 text-center">Listado Completo</h3>
+        <div class="cpi-table-container">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Número de orden</th>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
+                        <th scope="col" class="px-6 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody id="cpiList">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="estadisticasCpi" class="mt-4 hidden">
+        <h3 class="text-lg font-semibold mb-4 text-center">Estimación de Certificados Expedidos</h3>
+        <div class="flex flex-col space-y-4">
+            <div id="resumenEstadisticas" class="p-4 bg-gray-100 rounded-lg"></div>
+
+            <div class="flex flex-col space-y-2">
+                <label for="mesSelector" class="block text-sm font-bold text-gray-700">Seleccionar Mes:</label>
+                <select id="mesSelector" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+            
+            <div class="flex flex-col space-y-2">
+                <label for="anioSelector" class="block text-sm font-bold text-gray-700">Seleccionar Año Completo:</label>
+                <select id="anioSelector" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+
+            <div id="resultadosEstadisticas" class="mt-4 text-center"></div>
+        </div>
+    </div>
+  </div>
+  
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+      MENÚ PRINCIPAL
+    </button>
+  </div>
+  
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
       apiKey: "AIzaSyCbrIC_qmnXN0YFTVjNGR-j_Zpq_6V_glA",
       authDomain: "gad-alicante-f0d56.firebaseapp.com",
       databaseURL: "https://gad-alicante-f0d56-default-rtdb.europe-west1.firebasedatabase.app",
@@ -580,30 +510,6 @@
         const fecha = interpolarFecha(numero);
         resultado.innerHTML = fecha.includes("NO TENEMOS DATOS") ? fecha : `Fecha estimada: ${fecha}`;
     }
-    </script>
-   </div>
-   <div class="navigation-buttons-row">
-    <a class="yellow-button navigation-button w-40" href="index.html">
-     Menú Principal
-    </a>
-    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
-     Atrás
-    </button>
-   </div>
-  </main>
-  <footer class="mt-auto text-center py-6 bg-gray-200">
-   <div class="flex flex-col items-center">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
-    <p class="font-bold">
-     GRUPO DE ANÁLISIS DOCUMENTAL
-    </p>
-    <p class="font-bold">
-     POLICÍA LOCAL DE ALICANTE
-    </p>
-    <p>
-     © GAD - Todos los derechos reservados
-    </p>
-   </div>
-  </footer>
- </body>
+  </script>
+</body>
 </html>
