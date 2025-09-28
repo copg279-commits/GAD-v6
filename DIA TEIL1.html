@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Título de tu Página - GAD
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-header {
+            background-color: #1d4ed8; /* Color de fondo del index */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .gad-logo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del pie de página */
+        footer {
+            text-align: center;
+            width: 100%;
+            padding: 1.5rem 0;
+            background-color: #e5e7eb;
+        }
+        
+        /* Estilos de los botones de navegación */
+        .navigation-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            margin-top: 0.75rem;
+            gap: 0.75rem;
+        }
+        .navigation-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            flex-grow: 0;
+        }
+        .yellow-button {
+            background-color: #facc15;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .yellow-button:hover {
+            background-color: #eab308;
+        }
+  </style>
+ </head>
+ <body class="bg-gray-100">
+  <header class="main-header">
+   <div class="gad-logo-header">
+    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
+   </div>
+  </header>
+  <main>
+   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+     Nº orden de dia del año Teil 1
+    </h1>
+    <h2 class="text-gray-700 text-center mt-2 px-4">
+     Convierte un día/año a su fecha completa
+    </h2>
+    <div class="w-11/12 max-w-md mx-auto mt-4">
+     <img alt="Imagen representativa" class="w-full" src="logoteil.png"/>
+    </div>
+    <input class="block mx-auto mt-4 p-3 text-base w-11/12 max-w-md border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500" id="inputFecha" placeholder="Ej: 365/25" type="text"/>
+    <button class="block mx-auto mt-4 w-11/12 max-w-md bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition" onclick="calcularFecha()">
+     Calcular Fecha
+    </button>
+    <p class="mt-4 text-center text-red-500 font-semibold">
+     OJO!!! Si no coincide puede tratarse de un duplicado
+    </p>
+    <p class="mt-4 text-center text-gray-500 text-sm font-semibold" id="leyendaBisiesto">
+     El programa tiene en cuenta los años bisiestos.
+    </p>
+    <div class="w-11/12 max-w-md mx-auto mt-4">
+     <img alt="Logo I-DATUM" class="w-full" src="logoidatum.png"/>
+    </div>
+    <div class="mt-6 text-gray-700 text-center w-11/12 max-w-md mx-auto" id="output">
+    </div>
+    <script>
+     function esBisiesto(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    function calcularFecha() {
+      const input = document.getElementById("inputFecha").value;
+      const output = document.getElementById("output");
+      const partes = input.split("/");
+
+      if (partes.length !== 2) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>Formato incorrecto. Por favor, usa el formato 'dia/año' (Ej: 365/25).</p>";
+        return;
+      }
+
+      const diaAnio = parseInt(partes[0]);
+      const anio = parseInt(partes[1]);
+      
+      const anioCompleto = anio > 99 ? anio : 2000 + anio;
+
+      if (isNaN(diaAnio) || isNaN(anio) || diaAnio < 1 || diaAnio > 366) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>Por favor, ingresa valores numéricos válidos.</p>";
+        return;
+      }
+
+      if (diaAnio > 365 && !esBisiesto(anioCompleto)) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>El año no es bisiesto, el día del año debe ser 365 o menos.</p>";
+        return;
+      }
+
+      const fechaBase = new Date(anioCompleto, 0, 1);
+      fechaBase.setDate(diaAnio);
+
+      const dia = fechaBase.getDate().toString().padStart(2, '0');
+      const mes = (fechaBase.getMonth() + 1).toString().padStart(2, '0');
+      const year = fechaBase.getFullYear();
+      
+      let mensajeAdicional = "";
+      if (esBisiesto(anioCompleto)) {
+          mensajeAdicional = "<p class='text-green-600'>(Año Bisiesto)</p>";
+      }
+      
+      output.innerHTML = `
+        <p class='text-green-600 font-semibold'>
+          La fecha de I Datum es: ${dia}/${mes}/${year}
+        </p>
+        ${mensajeAdicional}
+      `;
+    }
+
+    document.getElementById("inputFecha").addEventListener("keypress", function (event) {
+      if (event.key === "Enter") {
+        calcularFecha();
+      }
+    });
+    </script>
+   </div>
+   <div class="navigation-buttons-row">
+    <a class="yellow-button navigation-button w-40" href="index.html">
+     Menú Principal
+    </a>
+    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
+     Atrás
+    </button>
+   </div>
+  </main>
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+   <div class="flex flex-col items-center">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
+    <p class="font-bold">
+     GRUPO DE ANÁLISIS DOCUMENTAL
+    </p>
+    <p class="font-bold">
+     POLICÍA LOCAL DE ALICANTE
+    </p>
+    <p>
+     © GAD - Todos los derechos reservados
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>

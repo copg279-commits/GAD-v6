@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Título de tu Página - GAD
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-header {
+            background-color: #1d4ed8; /* Color de fondo del index */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .gad-logo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del pie de página */
+        footer {
+            text-align: center;
+            width: 100%;
+            padding: 1.5rem 0;
+            background-color: #e5e7eb;
+        }
+        
+        /* Estilos de los botones de navegación */
+        .navigation-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            margin-top: 0.75rem;
+            gap: 0.75rem;
+        }
+        .navigation-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            flex-grow: 0;
+        }
+        .yellow-button {
+            background-color: #facc15;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .yellow-button:hover {
+            background-color: #eab308;
+        }
+  </style>
+ </head>
+ <body class="bg-gray-100">
+  <header class="main-header">
+   <div class="gad-logo-header">
+    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
+   </div>
+  </header>
+  <main>
+   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+    <h1 class="text-black text-center mt-6 text-2xl md:text-3xl font-bold px-4">
+     Clasificación de Vehículos
+    </h1>
+    <div class="w-11/12 max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-lg">
+     <div class="mb-6">
+      <label class="block text-sm font-semibold text-gray-800 mb-2" for="searchBox">
+       🔍 Buscar por tipo de vehículo:
+      </label>
+      <input class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" id="searchBox" placeholder="Ej: Autobús, Motocicleta, Turismo..." type="text"/>
+     </div>
+     <div class="mb-4">
+      <label class="block text-sm font-semibold text-gray-800 mb-2" for="categorySelect">
+       O selecciona por categoría:
+      </label>
+      <select class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" id="categorySelect">
+       <option disabled="" selected="" value="">
+        -- Elige una categoría --
+       </option>
+      </select>
+     </div>
+     <div class="mt-6" id="resultsContainer">
+     </div>
+    </div>
+    <script>
+     const vehicleData = [
+      { category: "L1e", commonName: "Ciclomotor", description: "Vehículos de dos ruedas (ciclomotores) con una velocidad máxima de 45 km/h." },
+      { category: "L2e", commonName: "Ciclomotor de 3 ruedas", description: "Vehículos de tres ruedas (ciclomotores) con una velocidad máxima de 45 km/h." },
+      { category: "L3eA1", commonName: "Motocicleta", description: "Motocicletas de dos ruedas con una potencia inferior a 11 kW y una relación potencia/peso inferior a 0.1 kW/kg." },
+      { category: "L3eA2", commonName: "Motocicleta", description: "Motocicletas de dos ruedas con una potencia inferior a 35 kW y una relación potencia/peso inferior a 0.2 kW/kg." },
+      { category: "L3eA3", commonName: "Motocicleta", description: "Motocicletas de dos ruedas con una potencia superior a 35 kW." },
+      { category: "L4eA1", commonName: "Motocicleta con sidecar", description: "Motocicletas de dos ruedas con sidecar, con una potencia inferior a 11 kW y una relación potencia/peso inferior a 0.1 kW/kg." },
+      { category: "L4eA2", commonName: "Motocicleta con sidecar", description: "Motocicletas de dos ruedas con sidecar, con una potencia inferior a 35 kW y una relación potencia/peso inferior a 0.2 kW/kg." },
+      { category: "L4eA3", commonName: "Motocicleta con sidecar", description: "Motocicletas de dos ruedas con sidecar, con una potencia superior a 35 kW." },
+      { category: "L5e", commonName: "Triciclo de motor", description: "Triciclos de motor (velocidad superior a 45 km/h)." },
+      { category: "L6e", commonName: "Cuadriciclo ligero", description: "Cuadriciclos ligeros, masa en vacío inferior a 350 kg, velocidad máx. 45 km/h." },
+      { category: "L7e", commonName: "Cuadriciclo pesado", description: "Cuadriciclos pesados, masa en vacío inferior a 450 kg (pasajeros) o 600 kg (carga)." },
+
+      { category: "M1", commonName: "Turismo", description: "Vehículos diseñados y fabricados para el transporte de pasajeros, que no tengan más de 8 asientos además del asiento del conductor." },
+      { category: "M2", commonName: "Autobús", description: "Vehículos para transporte de pasajeros, con más de 8 asientos y una masa máxima no superior a 5 toneladas." },
+      { category: "M3", commonName: "Autobús", description: "Vehículos para transporte de pasajeros, con más de 8 asientos y una masa máxima superior a 5 toneladas." },
+
+      { category: "N1", commonName: "Furgoneta o Camioneta", description: "Vehículos para transporte de mercancías con una masa máxima no superior a 3.5 toneladas." },
+      { category: "N2", commonName: "Camión", description: "Vehículos para transporte de mercancías con una masa máxima superior a 3.5 toneladas pero no superior a 12 toneladas." },
+      { category: "N3", commonName: "Camión", description: "Vehículos para transporte de mercancías con una masa máxima superior a 12 toneladas." },
+
+      { category: "O1", commonName: "Remolque ligero", description: "Remolques con una masa máxima no superior a 0.75 toneladas." },
+      { category: "O2", commonName: "Remolque medio", description: "Remolques con una masa máxima superior a 0.75 toneladas pero no superior a 3.5 toneladas." },
+      { category: "O3", commonName: "Remolque pesado", description: "Remolques con una masa máxima superior a 3.5 toneladas pero no superior a 10 toneladas." },
+      { category: "O4", commonName: "Remolque muy pesado", description: "Remolques con una masa máxima superior a 10 toneladas." },
+
+      { category: "T", commonName: "Tractor", description: "Tractores de ruedas (agrícolas y forestales)." },
+      { category: "R1", commonName: "Remolque agrícola", description: "Remolques agrícolas de masa máxima técnica inferior a 1,5 toneladas." },
+      { category: "R2", commonName: "Remolque agrícola", description: "Remolques agrícolas de masa máxima técnica superior a 1,5 toneladas e inferior a 3,5 toneladas." },
+      { category: "R3", commonName: "Remolque agrícola", description: "Remolques agrícolas de masa máxima técnica superior a 3,5 toneladas e inferior a 21 toneladas." },
+      { category: "R4", commonName: "Remolque agrícola", description: "Remolques agrícolas de masa máxima técnica superior a 21 toneladas." }
+    ];
+
+    const categorySelect = document.getElementById('categorySelect');
+    const searchBox = document.getElementById('searchBox');
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    function populateDropdown() {
+      vehicleData.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.category;
+        option.textContent = `${item.category} (${item.commonName})`;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    function createTable(data) {
+      if (data.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-gray-600 text-center">No se encontraron resultados.</p>';
+        return;
+      }
+      
+      let tableHtml = `
+        <div class="responsive-table">
+          <table class="w-full text-sm text-left text-gray-700 hidden md:table">
+            <thead class="bg-blue-600 text-white uppercase tracking-wider">
+              <tr>
+                <th scope="col" class="px-6 py-3 font-semibold">Categoría</th>
+                <th scope="col" class="px-6 py-3 font-semibold">Nombre Común</th>
+                <th scope="col" class="px-6 py-3 font-semibold">Descripción Completa</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      data.forEach((item, index) => {
+        const rowColor = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+        tableHtml += `
+          <tr class="${rowColor} border-b border-gray-200 hover:bg-gray-100 transition duration-150">
+            <th scope="row" class="px-6 py-4 font-medium text-gray-900">${item.category}</th>
+            <td class="px-6 py-4">${item.commonName}</td>
+            <td class="px-6 py-4">${item.description}</td>
+          </tr>
+        `;
+      });
+      tableHtml += `</tbody></table></div>`;
+
+      // Mobile view
+      tableHtml += `<div class="md:hidden">`;
+      data.forEach((item) => {
+        tableHtml += `
+          <div class="responsive-row">
+            <div class="responsive-cell" data-label="Categoría">
+              <span class="font-bold text-gray-900">${item.category}</span>
+            </div>
+            <div class="responsive-cell" data-label="Nombre Común">
+              <span>${item.commonName}</span>
+            </div>
+            <div class="responsive-cell" data-label="Descripción Completa">
+              <span>${item.description}</span>
+            </div>
+          </div>
+        `;
+      });
+      tableHtml += `</div>`;
+
+      resultsContainer.innerHTML = tableHtml;
+    }
+    
+    function normalizeText(text) {
+        return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    categorySelect.addEventListener('change', (event) => {
+      const selectedCategory = event.target.value;
+      if (selectedCategory) {
+        const selectedData = vehicleData.find(item => item.category === selectedCategory);
+        createTable([selectedData]);
+      }
+      searchBox.value = '';
+    });
+
+    searchBox.addEventListener('input', (event) => {
+      const searchTerm = normalizeText(event.target.value);
+      if (searchTerm.length > 0) {
+        const filteredData = vehicleData.filter(item => 
+          normalizeText(item.commonName).includes(searchTerm) || 
+          normalizeText(item.description).includes(searchTerm) ||
+          normalizeText(item.category).includes(searchTerm)
+        );
+        createTable(filteredData);
+      } else {
+        resultsContainer.innerHTML = '';
+      }
+      categorySelect.value = '';
+    });
+
+    populateDropdown();
+    </script>
+   </div>
+   <div class="navigation-buttons-row">
+    <a class="yellow-button navigation-button w-40" href="index.html">
+     Menú Principal
+    </a>
+    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
+     Atrás
+    </button>
+   </div>
+  </main>
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+   <div class="flex flex-col items-center">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
+    <p class="font-bold">
+     GRUPO DE ANÁLISIS DOCUMENTAL
+    </p>
+    <p class="font-bold">
+     POLICÍA LOCAL DE ALICANTE
+    </p>
+    <p>
+     © GAD - Todos los derechos reservados
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>

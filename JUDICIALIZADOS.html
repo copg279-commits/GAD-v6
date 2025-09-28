@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Título de tu Página - GAD
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-header {
+            background-color: #1d4ed8; /* Color de fondo del index */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .gad-logo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del pie de página */
+        footer {
+            text-align: center;
+            width: 100%;
+            padding: 1.5rem 0;
+            background-color: #e5e7eb;
+        }
+        
+        /* Estilos de los botones de navegación */
+        .navigation-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            margin-top: 0.75rem;
+            gap: 0.75rem;
+        }
+        .navigation-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            flex-grow: 0;
+        }
+        .yellow-button {
+            background-color: #facc15;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .yellow-button:hover {
+            background-color: #eab308;
+        }
+  </style>
+ </head>
+ <body class="bg-gray-100">
+  <header class="main-header">
+   <div class="gad-logo-header">
+    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
+   </div>
+  </header>
+  <main>
+   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+     DOCUMENTOS JUDICIALIZADOS
+    </h1>
+    <main class="flex-grow flex flex-col items-center py-8 px-4">
+     <button class="btn-add" id="addNewRowBtn">
+      <i class="fas fa-plus mr-2">
+      </i>
+      Introducir Nuevo Documento
+     </button>
+     <div class="results-container hidden" id="resultsContainer">
+      <h2 class="text-lg font-bold mb-4">
+       Datos
+      </h2>
+      <div class="overflow-x-auto">
+       <table class="results-table">
+        <thead>
+         <tr>
+          <th>
+           Fecha
+          </th>
+          <th>
+           País
+          </th>
+          <th>
+           Doc.
+          </th>
+          <th>
+           Atestado
+          </th>
+          <th>
+           J. Rápido
+          </th>
+          <th>
+           Juzgado
+          </th>
+          <th>
+           Resultado
+          </th>
+          <th>
+           Sentencia
+          </th>
+          <th>
+           Imagen
+          </th>
+          <th>
+           Acciones
+          </th>
+         </tr>
+        </thead>
+        <tbody id="resultsTableBody">
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </main>
+    <div class="modal-overlay" id="documentModal">
+     <div class="modal">
+      <div class="modal-header">
+       <strong id="modalTitle">
+        Añadir Nuevo Documento
+       </strong>
+       <button class="close-btn" id="closeModalBtn">
+        ×
+       </button>
+      </div>
+      <form id="documentForm">
+       <div class="modal-body">
+        <input id="recordKey" type="hidden"/>
+        <div class="form-fields">
+         <div class="field">
+          <label for="fechaSuceso">
+           Fecha del Suceso
+          </label>
+          <input id="fechaSuceso" name="fechaSuceso" required="" type="date"/>
+         </div>
+         <div class="field">
+          <label for="pais">
+           País
+          </label>
+          <input id="pais" list="paisesList" name="pais" placeholder="País" required="" type="text"/>
+          <datalist id="paisesList">
+          </datalist>
+         </div>
+         <div class="field">
+          <label for="tipoDocumento">
+           Tipo de Documento
+          </label>
+          <select id="tipoDocumento" name="tipoDocumento" required="">
+           <option value="PNC">
+            PNC
+           </option>
+           <option value="PIC">
+            PIC
+           </option>
+           <option value="TIE">
+            TIE
+           </option>
+           <option value="CI">
+            CI
+           </option>
+           <option value="PCIRC">
+            PCIRC
+           </option>
+           <option value="ITV">
+            ITV
+           </option>
+           <option value="SOA">
+            SOA
+           </option>
+          </select>
+         </div>
+         <div class="field">
+          <label for="atestadoNumero">
+           Número de Atestado
+          </label>
+          <input id="atestadoNumero" name="atestadoNumero" placeholder="Atestado" required="" type="text"/>
+         </div>
+         <div class="field">
+          <label for="juicioRapido">
+           Juicio Rápido
+          </label>
+          <select id="juicioRapido" name="juicioRapido" required="">
+           <option value="Sí">
+            Sí
+           </option>
+           <option value="No">
+            No
+           </option>
+          </select>
+         </div>
+         <div class="field">
+          <label for="juzgado">
+           Juzgado
+          </label>
+          <select id="juzgado" name="juzgado" required="">
+           <option value="Se desconoce">
+            Se desconoce
+           </option>
+          </select>
+         </div>
+         <div class="field">
+          <label for="resultado">
+           Resultado
+          </label>
+          <select id="resultado" name="resultado" required="">
+           <option value="Se desconoce">
+            Se desconoce
+           </option>
+           <option value="Condena">
+            Condena
+           </option>
+           <option value="Absolución">
+            Absolución
+           </option>
+           <option value="Pasa a Ordinario">
+            Pasa a Ordinario
+           </option>
+           <option value="En Trámite">
+            En Trámite
+           </option>
+          </select>
+         </div>
+         <div class="field">
+          <label for="sentenciaUrl">
+           Enlace a la Sentencia (URL)
+          </label>
+          <input id="sentenciaUrl" name="sentenciaUrl" placeholder="Pega aquí la URL de la sentencia" type="text"/>
+         </div>
+         <div class="field">
+          <label for="documentoUrl">
+           Enlace al Documento (URL de Google Drive o OneDrive)
+          </label>
+          <input id="documentoUrl" name="documentoUrl" placeholder="Pega aquí la URL" type="text"/>
+         </div>
+        </div>
+       </div>
+       <div class="modal-actions">
+        <button class="btn-primary" type="submit">
+         <i class="fas fa-save mr-2">
+         </i>
+         Guardar
+        </button>
+        <button class="btn-ghost" id="cancelModalBtn" type="button">
+         <i class="fas fa-times mr-2">
+         </i>
+         Cancelar
+        </button>
+       </div>
+      </form>
+     </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js">
+    </script>
+    <script>
+     document.addEventListener('DOMContentLoaded', () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyCbrIC_qmnXN0YFTVjNGR-j_Zpq_6V_glA",
+        authDomain: "gad-alicante-f0d56.firebaseapp.com",
+        databaseURL: "https://gad-alicante-f0d56-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gad-alicante-f0d56",
+        storageBucket: "gad-alicante-f0d56.firebasestorage.app",
+        messagingSenderId: "453863147861",
+        appId: "1:453863147861:web:50be7eb436bbee6ec4c7dc"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const documentsRef = db.ref('judicializados');
+      const savedPaisesRef = db.ref('paises');
+
+      const documentModal = document.getElementById('documentModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const cancelModalBtn = document.getElementById('cancelModalBtn');
+      const addNewRowBtn = document.getElementById('addNewRowBtn');
+      const documentForm = document.getElementById('documentForm');
+      const modalTitle = document.getElementById('modalTitle');
+      const recordKeyInput = document.getElementById('recordKey');
+      const modalContent = document.querySelector('.modal');
+
+      const resultsTableBody = document.getElementById('resultsTableBody');
+      const resultsContainer = document.getElementById('resultsContainer');
+      const paisesList = document.getElementById('paisesList');
+      const juzgadoSelect = document.getElementById('juzgado');
+
+      let savedPaises = [];
+      
+      const juzgadoOptions = ["Se desconoce"];
+      for (let i = 1; i <= 15; i++) {
+        juzgadoOptions.push(`Instrucción ${i}`);
+      }
+      for (let i = 1; i <= 15; i++) {
+        juzgadoOptions.push(`Penal ${i}`);
+      }
+      juzgadoOptions.forEach(opt => juzgadoSelect.innerHTML += `<option value="${opt}">${opt}</option>`);
+
+      savedPaisesRef.on('value', (snapshot) => {
+          savedPaises = snapshot.val() || [];
+          paisesList.innerHTML = savedPaises.map(pais => `<option value="${pais}"></option>`).join('');
+      });
+
+      const renderTable = (snapshot) => {
+        resultsTableBody.innerHTML = '';
+        const data = [];
+        snapshot.forEach(childSnapshot => {
+            const item = childSnapshot.val();
+            item.key = childSnapshot.key;
+            data.push(item);
+        });
+
+        if (data.length > 0) {
+            resultsContainer.classList.remove('hidden');
+            data.sort((a, b) => new Date(b.fechaSuceso) - new Date(a.fechaSuceso));
+
+            data.forEach((item) => {
+                const row = document.createElement('tr');
+                row.dataset.key = item.key;
+                
+                // Aplicar el color de la fila basado en la existencia de sentencia
+                if (item.sentenciaUrl) {
+                    row.classList.add('sentencia-presente');
+                } else {
+                    row.classList.add('sentencia-ausente');
+                }
+
+                if (item.archived) {
+                    row.classList.add('archived-row');
+                }
+
+                let imageHtml = 'No hay';
+                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(item.documentoUrl);
+                
+                if (item.documentoUrl) {
+                    if (item.documentoUrl.includes('1drv.ms/i/')) {
+                        const directUrl = `${item.documentoUrl.split('?')[0]}?width=150&height=100`;
+                        imageHtml = `<a href="${item.documentoUrl}" target="_blank"><img src="${directUrl}" alt="Doc" class="thumbnail"></a>`;
+                    } else if (isImage) {
+                        imageHtml = `<a href="${item.documentoUrl}" target="_blank"><img src="${item.documentoUrl}" alt="Doc" class="thumbnail"></a>`;
+                    } else {
+                        imageHtml = `<a href="${item.documentoUrl}" target="_blank" class="doc-link"><i class="fas fa-eye mr-2"></i>Ver Documento</a>`;
+                    }
+                }
+
+                let sentenciaHtml = 'No';
+                if (item.sentenciaUrl) {
+                    sentenciaHtml = `<a href="${item.sentenciaUrl}" target="_blank" class="sentencia-link">Ver</a>`;
+                }
+
+                let resultadoHtml;
+                switch (item.resultado) {
+                    case 'Condena':
+                        resultadoHtml = `<span class="condena">Condena</span>`;
+                        break;
+                    case 'En Trámite':
+                        resultadoHtml = `<span class="en-tramite">En Trámite</span>`;
+                        break;
+                    case 'Pasa a Ordinario':
+                        resultadoHtml = `<span class="pasa-a-ordinario">Pasa a Ordinario</span>`;
+                        break;
+                    case 'Absolución':
+                        resultadoHtml = `<span class="absolucion">Absolución</span>`;
+                        break;
+                    default:
+                        resultadoHtml = `<span>${item.resultado}</span>`;
+                        break;
+                }
+
+                row.innerHTML = `
+                    <td data-label="Fecha">${item.fechaSuceso}</td>
+                    <td data-label="País">${item.pais}</td>
+                    <td data-label="Documento">${item.tipoDocumento}</td>
+                    <td data-label="Atestado">${item.atestadoNumero}</td>
+                    <td data-label="Juicio Rápido">${item.juicioRapido}</td>
+                    <td data-label="Juzgado">${item.juzgado}</td>
+                    <td data-label="Resultado">${resultadoHtml}</td>
+                    <td data-label="Sentencia">${sentenciaHtml}</td>
+                    <td data-label="Imagen">
+                      ${imageHtml}
+                    </td>
+                    <td data-label="Acciones">
+                      <div class="action-buttons">
+                        <button class="edit-btn"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                        <button class="archive-btn">${item.archived ? 'Desarchivar' : 'Archivar'}</button>
+                      </div>
+                    </td>
+                `;
+                resultsTableBody.appendChild(row);
+            });
+        } else {
+            resultsContainer.classList.add('hidden');
+        }
+      };
+
+      documentsRef.on('value', renderTable);
+
+      addNewRowBtn.addEventListener('click', () => {
+        documentForm.reset();
+        recordKeyInput.value = '';
+        modalTitle.textContent = 'Introducir Nuevo Documento';
+        documentModal.classList.add('open');
+      });
+
+      documentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = documentForm.querySelector('button[type="submit"]');
+        saveBtn.disabled = true;
+
+        try {
+            const key = recordKeyInput.value;
+            const data = {
+              fechaSuceso: document.getElementById('fechaSuceso').value,
+              pais: document.getElementById('pais').value,
+              tipoDocumento: document.getElementById('tipoDocumento').value,
+              atestadoNumero: document.getElementById('atestadoNumero').value,
+              juicioRapido: document.getElementById('juicioRapido').value,
+              juzgado: document.getElementById('juzgado').value,
+              resultado: document.getElementById('resultado').value,
+              documentoUrl: document.getElementById('documentoUrl').value || null,
+              sentenciaUrl: document.getElementById('sentenciaUrl').value || null,
+            };
+
+            if (key) {
+                const currentItem = (await documentsRef.child(key).once('value')).val();
+                data.archived = currentItem.archived || false;
+                await documentsRef.child(key).update(data);
+            } else {
+                data.archived = false;
+                await documentsRef.push(data);
+            }
+
+            const pais = data.pais.trim();
+            if (pais && !savedPaises.includes(pais)) {
+              savedPaises.push(pais);
+              savedPaisesRef.set(savedPaises);
+            }
+
+            documentModal.classList.remove('open');
+            documentForm.reset();
+        } catch (error) {
+            console.error("Error al guardar los datos:", error);
+            alert("Hubo un error al guardar los datos.");
+        } finally {
+            saveBtn.disabled = false;
+        }
+      });
+
+      resultsTableBody.addEventListener('click', async (e) => {
+        const target = e.target;
+        const row = target.closest('tr');
+        if (!row) return;
+        const key = row.dataset.key;
+
+        if (target.closest('.edit-btn')) {
+          const itemToEdit = (await documentsRef.child(key).once('value')).val();
+          document.getElementById('fechaSuceso').value = itemToEdit.fechaSuceso;
+          document.getElementById('pais').value = itemToEdit.pais;
+          document.getElementById('tipoDocumento').value = itemToEdit.tipoDocumento;
+          document.getElementById('atestadoNumero').value = itemToEdit.atestadoNumero;
+          document.getElementById('juicioRapido').value = itemToEdit.juicioRapido;
+          document.getElementById('juzgado').value = itemToEdit.juzgado;
+          document.getElementById('resultado').value = itemToEdit.resultado;
+          document.getElementById('documentoUrl').value = itemToEdit.documentoUrl || '';
+          document.getElementById('sentenciaUrl').value = itemToEdit.sentenciaUrl || '';
+          recordKeyInput.value = key;
+          modalTitle.textContent = 'Editar Documento';
+          documentModal.classList.add('open');
+        } else if (target.closest('.delete-btn')) {
+          if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+            await documentsRef.child(key).remove();
+          }
+        } else if (target.closest('.archive-btn')) {
+            const currentItem = (await documentsRef.child(key).once('value')).val();
+            const newArchivedState = !currentItem.archived;
+            await documentsRef.child(key).update({ archived: newArchivedState });
+        }
+      });
+
+      const closeOrCancelModal = () => {
+        documentModal.classList.remove('open');
+        documentForm.reset();
+      };
+      
+      modalContent.addEventListener('click', (e) => {
+          e.stopPropagation();
+      });
+
+      closeModalBtn.addEventListener('click', closeOrCancelModal);
+      cancelModalBtn.addEventListener('click', closeOrCancelModal);
+      documentModal.addEventListener('click', (e) => {
+        if (e.target.id === 'documentModal') {
+          closeOrCancelModal();
+        }
+      });
+    });
+    </script>
+   </div>
+   <div class="navigation-buttons-row">
+    <a class="yellow-button navigation-button w-40" href="index.html">
+     Menú Principal
+    </a>
+    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
+     Atrás
+    </button>
+   </div>
+  </main>
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+   <div class="flex flex-col items-center">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
+    <p class="font-bold">
+     GRUPO DE ANÁLISIS DOCUMENTAL
+    </p>
+    <p class="font-bold">
+     POLICÍA LOCAL DE ALICANTE
+    </p>
+    <p>
+     © GAD - Todos los derechos reservados
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Título de tu Página - GAD
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-header {
+            background-color: #1d4ed8; /* Color de fondo del index */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .gad-logo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del pie de página */
+        footer {
+            text-align: center;
+            width: 100%;
+            padding: 1.5rem 0;
+            background-color: #e5e7eb;
+        }
+        
+        /* Estilos de los botones de navegación */
+        .navigation-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            margin-top: 0.75rem;
+            gap: 0.75rem;
+        }
+        .navigation-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            flex-grow: 0;
+        }
+        .yellow-button {
+            background-color: #facc15;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .yellow-button:hover {
+            background-color: #eab308;
+        }
+  </style>
+ </head>
+ <body class="bg-gray-100">
+  <header class="main-header">
+   <div class="gad-logo-header">
+    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
+   </div>
+  </header>
+  <main>
+   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+     Buscador Frecuencia ITV Europa
+    </h1>
+    <div class="w-11/12 max-w-md mx-auto mt-4 text-left">
+     <p class="mb-2">
+      Selecciona un país de la UE para ver la frecuencia de la ITV:
+     </p>
+     <select class="w-full p-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="countrySelect" onchange="buscarPais()">
+      <option value="">
+       -- Selecciona un país --
+      </option>
+     </select>
+    </div>
+    <div class="mt-6 p-4 bg-white shadow rounded-lg w-11/12 max-w-md mx-auto text-left relative" id="resultado">
+     <p class="text-gray-500" id="resultText">
+      La frecuencia de la ITV para el país seleccionado aparecerá aquí.
+     </p>
+    </div>
+    <div class="mt-2 p-2 w-11/12 max-w-md mx-auto text-center font-bold" id="directiva" style="display: none;">
+     DIRECTIVA 2014/45/UE
+    </div>
+    <div class="mt-4 flex justify-center">
+     <button class="w-11/12 max-w-md p-4 bg-blue-600 text-white font-bold rounded-lg shadow-md transition hover:bg-blue-700" onclick="window.location.href='https://road-safety.transport.ec.europa.eu/road-safety-member-states/roadworthiness-certificate-and-proof-test_en'">
+      FRECUENCIA ITV EUROPA
+     </button>
+    </div>
+    <script>
+     const itvFrequencies = {
+            "alemania": {
+                turismos: "Primera ITV a los 3 años, luego cada 2 años.",
+                motos: "Primera ITV a los 2 años, luego cada 2 años."
+            },
+            "austria": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            },
+            "belgica": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "bulgaria": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego cada 2 años."
+            },
+            "chipre": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 2 años, luego cada 2 años."
+            },
+            "croacia": {
+                turismos: "Primera ITV a los 2 años, luego anual.",
+                motos: "Anual, a partir del 1er año."
+            },
+            "dinamarca": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "eslovaquia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "eslovenia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "españa": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años (hasta los 10 años), luego anual.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "estonia": {
+                turismos: "Primera ITV a los 3 años, luego cada 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego cada 2 años, luego anual."
+            },
+            "finlandia": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            },
+            "francia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Normativa especial. Utiliza el calculador de abajo."
+            },
+            "grecia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "hungria": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "irlanda": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años (hasta los 10 años), luego anual.",
+                motos: "Exención de inspección obligatoria."
+            },
+            "italia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "letonia": {
+                turismos: "Primera ITV a los 3 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego anual."
+            },
+            "lituania": {
+                turismos: "Primera ITV a los 3 años, luego cada 2 años.",
+                motos: "Primera ITV a los 3 años, luego cada 2 años."
+            },
+            "luxemburgo": {
+                turismos: "Primera ITV a los 4 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "malta": {
+                turismos: "Primera ITV a los 2 años, luego anual.",
+                motos: "Primera ITV a los 2 años, luego anual."
+            },
+            "paises bajos": {
+                turismos: "Primera ITV a los 4 años, luego anual.",
+                motos: "Exención de inspección obligatoria."
+            },
+            "polonia": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            },
+            "portugal": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años (hasta los 8 años), luego anual.",
+                motos: "Exención de inspección obligatoria."
+            },
+            "reino unido": {
+                turismos: "Primera ITV (MOT) a los 3 años, luego anual.",
+                motos: "Primera ITV (MOT) a los 3 años, luego anual."
+            },
+            "republica checa": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "rumania": {
+                turismos: "Primera ITV a los 2 años, luego anual.",
+                motos: "Primera ITV a los 2 años, luego anual."
+            },
+            "suecia": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            }
+        };
+
+        const flagClassMap = {
+            "alemania": "flag-alemania",
+            "austria": "flag-austria",
+            "belgica": "flag-belgica",
+            "bulgaria": "flag-bulgaria",
+            "chipre": "flag-chipre",
+            "croacia": "flag-croacia",
+            "dinamarca": "flag-dinamarca",
+            "eslovaquia": "flag-eslovaquia",
+            "eslovenia": "flag-eslovenia",
+            "españa": "flag-españa",
+            "estonia": "flag-estonia",
+            "finlandia": "flag-finlandia",
+            "francia": "flag-francia",
+            "grecia": "flag-grecia",
+            "hungria": "flag-hungria",
+            "irlanda": "flag-irlanda",
+            "italia": "flag-italia",
+            "letonia": "flag-letonia",
+            "lituania": "flag-lituania",
+            "luxemburgo": "flag-luxemburgo",
+            "malta": "flag-malta",
+            "paises bajos": "flag-paisesbajos",
+            "polonia": "flag-polonia",
+            "portugal": "flag-portugal",
+            "reino unido": "flag-reinounido",
+            "republica checa": "flag-republicacheca",
+            "rumania": "flag-rumania",
+            "suecia": "flag-suecia"
+        };
+        
+        function mostrarResultado(html, esError = false, pais = '') {
+            const resultadoDiv = document.getElementById('resultado');
+            const resultadoText = document.getElementById('resultText');
+            const directivaDiv = document.getElementById('directiva');
+            
+            resultadoText.innerHTML = html;
+            resultadoDiv.classList.toggle('bg-red-200', esError);
+            resultadoDiv.classList.toggle('bg-white', !esError);
+            resultadoText.classList.toggle('text-center', esError);
+            resultadoText.classList.toggle('text-left', !esError);
+
+            const existingFlag = resultadoDiv.querySelector('.flag');
+            if (existingFlag) {
+                existingFlag.remove();
+            }
+
+            const existingButton = resultadoDiv.querySelector('#botonFrancia');
+            if (existingButton) {
+                existingButton.remove();
+            }
+            
+            const existingButtonAlemania = resultadoDiv.querySelector('#botonAlemania');
+            if (existingButtonAlemania) {
+                existingButtonAlemania.remove();
+            }
+
+
+            if (pais && flagClassMap[pais]) {
+                const flagDiv = document.createElement('div');
+                flagDiv.className = `flag ${flagClassMap[pais]}`;
+                resultadoDiv.appendChild(flagDiv);
+            }
+
+            if (pais) {
+                directivaDiv.style.display = 'block';
+            } else {
+                directivaDiv.style.display = 'none';
+            }
+        }
+
+        function buscarPais() {
+            const select = document.getElementById('countrySelect');
+            const input = select.value;
+            if (!input) {
+                mostrarResultado("Por favor, selecciona un país.", true);
+                return;
+            }
+
+            const paisData = itvFrequencies[input];
+            if (paisData) {
+                let html = `
+                    <div class="mb-2">
+                        <p><span class="font-bold text-lg">${input.toUpperCase()}:</span></p>
+                        <p><span class="font-bold">Turismos:</span> ${paisData.turismos}</p>
+                        <p><span class="font-bold">Motocicletas:</span> ${paisData.motos}</p>
+                    </div>
+                `;
+                
+                // Limpiar botones anteriores
+                const resultadoDiv = document.getElementById('resultado');
+                const existingButton = resultadoDiv.querySelector('#botonFrancia');
+                if (existingButton) existingButton.remove();
+                const existingButtonAlemania = resultadoDiv.querySelector('#botonAlemania');
+                if (existingButtonAlemania) existingButtonAlemania.remove();
+
+                mostrarResultado(html, false, input);
+                
+                // Agregar el botón para Francia si es el país seleccionado
+                if (input === 'francia') {
+                    const button = document.createElement('button');
+                    button.id = 'botonFrancia';
+                    button.textContent = 'CALCULADORA ITV MOTOS FRANCIA';
+                    button.onclick = () => window.location.href = 'ITV MOTOS FRANCIA.html';
+                    button.className = 'block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition';
+                    resultadoDiv.appendChild(button);
+                }
+                
+                // Agregar el botón para Alemania si es el país seleccionado
+                if (input === 'alemania') {
+                    const button = document.createElement('button');
+                    button.id = 'botonAlemania';
+                    button.textContent = 'VERIFICADOR PEGATINA TÜV';
+                    button.onclick = () => window.location.href = 'ITV ALEMANIA.html';
+                    button.className = 'block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition';
+                    resultadoDiv.appendChild(button);
+                }
+
+            } else {
+                mostrarResultado("País no encontrado o no disponible en la lista.", true);
+            }
+        }
+        
+        window.onload = function() {
+            const select = document.getElementById('countrySelect');
+            const paises = Object.keys(itvFrequencies).sort();
+            
+            paises.forEach(pais => {
+                const option = document.createElement('option');
+                option.value = pais;
+                option.textContent = pais.charAt(0).toUpperCase() + pais.slice(1);
+                select.appendChild(option);
+            });
+        };
+    </script>
+   </div>
+   <div class="navigation-buttons-row">
+    <a class="yellow-button navigation-button w-40" href="index.html">
+     Menú Principal
+    </a>
+    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
+     Atrás
+    </button>
+   </div>
+  </main>
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+   <div class="flex flex-col items-center">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
+    <p class="font-bold">
+     GRUPO DE ANÁLISIS DOCUMENTAL
+    </p>
+    <p class="font-bold">
+     POLICÍA LOCAL DE ALICANTE
+    </p>
+    <p>
+     © GAD - Todos los derechos reservados
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>

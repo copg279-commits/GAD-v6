@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Título de tu Página - GAD
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-header {
+            background-color: #1d4ed8; /* Color de fondo del index */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .gad-logo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del pie de página */
+        footer {
+            text-align: center;
+            width: 100%;
+            padding: 1.5rem 0;
+            background-color: #e5e7eb;
+        }
+        
+        /* Estilos de los botones de navegación */
+        .navigation-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            margin-top: 0.75rem;
+            gap: 0.75rem;
+        }
+        .navigation-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            flex-grow: 0;
+        }
+        .yellow-button {
+            background-color: #facc15;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .yellow-button:hover {
+            background-color: #eab308;
+        }
+  </style>
+ </head>
+ <body class="bg-gray-100">
+  <header class="main-header">
+   <div class="gad-logo-header">
+    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
+   </div>
+  </header>
+  <main>
+   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+     PROTOCOLO PERMISOS DSV
+    </h1>
+    <div class="w-11/12 max-w-md mx-auto mt-4 bg-white p-4 rounded-lg shadow-md container">
+     <p class="text-gray-700 font-bold uppercase">
+      SELECCIONE EL SUPUESTO PARA COMENZAR:
+     </p>
+     <div class="mt-4 flex flex-col gap-2" id="supuestos-container">
+     </div>
+     <div class="mt-6" id="question-container">
+     </div>
+     <div class="hidden result-box mt-6" id="resultado">
+      <h2 class="text-lg font-bold mb-2">
+       Detalles del Caso
+      </h2>
+      <div id="detalle-caso">
+      </div>
+     </div>
+     <button class="w-full p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md mt-6 transition hover:bg-yellow-200" onclick="window.location.href='index.html'">
+      <i class="fas fa-arrow-left">
+      </i>
+      VOLVER AL MENÚ PRINCIPAL
+     </button>
+    </div>
+    <div class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="edit-modal">
+     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-96 shadow-lg rounded-md bg-white">
+      <h3 class="text-lg font-bold mb-4">
+       Editar Resultado
+      </h3>
+      <form class="space-y-4" id="edit-form">
+       <div>
+        <label class="block text-sm font-medium text-gray-700" for="edit-hecho">
+         Hecho:
+        </label>
+        <input class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" id="edit-hecho" type="text"/>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-gray-700" for="edit-resumen">
+         Resumen:
+        </label>
+        <input class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" id="edit-resumen" type="text"/>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-gray-700" for="edit-actuacion">
+         Actuación:
+        </label>
+        <div class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" contenteditable="true" id="edit-actuacion">
+        </div>
+       </div>
+       <div class="flex justify-end space-x-4 mt-4">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" id="save-edit" type="button">
+         Guardar
+        </button>
+        <button class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400" id="cancel-edit" type="button">
+         Cancelar
+        </button>
+       </div>
+      </form>
+     </div>
+    </div>
+    <script>
+     // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY", 
+            authDomain: "gad-alicante-f0d56.firebaseapp.com",
+            databaseURL: "https://gad-alicante-f0d56-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-f0d56",
+            storageBucket: "gad-alicante-f0d56.appspot.com",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- Árboles de decisiones ---
+        const decisionTrees = {
+            "perdida-puntos": {
+                question: "¿CONDUCE DURANTE EL PERIODO DE PÉRDIDA DE VIGENCIA?",
+                options: {
+                    "SI (Solo permisos españoles)": "conduce-durante",
+                    "FINALIZADO SIN CURSO NI EXAMEN": "finalizado-no-curso-examen",
+                    "FINALIZADO CON CURSO SIN EXAMEN": "finalizado-no-examen",
+                    "FINALIZADO CON CURSO Y EXAMEN": "finalizado-si-examen",
+                    "NO TIENE CONOCIMIENTO EDICTAL": "no-conocimiento",
+                    "EN RECURSO DE ALZADA": "incidencias-recurso",
+                    "PENDIENTE DE RECURSO": "incidencias-pendiente"
+                }
+            },
+            "suspension-judicial": {
+                question: "¿LA CONDENA ES MAYOR A 2 AÑOS?",
+                options: {
+                    "NO": {
+                        question: "¿CUÁNDO CONDUCE?",
+                        options: {
+                            "DENTRO": "dentro-condena-menor",
+                            "FINALIZADO SIN CURSO": "finalizado-condena-menor-no-curso",
+                            "FINALIZADO CON CURSO": "finalizado-condena-menor-si-curso"
+                        }
+                    },
+                    "SI": {
+                        question: "¿CUÁNDO CONDUCE?",
+                        options: {
+                            "DENTRO": "dentro-condena-mayor",
+                            "FINALIZADO SIN CURSO NI EXAMEN": "finalizado-condena-mayor-no-curso-examen",
+                            "FINALIZADO CON CURSO Y EXAMEN": "finalizado-condena-mayor-si-curso-examen"
+                        }
+                    }
+                }
+            },
+            "carencia": {
+                question: "¿HA OBTENIDO ALGUNA VEZ EL PERMISO?",
+                options: {
+                    "NO": "nunca-obtenido",
+                    "TIENE PERMISO DE OTRO TIPO/PAÍS": "carecer-permiso"
+                }
+            },
+            "psicofisicas": {
+                question: "¿ES PÉRDIDA DE VIGENCIA O FALTA DE REQUISITOS?",
+                options: {
+                    "PÉRDIDA DE VIGENCIA": "perdida-psicofisicas",
+                    "SIN REQUISITOS EXIGIDOS": "sin-requisitos"
+                }
+            }
+        };
+
+        let history = [];
+        let currentSection = null;
+        let currentCaseKey = null;
+
+        function findCaseParent(caseKey) {
+            for (const section in decisionTrees) {
+                if (typeof decisionTrees[section].options === 'object') {
+                    for (const option in decisionTrees[section].options) {
+                        const nextNode = decisionTrees[section].options[option];
+                        if (typeof nextNode === 'string' && nextNode === caseKey) {
+                            return section;
+                        }
+                        if (typeof nextNode === 'object') {
+                            for (const nestedOption in nextNode.options) {
+                                if (nextNode.options[nestedOption] === caseKey) {
+                                    return section;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function initSupuestos() {
+            const container = document.getElementById("supuestos-container");
+            container.innerHTML = "";
+            for (let key in decisionTrees) {
+                const btnContainer = document.createElement("div");
+                btnContainer.className = "relative w-full";
+                const btn = document.createElement("button");
+                btn.className = "btn btn-primary w-full";
+                btn.textContent = key.replace(/-/g, " ").toUpperCase();
+                btn.onclick = () => startQuestions(key);
+                const editIcon = document.createElement("i");
+                editIcon.className = "fas fa-pencil-alt absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer z-10 text-white";
+                editIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    editButtonText(btn, key.replace(/-/g, " ").toUpperCase(), 'supuesto');
+                };
+                btnContainer.appendChild(btn);
+                btnContainer.appendChild(editIcon);
+                container.appendChild(btnContainer);
+            }
+        }
+
+        function startQuestions(sectionKey) {
+            const container = document.getElementById("question-container");
+            const resultDiv = document.getElementById("resultado");
+            container.innerHTML = "";
+            resultDiv.classList.add("hidden");
+            history = [];
+            currentSection = sectionKey;
+            if (!sectionKey) return;
+            const tree = decisionTrees[sectionKey];
+            history.push(tree);
+            showQuestion(tree);
+        }
+
+        function showQuestion(node) {
+            const container = document.getElementById("question-container");
+            container.innerHTML = `<p class=\"font-bold mb-2\">${node.question}</p>`;
+            for (let key in node.options) {
+                const btnContainer = document.createElement("div");
+                btnContainer.className = "relative w-full";
+                const btn = document.createElement("button");
+                btn.className = "btn btn-primary w-full mt-2";
+                btn.textContent = key.toUpperCase();
+                btn.onclick = () => handleAnswer(node.options[key]);
+                const editIcon = document.createElement("i");
+                editIcon.className = "fas fa-pencil-alt absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer z-10 text-white";
+                editIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    editButtonText(btn, key, node.options[key]);
+                };
+                btnContainer.appendChild(btn);
+                btnContainer.appendChild(editIcon);
+                container.appendChild(btnContainer);
+            }
+            const backBtn = document.createElement("button");
+            backBtn.className = "btn btn-back w-full mt-4";
+            backBtn.textContent = "VOLVER ATRÁS";
+            backBtn.onclick = goBack;
+            container.appendChild(backBtn);
+        }
+
+        function editButtonText(buttonElement, oldText, caseValue) {
+            const newText = prompt("Introduce el nuevo texto para el botón:", buttonElement.textContent);
+            if (newText === null || newText.trim() === "") return;
+            if (confirm(`¿Estás seguro de que deseas cambiar el texto a "${newText}"?`)) {
+                function updateDecisionTree(node, oldKey, newKey) {
+                    if (typeof node === 'object' && node.options) {
+                        const newOptions = {};
+                        let changed = false;
+                        for (const key in node.options) {
+                            if (key.toUpperCase() === oldKey.toUpperCase()) {
+                                newOptions[newKey] = node.options[key];
+                                changed = true;
+                            } else {
+                                newOptions[key] = node.options[key];
+                            }
+                        }
+                        if (changed) {
+                            node.options = newOptions;
+                            return true;
+                        }
+                        for (const key in node.options) {
+                            if (updateDecisionTree(node.options[key], oldKey, newKey)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+                if (caseValue === 'supuesto') {
+                    const newKey = newText.toLowerCase().replace(/ /g, "-");
+                    const oldKey = oldText.toLowerCase().replace(/ /g, "-");
+                    if (decisionTrees[oldKey]) {
+                        decisionTrees[newKey] = decisionTrees[oldKey];
+                        delete decisionTrees[oldKey];
+                        buttonElement.textContent = newText.toUpperCase();
+                        currentSection = newKey;
+                    }
+                } else {
+                    const currentPath = history[history.length - 1];
+                    updateDecisionTree(currentPath, oldText, newText.toUpperCase());
+                    buttonElement.textContent = newText.toUpperCase();
+                }
+            }
+        }
+
+        function handleAnswer(nextNode) {
+            if (typeof nextNode === "string") {
+                showResult(nextNode);
+            } else {
+                history.push(nextNode);
+                showQuestion(nextNode);
+            }
+        }
+
+        function goBack() {
+            const resultDiv = document.getElementById("resultado");
+            if (!resultDiv.classList.contains("hidden")) {
+                resultDiv.classList.add("hidden");
+                history = [];
+                showQuestion(decisionTrees[currentSection]);
+                return;
+            }
+            if (history.length > 1) {
+                history.pop();
+                showQuestion(history[history.length - 1]);
+            } else {
+                document.getElementById("question-container").innerHTML = "";
+                currentSection = null;
+            }
+        }
+
+        function showResult(optionKey) {
+            const resultDiv = document.getElementById("resultado");
+            const detailDiv = document.getElementById("detalle-caso");
+            const container = document.getElementById("question-container");
+            const parentKey = findCaseParent(optionKey);
+            if (!parentKey) {
+                detailDiv.innerHTML = "Error: No se encontró la categoría para este caso.";
+                resultDiv.className = `result-box delito`;
+                resultDiv.classList.remove("hidden");
+                return;
+            }
+            currentCaseKey = optionKey;
+            container.innerHTML = "";
+            detailDiv.innerHTML = "Cargando...";
+            db.ref(`protocolo/${parentKey}/options/${optionKey}`).once('value', (snapshot) => {
+                const info = snapshot.val();
+                if (info) {
+                    let hecho = info.hecho.replace("DELITO LSV art.384 CP- ATESTADO", "DSV DELITO art.384 CP - ATESTADO");
+                    let resumen = info.resumen.replace("DELITO LSV art.384 CP- ATESTADO", "DSV DELITO art.384 CP - ATESTADO");
+                    let actuacion = info.actuacion.replace("DELITO LSV art.384 CP- ATESTADO", "DSV DELITO art.384 CP - ATESTADO");
+                    detailDiv.innerHTML = `
+                        <div><strong>Hecho:</strong> ${hecho}</div>
+                        <div><strong>Resumen:</strong> ${resumen}</div>
+                        <div><strong>Actuación:</strong> ${actuacion}</div>
+                    `;
+                    resultDiv.className = `result-box ${info.tipo}`;
+                    resultDiv.classList.remove("hidden");
+                    const editBtn = document.createElement("button");
+                    editBtn.className = "btn btn-back w-full mt-4 bg-yellow-400 text-black";
+                    editBtn.textContent = "EDITAR RESULTADO";
+                    editBtn.onclick = () => openEditModal(info);
+                    container.appendChild(editBtn);
+                } else {
+                    detailDiv.innerHTML = "No se encontraron datos para este caso. Revise su base de datos de Firebase.";
+                    resultDiv.className = `result-box ok`;
+                    resultDiv.classList.remove("hidden");
+                }
+                const backBtn = document.createElement("button");
+                backBtn.className = "btn btn-back w-full mt-4";
+                backBtn.textContent = "VOLVER ATRÁS";
+                backBtn.onclick = goBack;
+                container.appendChild(backBtn);
+            }).catch(error => {
+                detailDiv.innerHTML = "Error al cargar los datos: " + error.message;
+                resultDiv.className = `result-box delito`;
+                resultDiv.classList.remove("hidden");
+            });
+        }
+
+        function openEditModal(data) {
+            const modal = document.getElementById("edit-modal");
+            document.getElementById("edit-hecho").value = data.hecho;
+            document.getElementById("edit-resumen").value = data.resumen;
+            document.getElementById("edit-actuacion").innerHTML = data.actuacion;
+            modal.classList.remove("hidden");
+        }
+
+        document.getElementById("save-edit").onclick = () => {
+            const parentKey = findCaseParent(currentCaseKey);
+            if (!parentKey) {
+                alert("Error: No se pudo encontrar la categoría del caso.");
+                return;
+            }
+            const updatedData = {
+                hecho: document.getElementById("edit-hecho").value,
+                resumen: document.getElementById("edit-resumen").value,
+                actuacion: document.getElementById("edit-actuacion").innerHTML
+            };
+            if (currentCaseKey) {
+                db.ref(`protocolo/${parentKey}/options/${currentCaseKey}`).update(updatedData)
+                    .then(() => {
+                        console.log("Cambios guardados con éxito.");
+                        document.getElementById("edit-modal").classList.add("hidden");
+                        showResult(currentCaseKey);
+                    })
+                    .catch((error) => {
+                        console.error("Error al guardar los cambios:", error);
+                        alert("Hubo un error al guardar los cambios.");
+                    });
+            } else {
+                alert("No se pudo guardar: no hay un caso seleccionado.");
+            }
+        };
+
+        document.getElementById("cancel-edit").onclick = () => {
+            document.getElementById("edit-modal").classList.add("hidden");
+        };
+
+        document.addEventListener("DOMContentLoaded", initSupuestos);
+    </script>
+   </div>
+   <div class="navigation-buttons-row">
+    <a class="yellow-button navigation-button w-40" href="index.html">
+     Menú Principal
+    </a>
+    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
+     Atrás
+    </button>
+   </div>
+  </main>
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+   <div class="flex flex-col items-center">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
+    <p class="font-bold">
+     GRUPO DE ANÁLISIS DOCUMENTAL
+    </p>
+    <p class="font-bold">
+     POLICÍA LOCAL DE ALICANTE
+    </p>
+    <p>
+     © GAD - Todos los derechos reservados
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>

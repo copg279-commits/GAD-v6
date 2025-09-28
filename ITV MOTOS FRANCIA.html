@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Título de tu Página - GAD
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .main-header {
+            background-color: #1d4ed8; /* Color de fondo del index */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .gad-logo-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos del pie de página */
+        footer {
+            text-align: center;
+            width: 100%;
+            padding: 1.5rem 0;
+            background-color: #e5e7eb;
+        }
+        
+        /* Estilos de los botones de navegación */
+        .navigation-buttons-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+            margin-top: 0.75rem;
+            gap: 0.75rem;
+        }
+        .navigation-button {
+            padding: 0.5rem 0.5rem;
+            font-size: 1rem;
+            flex-grow: 0;
+        }
+        .yellow-button {
+            background-color: #facc15;
+            color: #333;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            text-align: center;
+        }
+        .yellow-button:hover {
+            background-color: #eab308;
+        }
+  </style>
+ </head>
+ <body class="bg-gray-100">
+  <header class="main-header">
+   <div class="gad-logo-header">
+    <img alt="Logo GAD" class="w-full h-full object-cover block" src="logogad.png"/>
+   </div>
+  </header>
+  <main>
+   <div class="p-6 bg-white rounded-lg shadow-md mt-4 w-full max-w-2xl text-center">
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4 flex items-center justify-center">
+     Calculador ITV Motos Francia
+     <div class="flag flag-francia">
+     </div>
+    </h1>
+    <div class="mt-4 p-4 bg-white shadow rounded-lg w-11/12 max-w-md mx-auto relative">
+     <p class="text-center mb-2">
+      Calcula la primera ITV de una motocicleta francesa:
+     </p>
+     <p class="text-center mb-2 font-bold">
+      Introduce fecha 1ª matriculación:
+     </p>
+     <input class="w-full p-3 text-base border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500" id="fechaMatriculacionMotoFrancia" type="date"/>
+     <button class="block mx-auto mt-4 w-full bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition" onclick="calcularItvMotosFrancia()">
+      Calcular 1ª ITV Moto Francia
+     </button>
+     <div class="mt-4 text-center font-bold result-text-container" id="resultado">
+      <p class="text-gray-500">
+       El resultado aparecerá aquí.
+      </p>
+     </div>
+    </div>
+    <script>
+     function calcularItvMotosFrancia() {
+            const inputFecha = document.getElementById('fechaMatriculacionMotoFrancia').value;
+            const resultadoDiv = document.getElementById('resultado');
+
+            if (!inputFecha) {
+                resultadoDiv.innerHTML = "<p style='color: red;'>Por favor, introduce una fecha de matriculación.</p>";
+                return;
+            }
+
+            const fechaMatriculacion = new Date(inputFecha);
+            const anioMatriculacion = fechaMatriculacion.getFullYear();
+            const fechaActual = new Date();
+            
+            let fechaLimiteItv;
+
+            if (anioMatriculacion < 2017) {
+                fechaLimiteItv = new Date('2024-12-31');
+            } else if (anioMatriculacion >= 2017 && anioMatriculacion <= 2019) {
+                fechaLimiteItv = new Date(anioMatriculacion + 8, fechaMatriculacion.getMonth(), fechaMatriculacion.getDate());
+                // Ajuste para añadir 4 meses, si la fecha original ya era después de mayo
+                if (fechaMatriculacion.getMonth() > 4) { // Si la matriculación es después de mayo (mes 4 es mayo)
+                    fechaLimiteItv.setMonth(fechaLimiteItv.getMonth() + 4);
+                } else { // Si es de enero a mayo, la primera ITV será en los 4 meses siguientes al final del año 8
+                    fechaLimiteItv = new Date(anioMatriculacion + 8, 4, 1); // 1 de mayo del 8º año
+                }
+            } else if (anioMatriculacion >= 2020 && anioMatriculacion <= 2021) {
+                fechaLimiteItv = new Date(anioMatriculacion + 6, fechaMatriculacion.getMonth(), fechaMatriculacion.getDate());
+                 // Ajuste para añadir 4 meses, si la fecha original ya era después de mayo
+                if (fechaMatriculacion.getMonth() > 4) { // Si la matriculación es después de mayo (mes 4 es mayo)
+                    fechaLimiteItv.setMonth(fechaLimiteItv.getMonth() + 4);
+                } else { // Si es de enero a mayo, la primera ITV será en los 4 meses siguientes al final del año 6
+                    fechaLimiteItv = new Date(anioMatriculacion + 6, 4, 1); // 1 de mayo del 6º año
+                }
+            } else { // a partir de 2022
+                fechaLimiteItv = new Date(anioMatriculacion + 5, fechaMatriculacion.getMonth(), fechaMatriculacion.getDate());
+            }
+            
+            // Si el día y el mes de la fecha límite superan el 31 de diciembre del año límite,
+            // se ajusta al último día de ese año.
+            if (fechaLimiteItv.getFullYear() < anioMatriculacion + 5 && anioMatriculacion >= 2022) {
+                fechaLimiteItv.setFullYear(anioMatriculacion + 5);
+                fechaLimiteItv.setMonth(11); // Diciembre
+                fechaLimiteItv.setDate(31);
+            }
+            
+            const fechaFormateada = fechaLimiteItv.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            if (fechaLimiteItv < fechaActual) {
+                resultadoDiv.innerHTML = `<p style="color: red;">ITV caducada el <span style="font-weight: bold;">${fechaFormateada}</span>.</p>`;
+            } else {
+                resultadoDiv.innerHTML = `<p>La primera ITV de la motocicleta francesa deberá pasarse antes del <span style="color: green; font-weight: bold;">${fechaFormateada}</span>.</p>`;
+            }
+        }
+        
+        // Habilitar la tecla Intro en el campo de input de fecha
+        document.getElementById("fechaMatriculacionMotoFrancia").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                calcularItvMotosFrancia();
+            }
+        });
+    </script>
+   </div>
+   <div class="navigation-buttons-row">
+    <a class="yellow-button navigation-button w-40" href="index.html">
+     Menú Principal
+    </a>
+    <button class="yellow-button navigation-button w-40" onclick="window.history.back()">
+     Atrás
+    </button>
+   </div>
+  </main>
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+   <div class="flex flex-col items-center">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4"/>
+    <p class="font-bold">
+     GRUPO DE ANÁLISIS DOCUMENTAL
+    </p>
+    <p class="font-bold">
+     POLICÍA LOCAL DE ALICANTE
+    </p>
+    <p>
+     © GAD - Todos los derechos reservados
+    </p>
+   </div>
+  </footer>
+ </body>
+</html>
