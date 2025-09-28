@@ -469,9 +469,10 @@
             link.href = 'javascript:void(0);';
             link.addEventListener('click', () => {
                 if (!isEditMode) {
-                    const blob = new Blob([buttonData.htmlCode], { type: 'text/html' });
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, '_blank');
+                    const newWindow = window.open('', '_blank');
+                    const baseTag = `<base href="${window.location.origin}${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1)}">`;
+                    newWindow.document.write(baseTag + buttonData.htmlCode);
+                    newWindow.document.close();
                 }
             });
         } else if (buttonData.href) {
