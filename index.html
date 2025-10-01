@@ -540,9 +540,9 @@
             link.href = 'javascript:void(0);';
             link.addEventListener('click', () => {
                 if (!isEditMode) {
-                    const blob = new Blob([buttonData.htmlCode], { type: 'text/html' });
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, '_blank');
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(`<!DOCTYPE html><html><head><base href='${location.origin}${location.pathname.substring(0, location.pathname.lastIndexOf('/')+1)}'><meta charset='utf-8'></head><body>${buttonData.htmlCode}</body></html>`);
+                    newWindow.document.close();
                 }
             });
         } else if (buttonData.href) {
