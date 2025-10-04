@@ -27,8 +27,8 @@
         
         /* AJUSTE DEL LOGO - Se reduce el tamaño para móvil */
         .gad-logo-header {
-            width: 100px; /* Reducción de 150px a 100px */
-            height: 100px; /* Reducción de 150px a 100px */
+            width: 100px; 
+            height: 100px; 
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -45,62 +45,54 @@
             display: block;
         }
 
-        /* Estilos para los botones de navegación */
-        .nav-buttons .button-grid {
-            /* Se mantiene el grid de 2 columnas, que es compacto */
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 8px; 
-            width: 100%; 
-        }
-        .nav-buttons .back-button {
+        /* NUEVO: Estilo para los 3 botones de navegación rápida (ajustado para móvil) */
+        .quick-nav-button {
             display: flex; 
             justify-content: center;
             align-items: center;
-            /* Se reduce el padding y el font-size ligeramente para más espacio */
-            padding: 0.75rem 1rem; 
-            font-size: 0.9rem; 
+            /* Compacto para móvil (text-xs) */
+            padding: 0.6rem 0.5rem; 
+            font-size: 0.75rem; 
             font-weight: bold;
             color: white;
             border-radius: 0.5rem;
             text-align: center;
             transition: background-color 0.15s ease;
             text-decoration: none; 
-            height: 45px; /* Altura ajustada */
+            height: 40px;
+        }
+        /* En pantallas medianas, se aumenta un poco el tamaño */
+        @media (min-width: 640px) { 
+            .quick-nav-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem; 
+                height: 45px;
+            }
         }
         
         /* Adaptación de la tabla a móvil (Display Block para evitar overflow) */
-        /* Esta técnica es útil para tablas donde el contenido no puede ocultarse */
         @media (max-width: 768px) {
             .table-responsive {
                 border: 0;
-                overflow-x: auto; /* Mantiene el scroll si es inevitable, pero se intentará evitarlo con la reestructuración */
+                overflow-x: auto; 
             }
-
-            /* Se ocultan las cabeceras en móviles */
             .table-responsive thead {
                 display: none;
             }
-
-            /* Se transforma la estructura de la fila en un bloque de lista */
             .table-responsive tr {
                 display: block;
                 margin-bottom: 0.5rem;
-                border: 1px solid #e5e7eb; /* border-gray-200 */
-                border-radius: 0.5rem; /* rounded-lg */
+                border: 1px solid #e5e7eb; 
+                border-radius: 0.5rem; 
             }
-
-            /* Se transforma la celda en un bloque con label simulado */
             .table-responsive td {
                 display: block;
-                text-align: right !important; /* Alineación del valor a la derecha */
+                text-align: right !important; 
                 padding: 0.5rem 1rem;
-                border-bottom: 1px solid #f3f4f6; /* bg-gray-100 */
+                border-bottom: 1px solid #f3f4f6; 
                 position: relative;
-                font-size: 0.875rem; /* text-sm */
+                font-size: 0.875rem; 
             }
-
-            /* Simula el label de la columna usando pseudo-elemento ::before */
             .table-responsive td::before {
                 content: attr(data-label);
                 position: absolute;
@@ -110,22 +102,18 @@
                 white-space: nowrap;
                 text-align: left;
                 font-weight: bold;
-                color: #4b5563; /* text-gray-600 */
+                color: #4b5563; 
             }
-            
-            /* Ajustes específicos para celdas */
-            .table-responsive td:nth-child(1), /* Checkbox */
-            .table-responsive td:nth-child(2), /* # */
-            .table-responsive td:nth-child(6) { /* Acción */
+            .table-responsive td:nth-child(1), 
+            .table-responsive td:nth-child(2), 
+            .table-responsive td:nth-child(6) { 
                 text-align: center !important;
-                background-color: #f3f4f6; /* Un gris claro para destacarlas */
+                background-color: #f3f4f6; 
             }
-            
             .table-responsive td:nth-child(1)::before,
             .table-responsive td:nth-child(2)::before {
-                content: ''; /* Ocultar label para Checkbox y # */
+                content: ''; 
             }
-            
             .table-responsive td:last-child {
                 border-bottom: 0;
             }
@@ -144,7 +132,7 @@
         .button-gray { background-color: #4b5563; } 
         .button-gray:hover { background-color: #374151; }
 
-        /* Estilos generales de la tabla y modales (sin cambios relevantes) */
+        /* Estilos generales de la tabla y modales */
         .table-row-even { background-color: #f9fafb; }
         .table-row-odd { background-color: #ffffff; }
         .sort-header { cursor: pointer; user-select: none; }
@@ -157,78 +145,100 @@
             justify-content: center; align-items: center; z-index: 1000; overflow-y: auto;
         }
         .modal-content {
-            background-color: white; padding: 1.5rem; /* Reducir padding */
+            background-color: white; padding: 1.5rem; 
             border-radius: 0.75rem;
-            width: 95%; /* Aumentar ancho para aprovechar la pantalla */
+            width: 95%; 
             max-width: 600px; 
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-            margin: 1rem 0; /* Reducir margen */
+            margin: 1rem 0; 
         }
 
-        /* NUEVO: Estilo para inputs de edición en línea */
+        /* Estilo para inputs de edición en línea */
         .inline-edit-input {
-            border: 1px solid #3b82f6; /* blue-500 */
+            border: 1px solid #3b82f6; 
             padding: 4px;
             border-radius: 4px;
             width: 100%;
-            font-size: 0.875rem; /* text-sm */
+            font-size: 0.875rem; 
             line-height: 1.25rem;
         }
     </style>
 </head>
 <body>
 
-    <header class="bg-blue-600 w-full flex justify-center items-center py-4"> <div class="gad-logo-header">
+    <header class="bg-blue-600 w-full flex justify-center items-center py-4"> 
+        <div class="gad-logo-header">
             <img src="logogad.png" alt="Logo GAD" class="block">
         </div>
     </header>
 
     <main>
-        <div class="flex flex-col md:flex-row justify-between items-start mb-6 space-y-4 md:space-y-0"> 
+        <div class="flex flex-col justify-start mb-6 space-y-4"> 
 
-            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 w-full md:w-auto"> Registro de Destrucción de Placas 
+            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900"> 
+                Registro de Destrucción de Placas 
                 <span class="text-lg md:text-xl font-semibold text-red-600 ml-0 mt-1 md:ml-4 md:mt-0 block md:inline">
                     (Total: <span id="plateCounter">0</span>)
                 </span>
             </h1>
-            <div class="nav-buttons flex flex-col items-end space-y-2 w-full md:w-auto"> 
-                <div class="button-grid">
-                    <button id="openNewPlateModal" class="back-button button-green">
-                        <i class="fas fa-plus-circle mr-2"></i> Nueva Placa
-                    </button>
-                    <button id="openAnuladasModal" class="back-button button-blue-light">
-                        <i class="fas fa-trash-restore mr-2"></i> Anuladas (<span id="anuladasCount">0</span>) </button>
-                </div>
-                <div class="button-grid">
-                    <a href="index.html" class="back-button button-yellow">Volver a Menú</a> <button onclick="history.back()" class="back-button button-gray">Atrás</button>
-                </div>
+
+            <div id="quickNavButtons" class="grid grid-cols-3 gap-3 w-full"> 
+                
+                <button id="openNewPlateModal" class="quick-nav-button button-green">
+                    <i class="fas fa-plus-circle hidden sm:inline mr-1"></i> Nueva Placa
+                </button>
+                
+                <button id="openAnuladasModal" class="quick-nav-button button-blue-light">
+                    <i class="fas fa-trash-restore hidden sm:inline mr-1"></i> Anuladas (<span id="anuladasCount">0</span>)
+                </button>
+                
+                <a href="index.html" class="quick-nav-button button-yellow">
+                    <i class="fas fa-home hidden sm:inline mr-1"></i> Volver Menú
+                </a>
+                
             </div>
+            
         </div>
 
-        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Generación y Consulta Rápida</h2> <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> 
+            <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Generación y Consulta Rápida</h2> 
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
                 <div class="col-span-1">
-                    <label for="lotNumber" class="block text-sm font-medium text-gray-700 mb-1">Próximo Lote</label> <input type="text" id="lotNumber" readonly 
-                            class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-gray-100 font-bold cursor-default"> </div>
+                    <label for="lotNumber" class="block text-sm font-medium text-gray-700 mb-1">Próximo Lote</label> 
+                    <input type="text" id="lotNumber" readonly 
+                            class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-gray-100 font-bold cursor-default"> 
+                </div>
                 
-                <div class="col-span-1 order-3 lg:order-2"> <button id="generateLotButton" disabled
-                            class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-md shadow-lg transition duration-150 ease-in-out hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-sm"> Generar Lote <span id="selectedCount" class="font-normal"> (0)</span>
+                <div class="col-span-1 order-3 lg:order-2"> 
+                    <button id="generateLotButton" disabled
+                            class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-md shadow-lg transition duration-150 ease-in-out hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-sm"> 
+                        Generar Lote <span id="selectedCount" class="font-normal"> (0)</span>
                     </button>
                 </div>
 
-                <div class="col-span-1 order-2 lg:order-3"> <label for="searchPlate" class="block text-sm font-medium text-gray-700 mb-1">Buscar Placa</label>
+                <div class="col-span-1 order-2 lg:order-3"> 
+                    <label for="searchPlate" class="block text-sm font-medium text-gray-700 mb-1">Buscar Placa</label>
                     <div class="relative">
                         <input type="text" id="searchPlate" placeholder="Ej: GY846WR" 
-                               class="w-full border-2 border-blue-300 rounded-xl shadow-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 px-3 py-2 text-sm font-medium uppercase transition duration-200"> <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500"></i>
+                               class="w-full border-2 border-blue-300 rounded-xl shadow-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 px-3 py-2 text-sm font-medium uppercase transition duration-200"> 
+                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500"></i>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Administración de Lotes Creados</h2> <div class="overflow-x-auto shadow-md rounded-lg">
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> 
+            <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Administración de Lotes Creados</h2> 
+            <div class="overflow-x-auto shadow-md rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-200">
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Lote</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">EUROCOP</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Total</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">FECHA DESTRUCCIÓN</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Lote</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">EUROCOP</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Total</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">FECHA DESTRUCCIÓN</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="lotAdminBody" class="divide-y divide-gray-200">
@@ -242,7 +252,8 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12"> <input type="checkbox" id="selectAllCheckbox" class="rounded text-red-600 border-gray-300">
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12"> 
+                            <input type="checkbox" id="selectAllCheckbox" class="rounded text-red-600 border-gray-300">
                         </th>
                         <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">#</th>
                         <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PAIS">
@@ -263,8 +274,10 @@
         
     </main>
 
-<footer class="mt-auto text-center py-4 bg-gray-200 text-xs"> <div class="flex flex-col items-center">
-        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-2"> <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+<footer class="mt-auto text-center py-4 bg-gray-200 text-xs"> 
+    <div class="flex flex-col items-center">
+        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-2"> 
+        <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
         <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
         <p>&copy; GAD - Todos los derechos reservados</p>
     </div>
@@ -306,7 +319,10 @@
     </div>
 
     <div id="anuladasModal" class="modal">
-        <div class="modal-content max-w-xl"> <h3 class="text-xl font-bold mb-4 text-gray-800">Placas Anuladas</h3> <div class="h-80 overflow-y-auto border border-gray-300 rounded-md p-2 bg-gray-50"> <table class="min-w-full divide-y divide-gray-200">
+        <div class="modal-content max-w-xl"> 
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Placas Anuladas</h3> 
+            <div class="h-80 overflow-y-auto border border-gray-300 rounded-md p-2 bg-gray-50"> 
+                <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-200">
                         <tr>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">País</th>
@@ -581,7 +597,7 @@
             document.querySelectorAll('.delete-icon').forEach(icon => {
                 icon.addEventListener('click', handleAnularPlate); 
             });
-            // NUEVO: Listener para el icono de edición
+            // Listener para el icono de edición
             document.querySelectorAll('.edit-icon').forEach(icon => {
                 icon.addEventListener('click', handleEditPlate);
             });
@@ -622,8 +638,10 @@
                                onchange="saveEurocopValue(this)">
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">${plateCount}</td>
-                    <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">${dateMatch ? dateMatch[1] : 'Desconocida'}</td> <td class="px-3 py-3 whitespace-nowrap text-sm font-medium flex flex-col sm:flex-row items-start sm:items-center justify-start space-y-1 sm:space-y-0 sm:space-x-2"> 
-                        <button data-lot-name="${lotName}" class="consult-lot-btn text-blue-600 hover:text-blue-700 font-bold text-xs whitespace-nowrap w-full sm:w-auto"> <i class="fas fa-search-plus"></i> Consultar
+                    <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">${dateMatch ? dateMatch[1] : 'Desconocida'}</td> 
+                    <td class="px-3 py-3 whitespace-nowrap text-sm font-medium flex flex-col sm:flex-row items-start sm:items-center justify-start space-y-1 sm:space-y-0 sm:space-x-2"> 
+                        <button data-lot-name="${lotName}" class="consult-lot-btn text-blue-600 hover:text-blue-700 font-bold text-xs whitespace-nowrap w-full sm:w-auto"> 
+                            <i class="fas fa-search-plus"></i> Consultar
                         </button>
                         <button data-lot-name="${lotName}" class="undo-lot-admin-btn text-red-600 hover:text-red-900 font-bold text-xs whitespace-nowrap w-full sm:w-auto">
                             <i class="fas fa-undo"></i> Deshacer 
@@ -642,7 +660,7 @@
             window.saveEurocopValue = saveEurocopValue; 
         }
 
-        // --- FUNCIONES DE EDICIÓN EN LÍNEA (NUEVAS) ---
+        // --- FUNCIONES DE EDICIÓN EN LÍNEA ---
         
         function handleEditPlate(event) {
             const plateId = event.currentTarget.dataset.plateId;
@@ -746,7 +764,7 @@
             loadPlates(); 
         }
 
-        // --- FUNCIONES DE ANULACIÓN Y RESTAURACIÓN (EXISTENTES) ---
+        // --- FUNCIONES DE ANULACIÓN Y RESTAURACIÓN ---
 
         function renderAnuladasModal() {
             const listBody = document.getElementById('anuladasListBody');
@@ -1050,7 +1068,7 @@
             document.body.removeChild(link);
         }
 
-        // --- LÓGICA DE MODALES (EXISTENTE) ---
+        // --- LÓGICA DE MODALES ---
         function setupModalListeners() {
             // Modal Nueva Placa
             const newPlateModal = document.getElementById('newPlateModal');
@@ -1094,7 +1112,7 @@
             });
         }
 
-        // --- INICIALIZACIÓN (EXISTENTE) ---
+        // --- INICIALIZACIÓN ---
 
         document.addEventListener('DOMContentLoaded', () => {
             loadPlates();
