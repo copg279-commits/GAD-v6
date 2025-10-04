@@ -18,16 +18,17 @@
         }
         main {
             flex: 1;
-            padding: 2rem;
+            /* Se reduce el padding en móviles y se asegura un max-width */
+            padding: 1rem; 
             max-width: 1400px;
             width: 100%;
             margin: 0 auto;
         }
         
-        /* AJUSTE DEL LOGO */
+        /* AJUSTE DEL LOGO - Se reduce el tamaño para móvil */
         .gad-logo-header {
-            width: 150px; 
-            height: 150px; 
+            width: 100px; /* Reducción de 150px a 100px */
+            height: 100px; /* Reducción de 150px a 100px */
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -46,6 +47,7 @@
 
         /* Estilos para los botones de navegación */
         .nav-buttons .button-grid {
+            /* Se mantiene el grid de 2 columnas, que es compacto */
             display: grid;
             grid-template-columns: repeat(2, 1fr); 
             gap: 8px; 
@@ -55,17 +57,80 @@
             display: flex; 
             justify-content: center;
             align-items: center;
-            padding: 1rem 1.5rem; 
-            font-size: 1rem; 
+            /* Se reduce el padding y el font-size ligeramente para más espacio */
+            padding: 0.75rem 1rem; 
+            font-size: 0.9rem; 
             font-weight: bold;
             color: white;
             border-radius: 0.5rem;
             text-align: center;
             transition: background-color 0.15s ease;
             text-decoration: none; 
-            height: 55px; 
+            height: 45px; /* Altura ajustada */
         }
+        
+        /* Adaptación de la tabla a móvil (Display Block para evitar overflow) */
+        /* Esta técnica es útil para tablas donde el contenido no puede ocultarse */
+        @media (max-width: 768px) {
+            .table-responsive {
+                border: 0;
+                overflow-x: auto; /* Mantiene el scroll si es inevitable, pero se intentará evitarlo con la reestructuración */
+            }
 
+            /* Se ocultan las cabeceras en móviles */
+            .table-responsive thead {
+                display: none;
+            }
+
+            /* Se transforma la estructura de la fila en un bloque de lista */
+            .table-responsive tr {
+                display: block;
+                margin-bottom: 0.5rem;
+                border: 1px solid #e5e7eb; /* border-gray-200 */
+                border-radius: 0.5rem; /* rounded-lg */
+            }
+
+            /* Se transforma la celda en un bloque con label simulado */
+            .table-responsive td {
+                display: block;
+                text-align: right !important; /* Alineación del valor a la derecha */
+                padding: 0.5rem 1rem;
+                border-bottom: 1px solid #f3f4f6; /* bg-gray-100 */
+                position: relative;
+                font-size: 0.875rem; /* text-sm */
+            }
+
+            /* Simula el label de la columna usando pseudo-elemento ::before */
+            .table-responsive td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 1rem;
+                width: 45%; 
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+                color: #4b5563; /* text-gray-600 */
+            }
+            
+            /* Ajustes específicos para celdas */
+            .table-responsive td:nth-child(1), /* Checkbox */
+            .table-responsive td:nth-child(2), /* # */
+            .table-responsive td:nth-child(6) { /* Acción */
+                text-align: center !important;
+                background-color: #f3f4f6; /* Un gris claro para destacarlas */
+            }
+            
+            .table-responsive td:nth-child(1)::before,
+            .table-responsive td:nth-child(2)::before {
+                content: ''; /* Ocultar label para Checkbox y # */
+            }
+            
+            .table-responsive td:last-child {
+                border-bottom: 0;
+            }
+        }
+        
         /* Colores específicos para los botones */
         .button-green { background-color: #22c55e; } 
         .button-green:hover { background-color: #16a34a; }
@@ -92,9 +157,12 @@
             justify-content: center; align-items: center; z-index: 1000; overflow-y: auto;
         }
         .modal-content {
-            background-color: white; padding: 2rem; border-radius: 0.75rem;
-            width: 90%; max-width: 600px; box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-            margin: 2rem 0;
+            background-color: white; padding: 1.5rem; /* Reducir padding */
+            border-radius: 0.75rem;
+            width: 95%; /* Aumentar ancho para aprovechar la pantalla */
+            max-width: 600px; 
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0; /* Reducir margen */
         }
 
         /* NUEVO: Estilo para inputs de edición en línea */
@@ -110,74 +178,57 @@
 </head>
 <body>
 
-    <header class="bg-blue-600 w-full flex justify-center items-center py-6">
-        <div class="gad-logo-header">
+    <header class="bg-blue-600 w-full flex justify-center items-center py-4"> <div class="gad-logo-header">
             <img src="logogad.png" alt="Logo GAD" class="block">
         </div>
     </header>
 
     <main>
-        <div class="flex justify-between items-start mb-6"> 
+        <div class="flex flex-col md:flex-row justify-between items-start mb-6 space-y-4 md:space-y-0"> 
 
-            <h1 class="text-3xl font-extrabold text-gray-900">
-                Registro de Destrucción de Placas 
-                <span class="text-xl font-semibold text-red-600 ml-4">(Total: <span id="plateCounter">0</span>)</span>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 w-full md:w-auto"> Registro de Destrucción de Placas 
+                <span class="text-lg md:text-xl font-semibold text-red-600 ml-0 mt-1 md:ml-4 md:mt-0 block md:inline">
+                    (Total: <span id="plateCounter">0</span>)
+                </span>
             </h1>
-            <div class="nav-buttons flex flex-col items-end space-y-2"> 
-
+            <div class="nav-buttons flex flex-col items-end space-y-2 w-full md:w-auto"> 
                 <div class="button-grid">
                     <button id="openNewPlateModal" class="back-button button-green">
                         <i class="fas fa-plus-circle mr-2"></i> Nueva Placa
                     </button>
                     <button id="openAnuladasModal" class="back-button button-blue-light">
-                        <i class="fas fa-trash-restore mr-2"></i> Placas Anuladas (<span id="anuladasCount">0</span>)
-                    </button>
+                        <i class="fas fa-trash-restore mr-2"></i> Anuladas (<span id="anuladasCount">0</span>) </button>
                 </div>
                 <div class="button-grid">
-                    <a href="index.html" class="back-button button-yellow">Volver a Menú Principal</a>
-                    <button onclick="history.back()" class="back-button button-gray">Atrás</button>
+                    <a href="index.html" class="back-button button-yellow">Volver a Menú</a> <button onclick="history.back()" class="back-button button-gray">Atrás</button>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-xl mb-8 border border-gray-200">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">Generación y Consulta Rápida</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Generación y Consulta Rápida</h2> <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
                 <div class="col-span-1">
-                    <label for="lotNumber" class="block text-sm font-medium text-gray-700 mb-1">Próximo Lote a Generar</label>
-                    <input type="text" id="lotNumber" readonly 
-                            class="w-full border-gray-300 rounded-md shadow-sm p-2.5 text-base bg-gray-100 font-bold cursor-default">
-                </div>
+                    <label for="lotNumber" class="block text-sm font-medium text-gray-700 mb-1">Próximo Lote</label> <input type="text" id="lotNumber" readonly 
+                            class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-gray-100 font-bold cursor-default"> </div>
                 
-                <div class="col-span-1">
-                    <button id="generateLotButton" disabled
-                            class="w-full px-6 py-2.5 bg-red-600 text-white font-bold rounded-md shadow-lg transition duration-150 ease-in-out hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-base">
-                        Generar Lote <span id="selectedCount" class="font-normal"> (0)</span>
+                <div class="col-span-1 order-3 lg:order-2"> <button id="generateLotButton" disabled
+                            class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-md shadow-lg transition duration-150 ease-in-out hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-sm"> Generar Lote <span id="selectedCount" class="font-normal"> (0)</span>
                     </button>
                 </div>
 
-                <div class="col-span-1">
-                    <label for="searchPlate" class="block text-sm font-medium text-gray-700 mb-1">Buscar Placa</label>
+                <div class="col-span-1 order-2 lg:order-3"> <label for="searchPlate" class="block text-sm font-medium text-gray-700 mb-1">Buscar Placa</label>
                     <div class="relative">
                         <input type="text" id="searchPlate" placeholder="Ej: GY846WR" 
-                               class="w-full border-2 border-blue-300 rounded-xl shadow-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 px-3 py-2.5 text-base font-medium uppercase transition duration-200">
-                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500"></i>
+                               class="w-full border-2 border-blue-300 rounded-xl shadow-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 px-3 py-2 text-sm font-medium uppercase transition duration-200"> <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500"></i>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="bg-white p-6 rounded-lg shadow-xl mb-8 border border-gray-200">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">Administración de Lotes Creados</h2>
-            <div class="overflow-x-auto shadow-md rounded-lg">
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Administración de Lotes Creados</h2> <div class="overflow-x-auto shadow-md rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-200">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Lote</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">EUROCOP Nº</th> 
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Total de Placas</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">FECHA DE DESTRUCCIÓN</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Lote</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">EUROCOP</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Total</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">FECHA DESTRUCCIÓN</th> <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="lotAdminBody" class="divide-y divide-gray-200">
@@ -187,22 +238,21 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+        <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200 table-responsive">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
-                            <input type="checkbox" id="selectAllCheckbox" class="rounded text-red-600 border-gray-300">
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12"> <input type="checkbox" id="selectAllCheckbox" class="rounded text-red-600 border-gray-300">
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">#</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PAIS">
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">#</th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PAIS">
                             País <span class="sort-icon" id="sortIconPAIS"></span>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12 sort-header" data-sort-by="PLACA">
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12 sort-header" data-sort-by="PLACA">
                             Placa <span class="sort-icon" id="sortIconPLACA"></span>
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12">Estado / Lote</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Acción</th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12">Estado / Lote</th>
+                        <th scope="col" class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Acción</th>
                     </tr>
                 </thead>
                 <tbody id="platesTableBody" class="divide-y divide-gray-200">
@@ -213,10 +263,8 @@
         
     </main>
 
-<footer class="mt-auto text-center py-6 bg-gray-200">
-    <div class="flex flex-col items-center">
-        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
-        <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+<footer class="mt-auto text-center py-4 bg-gray-200 text-xs"> <div class="flex flex-col items-center">
+        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-2"> <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
         <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
         <p>&copy; GAD - Todos los derechos reservados</p>
     </div>
@@ -224,7 +272,7 @@
 
     <div id="newPlateModal" class="modal">
         <div class="modal-content">
-            <h3 class="text-2xl font-bold mb-4 text-gray-800">Añadir Nueva Placa</h3>
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Añadir Nueva Placa</h3>
             <div class="space-y-4">
                 <div>
                     <label for="newPlateCountry" class="block text-sm font-medium text-gray-700">País</label>
@@ -236,8 +284,8 @@
                     <input type="text" id="newPlateNumber" class="mt-1 w-full border-gray-300 rounded-md shadow-sm p-2.5 focus:border-blue-500 uppercase" placeholder="Ej: WX123YZ" required>
                 </div>
                 <div class="flex justify-end space-x-3 mt-6">
-                    <button id="closeNewPlateModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition">Cancelar</button>
-                    <button id="saveNewPlateButton" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"><i class="fas fa-save"></i> Guardar Placa</button>
+                    <button id="closeNewPlateModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition text-sm">Cancelar</button>
+                    <button id="saveNewPlateButton" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm"><i class="fas fa-save"></i> Guardar</button>
                 </div>
             </div>
         </div>
@@ -245,28 +293,25 @@
 
     <div id="consultLotModal" class="modal">
         <div class="modal-content">
-            <h3 id="consultLotTitle" class="text-2xl font-bold mb-4 text-gray-800">Placas del Lote</h3>
-            <div class="h-64 overflow-y-auto border border-gray-300 rounded-md p-4 bg-gray-50">
+            <h3 id="consultLotTitle" class="text-xl font-bold mb-4 text-gray-800">Placas del Lote</h3>
+            <div class="h-64 overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50">
                 <ul id="consultLotList" class="space-y-1 text-gray-700">
                     </ul>
             </div>
             <div class="flex justify-between mt-6">
-                <button id="exportLotToExcelButton" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
-                <button id="closeConsultLotModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition">Cerrar</button>
+                <button id="exportLotToExcelButton" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm"><i class="fas fa-file-excel"></i> Exportar</button>
+                <button id="closeConsultLotModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition text-sm">Cerrar</button>
             </div>
         </div>
     </div>
 
     <div id="anuladasModal" class="modal">
-        <div class="modal-content max-w-2xl">
-            <h3 class="text-2xl font-bold mb-4 text-gray-800">Placas Anuladas para Restauración</h3>
-            <div class="h-96 overflow-y-auto border border-gray-300 rounded-md p-4 bg-gray-50">
-                <table class="min-w-full divide-y divide-gray-200">
+        <div class="modal-content max-w-xl"> <h3 class="text-xl font-bold mb-4 text-gray-800">Placas Anuladas</h3> <div class="h-80 overflow-y-auto border border-gray-300 rounded-md p-2 bg-gray-50"> <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-200">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">País</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">Placa</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Acción</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">País</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">Placa</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="anuladasListBody" class="divide-y divide-gray-200">
@@ -275,7 +320,7 @@
                 </table>
             </div>
             <div class="flex justify-end mt-6">
-                <button id="closeAnuladasModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition">Cerrar</button>
+                <button id="closeAnuladasModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition text-sm">Cerrar</button>
             </div>
         </div>
     </div>
@@ -511,18 +556,18 @@
                     row.classList.add('bg-green-100', 'hover:bg-green-200');
                 }
 
-                // CAMBIO CLAVE: Añadimos IDs únicos a las celdas y el icono de edición.
+                // ADAPTACIÓN CLAVE: Se añaden los atributos data-label a las celdas
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td data-label="Seleccionar" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <input type="checkbox" data-plate-id="${key}" ${isDestroyed ? 'disabled' : ''} class="plate-checkbox rounded text-red-600 border-gray-300">
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${totalPlates - i}</td> 
-                    <td id="pais-${key}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">${placa.PAIS || ''}</td>
-                    <td id="placa-${key}" class="px-6 py-4 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${isDestroyed ? 'text-green-700' : 'text-gray-400'}">
+                    <td data-label="#" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${totalPlates - i}</td> 
+                    <td id="pais-${key}" data-label="País" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">${placa.PAIS || ''}</td>
+                    <td id="placa-${key}" data-label="Placa" class="px-6 py-4 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
+                    <td data-label="Estado / Lote" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${isDestroyed ? 'text-green-700' : 'text-gray-400'}">
                         ${isDestroyed ? `<i class="fas fa-check-circle"></i> ${placa.LoteDestruccion}` : 'PENDIENTE'}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium flex justify-center items-center space-x-3">
+                    <td data-label="Acción" class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium flex justify-center items-center space-x-3">
                         ${isDestroyed ? '' : `<i class="fas fa-edit edit-icon text-blue-600 hover:text-blue-800 cursor-pointer" data-plate-id="${key}" title="Editar País/Placa"></i>`}
                         <i class="fas fa-times-circle delete-icon" data-plate-id="${key}" title="Anular placa y mover a sección 'Anuladas'"></i>
                     </td>
@@ -570,20 +615,18 @@
                 const eurocopValue = lotEurocopData[lotNumberOnly] || ''; 
 
                 row.innerHTML = `
-                    <td class="px-6 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${lotNumberOnly}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${lotNumberOnly}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                         <input type="text" value="${eurocopValue}" data-lot-number="${lotNumberOnly}" placeholder="Nº EUROCOP"
                                class="eurocop-input w-full border border-gray-300 rounded-md p-1 text-xs" 
                                onchange="saveEurocopValue(this)">
                     </td>
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${plateCount}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${dateMatch ? dateMatch[1] : 'Desconocida'}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium flex items-center justify-between"> 
-                        <button data-lot-name="${lotName}" class="consult-lot-btn text-blue-600 hover:text-blue-700 font-bold text-sm whitespace-nowrap">
-                            <i class="fas fa-search-plus"></i> Consultar Lote
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">${plateCount}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">${dateMatch ? dateMatch[1] : 'Desconocida'}</td> <td class="px-3 py-3 whitespace-nowrap text-sm font-medium flex flex-col sm:flex-row items-start sm:items-center justify-start space-y-1 sm:space-y-0 sm:space-x-2"> 
+                        <button data-lot-name="${lotName}" class="consult-lot-btn text-blue-600 hover:text-blue-700 font-bold text-xs whitespace-nowrap w-full sm:w-auto"> <i class="fas fa-search-plus"></i> Consultar
                         </button>
-                        <button data-lot-name="${lotName}" class="undo-lot-admin-btn text-red-600 hover:text-red-900 font-bold text-sm whitespace-nowrap">
-                            <i class="fas fa-undo"></i> Deshacer Lote 
+                        <button data-lot-name="${lotName}" class="undo-lot-admin-btn text-red-600 hover:text-red-900 font-bold text-xs whitespace-nowrap w-full sm:w-auto">
+                            <i class="fas fa-undo"></i> Deshacer 
                         </button>
                     </td>
                 `;
@@ -626,12 +669,16 @@
                 <input type="text" id="edit-pais-${plateId}" list="countryDatalist" value="${plateData.PAIS || ''}" 
                        class="inline-edit-input uppercase text-sm font-bold text-gray-700">
             `;
+            // Asegurar que el label simulado para móvil siga funcionando
+            paisCell.setAttribute('data-label', 'País (Editando)');
             
             // 3. Reemplazar Placa con input
             placaCell.innerHTML = `
                 <input type="text" id="edit-placa-${plateId}" value="${plateData.PLACA || ''}" 
                        class="inline-edit-input uppercase text-base font-bold text-red-700">
             `;
+            // Asegurar que el label simulado para móvil siga funcionando
+            placaCell.setAttribute('data-label', 'Placa (Editando)');
             
             // 4. Cambiar iconos (Edit -> Save, Delete -> Cancel)
             actionCell.innerHTML = `
@@ -715,13 +762,13 @@
                 row.classList.add(i % 2 === 0 ? 'bg-gray-50' : 'bg-white', 'hover:bg-yellow-50');
                 
                 row.innerHTML = `
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-bold">${placa.PAIS || ''}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-center text-sm font-medium">
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-bold">${placa.PAIS || ''}</td>
+                    <td class="px-3 py-2 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
+                    <td class="px-3 py-2 whitespace-nowrap text-center text-sm font-medium">
                         <button data-plate-id="${placa.id}" 
                                 data-plate-pais="${placa.PAIS}"
                                 data-plate-number="${placa.PLACA}"
-                                class="restore-plate-btn text-green-600 hover:text-green-800 font-semibold transition">
+                                class="restore-plate-btn text-green-600 hover:text-green-800 font-semibold transition text-xs">
                             <i class="fas fa-reply"></i> Restaurar
                         </button>
                     </td>
@@ -955,7 +1002,7 @@
                 
                 platesInLot.forEach(placa => {
                     const li = document.createElement('li');
-                    li.classList.add('flex', 'justify-between', 'py-1', 'border-b', 'border-gray-200');
+                    li.classList.add('flex', 'justify-between', 'py-1', 'border-b', 'border-gray-200', 'text-sm');
                     li.innerHTML = `
                         <span class="font-bold text-red-700">${placa.PLACA}</span>
                         <span class="text-gray-500 font-bold">${placa.PAIS}</span> 
@@ -963,7 +1010,7 @@
                     plateListUl.appendChild(li);
                 });
             } else {
-                plateListUl.innerHTML = '<li class="text-center py-4 text-gray-500">No se encontraron placas en este lote.</td></tr>';
+                plateListUl.innerHTML = '<li class="text-center py-4 text-gray-500 text-sm">No se encontraron placas en este lote.</td></tr>';
             }
             
             document.getElementById('exportLotToExcelButton').onclick = () => {
