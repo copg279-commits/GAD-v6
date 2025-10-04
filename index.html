@@ -62,15 +62,61 @@
         .counters-row { 
             display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; flex-wrap: wrap; 
         }
-        /* MODIFICACIÓN: Ajuste de estilos para los contadores */
+        /* MEJORA: Estilos modernizados para los contadores */
         .counter-item { 
             display: flex; flex-direction: column; align-items: center; 
-            background-color: #d1d5db; padding: 5px 8px; border-radius: 0.375rem; 
-            font-weight: 500; color: #1f2937; text-align: center; min-width: 6rem; 
-            height: 80px; justify-content: space-between;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 12px 10px; 
+            border-radius: 12px; 
+            font-weight: 500; 
+            color: white; 
+            text-align: center; 
+            min-width: 7rem; 
+            height: 100px; 
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
         }
-        .counter-label { font-size: 0.75rem; white-space: nowrap; }
-        .counter-value { font-size: 1rem; font-weight: 700; }
+        .counter-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .counter-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .counter-label { 
+            font-size: 0.75rem; 
+            white-space: nowrap; 
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .counter-value { 
+            font-size: 1.2rem; 
+            font-weight: 700; 
+            margin: 5px 0;
+        }
+        .counter-total {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+        }
+        .counter-total .counter-label {
+            font-size: 0.85rem;
+        }
+        .counter-total .counter-value {
+            font-size: 1.5rem;
+        }
+        .counter-last-access {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
         .btn-logout, .btn-admin { padding: 0.25rem 0.75rem; font-size: 0.875rem; border: none; border-radius: 0.375rem; color: white; cursor: pointer; transition: background-color 0.3s; white-space: nowrap; }
         .btn-logout { background-color: #ef4444; }
         .btn-logout:hover { background-color: #dc2626; }
@@ -212,6 +258,26 @@
         #full-log-modal .modal table tbody tr:nth-child(even) { background-color: #1a1a2e; }
         #full-log-modal .modal table tbody tr:hover { background-color: #3e3e58; }
         
+        /* MEJORA: Estilos para el área de arrastrar y soltar en modo edición */
+        .edit-drop-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            color: #667eea;
+            background-color: rgba(102, 126, 234, 0.05);
+            margin-top: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .edit-drop-area.hover {
+            background-color: rgba(102, 126, 234, 0.2);
+            border-color: #5a67d8;
+        }
+        .edit-drop-area p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -286,7 +352,12 @@
             <input type="text" id="edit-button-text" placeholder="Texto del botón" />
             <div id="edit-link-fields">
                 <input type="text" id="edit-button-href" placeholder="Enlace (ej: vehiculos.html)" />
-                <textarea id="edit-button-html-code" rows="5" placeholder="Código HTML"></textarea>
+                <!-- MEJORA: Área de arrastrar y soltar para HTML en modo edición -->
+                <div class="edit-drop-area" id="edit-drop-area">
+                    <p>Arrastra un archivo HTML aquí o haz clic para seleccionar</p>
+                    <input type="file" id="edit-html-file-input" accept=".html" style="display: none;">
+                    <textarea id="edit-button-html-code" rows="5" placeholder="Código HTML"></textarea>
+                </div>
             </div>
             <div class="flex flex-col gap-4 mt-4">
                 <p>Elige el tamaño del botón:</p>
@@ -404,6 +475,11 @@
     const newButtonHtmlCodeTextarea = document.getElementById('new-button-html-code');
     const newLinkFields = document.getElementById('new-link-fields');
     
+    // MEJORA: Nuevos selectores para el área de arrastrar y soltar en modo edición
+    const editDropArea = document.getElementById('edit-drop-area');
+    const editHtmlFileInput = document.getElementById('edit-html-file-input');
+    const editButtonHtmlCodeTextarea = document.getElementById('edit-button-html-code');
+    
     let currentUser = null;
     let isEditMode = false;
     let menuButtonsData = {};
@@ -455,6 +531,63 @@
             }
         }
     });
+
+    // MEJORA: Lógica de arrastrar y soltar para el modal de edición
+    if (editDropArea) {
+        // Eventos para el área de arrastrar y soltar
+        editDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editDropArea.classList.add('hover');
+        });
+
+        editDropArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!editDropArea.contains(e.relatedTarget)) {
+                editDropArea.classList.remove('hover');
+            }
+        });
+
+        editDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editDropArea.classList.remove('hover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.html')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        editButtonHtmlCodeTextarea.value = event.target.result;
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Por favor, arrastra un archivo con extensión .html');
+                }
+            }
+        });
+
+        // Evento para hacer clic en el área y abrir el selector de archivos
+        editDropArea.addEventListener('click', () => {
+            editHtmlFileInput.click();
+        });
+
+        // Evento para cuando se selecciona un archivo
+        editHtmlFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.name.endsWith('.html')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    editButtonHtmlCodeTextarea.value = event.target.result;
+                };
+                reader.readAsText(file);
+            } else if (file) {
+                alert('Por favor, selecciona un archivo con extensión .html');
+            }
+        });
+    }
 
     // --- LÓGICA DE MENÚ DINÁMICO ---
     function renderMenuButtons() {
@@ -536,16 +669,23 @@
                     renderMenuButtons();
                 }
             });
-        } else if (buttonData.htmlCode) {
-            link.href = 'javascript:void(0);';
-            link.addEventListener('click', () => {
-                if (!isEditMode) {
-                    const newWindow = window.open('', '_blank');
-                    newWindow.document.write(`<!DOCTYPE html><html><head><base href='${location.origin}${location.pathname.substring(0, location.pathname.lastIndexOf('/')+1)}'><meta charset='utf-8'></head><body>${buttonData.htmlCode}</body></html>`);
-                    newWindow.document.close();
-                }
-            });
-        } else if (buttonData.href) {
+} else if (buttonData.htmlCode) {
+    link.href = 'javascript:void(0);';
+    link.addEventListener('click', () => {
+        if (!isEditMode) {
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.open();
+                newWindow.document.write(buttonData.htmlCode);
+                newWindow.document.close();
+            } else {
+                alert("El navegador ha bloqueado la ventana emergente. Permite pop-ups para esta página.");
+            }
+        }
+    });
+}
+
+        else if (buttonData.href) {
             link.href = isEditMode ? 'javascript:void(0);' : buttonData.href;
             if (!isEditMode) link.target = "_blank";
         }
@@ -1266,7 +1406,7 @@
                     <div class="counter-item" style="height: auto; justify-content: space-between; padding: 5px; min-height: 80px; width: 100px;">
                         <div class="counter-label" style="font-weight: 700; color: #1f2937; font-size: 0.85rem; width: 100%;">${user.nombre}</div>
                         <div class="counter-value" style="font-size: 1.1rem; font-weight: 700;">Visitas: ${visits}</div>
-                        <div style="font-size:0.65rem; color:#4b5563; margin-top:5px; text-align: center; width: 100%;">Último acceso: ${lastAccessText}</div>
+<div class="counter-last-access">Último acceso: ${lastAccessText}</div>
                         <button 
                             onclick="openUserVisitHistory('${user.key}', '${user.nombre}')" 
                             style="padding: 2px 5px; font-size: 0.7rem; background-color: #667eea; color: white; border-radius: 3px; cursor: pointer; border: none; width: 100%; margin-top: 3px;">
@@ -1279,13 +1419,15 @@
             // Contador total de visitas
             const totalVisitsCount = Object.values(users).reduce((acc, user) => acc + (user.accesos || 0), 0);
 
-            const totalCounterHtml = `
-                <div class="counter-item" style="background-color: #3b82f6; color: white; height: 80px; justify-content: space-around;">
-                    <div class="counter-label" style="font-size: 0.85rem; font-weight: 700;">TOTAL VISITAS</div>
-                    <div class="counter-value" style="font-size: 1.2rem;">${totalVisitsCount}</div>
-                    <div style="font-size:0.65rem; color: #bfdbfe; margin-top:2px;">(De ${Object.keys(users).length} usuarios)</div>
-                </div>
-            `;
+const totalCounterHtml = `
+    <div class="counter-item counter-total" style="background-color: #60a5fa; color: white; min-height: 80px; width: 100px; justify-content: space-between; padding: 5px;">
+        <div class="counter-label">TOTAL VISITAS</div>
+        <div class="counter-value">${totalVisitsCount}</div>
+        <div class="counter-last-access">(De ${Object.keys(users).length} usuarios)</div>
+    </div>
+`;
+
+
             
             // Mostrar el total y todos los usuarios
             countersRow.innerHTML = totalCounterHtml + countersHtml.join('');
