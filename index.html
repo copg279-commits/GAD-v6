@@ -62,61 +62,114 @@
         .counters-row { 
             display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; flex-wrap: wrap; 
         }
-        /* MEJORA: Estilos modernizados para los contadores */
-        .counter-item { 
-            display: flex; flex-direction: column; align-items: center; 
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 12px 10px; 
-            border-radius: 12px; 
-            font-weight: 500; 
-            color: white; 
-            text-align: center; 
-            min-width: 7rem; 
-            height: 100px; 
-            justify-content: space-between;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .counter-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        .counter-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-        }
-        .counter-label { 
-            font-size: 0.75rem; 
-            white-space: nowrap; 
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        .counter-value { 
-            font-size: 1.2rem; 
-            font-weight: 700; 
-            margin: 5px 0;
-        }
-        .counter-total {
-            background: linear-gradient(135deg, #3b82f6, #1e40af);
-        }
-        .counter-total .counter-label {
-            font-size: 0.85rem;
-        }
-        .counter-total .counter-value {
-            font-size: 1.5rem;
-        }
-        .counter-last-access {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 5px;
-        }
+/* ESTILOS MEJORADOS PARA LOS CONTADORES - MÁS DISCRETOS Y UNIFORMES */
+.counters-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+/* Contenedor principal para todos los contadores */
+.counters-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 800px;
+}
+
+/* Estilo uniforme para todos los contadores */
+.counter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, #4b5563, #6b7280);
+    padding: 8px 6px;
+    border-radius: 8px;
+    font-weight: 500;
+    color: white;
+    text-align: center;
+    width: 110px;
+    min-height: 85px;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.counter-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.counter-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.counter-label {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    font-weight: 600;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.counter-value {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 3px 0;
+}
+
+.counter-last-access {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 2px;
+    line-height: 1.1;
+}
+
+/* Contador total con estilo diferenciado pero del mismo tamaño */
+.counter-total {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+}
+
+.counter-total .counter-label {
+    font-size: 0.75rem;
+}
+
+.counter-total .counter-value {
+    font-size: 1.1rem;
+}
+
+/* Botón de historial más discreto */
+.counter-item button {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+    background-color: rgba(102, 126, 234, 0.8);
+    color: white;
+    border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    margin-top: 4px;
+    transition: background-color 0.2s;
+}
+
+.counter-item button:hover {
+    background-color: rgba(102, 126, 234, 1);
+}
         .btn-logout, .btn-admin { padding: 0.25rem 0.75rem; font-size: 0.875rem; border: none; border-radius: 0.375rem; color: white; cursor: pointer; transition: background-color 0.3s; white-space: nowrap; }
         .btn-logout { background-color: #ef4444; }
         .btn-logout:hover { background-color: #dc2626; }
@@ -1374,64 +1427,63 @@
             });
         }
         
-        // MODIFICACIÓN: Función para renderizar TODOS los usuarios con sus visitas (Punto 1 y 2)
-        function renderAdminCounters(users) {
-            
-            // Ordenar todos los usuarios por nombre para un listado coherente
-            let sortedUsers = Object.entries(users)
-                .map(([key, user]) => ({
-                    key,
-                    ...user
-                }))
-                .sort((a, b) => a.nombre.localeCompare(b.nombre)); // Ordenar por nombre
+// MODIFICACIÓN: Función para renderizar TODOS los usuarios con sus visitas
+function renderAdminCounters(users) {
+    // Ordenar todos los usuarios por nombre para un listado coherente
+    let sortedUsers = Object.entries(users)
+        .map(([key, user]) => ({
+            key,
+            ...user
+        }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre)); // Ordenar por nombre
 
-            const countersHtml = [];
-            // YA NO SE MUESTRA SOLO slice(0, 4)
+    const countersHtml = [];
 
-            sortedUsers.forEach(user => {
-                const visits = user.accesos || 0;
-                
-                const lastAccessTimestamp = user.ultimoAcceso;
-                let lastAccessText = 'Nunca';
-                if (lastAccessTimestamp) {
-                    const date = new Date(lastAccessTimestamp);
-                    lastAccessText = date.toLocaleString('es-ES', { 
-                        day: '2-digit', month: '2-digit', year: 'numeric', 
-                        hour: '2-digit', minute: '2-digit' 
-                    });
-                }
-
-                // NUEVO HTML para mostrar visitas debajo (Punto 2)
-                countersHtml.push(`
-                    <div class="counter-item" style="height: auto; justify-content: space-between; padding: 5px; min-height: 80px; width: 100px;">
-                        <div class="counter-label" style="font-weight: 700; color: #1f2937; font-size: 0.85rem; width: 100%;">${user.nombre}</div>
-                        <div class="counter-value" style="font-size: 1.1rem; font-weight: 700;">Visitas: ${visits}</div>
-<div class="counter-last-access">Último acceso: ${lastAccessText}</div>
-                        <button 
-                            onclick="openUserVisitHistory('${user.key}', '${user.nombre}')" 
-                            style="padding: 2px 5px; font-size: 0.7rem; background-color: #667eea; color: white; border-radius: 3px; cursor: pointer; border: none; width: 100%; margin-top: 3px;">
-                            Ver Historial
-                        </button>
-                    </div>
-                `);
+    sortedUsers.forEach(user => {
+        const visits = user.accesos || 0;
+        
+        const lastAccessTimestamp = user.ultimoAcceso;
+        let lastAccessText = 'Nunca';
+        if (lastAccessTimestamp) {
+            const date = new Date(lastAccessTimestamp);
+            lastAccessText = date.toLocaleString('es-ES', { 
+                day: '2-digit', month: '2-digit', 
+                hour: '2-digit', minute: '2-digit' 
             });
-
-            // Contador total de visitas
-            const totalVisitsCount = Object.values(users).reduce((acc, user) => acc + (user.accesos || 0), 0);
-
-const totalCounterHtml = `
-    <div class="counter-item counter-total" style="background-color: #60a5fa; color: white; min-height: 80px; width: 100px; justify-content: space-between; padding: 5px;">
-        <div class="counter-label">TOTAL VISITAS</div>
-        <div class="counter-value">${totalVisitsCount}</div>
-        <div class="counter-last-access">(De ${Object.keys(users).length} usuarios)</div>
-    </div>
-`;
-
-
-            
-            // Mostrar el total y todos los usuarios
-            countersRow.innerHTML = totalCounterHtml + countersHtml.join('');
         }
+
+        // HTML uniforme para todos los contadores
+        countersHtml.push(`
+            <div class="counter-item">
+                <div class="counter-label">${user.nombre}</div>
+                <div class="counter-value">${visits}</div>
+                <div class="counter-last-access">${lastAccessText}</div>
+                <button onclick="openUserVisitHistory('${user.key}', '${user.nombre}')">
+                    Ver Historial
+                </button>
+            </div>
+        `);
+    });
+
+    // Contador total de visitas (mismo tamaño que los demás)
+    const totalVisitsCount = Object.values(users).reduce((acc, user) => acc + (user.accesos || 0), 0);
+
+    const totalCounterHtml = `
+        <div class="counter-item counter-total">
+            <div class="counter-label">TOTAL VISITAS</div>
+            <div class="counter-value">${totalVisitsCount}</div>
+            <div class="counter-last-access">${Object.keys(users).length} usuarios</div>
+        </div>
+    `;
+    
+    // Mostrar el total y todos los usuarios en un contenedor uniforme
+    countersRow.innerHTML = `
+        <div class="counters-container">
+            ${totalCounterHtml}
+            ${countersHtml.join('')}
+        </div>
+    `;
+}
 
         // ***************************************************************
         // *** LÓGICA DE MODIFICAR PIN ***
