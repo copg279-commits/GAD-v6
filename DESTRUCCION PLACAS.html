@@ -18,17 +18,15 @@
         }
         main {
             flex: 1;
-            /* Se reduce el padding en móviles y se asegura un max-width */
             padding: 1rem; 
             max-width: 1400px;
             width: 100%;
             margin: 0 auto;
         }
         
-        /* AJUSTE DEL LOGO - TAMAÑO ORIGINAL RESTAURADO */
         .gad-logo-header {
-            width: 150px; /* RESTAURADO A 150px */
-            height: 150px; /* RESTAURADO A 150px */
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -45,12 +43,10 @@
             display: block;
         }
 
-        /* NUEVO: Estilo para los 3 botones de navegación rápida (ajustado para móvil) */
         .quick-nav-button {
             display: flex; 
             justify-content: center;
             align-items: center;
-            /* Compacto para móvil (text-xs) */
             padding: 0.6rem 0.5rem; 
             font-size: 0.75rem; 
             font-weight: bold;
@@ -61,7 +57,6 @@
             text-decoration: none; 
             height: 40px;
         }
-        /* En pantallas medianas, se aumenta un poco el tamaño */
         @media (min-width: 640px) { 
             .quick-nav-button {
                 padding: 0.75rem 1rem;
@@ -70,7 +65,6 @@
             }
         }
         
-        /* Adaptación de la tabla a móvil (Display Block para evitar overflow) */
         @media (max-width: 768px) {
             .table-responsive {
                 border: 0;
@@ -106,7 +100,7 @@
             }
             .table-responsive td:nth-child(1), 
             .table-responsive td:nth-child(2), 
-            .table-responsive td:nth-child(6) { 
+            .table-responsive td:nth-child(7) { 
                 text-align: center !important;
                 background-color: #f3f4f6; 
             }
@@ -119,7 +113,6 @@
             }
         }
         
-        /* Colores específicos para los botones */
         .button-green { background-color: #22c55e; } 
         .button-green:hover { background-color: #16a34a; }
         
@@ -132,7 +125,6 @@
         .button-gray { background-color: #4b5563; } 
         .button-gray:hover { background-color: #374151; }
 
-        /* Estilos generales de la tabla y modales */
         .table-row-even { background-color: #f9fafb; }
         .table-row-odd { background-color: #ffffff; }
         .sort-header { cursor: pointer; user-select: none; }
@@ -153,7 +145,6 @@
             margin: 1rem 0; 
         }
 
-        /* Estilo para inputs de edición en línea */
         .inline-edit-input {
             border: 1px solid #3b82f6; 
             padding: 4px;
@@ -161,6 +152,16 @@
             width: 100%;
             font-size: 0.875rem; 
             line-height: 1.25rem;
+        }
+        
+        .permanent-delete-icon { 
+            color: #ef4444; 
+            cursor: pointer; 
+            transition: color 0.15s; 
+            margin-left: 8px;
+        }
+        .permanent-delete-icon:hover { 
+            color: #b91c1c; 
         }
     </style>
 </head>
@@ -189,7 +190,7 @@
                 </button>
                 
                 <button id="openAnuladasModal" class="quick-nav-button button-blue-light">
-                    <i class="fas fa-trash-restore hidden sm:inline mr-1"></i> Anuladas (<span id="anuladasCount">0</span>)
+                    <i class="fas fa-trash-restore hidden sm:inline mr-1"></i> Devolución (<span id="anuladasCount">0</span>)
                 </button>
                 
                 <a href="index.html" class="quick-nav-button button-yellow">
@@ -259,15 +260,18 @@
                         <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PAIS">
                             País <span class="sort-icon" id="sortIconPAIS"></span>
                         </th>
-                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12 sort-header" data-sort-by="PLACA">
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PLACA">
                             Placa <span class="sort-icon" id="sortIconPLACA"></span>
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="FECHA_AGREGADA">
+                            Fecha Agregada <span class="sort-icon" id="sortIconFECHA_AGREGADA"></span>
                         </th>
                         <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12">Estado / Lote</th>
                         <th scope="col" class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Acción</th>
                     </tr>
                 </thead>
                 <tbody id="platesTableBody" class="divide-y divide-gray-200">
-                    <tr id="loadingRow"><td colspan="6" class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+                    <tr id="loadingRow"><td colspan="7" class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -319,19 +323,20 @@
     </div>
 
     <div id="anuladasModal" class="modal">
-        <div class="modal-content max-w-xl"> 
-            <h3 class="text-xl font-bold mb-4 text-gray-800">Placas Anuladas</h3> 
+        <div class="modal-content max-w-4xl"> 
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Devolución de Placas</h3> 
             <div class="h-80 overflow-y-auto border border-gray-300 rounded-md p-2 bg-gray-50"> 
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-200">
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">País</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-4/12">Placa</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Acción</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">País</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Placa</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Fecha Devolución</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="anuladasListBody" class="divide-y divide-gray-200">
-                        <tr><td colspan="3" class="text-center py-4 text-gray-500">Cargando...</td></tr>
+                        <tr><td colspan="4" class="text-center py-4 text-gray-500">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -343,7 +348,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-        import { getDatabase, ref, get, update, push, remove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+        import { getDatabase, ref, get, update, push, remove, set } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
         // 1. CONFIGURACIÓN DE TU PROYECTO (¡DEBES REEMPLAZAR LOS VALORES DE TUS CLAVES!)
         const firebaseConfig = {
@@ -363,7 +368,7 @@
         let allPlatesData = []; 
         let anuladasData = []; 
         let uniqueLots = {}; 
-        let currentSort = { column: 'PLACA', direction: 'asc' };
+        let currentSort = { column: 'FECHA_AGREGADA', direction: 'desc' }; // Orden por defecto por fecha (más reciente primero)
         let lotEurocopData = {}; 
         let currentPlatesInConsultedLot = [];
         let knownCountries = []; 
@@ -417,7 +422,7 @@
         
         async function loadPlates() {
             const tableBody = document.getElementById('platesTableBody');
-            tableBody.innerHTML = '<tr id="loadingRow"><td colspan="6" class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>';
+            tableBody.innerHTML = '<tr id="loadingRow"><td colspan="7" class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>';
             document.getElementById('lotAdminBody').innerHTML = '<tr><td colspan="5" class="text-center py-3 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>'; 
 
             try {
@@ -445,6 +450,9 @@
                         return { id: key, ...value };
                     });
 
+                    // Asignar fecha 06/10/2025 a placas existentes que no tengan fecha
+                    await assignDefaultDateToExistingPlates();
+                    
                     await getNextLotNumber();
                     document.getElementById('plateCounter').textContent = allPlatesData.length; 
                     
@@ -453,7 +461,7 @@
                     renderPlates(allPlatesData);
                     loadLotAdministrationPanel(); 
                 } else {
-                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-orange-500">❌ Base de datos vacía. Asegúrate de importar el JSON en Firebase.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-orange-500">❌ Base de datos vacía. Asegúrate de importar el JSON en Firebase.</td></tr>';
                     document.getElementById('plateCounter').textContent = '0';
                     loadLotAdministrationPanel(); 
                 }
@@ -461,7 +469,31 @@
             } catch (error) {
                 console.error("🚨 ERROR CRÍTICO al cargar placas (SDK):", error);
                 alert("❌ ERROR: No se pudo conectar a Firebase. Revisa si la configuración es correcta.");
-                tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">Error al cargar datos. Comprueba la Consola (F12).</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Error al cargar datos. Comprueba la Consola (F12).</td></tr>';
+            }
+        }
+
+        // Función para asignar fecha 06/10/2025 a placas existentes sin fecha
+        async function assignDefaultDateToExistingPlates() {
+            const updates = {};
+            let needsUpdate = false;
+            
+            allPlatesData.forEach(plate => {
+                if (!plate.FECHA_AGREGADA) {
+                    // Asignar fecha 06/10/2025 a placas existentes
+                    updates[`placas_destruccion/${plate.id}/FECHA_AGREGADA`] = "2025-10-06T00:00:00.000Z";
+                    plate.FECHA_AGREGADA = "2025-10-06T00:00:00.000Z";
+                    needsUpdate = true;
+                }
+            });
+            
+            if (needsUpdate) {
+                try {
+                    await update(ref(database), updates);
+                    console.log("Fechas asignadas a placas existentes correctamente");
+                } catch (error) {
+                    console.error("Error al asignar fechas a placas existentes:", error);
+                }
             }
         }
 
@@ -545,9 +577,18 @@
                         return isADestroyed ? 1 : -1; 
                     }
 
-                    // 2. Criterio secundario: Ordenar por columna seleccionada (PAIS o PLACA)
-                    const aVal = String(a[currentSort.column] || '').toUpperCase();
-                    const bVal = String(b[currentSort.column] || '').toUpperCase();
+                    // 2. Criterio secundario: Ordenar por columna seleccionada (PAIS, PLACA o FECHA_AGREGADA)
+                    let aVal, bVal;
+                    
+                    if (currentSort.column === 'FECHA_AGREGADA') {
+                        // Para fechas, usamos el valor numérico del timestamp
+                        aVal = a.FECHA_AGREGADA ? new Date(a.FECHA_AGREGADA).getTime() : 0;
+                        bVal = b.FECHA_AGREGADA ? new Date(b.FECHA_AGREGADA).getTime() : 0;
+                    } else {
+                        // Para texto (PAIS o PLACA)
+                        aVal = String(a[currentSort.column] || '').toUpperCase();
+                        bVal = String(b[currentSort.column] || '').toUpperCase();
+                    }
                     
                     if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
                     if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
@@ -558,13 +599,20 @@
             let totalPlates = platesToRender.length; 
             
             if (platesToRender.length === 0) {
-                 tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No se encontraron placas que coincidan con la búsqueda.</td></tr>';
+                 tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No se encontraron placas que coincidan con la búsqueda.</td></tr>';
             }
 
             platesToRender.forEach((placa, i) => {
                 const key = placa.id;
                 const isDestroyed = placa.LoteDestruccion && placa.LoteDestruccion.trim() !== "";
                 const rowClass = i % 2 === 0 ? 'table-row-even' : 'table-row-odd';
+                
+                // Formatear fecha para mostrar
+                let fechaFormateada = '';
+                if (placa.FECHA_AGREGADA) {
+                    const fecha = new Date(placa.FECHA_AGREGADA);
+                    fechaFormateada = fecha.toLocaleDateString('es-ES');
+                }
                 
                 const row = document.createElement('tr');
                 row.classList.add(rowClass, 'hover:bg-yellow-100', 'transition', 'duration-150');
@@ -580,12 +628,13 @@
                     <td data-label="#" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${totalPlates - i}</td> 
                     <td id="pais-${key}" data-label="País" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">${placa.PAIS || ''}</td>
                     <td id="placa-${key}" data-label="Placa" class="px-6 py-4 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
+                    <td data-label="Fecha Agregada" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fechaFormateada}</td>
                     <td data-label="Estado / Lote" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${isDestroyed ? 'text-green-700' : 'text-gray-400'}">
                         ${isDestroyed ? `<i class="fas fa-check-circle"></i> ${placa.LoteDestruccion}` : 'PENDIENTE'}
                     </td>
                     <td data-label="Acción" class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium flex justify-center items-center space-x-3">
                         ${isDestroyed ? '' : `<i class="fas fa-edit edit-icon text-blue-600 hover:text-blue-800 cursor-pointer" data-plate-id="${key}" title="Editar País/Placa"></i>`}
-                        <i class="fas fa-times-circle delete-icon" data-plate-id="${key}" title="Anular placa y mover a sección 'Anuladas'"></i>
+                        <i class="fas fa-times-circle delete-icon" data-plate-id="${key}" title="Anular placa y mover a sección 'Devolución'"></i>
                     </td>
                 `;
                 tableBody.appendChild(row);
@@ -644,489 +693,550 @@
                             <i class="fas fa-search-plus"></i> Consultar
                         </button>
                         <button data-lot-name="${lotName}" class="undo-lot-admin-btn text-red-600 hover:text-red-900 font-bold text-xs whitespace-nowrap w-full sm:w-auto">
-                            <i class="fas fa-undo"></i> Deshacer 
+                            <i class="fas fa-undo"></i> Deshacer Lote
                         </button>
                     </td>
                 `;
                 lotAdminBody.appendChild(row);
             });
             
-            document.querySelectorAll('.undo-lot-admin-btn').forEach(button => {
-                button.addEventListener('click', handleUndoLotAdmin);
+            document.querySelectorAll('.consult-lot-btn').forEach(btn => {
+                btn.addEventListener('click', handleConsultLot);
             });
-            document.querySelectorAll('.consult-lot-btn').forEach(button => {
-                button.addEventListener('click', handleConsultLotButton);
+            document.querySelectorAll('.undo-lot-admin-btn').forEach(btn => {
+                btn.addEventListener('click', handleUndoLot);
             });
-            window.saveEurocopValue = saveEurocopValue; 
         }
-
-        // --- FUNCIONES DE EDICIÓN EN LÍNEA ---
         
-        function handleEditPlate(event) {
-            const plateId = event.currentTarget.dataset.plateId;
-            const row = event.currentTarget.closest('tr');
-
-            // Prevenir edición si ya hay otra fila editándose
-            if (document.querySelector('tr[data-editing="true"]')) {
-                alert("Por favor, guarda o cancela la edición de la fila actual primero.");
-                return;
-            }
-            
-            const plateData = allPlatesData.find(p => p.id === plateId);
-            if (!plateData) return;
-            
-            const paisCell = document.getElementById(`pais-${plateId}`);
-            const placaCell = document.getElementById(`placa-${plateId}`);
-            const actionCell = row.querySelector('.flex.justify-center.items-center.space-x-3');
-
-            // 1. SWITCH TO EDIT MODE
-            row.dataset.editing = 'true';
-            
-            // 2. Reemplazar País con input + datalist
-            paisCell.innerHTML = `
-                <input type="text" id="edit-pais-${plateId}" list="countryDatalist" value="${plateData.PAIS || ''}" 
-                       class="inline-edit-input uppercase text-sm font-bold text-gray-700">
-            `;
-            // Asegurar que el label simulado para móvil siga funcionando
-            paisCell.setAttribute('data-label', 'País (Editando)');
-            
-            // 3. Reemplazar Placa con input
-            placaCell.innerHTML = `
-                <input type="text" id="edit-placa-${plateId}" value="${plateData.PLACA || ''}" 
-                       class="inline-edit-input uppercase text-base font-bold text-red-700">
-            `;
-            // Asegurar que el label simulado para móvil siga funcionando
-            placaCell.setAttribute('data-label', 'Placa (Editando)');
-            
-            // 4. Cambiar iconos (Edit -> Save, Delete -> Cancel)
-            actionCell.innerHTML = `
-                <i class="fas fa-save save-edit-icon text-green-600 hover:text-green-800 cursor-pointer" data-plate-id="${plateId}" title="Guardar cambios"></i>
-                <i class="fas fa-times cancel-edit-icon text-gray-500 hover:text-gray-700 cursor-pointer" data-plate-id="${plateId}" title="Cancelar edición"></i>
-            `;
-            
-            // 5. Establecer nuevos listeners
-            actionCell.querySelector('.save-edit-icon').addEventListener('click', handleSaveEdit);
-            actionCell.querySelector('.cancel-edit-icon').addEventListener('click', handleCancelEdit);
-            
-            // Foco en el primer campo
-            document.getElementById(`edit-pais-${plateId}`).focus();
-        }
-
-        async function handleSaveEdit(event) {
-            const plateId = event.currentTarget.dataset.plateId;
-            const newCountry = document.getElementById(`edit-pais-${plateId}`).value.trim().toUpperCase();
-            const newPlate = document.getElementById(`edit-placa-${plateId}`).value.trim().toUpperCase();
-            
-            const plateData = allPlatesData.find(p => p.id === plateId);
-            
-            if (!newCountry || !newPlate) {
-                alert("El País y la Placa no pueden estar vacíos.");
-                return;
-            }
-            
-            // 1. Verificar si los datos son iguales (sin cambios)
-            if (newCountry === plateData.PAIS && newPlate === plateData.PLACA) {
-                loadPlates(); // Revertir a display mode
-                return;
-            }
-            
-            // 2. Verificar duplicidad de placa
-            const isDuplicate = allPlatesData.some(p => 
-                p.id !== plateId && p.PLACA && p.PLACA.toUpperCase() === newPlate && p.LoteDestruccion.trim() === "" // Solo chequear placas PENDIENTES
-            );
-
-            if (isDuplicate) {
-                alert(`Error: La placa "${newPlate}" ya existe en la base de datos (y está pendiente de destrucción).`);
-                return;
-            }
-            
-            if (!confirm(`¿Confirmas la modificación de la placa ${plateData.PLACA} a ${newPlate} (${newCountry})?`)) {
-                return;
-            }
-            
-            try {
-                const plateRef = ref(database, `placas_destruccion/${plateId}`);
-                await update(plateRef, {
-                    PAIS: newCountry,
-                    PLACA: newPlate
-                });
-                
-                loadPlates(); // Recargar todos los datos para reflejar los cambios y salir del modo edición.
-                
-            } catch (error) {
-                console.error("Error al guardar edición de placa:", error);
-                alert("Ocurrió un error al guardar los cambios. Revisa la consola.");
-            }
-        }
-
-        function handleCancelEdit() {
-            // Simplemente forzar una recarga para revertir la fila al estado de visualización original.
-            loadPlates(); 
-        }
-
-        // --- FUNCIONES DE ANULACIÓN Y RESTAURACIÓN ---
-
         function renderAnuladasModal() {
-            const listBody = document.getElementById('anuladasListBody');
-            listBody.innerHTML = '';
-
+            const anuladasListBody = document.getElementById('anuladasListBody');
+            anuladasListBody.innerHTML = '';
+            
             if (anuladasData.length === 0) {
-                listBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">No hay placas anuladas.</td></tr>';
+                anuladasListBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No hay placas anuladas.</td></tr>';
                 return;
             }
-
+            
             anuladasData.forEach((placa, i) => {
                 const row = document.createElement('tr');
                 row.classList.add(i % 2 === 0 ? 'bg-gray-50' : 'bg-white', 'hover:bg-yellow-50');
                 
+                // Formatear fecha de devolución
+                let fechaDevolucionFormateada = '';
+                if (placa.FECHA_ANULACION) {
+                    const fecha = new Date(placa.FECHA_ANULACION);
+                    fechaDevolucionFormateada = fecha.toLocaleDateString('es-ES');
+                }
+                
                 row.innerHTML = `
-                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-bold">${placa.PAIS || ''}</td>
-                    <td class="px-3 py-2 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
-                    <td class="px-3 py-2 whitespace-nowrap text-center text-sm font-medium">
-                        <button data-plate-id="${placa.id}" 
-                                data-plate-pais="${placa.PAIS}"
-                                data-plate-number="${placa.PLACA}"
-                                class="restore-plate-btn text-green-600 hover:text-green-800 font-semibold transition text-xs">
-                            <i class="fas fa-reply"></i> Restaurar
-                        </button>
+                    <td class="px-3 py-2 text-sm font-bold text-gray-700">${placa.PAIS || ''}</td>
+                    <td class="px-3 py-2 text-sm font-bold text-red-600">${placa.PLACA || ''}</td>
+                    <td class="px-3 py-2 text-sm text-gray-500">${fechaDevolucionFormateada}</td>
+                    <td class="px-3 py-2 text-center">
+                        <div class="flex justify-center items-center space-x-2">
+                            <button data-plate-id="${placa.id}" class="restore-plate-btn text-green-600 hover:text-green-900 font-bold text-xs whitespace-nowrap">
+                                <i class="fas fa-trash-restore"></i> Restaurar
+                            </button>
+                            <i class="fas fa-trash permanent-delete-icon" data-plate-id="${placa.id}" title="Eliminar permanentemente"></i>
+                        </div>
                     </td>
                 `;
-                listBody.appendChild(row);
+                anuladasListBody.appendChild(row);
             });
-
-            document.querySelectorAll('.restore-plate-btn').forEach(button => {
-                button.addEventListener('click', handleRestaurarPlate);
+            
+            document.querySelectorAll('.restore-plate-btn').forEach(btn => {
+                btn.addEventListener('click', handleRestorePlate);
+            });
+            document.querySelectorAll('.permanent-delete-icon').forEach(icon => {
+                icon.addEventListener('click', handlePermanentDelete);
             });
         }
 
-        async function handleAnularPlate(event) {
+        // --- FUNCIONES DE GESTIÓN DE EVENTOS ---
+
+        function handleEditPlate(event) {
             const plateId = event.currentTarget.dataset.plateId;
-            const plateData = allPlatesData.find(p => p.id === plateId);
-            const plateNumber = plateData ? plateData.PLACA : 'Desconocida';
+            const paisCell = document.getElementById(`pais-${plateId}`);
+            const placaCell = document.getElementById(`placa-${plateId}`);
             
-            if (!confirm(`¿Estás seguro de que quieres ANULAR la placa ${plateNumber}? Se moverá a la sección 'Anuladas'.`)) {
+            const currentPais = paisCell.textContent;
+            const currentPlaca = placaCell.textContent;
+            
+            // Crear inputs de edición
+            paisCell.innerHTML = `<input type="text" value="${currentPais}" class="inline-edit-input" id="edit-pais-${plateId}" list="countryDatalist">`;
+            placaCell.innerHTML = `<input type="text" value="${currentPlaca}" class="inline-edit-input" id="edit-placa-${plateId}">`;
+            
+            // Enfocar el campo de país
+            document.getElementById(`edit-pais-${plateId}`).focus();
+            
+            // Agregar eventos para guardar al presionar Enter o perder foco
+            const saveEdit = () => {
+                const newPais = document.getElementById(`edit-pais-${plateId}`).value.trim().toUpperCase();
+                const newPlaca = document.getElementById(`edit-placa-${plateId}`).value.trim().toUpperCase();
+                
+                if (newPais && newPlaca) {
+                    updatePlateInDatabase(plateId, newPais, newPlaca);
+                } else {
+                    // Restaurar valores originales si están vacíos
+                    paisCell.textContent = currentPais;
+                    placaCell.textContent = currentPlaca;
+                }
+            };
+            
+            document.getElementById(`edit-pais-${plateId}`).addEventListener('blur', saveEdit);
+            document.getElementById(`edit-placa-${plateId}`).addEventListener('blur', saveEdit);
+            document.getElementById(`edit-pais-${plateId}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveEdit();
+            });
+            document.getElementById(`edit-placa-${plateId}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveEdit();
+            });
+        }
+        
+        async function updatePlateInDatabase(plateId, newPais, newPlaca) {
+            try {
+                const plateRef = ref(database, `placas_destruccion/${plateId}`);
+                await update(plateRef, { PAIS: newPais, PLACA: newPlaca });
+                
+                // Actualizar en la interfaz
+                document.getElementById(`pais-${plateId}`).textContent = newPais;
+                document.getElementById(`placa-${plateId}`).textContent = newPlaca;
+                
+                // Actualizar en el array local
+                const plateIndex = allPlatesData.findIndex(p => p.id === plateId);
+                if (plateIndex !== -1) {
+                    allPlatesData[plateIndex].PAIS = newPais;
+                    allPlatesData[plateIndex].PLACA = newPlaca;
+                }
+                
+            } catch (error) {
+                console.error("Error al actualizar placa:", error);
+                alert("Error al actualizar la placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleAnularPlate(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const plate = allPlatesData.find(p => p.id === plateId);
+            
+            if (!plate) {
+                alert("Error: No se encontró la placa para anular.");
                 return;
             }
             
-            const newPlateData = {
-                PAIS: plateData.PAIS,
-                PLACA: plateData.PLACA,
-                FechaAnulacion: new Date().toISOString()
-            };
-
+            if (confirm(`¿Estás seguro de que deseas anular la placa ${plate.PLACA} (${plate.PAIS}) y moverla a "Devolución de Placas"?`)) {
+                anularPlate(plateId, plate);
+            }
+        }
+        
+        async function anularPlate(plateId, plateData) {
             try {
-                await push(ref(database, 'placas_anuladas'), newPlateData);
-                await remove(ref(database, `placas_destruccion/${plateId}`));
+                // 1. Mover a placas_anuladas
+                const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
+                await update(anuladasRef, {
+                    PAIS: plateData.PAIS,
+                    PLACA: plateData.PLACA,
+                    FECHA_ANULACION: new Date().toISOString() // Fecha de devolución automática
+                });
                 
-                alert(`Placa ${plateNumber} ANULADA y movida a la papelera.`);
+                // 2. Eliminar de placas_destruccion
+                const plateRef = ref(database, `placas_destruccion/${plateId}`);
+                await remove(plateRef);
                 
-                loadPlates(); 
+                // 3. Actualizar interfaz
+                await loadPlates(); 
+                await loadAnuladas(); 
+                
+                alert(`Placa ${plateData.PLACA} anulada y movida a "Devolución de Placas".`);
+                
             } catch (error) {
                 console.error("Error al anular placa:", error);
-                alert("Ocurrió un error al anular la placa. Revisa la consola.");
+                alert("Error al anular la placa. Inténtalo de nuevo.");
             }
         }
-
-        async function handleRestaurarPlate(event) {
-            const button = event.currentTarget;
-            const plateId = button.dataset.plateId;
-            const plateNumber = button.dataset.plateNumber;
-            const platePais = button.dataset.platePais;
-
-            if (!confirm(`¿Estás seguro de que quieres RESTAURAR la placa ${plateNumber} a la lista principal?`)) {
+        
+        function handleRestorePlate(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const plate = anuladasData.find(p => p.id === plateId);
+            
+            if (!plate) {
+                alert("Error: No se encontró la placa para restaurar.");
                 return;
             }
-
-            const restoredPlateData = {
-                PAIS: platePais,
-                PLACA: plateNumber,
-                LoteDestruccion: "" 
-            };
             
+            if (confirm(`¿Restaurar la placa ${plate.PLACA} (${plate.PAIS}) a la lista principal?`)) {
+                restorePlate(plateId, plate);
+            }
+        }
+        
+        async function restorePlate(plateId, plateData) {
             try {
-                await push(ref(database, 'placas_destruccion'), restoredPlateData);
-                await remove(ref(database, `placas_anuladas/${plateId}`));
+                // 1. Mover de vuelta a placas_destruccion
+                const plateRef = ref(database, `placas_destruccion/${plateId}`);
+                await update(plateRef, {
+                    PAIS: plateData.PAIS,
+                    PLACA: plateData.PLACA,
+                    FECHA_AGREGADA: new Date().toISOString() // Nueva fecha al restaurar
+                });
                 
-                alert(`Placa ${plateNumber} RESTAURADA y ahora está PENDIENTE.`);
+                // 2. Eliminar de placas_anuladas
+                const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
+                await remove(anuladasRef);
                 
-                document.getElementById('anuladasModal').style.display = 'none';
-                loadPlates(); 
+                // 3. Actualizar interfaz
+                await loadPlates(); 
+                await loadAnuladas(); 
+                renderAnuladasModal(); 
+                
+                alert(`Placa ${plateData.PLACA} restaurada correctamente.`);
+                
             } catch (error) {
                 console.error("Error al restaurar placa:", error);
-                alert("Ocurrió un error al restaurar la placa. Revisa la consola.");
+                alert("Error al restaurar la placa. Inténtalo de nuevo.");
             }
         }
         
-        // --- Otras Funciones (generateLot, handleUndoLotAdmin, etc.) ---
-        
-        function handleSort(event) {
-            const newColumn = event.currentTarget.dataset.sortBy;
-            let newDirection = 'asc';
-
-            if (currentSort.column === newColumn) {
-                newDirection = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            }
-
-            currentSort = { column: newColumn, direction: newDirection };
-
-            document.getElementById('sortIconPAIS').innerHTML = '';
-            document.getElementById('sortIconPLACA').innerHTML = '';
-
-            const iconId = `sortIcon${newColumn}`;
-            document.getElementById(iconId).innerHTML = newDirection === 'asc' ? '<i class="fas fa-sort-up"></i>' : '<i class="fas fa-sort-down"></i>';
+        function handlePermanentDelete(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const plate = anuladasData.find(p => p.id === plateId);
             
-            renderPlates(allPlatesData);
-        }
-        
-        function handleSearch(event) {
-            const searchTerm = event.target.value.toUpperCase().trim();
-            
-            if (searchTerm.length < 1) {
-                renderPlates(allPlatesData); 
+            if (!plate) {
+                alert("Error: No se encontró la placa para eliminar.");
                 return;
             }
             
-            const filteredPlates = allPlatesData.filter(p => p.PLACA && p.PLACA.toUpperCase().includes(searchTerm));
-            renderPlates(filteredPlates);
-        }
-
-        function updateLotButton() {
-            const selected = document.querySelectorAll('.plate-checkbox:checked');
-            const button = document.getElementById('generateLotButton');
-            
-            document.getElementById('selectedCount').textContent = ` (${selected.length})`;
-            
-            button.disabled = selected.length === 0;
+            if (confirm(`¿ELIMINAR PERMANENTEMENTE la placa ${plate.PLACA} (${plate.PAIS})? Esta acción no se puede deshacer.`)) {
+                permanentDeletePlate(plateId);
+            }
         }
         
-        function toggleSelectAll(event) {
-            const isChecked = event.target.checked;
-            document.querySelectorAll('.plate-checkbox:not(:disabled)').forEach(cb => {
-                cb.checked = isChecked;
-            });
-            updateLotButton();
-        }
-
-        async function generateLot() {
-            const lotNumber = document.getElementById('lotNumber').value.trim();
-            const selectedPlates = document.querySelectorAll('.plate-checkbox:checked');
-            
-            if (lotNumber === "" || selectedPlates.length === 0) return;
-            
-            if (!confirm(`¿Confirmas que quieres marcar ${selectedPlates.length} placas con el lote: ${lotNumber}? Esta acción es irreversible.`)) return;
-
-            const updates = {};
-            const lotMark = `${lotNumber} (${new Date().toLocaleDateString('es-ES')})`;
-
-            selectedPlates.forEach(checkbox => {
-                const plateId = checkbox.dataset.plateId;
-                updates[`placas_destruccion/${plateId}/LoteDestruccion`] = lotMark;
-            });
-
+        async function permanentDeletePlate(plateId) {
             try {
-                await update(ref(database), updates);
-                alert(`¡Lote ${lotNumber} generado con éxito para ${selectedPlates.length} placas!`);
+                // Eliminar de placas_anuladas
+                const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
+                await remove(anuladasRef);
                 
-                document.getElementById('searchPlate').value = "";
-                document.getElementById('selectAllCheckbox').checked = false;
-                loadPlates(); 
-
-            } catch (error) {
-                console.error("Error al actualizar placas (SDK):", error);
-                alert("Ocurrió un error al guardar el lote. Revisa la consola.");
-            }
-        }
-
-        async function handleUndoLotAdmin(event) {
-            const lotName = event.currentTarget.dataset.lotName;
-            const plateIds = uniqueLots[lotName];
-            
-            if (!plateIds || plateIds.length === 0) return;
-
-            if (!confirm(`ADVERTENCIA: ¿Estás seguro de que quieres DESHACER el lote completo "${lotName}"? Se desmarcarán ${plateIds.length} placas y volverán a estado PENDIENTE.`)) {
-                return;
-            }
-
-            const updates = {};
-            plateIds.forEach(plateId => {
-                updates[`placas_destruccion/${plateId}/LoteDestruccion`] = "";
-            });
-
-            try {
-                await update(ref(database), updates);
-                alert(`Lote "${lotName}" deshecho con éxito. Las placas han vuelto a estado PENDIENTE.`);
-                loadPlates(); 
-            } catch (error) {
-                console.error("Error al deshacer lote (SDK):", error);
-                alert("Ocurrió un error al deshacer el lote. Revisa la consola.");
-            }
-        }
-
-        async function saveNewPlate() {
-            const countryInput = document.getElementById('newPlateCountry');
-            const plateInput = document.getElementById('newPlateNumber');
-            
-            // Aseguramos que el País se guarde en MAYÚSCULAS para consistencia.
-            const country = countryInput.value.trim().toUpperCase(); 
-            const plate = plateInput.value.trim().toUpperCase();
-
-            if (country === "" || plate === "") {
-                alert("Por favor, rellena el País y el Número de Placa.");
-                return;
-            }
-
-            const exists = allPlatesData.some(p => p.PLACA && p.PLACA.toUpperCase() === plate);
-            if (exists) {
-                alert(`Error: La placa "${plate}" ya existe en la base de datos.`);
-                return;
-            }
-
-            const newPlateData = {
-                PAIS: country,
-                PLACA: plate,
-                LoteDestruccion: "" 
-            };
-
-            try {
-                await push(ref(database, 'placas_destruccion'), newPlateData);
-                alert(`Placa "${plate}" de ${country} añadida con éxito.`);
+                // Actualizar interfaz
+                await loadAnuladas(); 
+                renderAnuladasModal(); 
                 
-                countryInput.value = '';
-                plateInput.value = '';
-                document.getElementById('newPlateModal').style.display = 'none';
-
-                loadPlates(); // Recargar datos, lo que actualizará automáticamente el datalist de países.
+                alert("Placa eliminada permanentemente.");
+                
             } catch (error) {
-                console.error("Error al añadir nueva placa (SDK):", error);
-                alert("Ocurrió un error al guardar la nueva placa. Revisa la consola.");
+                console.error("Error al eliminar placa:", error);
+                alert("Error al eliminar la placa. Inténtalo de nuevo.");
             }
         }
         
-        function handleConsultLotButton(event) {
+        function handleConsultLot(event) {
             const lotName = event.currentTarget.dataset.lotName;
-            const plateIds = uniqueLots[lotName];
+            const plateIds = uniqueLots[lotName] || [];
             
-            const modalTitle = document.getElementById('consultLotTitle');
-            const plateListUl = document.getElementById('consultLotList');
-            plateListUl.innerHTML = '';
-            
-            modalTitle.textContent = `Placas en ${lotName.replace(/\s*\([^)]*\)/, '')}`;
+            document.getElementById('consultLotTitle').textContent = `Placas del ${lotName}`;
+            const consultLotList = document.getElementById('consultLotList');
+            consultLotList.innerHTML = '';
             
             currentPlatesInConsultedLot = [];
-
-            if (plateIds && plateIds.length > 0) {
-                const platesInLot = allPlatesData.filter(p => plateIds.includes(p.id));
-                currentPlatesInConsultedLot = platesInLot; 
-                
-                platesInLot.forEach(placa => {
-                    const li = document.createElement('li');
-                    li.classList.add('flex', 'justify-between', 'py-1', 'border-b', 'border-gray-200', 'text-sm');
-                    li.innerHTML = `
-                        <span class="font-bold text-red-700">${placa.PLACA}</span>
-                        <span class="text-gray-500 font-bold">${placa.PAIS}</span> 
-                    `;
-                    plateListUl.appendChild(li);
-                });
+            
+            if (plateIds.length === 0) {
+                consultLotList.innerHTML = '<li class="text-gray-500">No hay placas en este lote.</li>';
             } else {
-                plateListUl.innerHTML = '<li class="text-center py-4 text-gray-500 text-sm">No se encontraron placas en este lote.</td></tr>';
+                plateIds.forEach(plateId => {
+                    const plate = allPlatesData.find(p => p.id === plateId);
+                    if (plate) {
+                        currentPlatesInConsultedLot.push(plate);
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center py-1 px-2 hover:bg-blue-50 rounded';
+                        li.innerHTML = `
+                            <span class="font-semibold">${plate.PAIS || 'N/A'}</span>
+                            <span class="font-bold text-red-600">${plate.PLACA || 'N/A'}</span>
+                        `;
+                        consultLotList.appendChild(li);
+                    }
+                });
             }
             
-            document.getElementById('exportLotToExcelButton').onclick = () => {
-                exportLotToExcel(lotName, currentPlatesInConsultedLot);
-            };
-
             document.getElementById('consultLotModal').style.display = 'flex';
         }
         
-        function exportLotToExcel(lotName, platesInLot) {
-            if (platesInLot.length === 0) {
-                alert("No hay placas en este lote para exportar.");
+        function handleUndoLot(event) {
+            const lotName = event.currentTarget.dataset.lotName;
+            const plateIds = uniqueLots[lotName] || [];
+            
+            if (plateIds.length === 0) {
+                alert("No hay placas en este lote para deshacer.");
                 return;
             }
-
-            const cleanLotName = lotName.replace(/\s*\([^)]*\)/, '').replace(/[^\w\s]/gi, '');
-            const filename = `${cleanLotName}_Placas.csv`;
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-
-            csvContent += "PLACA,PAIS,LOTE DESTRUCCION\r\n";
-
-            platesInLot.forEach(placa => {
-                const placaNumber = placa.PLACA || '';
-                const pais = placa.PAIS || '';
-                const lote = cleanLotName || '';
+            
+            if (confirm(`¿Estás seguro de que deseas deshacer el ${lotName}? Esto marcará ${plateIds.length} placas como PENDIENTES.`)) {
+                undoLot(lotName, plateIds);
+            }
+        }
+        
+        async function undoLot(lotName, plateIds) {
+            try {
+                const updates = {};
+                plateIds.forEach(plateId => {
+                    updates[`placas_destruccion/${plateId}/LoteDestruccion`] = "";
+                });
                 
-                const row = [placaNumber, pais, lote].map(field => `"${field.toString().replace(/"/g, '""')}"`).join(",");
-                csvContent += row + "\r\n";
+                await update(ref(database), updates);
+                
+                alert(`Lote ${lotName} deshecho. ${plateIds.length} placas marcadas como PENDIENTES.`);
+                await loadPlates(); 
+                
+            } catch (error) {
+                console.error("Error al deshacer lote:", error);
+                alert("Error al deshacer el lote. Inténtalo de nuevo.");
+            }
+        }
+        
+        function updateLotButton() {
+            const selectedCount = document.querySelectorAll('.plate-checkbox:checked').length;
+            document.getElementById('selectedCount').textContent = `(${selectedCount})`;
+            document.getElementById('generateLotButton').disabled = selectedCount === 0;
+        }
+        
+        async function handleGenerateLot() {
+            const selectedCheckboxes = document.querySelectorAll('.plate-checkbox:checked');
+            const selectedPlateIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.plateId);
+            
+            if (selectedPlateIds.length === 0) {
+                alert("No hay placas seleccionadas para generar el lote.");
+                return;
+            }
+            
+            const lotName = document.getElementById('lotNumber').value;
+            const currentDate = new Date().toLocaleDateString('es-ES');
+            
+            if (confirm(`¿Generar ${lotName} con ${selectedPlateIds.length} placas seleccionadas?`)) {
+                await generateLot(selectedPlateIds, lotName, currentDate);
+            }
+        }
+        
+        async function generateLot(plateIds, lotName, currentDate) {
+            try {
+                const updates = {};
+                plateIds.forEach(plateId => {
+                    updates[`placas_destruccion/${plateId}/LoteDestruccion`] = lotName;
+                });
+                
+                await update(ref(database), updates);
+                
+                alert(`✅ ${lotName} generado correctamente con ${plateIds.length} placas.`);
+                await loadPlates(); 
+                
+            } catch (error) {
+                console.error("Error al generar lote:", error);
+                alert("Error al generar el lote. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleSearchPlate() {
+            const searchTerm = document.getElementById('searchPlate').value.trim().toUpperCase();
+            
+            if (searchTerm === "") {
+                renderPlates(allPlatesData);
+                return;
+            }
+            
+            const filteredPlates = allPlatesData.filter(placa => 
+                (placa.PLACA && placa.PLACA.toUpperCase().includes(searchTerm)) ||
+                (placa.PAIS && placa.PAIS.toUpperCase().includes(searchTerm))
+            );
+            
+            renderPlates(filteredPlates);
+        }
+        
+        function handleSort(column) {
+            // Si ya está ordenando por esta columna, cambiar la dirección
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                // Si es una nueva columna, ordenar ascendente por defecto
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Actualizar iconos de ordenación
+            updateSortIcons();
+            
+            // Re-renderizar la tabla
+            renderPlates(allPlatesData);
+        }
+        
+        function updateSortIcons() {
+            // Limpiar todos los iconos
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.innerHTML = '';
             });
-
-            const encodedUri = encodeURI(csvContent);
+            
+            // Añadir icono a la columna actualmente ordenada
+            const currentIcon = document.getElementById(`sortIcon${currentSort.column}`);
+            if (currentIcon) {
+                currentIcon.innerHTML = currentSort.direction === 'asc' ? 
+                    '<i class="fas fa-sort-up"></i>' : 
+                    '<i class="fas fa-sort-down"></i>';
+            }
+        }
+        
+        async function handleSaveNewPlate() {
+            const country = document.getElementById('newPlateCountry').value.trim().toUpperCase();
+            const plateNumber = document.getElementById('newPlateNumber').value.trim().toUpperCase();
+            
+            if (!country || !plateNumber) {
+                alert("Por favor, completa ambos campos: País y Número de Placa.");
+                return;
+            }
+            
+            // Verificar si la placa ya existe
+            const plateExists = allPlatesData.some(placa => 
+                placa.PLACA === plateNumber && placa.PAIS === country
+            );
+            
+            if (plateExists) {
+                alert("Esta placa ya existe en la base de datos.");
+                return;
+            }
+            
+            try {
+                const newPlateRef = push(ref(database, 'placas_destruccion'));
+                const fechaAgregada = new Date().toISOString(); // Fecha automática del día actual
+                
+                await update(newPlateRef, {
+                    PAIS: country,
+                    PLACA: plateNumber,
+                    FECHA_AGREGADA: fechaAgregada,
+                    LoteDestruccion: ""
+                });
+                
+                // Limpiar formulario
+                document.getElementById('newPlateCountry').value = '';
+                document.getElementById('newPlateNumber').value = '';
+                
+                // Cerrar modal
+                document.getElementById('newPlateModal').style.display = 'none';
+                
+                // Recargar datos
+                await loadPlates();
+                
+                alert(`Placa ${plateNumber} (${country}) añadida correctamente.`);
+                
+            } catch (error) {
+                console.error("Error al guardar nueva placa:", error);
+                alert("Error al guardar la nueva placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleExportToExcel() {
+            if (currentPlatesInConsultedLot.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+            
+            // Crear contenido CSV
+            let csvContent = "PAIS,PLACA\n";
+            currentPlatesInConsultedLot.forEach(plate => {
+                csvContent += `"${plate.PAIS || ''}","${plate.PLACA || ''}"\n`;
+            });
+            
+            // Crear y descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
+            const fileName = `lote_${document.getElementById('consultLotTitle').textContent.replace(/\s+/g, '_')}.csv`;
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // --- LÓGICA DE MODALES ---
-        function setupModalListeners() {
-            // Modal Nueva Placa
-            const newPlateModal = document.getElementById('newPlateModal');
-            document.getElementById('openNewPlateModal').addEventListener('click', () => {
-                // Limpiar el input del país al abrir
-                document.getElementById('newPlateCountry').value = '';
-                newPlateModal.style.display = 'flex';
-            });
-            document.getElementById('closeNewPlateModal').addEventListener('click', () => {
-                newPlateModal.style.display = 'none';
-            });
-            document.getElementById('saveNewPlateButton').addEventListener('click', saveNewPlate);
+        // --- INICIALIZACIÓN DE EVENT LISTENERS ---
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar datos iniciales
+            loadPlates();
             
-            // Modal Consultar Lote
-            const consultLotModal = document.getElementById('consultLotModal');
-             document.getElementById('closeConsultLotModal').addEventListener('click', () => {
-                consultLotModal.style.display = 'none';
+            // Configurar ordenación
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    handleSort(header.dataset.sortBy);
+                });
             });
-
-            // Modal Anuladas
-            const anuladasModal = document.getElementById('anuladasModal');
+            
+            // Inicializar iconos de ordenación
+            updateSortIcons();
+            
+            // Event listeners para los botones principales
+            document.getElementById('openNewPlateModal').addEventListener('click', () => {
+                document.getElementById('newPlateModal').style.display = 'flex';
+            });
+            
+            document.getElementById('closeNewPlateModal').addEventListener('click', () => {
+                document.getElementById('newPlateModal').style.display = 'none';
+            });
+            
+            document.getElementById('saveNewPlateButton').addEventListener('click', handleSaveNewPlate);
+            
             document.getElementById('openAnuladasModal').addEventListener('click', () => {
-                renderAnuladasModal(); 
-                anuladasModal.style.display = 'flex';
+                renderAnuladasModal();
+                document.getElementById('anuladasModal').style.display = 'flex';
             });
+            
             document.getElementById('closeAnuladasModal').addEventListener('click', () => {
-                anuladasModal.style.display = 'none';
+                document.getElementById('anuladasModal').style.display = 'none';
             });
-
+            
+            document.getElementById('closeConsultLotModal').addEventListener('click', () => {
+                document.getElementById('consultLotModal').style.display = 'none';
+            });
+            
+            document.getElementById('generateLotButton').addEventListener('click', handleGenerateLot);
+            
+            document.getElementById('searchPlate').addEventListener('input', handleSearchPlate);
+            
+            document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.plate-checkbox:not(:disabled)');
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+                updateLotButton();
+            });
+            
+            document.getElementById('exportLotToExcelButton').addEventListener('click', handleExportToExcel);
+            
             // Cerrar modales al hacer clic fuera
-            window.addEventListener('click', (event) => {
+            window.addEventListener('click', function(event) {
+                const newPlateModal = document.getElementById('newPlateModal');
+                const anuladasModal = document.getElementById('anuladasModal');
+                const consultLotModal = document.getElementById('consultLotModal');
+                
                 if (event.target === newPlateModal) {
                     newPlateModal.style.display = 'none';
-                }
-                if (event.target === consultLotModal) {
-                    consultLotModal.style.display = 'none';
                 }
                 if (event.target === anuladasModal) {
                     anuladasModal.style.display = 'none';
                 }
-            });
-        }
-
-        // --- INICIALIZACIÓN ---
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadPlates();
-            setupModalListeners(); 
-
-            document.getElementById('generateLotButton').addEventListener('click', generateLot);
-            document.getElementById('searchPlate').addEventListener('input', handleSearch); 
-            document.getElementById('selectAllCheckbox').addEventListener('change', toggleSelectAll);
-            
-            document.querySelectorAll('.sort-header').forEach(header => {
-                header.addEventListener('click', handleSort);
+                if (event.target === consultLotModal) {
+                    consultLotModal.style.display = 'none';
+                }
             });
             
-            document.getElementById(`sortIcon${currentSort.column}`).innerHTML = '<i class="fas fa-sort-up"></i>';
+            // Permitir Enter para guardar nueva placa
+            document.getElementById('newPlateCountry').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('newPlateNumber').focus();
+                }
+            });
+            
+            document.getElementById('newPlateNumber').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSaveNewPlate();
+                }
+            });
         });
     </script>
 </body>
