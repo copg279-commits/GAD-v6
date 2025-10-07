@@ -120,7 +120,8 @@
   </footer>
 
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script> 
+  
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCbrIC_qmnXN0YFTVjNGR-j_Zpq_6V_glA",
@@ -133,33 +134,43 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const licenciasNuevasRef = db.collection('licencias_italia_firestore');
+    // Inicialización a Realtime Database (RTDB)
+    const db = firebase.database();
+    // Referencia al nodo 'licencias_italia' en RTDB (coincidente con su exportación)
+    const licenciasNuevasRef = db.ref('licencias_italia');
 
     let datosCompletos = [];
     
     document.addEventListener('DOMContentLoaded', () => {
-      cargarDatosDesdeFirestore();
+      // Se mantiene el nombre de la función, pero ahora ejecuta la lógica de RTDB
+      cargarDatosDesdeFirestore(); 
     });
 
+    // Lógica de carga de datos adaptada para RTDB
     function cargarDatosDesdeFirestore() {
-      licenciasNuevasRef.get()
+      licenciasNuevasRef.once('value') // Usar .once('value') para RTDB
         .then(snapshot => {
           datosCompletos = [];
-          snapshot.forEach(doc => {
-            const nuevoDato = doc.data();
-            datosCompletos.push({
-              numero: nuevoDato.numero,
-              fecha: nuevoDato.fecha,
-              key: doc.id
+          const dataObject = snapshot.val(); // Obtener el objeto completo
+          
+          if (dataObject) {
+            // Iterar sobre las claves del objeto para extraer numero, fecha y key
+            Object.keys(dataObject).forEach(key => {
+              const nuevoDato = dataObject[key];
+              datosCompletos.push({
+                numero: nuevoDato.numero,
+                fecha: nuevoDato.fecha,
+                key: key // La clave de RTDB es el número de documento
+              });
             });
-          });
+          }
+          
           datosCompletos.sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
-          console.log("Datos de Firestore cargados y combinados.");
+          console.log("Datos de RTDB cargados y combinados.");
           renderizarTablaCpi();
         })
         .catch(error => {
-          console.error("Error al cargar datos de Firestore:", error);
+          console.error("Error al cargar datos de RTDB:", error);
         });
     }
 
@@ -191,6 +202,7 @@
         mensajeGuardadoDiv.style.color = '';
     }
 
+    // Lógica de guardado adaptada para RTDB
     function guardarNuevoNumero() {
         const nuevoNumero = nuevoNumeroInput.value.trim().toUpperCase();
         const nuevaFecha = nuevaFechaInput.value;
@@ -231,9 +243,10 @@
             fecha: fechaFormateada
         };
 
-        licenciasNuevasRef.doc(nuevoNumero).set(nuevoDato)
+        // Guardar en RTDB usando el número como clave
+        licenciasNuevasRef.child(nuevoNumero).set(nuevoDato)
             .then(() => {
-                mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito en Firestore!';
+                mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito en Realtime Database!';
                 mensajeGuardadoDiv.style.color = 'green';
                 
                 cargarDatosDesdeFirestore();
@@ -242,7 +255,7 @@
                 formularioNuevosDatos.classList.add('hidden');
             })
             .catch(error => {
-                mensajeGuardadoDiv.textContent = 'Error al guardar en Firestore: ' + error.message;
+                mensajeGuardadoDiv.textContent = 'Error al guardar en Realtime Database: ' + error.message;
                 mensajeGuardadoDiv.style.color = 'red';
             });
     }
@@ -295,8 +308,9 @@
       }
     }
 
+    // Lógica de eliminación adaptada para RTDB
     function eliminarDato(key) {
-      licenciasNuevasRef.doc(key).delete()
+      licenciasNuevasRef.child(key).remove() // Usar .child(key).remove() para RTDB
         .then(() => {
           console.log("Registro eliminado con éxito.");
           cargarDatosDesdeFirestore();
