@@ -125,7 +125,7 @@
         </div>
         
         <div class="logs-header">
-            <h3>Registro Histórico de Copias (Almacenado en Firebase)</h3>
+            <h3>Registro Histórico de Copias (Últimas 10)</h3>
             <button id="clearLogsBtn" title="Eliminar todo el historial de copias guardado en Firebase">
                 🗑️ Eliminar Historial Remoto
             </button>
@@ -169,16 +169,21 @@
         function renderLogs() {
             logsElement.innerHTML = ''; 
             
+            // 1. Ordenar por tiempo (más reciente primero)
             const sortedHistory = backupHistory
                 .filter(entry => entry.time) 
                 .sort((a, b) => new Date(b.time) - new Date(a.time));
 
-            if (sortedHistory.length === 0) {
+            // 2. Tomar solo las 10 entradas más recientes
+            const logsToDisplay = sortedHistory.slice(0, 10); 
+
+            if (logsToDisplay.length === 0) {
                 logsElement.innerHTML = '<p style="color: #999;">Aún no hay registros de copias en Firebase.</p>';
                 return;
             }
             
-            sortedHistory.forEach(entry => {
+            // 3. Iterar y renderizar solo las 10 seleccionadas
+            logsToDisplay.forEach(entry => {
                 const logDiv = document.createElement('div');
                 logDiv.className = 'log-entry';
                 
@@ -209,6 +214,7 @@
                 const data = await response.json();
                 
                 if (data) {
+                    // Mantenemos el historial completo en memoria, solo limitamos la vista
                     backupHistory = Object.values(data);
                 } else {
                     backupHistory = [];
