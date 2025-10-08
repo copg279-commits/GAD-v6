@@ -366,15 +366,19 @@
             </button>
         </div>
 
-        <div class="controls-container">
-            <div id="counters-row" class="counters-row" style="display: none;"></div>
-            <div class="admin-controls">
-                <button id="show-edit-menu-modal" style="display: none;" class="btn-admin">Editar Menú</button>
-                <button id="show-manage-users-modal" style="display: none;" class="btn-admin">Gestionar Usuarios</button>
-                <button id="show-full-log-modal" style="display: none;" class="btn-admin">Registro Global de Visitas</button>
-            </div>
-            <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
+<div class="controls-container">
+    <div id="counters-row" class="counters-row" style="display: none;"></div>
+    <div class="admin-controls">
+        <button id="show-edit-menu-modal" style="display: none;" class="btn-admin">Editar Menú</button>
+        <button id="show-manage-users-modal" style="display: none;" class="btn-admin">Gestionar Usuarios</button>
+        <button id="show-full-log-modal" style="display: none;" class="btn-admin">Registro Global de Visitas</button>
+<button onclick="window.open('copia seguridad firebase.html', '_blank')" 
+        style="display: none; background-color: #7C3AED;" 
+        class="btn-admin" 
+        id="backup-button">Copia de Seguridad</button>
         </div>
+    <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
+</div>
     </div>
 </div>
 
@@ -983,6 +987,7 @@
         showFullLogModalBtn.style.display = isAdmin ? 'block' : 'none';
         editTitleIcon.style.display = isAdmin ? 'inline-block' : 'none';
         countersRow.style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('backup-button').style.display = isAdmin ? 'block' : 'none';
         controlsContainer.style.display = 'flex';
 
         // 1. Actualizar el contador de accesos
