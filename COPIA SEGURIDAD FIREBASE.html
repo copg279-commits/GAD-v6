@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Copia de Seguridad Firebase RDB (Módulo Manual)</title>
+    <title>Copia de Seguridad Firebase RDB (Módulo Final)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -137,14 +137,13 @@
 
     <script>
         // ----------------------------------------------------------------------
-        // --- CONFIGURACIÓN (¡EDITA ESTO CON TU CLAVE REAL!) -------------------
+        // --- CONFIGURACIÓN (CON TU TOKEN SECRETO INSERTADO) -------------------
         // ----------------------------------------------------------------------
         const FIREBASE_CONFIG = {
             name: 'GAD-ALICANTE (v3)',
-            // BASE URL DE FIREBASE RDB
             baseUrl: 'https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app',
-            // El token es necesario para las operaciones de escritura (logs) y descarga
-            token: 'mxfkSXOgQIySNWYfl6bg7buBCA4Jeph36mVnheTp' // ⚠️ ¡REEMPLAZAR CON TU TOKEN REAL!
+            // Token insertado por el usuario:
+            token: 'mxfkSXOgQIySNWYfl6bg7buBCA4Jeph36mVnheTp' 
         };
 
         const LOGS_PATH = '/backup_logs';
@@ -154,26 +153,22 @@
         const logsElement = document.getElementById('logs');
         const clearLogsBtn = document.getElementById('clearLogsBtn');
         
-        // El historial en memoria se cargará desde Firebase
         let backupHistory = []; 
 
         // ----------------------------------------------------------------------
         // --- UTILIDADES DE FIREBASE Y LOGS ------------------------------------
         // ----------------------------------------------------------------------
 
-        /** Construye la URL de Firebase con el path y el token de autenticación. */
-        function getFirebaseUrl(path, isDataFetch = false) {
-            // isDataFetch = true solo para la descarga completa, que no necesita la extensión .json
-            const jsonExtension = isDataFetch ? '' : '.json';
-            return `${FIREBASE_CONFIG.baseUrl}${path}${jsonExtension}?auth=${FIREBASE_CONFIG.token}`;
+        /** Construye la URL de Firebase con el path y el token. SIEMPRE añade .json. */
+        function getFirebaseUrl(path) {
+            // Siempre añadimos .json para forzar una URL absoluta y evitar redirecciones.
+            return `${FIREBASE_CONFIG.baseUrl}${path}.json?auth=${FIREBASE_CONFIG.token}`;
         }
 
         // Función para dibujar los logs en la interfaz
         function renderLogs() {
             logsElement.innerHTML = ''; 
             
-            // Ordenar los logs por tiempo de forma descendente (más reciente primero)
-            // Filtramos los logs que no tienen tiempo, como los logs 'info' temporales
             const sortedHistory = backupHistory
                 .filter(entry => entry.time) 
                 .sort((a, b) => new Date(b.time) - new Date(a.time));
@@ -187,17 +182,9 @@
                 const logDiv = document.createElement('div');
                 logDiv.className = 'log-entry';
                 
-                let statusClass = 'log-info';
-                let statusText = '💬 Info';
-
-                if (entry.type === 'success') {
-                    statusClass = 'log-success';
-                    statusText = '✅ Éxito';
-                } else if (entry.type === 'error') {
-                    statusClass = 'log-error';
-                    statusText = '❌ Error';
-                }
-
+                let statusClass = entry.type === 'success' ? 'log-success' : entry.type === 'error' ? 'log-error' : 'log-info';
+                let statusText = entry.type === 'success' ? '✅ Éxito' : entry.type === 'error' ? '❌ Error' : '💬 Info';
+                
                 const statusSpan = `<span class="${statusClass}">${statusText}</span>`;
                 
                 logDiv.innerHTML = `
@@ -212,7 +199,7 @@
         /** Lee el historial de logs desde Firebase. */
         async function fetchLogsFromFirebase() {
             try {
-                // GET request para leer todos los logs
+                // Leer logs desde /backup_logs.json
                 const response = await fetch(getFirebaseUrl(LOGS_PATH));
                 
                 if (!response.ok) {
@@ -222,7 +209,6 @@
                 const data = await response.json();
                 
                 if (data) {
-                    // Mapeamos el objeto de Firebase para obtener solo los valores (los logs)
                     backupHistory = Object.values(data);
                 } else {
                     backupHistory = [];
@@ -231,14 +217,13 @@
                 renderLogs();
             } catch (error) {
                 console.error("Error al cargar el historial de Firebase:", error);
-                logsElement.innerHTML = `<p class="log-error">Error al cargar logs: ${error.message}. ¿Token Correcto?</p>`;
+                logsElement.innerHTML = `<p class="log-error">Error al cargar logs: ${error.message}. Asegúrate de que el archivo se abre correctamente desde GitHub Pages o un servidor local.</p>`;
             }
         }
 
-        /** Guarda un nuevo log en Firebase usando POST (genera una clave única). */
+        /** Guarda un nuevo log en Firebase usando POST. */
         async function saveLogToFirebase(logEntry) {
             try {
-                // POST request para añadir un nuevo elemento a la lista de logs
                 const response = await fetch(getFirebaseUrl(LOGS_PATH), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -249,7 +234,6 @@
                     throw new Error(`Error HTTP al guardar log: ${response.status} ${response.statusText}`);
                 }
                 
-                // Después de guardar, recargamos y redibujamos el historial
                 await fetchLogsFromFirebase();
 
             } catch (error) {
@@ -258,7 +242,7 @@
             }
         }
 
-        // Función para agregar un registro (que ahora guarda en Firebase)
+        /** Agrega un registro. */
         async function addLog(name, type = 'success') {
             const now = new Date();
             const logEntry = {
@@ -267,17 +251,15 @@
                 type: type
             };
             
-            // Si es un log 'info', lo añadimos solo temporalmente para mostrarlo en el momento
             if (type === 'info') {
                 backupHistory.unshift(logEntry);
                 renderLogs();
             } else {
-                // Si es éxito o error, lo guardamos permanentemente en Firebase
                 await saveLogToFirebase(logEntry);
             }
         }
         
-        // Función para descargar el JSON
+        /** Función para descargar el JSON */
         function downloadJSON(data, name) {
             const now = new Date();
             const dateString = now.toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-').replace(/-/g, '_');
@@ -300,15 +282,12 @@
         // --- LÓGICA DE BACKUP MANUAL ------------------------------------------
         // ----------------------------------------------------------------------
 
-        /**
-         * Realiza la descarga de la BD y registra el evento.
-         * @param {Object} config - Objeto de configuración de Firebase
-         */
+        /** Realiza la descarga de la BD y registra el evento. */
         async function performSingleBackup(config) {
             const { name } = config;
             
-            // La descarga de la base de datos completa requiere la extensión .json
-            const FIREBASE_URL_AUTH = getFirebaseUrl('/', true); 
+            // Usar la URL base con el .json agregado por getFirebaseUrl
+            const FIREBASE_URL_AUTH = getFirebaseUrl('/'); 
             
             console.log(`Intentando copiar ${name} (Manual)...`);
             
@@ -359,7 +338,7 @@
             if (confirm('⚠️ ¿Estás seguro de que quieres eliminar COMPLETAMENTE el historial de copias de seguridad de Firebase? Esta acción es IRREVERSIBLE.')) {
                 
                 try {
-                    // DELETE request para eliminar la rama completa de logs
+                    // La URL ya tendrá .json añadido por getFirebaseUrl
                     const response = await fetch(getFirebaseUrl(LOGS_PATH), {
                         method: 'DELETE'
                     });
@@ -368,8 +347,8 @@
                         throw new Error(`Error HTTP al eliminar logs: ${response.status} ${response.statusText}`);
                     }
                     
-                    backupHistory = []; // Resetear en memoria
-                    renderLogs(); // Redibujar para mostrar el historial vacío
+                    backupHistory = []; 
+                    renderLogs(); 
 
                     await addLog('Historial de copias ha sido BORRADO de Firebase.', 'info');
 
@@ -383,7 +362,7 @@
 
         // Inicialización (Solo carga el historial remoto)
         async function init() {
-            await fetchLogsFromFirebase(); // Cargar historial remoto
+            await fetchLogsFromFirebase();
             addLog('Herramienta inicializada. Lista para copia manual.', 'info'); 
         }
 
