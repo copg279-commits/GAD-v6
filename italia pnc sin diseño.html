@@ -3,24 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verificación Permiso de Conducir Argelia</title>
+  <title>Verificación Permiso de Conducir Italia</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .flag-button-algeria {
-      background: linear-gradient(to right, #006a4e 50%, #e2b404 50%);
-      position: relative;
-    }
-    .flag-button-algeria:before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 70%;
-      width: 30px;
-      height: 30px;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="%23e2b404" d="M256 0c141.4 0 256 114.6 256 256S397.4 512 256 512 0 397.4 0 256 114.6 0 256 0zm-7.6 150.9c25.4-8.8 54.4-13.4 83.6-13.4 89.2 0 161.6 72.4 161.6 161.6s-72.4 161.6-161.6 161.6-161.6-72.4-161.6-161.6c0-29.2 4.6-58.2 13.4-83.6L256 256l-7.6-105.1z"/></svg>');
-      background-size: contain;
-      background-repeat: no-repeat;
-      transform: translate(-50%, -50%);
+    .flag-button-italy {
+      background: linear-gradient(to right, #009246 33.33%, #ffffff 33.33%, #ffffff 66.66%, #ce2b37 66.66%);
     }
     .delete-icon {
       cursor: pointer;
@@ -30,50 +17,23 @@
     .delete-icon:hover {
       transform: scale(1.1);
     }
-    .listado-container {
-      max-height: 300px;
-      overflow-y: auto;
-    }
     .cpi-table-container {
-        max-height: 400px;
-        overflow-y: auto;
-        overflow-x: auto;
-    }
-    .cpi-table-header th {
-        white-space: nowrap;
-    }
-    .cpi-table-cell {
-        white-space: nowrap;
-    }
-    @media (max-width: 640px) {
-        .cpi-table-header th, .cpi-table-cell {
-            padding-left: 0.75rem; /* px-3 */
-            padding-right: 0.75rem; /* px-3 */
-        }
+      max-height: 400px;
+      overflow-y: auto;
     }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col pb-16">
 
-  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
-    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
-      <img
-        src="logogad.png"
-        alt="Logo GAD"
-        class="w-full h-full object-cover block"
-      >
-    </div>
-  </header>
-
   <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
-    Verificación Permiso de Conducir Argelia
+    Verificación Permiso de Conducir Italia
   </h1>
   <h2 class="text-gray-700 text-center mt-2 px-4">
     Introduce el Nº de Serie del Permiso ID1
   </h2>
   
   <div class="w-11/12 max-w-md mx-auto mt-4">
-    <img src="logoargelia.png" alt="Logo Argelia" class="w-full">
+    <img src="logoitalia.png" alt="Logo Italia" class="w-full">
   </div>
 
   <input 
@@ -104,8 +64,8 @@
     <div id="cpiDataTable" class="mt-4 hidden">
         <h3 class="text-lg font-semibold mb-4 text-center">Listado Completo</h3>
         <div class="cpi-table-container">
-            <table class="w-full min-w-full text-sm text-left text-gray-500">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 cpi-table-header">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                     <tr>
                         <th scope="col" class="px-6 py-3">Número de orden</th>
                         <th scope="col" class="px-6 py-3">Fecha</th>
@@ -121,7 +81,7 @@
     <div id="formularioNuevosDatos" class="mt-4 hidden">
       <div class="mb-4">
         <label for="nuevoNumero" class="block text-sm font-bold text-gray-700 mb-1">Número de Identificación:</label>
-        <input type="text" id="nuevoNumero" placeholder="Ej: 1234567890" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="text" id="nuevoNumero" placeholder="Ej: AA1234567A" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       <div class="mb-4">
         <label for="nuevaFecha" class="block text-sm font-bold text-gray-700 mb-1">Fecha de expedición:</label>
@@ -139,24 +99,13 @@
     </div>
   </div>
 
-  <div class="mt-8 flex justify-center">
-    <button onclick="window.location.href='index.html'"
-            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
-        MENÚ PRINCIPAL
-    </button>
-  </div>
-
- <footer class="mt-auto text-center py-6 bg-gray-200">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
-    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
-    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
-    <p>&copy; GAD - Todos los derechos reservados</p>
-  </footer>
+  <div class="mt-8 flex flex-col items-center gap-4">
+    </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
   <script>
-       const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
       authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
       databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
@@ -167,31 +116,34 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const licenciasNuevasRef = database.ref('licencias_argelia_nuevas');
+    const db = firebase.firestore();
+    const licenciasNuevasRef = db.collection('licencias_italia_firestore');
 
     let datosCompletos = [];
     
     document.addEventListener('DOMContentLoaded', () => {
-      cargarDatosDesdeFirebase();
+      cargarDatosDesdeFirestore();
     });
 
-    function cargarDatosDesdeFirebase() {
-      licenciasNuevasRef.on('value', snapshot => {
-        datosCompletos = [];
-        snapshot.forEach(childSnapshot => {
-          const nuevoDato = childSnapshot.val();
-          const key = childSnapshot.key;
-          datosCompletos.push({
-            numero: nuevoDato.numero,
-            fecha: nuevoDato.fecha,
-            key: key
+    function cargarDatosDesdeFirestore() {
+      licenciasNuevasRef.get()
+        .then(snapshot => {
+          datosCompletos = [];
+          snapshot.forEach(doc => {
+            const nuevoDato = doc.data();
+            datosCompletos.push({
+              numero: nuevoDato.numero,
+              fecha: nuevoDato.fecha,
+              key: doc.id
+            });
           });
+          datosCompletos.sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
+          console.log("Datos de Firestore cargados y combinados.");
+          renderizarTablaCpi();
+        })
+        .catch(error => {
+          console.error("Error al cargar datos de Firestore:", error);
         });
-        datosCompletos.sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
-        console.log("Datos de Firebase cargados y combinados.");
-        renderizarTablaCpi();
-      });
     }
 
     const mostrarFormularioBtn = document.getElementById('mostrarFormularioBtn');
@@ -223,7 +175,7 @@
     }
 
     function guardarNuevoNumero() {
-        const nuevoNumero = nuevoNumeroInput.value.trim();
+        const nuevoNumero = nuevoNumeroInput.value.trim().toUpperCase();
         const nuevaFecha = nuevaFechaInput.value;
 
         if (!nuevoNumero || !nuevaFecha) {
@@ -262,42 +214,32 @@
             fecha: fechaFormateada
         };
 
-        licenciasNuevasRef.push(nuevoDato)
+        licenciasNuevasRef.doc(nuevoNumero).set(nuevoDato)
             .then(() => {
-                mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito en Firebase!';
+                mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito en Firestore!';
                 mensajeGuardadoDiv.style.color = 'green';
+                
+                cargarDatosDesdeFirestore();
+                
                 limpiarCampos();
                 formularioNuevosDatos.classList.add('hidden');
             })
             .catch(error => {
-                mensajeGuardadoDiv.textContent = 'Error al guardar en Firebase: ' + error.message;
+                mensajeGuardadoDiv.textContent = 'Error al guardar en Firestore: ' + error.message;
                 mensajeGuardadoDiv.style.color = 'red';
             });
-    }
-    
-    // Función para formatear la fecha a DD/MM/YYYY
-    function formatoFecha(fechaStr) {
-      if (!fechaStr) return '';
-      // Verifica si el formato ya es DD/MM/YYYY
-      if (fechaStr.includes('/')) {
-        return fechaStr;
-      }
-      // Convierte YYYY-MM-DD a DD/MM/YYYY
-      const [year, month, day] = fechaStr.split('-');
-      if (year && month && day) {
-        return `${day}/${month}/${year}`;
-      }
-      return fechaStr; // Devuelve el original si el formato no es reconocible
     }
 
     function renderizarTablaCpi() {
       cpiListDiv.innerHTML = '';
       
       const datosOrdenados = [...datosCompletos].sort((a, b) => {
-          const fechaA = new Date(formatoFecha(a.fecha).split('/').reverse().join('-'));
-          const fechaB = new Date(formatoFecha(b.fecha).split('/').reverse().join('-'));
+          const [d1, m1, y1] = a.fecha.split('/');
+          const [d2, m2, y2] = b.fecha.split('/');
+          const fechaA = new Date(`${y1}-${m1}-${d1}`);
+          const fechaB = new Date(`${y2}-${m2}-${d2}`);
           if (fechaA.getTime() === fechaB.getTime()) {
-              return b.numero - a.numero;
+              return b.numero.localeCompare(a.numero, undefined, { numeric: true });
           }
           return fechaB - fechaA;
       });
@@ -307,15 +249,15 @@
         fila.classList.add('bg-white', 'border-b', 'hover:bg-gray-50');
 
         const celdaNumero = document.createElement('td');
-        celdaNumero.classList.add('cpi-table-cell', 'px-6', 'py-4', 'font-medium', 'text-gray-900', 'whitespace-nowrap');
+        celdaNumero.classList.add('px-6', 'py-4', 'font-medium', 'text-gray-900', 'whitespace-nowrap');
         celdaNumero.textContent = dato.numero;
 
         const celdaFecha = document.createElement('td');
-        celdaFecha.classList.add('cpi-table-cell', 'px-6', 'py-4', 'whitespace-nowrap');
-        celdaFecha.textContent = formatoFecha(dato.fecha); // Aquí se aplica el nuevo formateo
+        celdaFecha.classList.add('px-6', 'py-4');
+        celdaFecha.textContent = dato.fecha;
 
         const celdaAccion = document.createElement('td');
-        celdaAccion.classList.add('cpi-table-cell', 'px-6', 'py-4', 'text-right', 'whitespace-nowrap');
+        celdaAccion.classList.add('px-6', 'py-4', 'text-right');
         const deleteIcon = document.createElement('span');
         deleteIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 delete-icon inline-block" viewBox="0 0 20 20" fill="currentColor">
                                   <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
@@ -329,7 +271,7 @@
         cpiListDiv.appendChild(fila);
       });
     }
-    
+
     function confirmarEliminar(key, numero) {
       if (confirm(`¿Estás seguro de que quieres eliminar el registro con el número ${numero}?`)) {
         eliminarDato(key);
@@ -337,17 +279,19 @@
     }
 
     function eliminarDato(key) {
-      licenciasNuevasRef.child(key).remove()
+      licenciasNuevasRef.doc(key).delete()
         .then(() => {
           console.log("Registro eliminado con éxito.");
+          cargarDatosDesdeFirestore();
         })
         .catch((error) => {
           console.error("Error al eliminar el registro:", error);
+          alert("Error al eliminar el registro.");
         });
     }
 
     function buscarFecha() {
-      const numero = document.getElementById("numero").value.trim();
+      const numero = document.getElementById("numero").value.trim().toUpperCase();
       const output = document.getElementById("output");
 
       if (!numero) {
@@ -379,9 +323,9 @@
         return;
       }
 
-      const numAntes = parseInt(antes.numero.replace(/\D/g, ''));
-      const numDespues = parseInt(despues.numero.replace(/\D/g, ''));
-      const numActual = parseInt(numero.replace(/\D/g, ''));
+      const numAntes = parseInt(antes.numero.replace(/\D/g, ''), 36);
+      const numDespues = parseInt(despues.numero.replace(/\D/g, ''), 36);
+      const numActual = parseInt(numero.replace(/\D/g, ''), 36);
       
       const prop = (numActual - numAntes) / (numDespues - numAntes);
 

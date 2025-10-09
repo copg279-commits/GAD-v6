@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Documentos GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            /* Se ha ajustado para alinear el contenido de la función */
+            align-items: center; 
+            padding: 2rem;
+            width: 100%;
+            max-width: 900px; /* Centrar el contenido principal */
+            margin: 0 auto;
+        }
+        .gad-logo-header {
+            /* TAMAÑO ORIGINAL RESTAURADO (160px) */
+            width: 160px; 
+            height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .back-to-menu-button {
+            background-color: #f59e0b; /* Amarillo */
+        }
+        .back-to-menu-button:hover {
+            background-color: #d97706;
+        }
+        .back-button-history {
+            background-color: #4b5563; /* Gris oscuro */
+        }
+        .back-button-history:hover {
+            background-color: #374151;
+        }
+        /* Estilos específicos para la aplicación de inventario */
+        .card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header sin shadow-lg, como en el archivo original -->
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="gad-logo-header">
+            <!-- RUTA ORIGINAL RESTAURADA -->
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <main>
+        <div class="text-center w-full max-w-xl mb-8">
+            <h1 class="text-4xl font-extrabold text-blue-800 mb-2">Inventario de Documentos GAD</h1>
+            <p class="text-lg text-gray-600">Registro y Consulta de Documentos (Personas/Vehículos)</p>
+        </div>
+        
+        <!-- =================================================================== -->
+        <!--  CONTENIDO PERSONALIZADO: INVENTARIO DE DOCUMENTOS                  -->
+        <!-- =================================================================== -->
+        
+        <!-- Tarjeta de Registro de Documento -->
+        <div class="card max-w-3xl">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-700"><i class="fas fa-plus-circle mr-2"></i> Nuevo Documento</h2>
+            
+            <form id="documentForm" class="space-y-4">
+                
+                <!-- Campos Fijos -->
+                <div>
+                    <label for="nombreDocumento" class="block text-sm font-medium text-gray-700">Nombre del Documento/Asunto</label>
+                    <input type="text" id="nombreDocumento" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Tipo de Documento -->
+                    <div>
+                        <label for="tipoDocumento" class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
+                        <select id="tipoDocumento" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione...</option>
+                            <option value="Persona">Persona</option>
+                            <option value="Vehiculo">Vehículo</option>
+                        </select>
+                    </div>
+
+                    <!-- Ubicación (Físico/Escaneado) -->
+                    <div>
+                        <label for="ubicacion" class="block text-sm font-medium text-gray-700">Ubicación</label>
+                        <select id="ubicacion" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione...</option>
+                            <option value="Fisico">Físico</option>
+                            <option value="Escaneado 2400">Escaneado a 2400 dpi</option>
+                            <option value="Escaneado 600">Escaneado a 600 dpi</option>
+                        </select>
+                    </div>
+
+                    <!-- Fecha de Creación -->
+                    <div>
+                        <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha de Registro</label>
+                        <input type="date" id="fecha" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Campos Dinámicos (Se insertarán aquí mediante JS) -->
+                <div id="dynamicFieldsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Ejemplo de cómo se verán: -->
+                    <!-- <div><label for="campoDinamico" class="block text-sm font-medium text-gray-700">Campo Dinámico</label><input type="text" id="campoDinamico" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div> -->
+                </div>
+
+                <button type="submit" id="saveButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out flex items-center justify-center disabled:opacity-50" disabled>
+                    <i class="fas fa-database mr-2"></i> Guardar Documento
+                </button>
+                <p id="formStatus" class="mt-3 text-sm text-center"></p>
+            </form>
+        </div>
+
+        <!-- Tarjeta de Listado y Filtro -->
+        <div class="card max-w-3xl">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-700"><i class="fas fa-list-alt mr-2"></i> Documentos Registrados</h2>
+            
+            <!-- Controles de Filtro -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="filterTerm" class="block text-sm font-medium text-gray-700">Buscar por Contenido (Cualquier Campo)</label>
+                    <input type="text" id="filterTerm" placeholder="Escribe nombre, DNI, matrícula, etc..." class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+                <div>
+                    <label for="filterTipo" class="block text-sm font-medium text-gray-700">Filtrar por Tipo</label>
+                    <select id="filterTipo" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500">
+                        <option value="">-- Mostrar Todos --</option>
+                        <option value="Persona">Persona</option>
+                        <option value="Vehiculo">Vehículo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Contenedor de la Lista -->
+            <div id="documentsList" class="space-y-3 max-h-96 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-gray-50">
+                <p id="loadingMessage" class="text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Esperando conexión y carga de documentos...</p>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!--  FIN DEL CONTENIDO PERSONALIZADO                                    -->
+        <!-- =================================================================== -->
+
+        <div class="nav-buttons">
+            <a href="index.html" class="back-button back-to-menu-button">Volver a Menú Principal</a>
+            <button onclick="history.back()" class="back-button back-button-history">Atrás</button>
+        </div>
+    </main>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200 shadow-inner">
+        <div class="flex flex-col items-center">
+            <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+            <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+            <p>&copy; GAD - Todos los derechos reservados</p>
+            <!-- Placeholder para ver el estado de la conexión -->
+            <p id="auth-info" class="text-xs text-gray-500 mt-2">Estado de Autenticación: Inicializando...</p>
+        </div>
+    </footer>
+
+    <!-- Script de Inicialización de Firebase (NO TOCAR) -->
+    <script type="module">
+        // Importaciones de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Establecer nivel de log para depuración de Firestore
+        setLogLevel('debug');
+
+        // Variables Globales del Entorno (No cambiar)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Variables de Firebase accesibles globalmente dentro de este módulo
+        let app;
+        window.db = null; // Hacemos las variables globales para el resto del código
+        window.auth = null;
+        window.userId = null;
+        window.isAuthReady = false;
+        
+        // Almacén local de documentos (para manejo de filtros)
+        let documentsData = []; 
+
+        // Referencias a elementos del DOM
+        const authInfo = document.getElementById('auth-info');
+        const documentForm = document.getElementById('documentForm');
+        const tipoDocumentoSelect = document.getElementById('tipoDocumento');
+        const dynamicFieldsContainer = document.getElementById('dynamicFieldsContainer');
+        const saveButton = document.getElementById('saveButton');
+        const formStatus = document.getElementById('formStatus');
+        const documentsList = document.getElementById('documentsList');
+        const filterTermInput = document.getElementById('filterTerm');
+        const filterTipoSelect = document.getElementById('filterTipo');
+
+        /**
+         * Inicializa Firebase, autentica al usuario y establece las variables globales.
+         */
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                authInfo.textContent = "ERROR: Configuración de Firebase no encontrada.";
+                return;
+            }
+
+            try {
+                // 1. Inicializar la aplicación Firebase
+                app = initializeApp(firebaseConfig);
+                window.db = getFirestore(app);
+                window.auth = getAuth(app);
+
+                // 2. Autenticar al usuario
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        window.userId = user.uid;
+                        window.isAuthReady = true;
+                        authInfo.innerHTML = `<i class="fas fa-check-circle text-green-500"></i> Autenticado. User ID: ${window.userId.substring(0, 8)}...`;
+                        saveButton.disabled = false; // Habilitar el botón de guardar
+                        
+                        // Una vez autenticado, configurar listeners
+                        setupDynamicFieldsListener();
+                        setupFormSubmission();
+                        setupRealtimeListener();
+                        setupFilterListeners();
+
+                    } else {
+                        // Si no hay usuario, intentar autenticar con el token o de forma anónima
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Error al iniciar sesión:", error);
+                            authInfo.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500"></i> ERROR de Autenticación: ${error.message}`;
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                authInfo.innerHTML = `<i class="fas fa-exclamation-circle text-red-500"></i> ERROR FATAL de Firebase: ${error.message}`;
+            }
+        }
+        
+        /**
+         * Configura el listener para mostrar los campos dinámicos del formulario.
+         */
+        function setupDynamicFieldsListener() {
+            tipoDocumentoSelect.addEventListener('change', (e) => {
+                const tipo = e.target.value;
+                dynamicFieldsContainer.innerHTML = '';
+                
+                if (tipo === 'Persona') {
+                    dynamicFieldsContainer.innerHTML = `
+                        <div>
+                            <label for="campoDNI" class="block text-sm font-medium text-gray-700">DNI/NIE del Individuo</label>
+                            <input type="text" id="campoDNI" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="campoNombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                            <input type="text" id="campoNombre" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    `;
+                } else if (tipo === 'Vehiculo') {
+                    dynamicFieldsContainer.innerHTML = `
+                        <div>
+                            <label for="campoMatricula" class="block text-sm font-medium text-gray-700">Matrícula del Vehículo</label>
+                            <input type="text" id="campoMatricula" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="campoMarca" class="block text-sm font-medium text-gray-700">Marca y Modelo</label>
+                            <input type="text" id="campoMarca" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        /**
+         * Maneja el envío del formulario y guarda los datos en Firestore.
+         */
+        function setupFormSubmission() {
+            documentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!window.isAuthReady) {
+                    formStatus.textContent = 'Error: Esperando conexión a Firebase...';
+                    formStatus.className = 'mt-3 text-sm text-center text-red-500';
+                    return;
+                }
+                
+                formStatus.textContent = 'Guardando documento...';
+                formStatus.className = 'mt-3 text-sm text-center text-yellow-600';
+                saveButton.disabled = true;
+
+                try {
+                    // Recoger datos del formulario
+                    const docData = {
+                        nombreDocumento: document.getElementById('nombreDocumento').value,
+                        tipoDocumento: tipoDocumentoSelect.value,
+                        ubicacion: document.getElementById('ubicacion').value,
+                        fecha: document.getElementById('fecha').value,
+                        authorId: window.userId,
+                        createdAt: serverTimestamp()
+                    };
+                    
+                    // Añadir campos dinámicos
+                    if (docData.tipoDocumento === 'Persona') {
+                        docData.dni = document.getElementById('campoDNI').value;
+                        docData.nombreCompleto = document.getElementById('campoNombre').value;
+                    } else if (docData.tipoDocumento === 'Vehiculo') {
+                        docData.matricula = document.getElementById('campoMatricula').value;
+                        docData.marcaModelo = document.getElementById('campoMarca').value;
+                    }
+
+                    // Guardar en la colección pública (para compartir el inventario)
+                    const collectionPath = `/artifacts/${appId}/public/data/gad_inventario`;
+                    const docsCollection = collection(window.db, collectionPath);
+
+                    await addDoc(docsCollection, docData);
+
+                    // Limpiar formulario y mostrar éxito
+                    documentForm.reset();
+                    dynamicFieldsContainer.innerHTML = ''; // Limpiar campos dinámicos
+                    formStatus.textContent = '¡Documento inventariado con éxito!';
+                    formStatus.className = 'mt-3 text-sm text-center text-green-600';
+                } catch (error) {
+                    console.error("Error al añadir el documento: ", error);
+                    formStatus.textContent = `Error al guardar: ${error.message}`;
+                    formStatus.className = 'mt-3 text-sm text-center text-red-500';
+                } finally {
+                    saveButton.disabled = false;
+                }
+            });
+        }
+
+        /**
+         * Configura el listener en tiempo real para recuperar todos los documentos.
+         */
+        function setupRealtimeListener() {
+             if (!window.db || !window.isAuthReady) {
+                 console.warn("Firestore o Autenticación no están listos. No se puede configurar el listener.");
+                 return;
+             }
+            
+            const collectionPath = `/artifacts/${appId}/public/data/gad_inventario`;
+            const docsCollection = collection(window.db, collectionPath);
+            const docsQuery = query(docsCollection); 
+
+            // Inicia la escucha en tiempo real
+            onSnapshot(docsQuery, (snapshot) => {
+                const docs = [];
+                snapshot.forEach((doc) => {
+                    docs.push({ id: doc.id, ...doc.data() });
+                });
+
+                documentsData = docs; // Almacenar datos globalmente
+                
+                // Aplicar filtros actuales
+                applyFilters();
+
+            }, (error) => {
+                console.error("Error al escuchar en tiempo real:", error);
+                documentsList.innerHTML = `<p class="text-red-500"><i class="fas fa-exclamation-circle mr-2"></i> Error al cargar datos: ${error.message}</p>`;
+            });
+        }
+        
+        /**
+         * Configura los listeners para los campos de filtrado.
+         */
+        function setupFilterListeners() {
+            filterTermInput.addEventListener('input', applyFilters);
+            filterTipoSelect.addEventListener('change', applyFilters);
+        }
+        
+        /**
+         * Aplica los filtros actuales a los datos almacenados y renderiza la lista.
+         */
+        function applyFilters() {
+            const searchTerm = filterTermInput.value.toLowerCase();
+            const filterTipo = filterTipoSelect.value;
+            
+            let filteredDocs = documentsData;
+
+            // 1. Filtrar por Tipo
+            if (filterTipo) {
+                filteredDocs = filteredDocs.filter(doc => doc.tipoDocumento === filterTipo);
+            }
+            
+            // 2. Filtrar por Término de Búsqueda (Cualquier campo)
+            if (searchTerm) {
+                filteredDocs = filteredDocs.filter(doc => {
+                    // Convertir el documento a una cadena JSON para buscar en todos los campos de forma sencilla
+                    const docString = JSON.stringify(doc).toLowerCase();
+                    return docString.includes(searchTerm);
+                });
+            }
+
+            // 3. Ordenar por fecha de creación (más reciente primero)
+            filteredDocs.sort((a, b) => {
+                const dateA = a.createdAt ? a.createdAt.toDate().getTime() : 0;
+                const dateB = b.createdAt ? b.createdAt.toDate().getTime() : 0;
+                return dateB - dateA;
+            });
+            
+            renderDocuments(filteredDocs);
+        }
+
+        /**
+         * Renderiza la lista de documentos en el contenedor.
+         */
+        function renderDocuments(docs) {
+            documentsList.innerHTML = '';
+            
+            if (docs.length === 0) {
+                documentsList.innerHTML = '<p class="text-gray-500 p-4 text-center">No se encontraron documentos que coincidan con los filtros.</p>';
+                return;
+            }
+
+            docs.forEach(doc => {
+                const docElement = document.createElement('div');
+                docElement.className = 'bg-white p-4 border border-blue-100 rounded-lg shadow-sm hover:shadow-md transition duration-150 ease-in-out';
+                
+                const createdAtDate = doc.createdAt ? doc.createdAt.toDate() : new Date();
+                const formattedDate = createdAtDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                let dynamicDetails = '';
+                if (doc.tipoDocumento === 'Persona') {
+                    dynamicDetails = `
+                        <p class="text-sm text-gray-600"><span class="font-semibold">DNI/NIE:</span> ${doc.dni}</p>
+                        <p class="text-sm text-gray-600"><span class="font-semibold">Nombre:</span> ${doc.nombreCompleto}</p>
+                    `;
+                } else if (doc.tipoDocumento === 'Vehiculo') {
+                    dynamicDetails = `
+                        <p class="text-sm text-gray-600"><span class="font-semibold">Matrícula:</span> ${doc.matricula}</p>
+                        <p class="text-sm text-gray-600"><span class="font-semibold">Marca/Modelo:</span> ${doc.marcaModelo}</p>
+                    `;
+                }
+
+                docElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg font-bold text-blue-700">${doc.nombreDocumento}</h3>
+                        <span class="text-xs font-medium px-2 py-1 rounded-full ${doc.tipoDocumento === 'Persona' ? 'bg-yellow-100 text-yellow-800' : 'bg-indigo-100 text-indigo-800'}">
+                            ${doc.tipoDocumento}
+                        </span>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm text-gray-600"><span class="font-semibold">Ubicación:</span> <span class="text-green-600 font-medium">${doc.ubicacion}</span></p>
+                        ${dynamicDetails}
+                        <p class="text-xs text-gray-400 pt-2"><i class="fas fa-clock mr-1"></i> Registrado el ${formattedDate} por ${doc.authorId.substring(0, 8)}...</p>
+                    </div>
+                `;
+                documentsList.appendChild(docElement);
+            });
+        }
+
+
+        // Iniciar la conexión al cargar la ventana
+        window.onload = initFirebase;
+    </script>
+</body>
+</html>

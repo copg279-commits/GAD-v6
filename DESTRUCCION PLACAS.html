@@ -350,31 +350,27 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getDatabase, ref, get, update, push, remove, set } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
-        // 1. CONFIGURACIÓN DE TU PROYECTO (¡DEBES REEMPLAZAR LOS VALORES DE TUS CLAVES!)
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY_AQUI", // <-- REEMPLAZA ESTE VALOR CON TU CLAVE REAL
-            authDomain: "gad-alicante-f0d56.firebaseapp.com",
-            databaseURL: "https://gad-alicante-f0d56-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "gad-alicante-f0d56",
-            storageBucket: "gad-alicante-f0d56.appspot.com",
-            messagingSenderId: "1098616110904",
-            appId: "TU_APP_ID_AQUI" // <-- REEMPLAZA ESTE VALOR CON TU ID REAL
-        };
+       const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
 
-        // 2. Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         
         let allPlatesData = []; 
         let anuladasData = []; 
         let uniqueLots = {}; 
-        let currentSort = { column: 'FECHA_AGREGADA', direction: 'desc' }; // Orden por defecto por fecha (más reciente primero)
+        let currentSort = { column: 'FECHA_AGREGADA', direction: 'desc' };
         let lotEurocopData = {}; 
         let currentPlatesInConsultedLot = [];
         let knownCountries = []; 
 
-        // --- FUNCIONES PRINCIPALES DE CARGA Y PERSISTENCIA ---
-        
         async function loadLotMetadata() {
             try {
                 const dbRef = ref(database, 'lotes');
@@ -384,7 +380,7 @@
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     Object.entries(data).forEach(([lotNumber, metadata]) => {
-                        if (metadata.eurocop) {
+                        if (metadata && metadata.eurocop !== undefined) {
                             lotEurocopData[lotNumber] = metadata.eurocop;
                         }
                     });
@@ -450,9 +446,6 @@
                         return { id: key, ...value };
                     });
 
-                    // Asignar fecha 06/10/2025 a placas existentes que no tengan fecha
-                    await assignDefaultDateToExistingPlates();
-                    
                     await getNextLotNumber();
                     document.getElementById('plateCounter').textContent = allPlatesData.length; 
                     
@@ -461,43 +454,17 @@
                     renderPlates(allPlatesData);
                     loadLotAdministrationPanel(); 
                 } else {
-                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-orange-500">❌ Base de datos vacía. Asegúrate de importar el JSON en Firebase.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-orange-500">❌ Base de datos vacía.</td></tr>';
                     document.getElementById('plateCounter').textContent = '0';
                     loadLotAdministrationPanel(); 
                 }
 
             } catch (error) {
-                console.error("🚨 ERROR CRÍTICO al cargar placas (SDK):", error);
-                alert("❌ ERROR: No se pudo conectar a Firebase. Revisa si la configuración es correcta.");
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Error al cargar datos. Comprueba la Consola (F12).</td></tr>';
+                console.error("🚨 ERROR CRÍTICO al cargar placas:", error);
+                alert("❌ ERROR: No se pudo conectar a Firebase.");
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Error al cargar datos.</td></tr>';
             }
         }
-
-        // Función para asignar fecha 06/10/2025 a placas existentes sin fecha
-        async function assignDefaultDateToExistingPlates() {
-            const updates = {};
-            let needsUpdate = false;
-            
-            allPlatesData.forEach(plate => {
-                if (!plate.FECHA_AGREGADA) {
-                    // Asignar fecha 06/10/2025 a placas existentes
-                    updates[`placas_destruccion/${plate.id}/FECHA_AGREGADA`] = "2025-10-06T00:00:00.000Z";
-                    plate.FECHA_AGREGADA = "2025-10-06T00:00:00.000Z";
-                    needsUpdate = true;
-                }
-            });
-            
-            if (needsUpdate) {
-                try {
-                    await update(ref(database), updates);
-                    console.log("Fechas asignadas a placas existentes correctamente");
-                } catch (error) {
-                    console.error("Error al asignar fechas a placas existentes:", error);
-                }
-            }
-        }
-
-        // --- FUNCIONES SECUNDARIAS DE CARGA Y AUTOCONFIGURACIÓN ---
 
         function extractAndRenderCountries() {
             const uniqueCountriesSet = new Set();
@@ -567,25 +534,20 @@
             tableBody.innerHTML = '';
             
             if (document.getElementById('searchPlate').value.trim() === "") {
-                // 1. Criterio principal: Mover PENDIENTES al inicio y Loteados al final
                 platesToRender.sort((a, b) => {
                     const isADestroyed = !!a.LoteDestruccion && a.LoteDestruccion.trim() !== "";
                     const isBDestroyed = !!b.LoteDestruccion && b.LoteDestruccion.trim() !== "";
 
-                    // PENDIENTE (false) va antes que DESTRUIDO (true)
                     if (isADestroyed !== isBDestroyed) {
                         return isADestroyed ? 1 : -1; 
                     }
 
-                    // 2. Criterio secundario: Ordenar por columna seleccionada (PAIS, PLACA o FECHA_AGREGADA)
                     let aVal, bVal;
                     
                     if (currentSort.column === 'FECHA_AGREGADA') {
-                        // Para fechas, usamos el valor numérico del timestamp
                         aVal = a.FECHA_AGREGADA ? new Date(a.FECHA_AGREGADA).getTime() : 0;
                         bVal = b.FECHA_AGREGADA ? new Date(b.FECHA_AGREGADA).getTime() : 0;
                     } else {
-                        // Para texto (PAIS o PLACA)
                         aVal = String(a[currentSort.column] || '').toUpperCase();
                         bVal = String(b[currentSort.column] || '').toUpperCase();
                     }
@@ -607,7 +569,6 @@
                 const isDestroyed = placa.LoteDestruccion && placa.LoteDestruccion.trim() !== "";
                 const rowClass = i % 2 === 0 ? 'table-row-even' : 'table-row-odd';
                 
-                // Formatear fecha para mostrar
                 let fechaFormateada = '';
                 if (placa.FECHA_AGREGADA) {
                     const fecha = new Date(placa.FECHA_AGREGADA);
@@ -620,7 +581,6 @@
                     row.classList.add('bg-green-100', 'hover:bg-green-200');
                 }
 
-                // ADAPTACIÓN CLAVE: Se añaden los atributos data-label a las celdas
                 row.innerHTML = `
                     <td data-label="Seleccionar" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <input type="checkbox" data-plate-id="${key}" ${isDestroyed ? 'disabled' : ''} class="plate-checkbox rounded text-red-600 border-gray-300">
@@ -646,7 +606,6 @@
             document.querySelectorAll('.delete-icon').forEach(icon => {
                 icon.addEventListener('click', handleAnularPlate); 
             });
-            // Listener para el icono de edición
             document.querySelectorAll('.edit-icon').forEach(icon => {
                 icon.addEventListener('click', handleEditPlate);
             });
@@ -683,8 +642,7 @@
                     <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${lotNumberOnly}</td>
                     <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
                         <input type="text" value="${eurocopValue}" data-lot-number="${lotNumberOnly}" placeholder="Nº EUROCOP"
-                               class="eurocop-input w-full border border-gray-300 rounded-md p-1 text-xs" 
-                               onchange="saveEurocopValue(this)">
+                               class="eurocop-input w-full border border-gray-300 rounded-md p-1 text-xs">
                     </td>
                     <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">${plateCount}</td>
                     <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">${dateMatch ? dateMatch[1] : 'Desconocida'}</td> 
@@ -698,6 +656,12 @@
                     </td>
                 `;
                 lotAdminBody.appendChild(row);
+                
+                // Agregar event listener para EUROCOP
+                const eurocopInput = row.querySelector('.eurocop-input');
+                eurocopInput.addEventListener('change', function() {
+                    saveEurocopValue(this);
+                });
             });
             
             document.querySelectorAll('.consult-lot-btn').forEach(btn => {
@@ -721,7 +685,6 @@
                 const row = document.createElement('tr');
                 row.classList.add(i % 2 === 0 ? 'bg-gray-50' : 'bg-white', 'hover:bg-yellow-50');
                 
-                // Formatear fecha de devolución
                 let fechaDevolucionFormateada = '';
                 if (placa.FECHA_ANULACION) {
                     const fecha = new Date(placa.FECHA_ANULACION);
@@ -752,8 +715,6 @@
             });
         }
 
-        // --- FUNCIONES DE GESTIÓN DE EVENTOS ---
-
         function handleEditPlate(event) {
             const plateId = event.currentTarget.dataset.plateId;
             const paisCell = document.getElementById(`pais-${plateId}`);
@@ -762,14 +723,11 @@
             const currentPais = paisCell.textContent;
             const currentPlaca = placaCell.textContent;
             
-            // Crear inputs de edición
             paisCell.innerHTML = `<input type="text" value="${currentPais}" class="inline-edit-input" id="edit-pais-${plateId}" list="countryDatalist">`;
             placaCell.innerHTML = `<input type="text" value="${currentPlaca}" class="inline-edit-input" id="edit-placa-${plateId}">`;
             
-            // Enfocar el campo de país
             document.getElementById(`edit-pais-${plateId}`).focus();
             
-            // Agregar eventos para guardar al presionar Enter o perder foco
             const saveEdit = () => {
                 const newPais = document.getElementById(`edit-pais-${plateId}`).value.trim().toUpperCase();
                 const newPlaca = document.getElementById(`edit-placa-${plateId}`).value.trim().toUpperCase();
@@ -777,7 +735,6 @@
                 if (newPais && newPlaca) {
                     updatePlateInDatabase(plateId, newPais, newPlaca);
                 } else {
-                    // Restaurar valores originales si están vacíos
                     paisCell.textContent = currentPais;
                     placaCell.textContent = currentPlaca;
                 }
@@ -798,11 +755,9 @@
                 const plateRef = ref(database, `placas_destruccion/${plateId}`);
                 await update(plateRef, { PAIS: newPais, PLACA: newPlaca });
                 
-                // Actualizar en la interfaz
                 document.getElementById(`pais-${plateId}`).textContent = newPais;
                 document.getElementById(`placa-${plateId}`).textContent = newPlaca;
                 
-                // Actualizar en el array local
                 const plateIndex = allPlatesData.findIndex(p => p.id === plateId);
                 if (plateIndex !== -1) {
                     allPlatesData[plateIndex].PAIS = newPais;
@@ -831,19 +786,16 @@
         
         async function anularPlate(plateId, plateData) {
             try {
-                // 1. Mover a placas_anuladas
                 const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
                 await update(anuladasRef, {
                     PAIS: plateData.PAIS,
                     PLACA: plateData.PLACA,
-                    FECHA_ANULACION: new Date().toISOString() // Fecha de devolución automática
+                    FECHA_ANULACION: new Date().toISOString()
                 });
                 
-                // 2. Eliminar de placas_destruccion
                 const plateRef = ref(database, `placas_destruccion/${plateId}`);
                 await remove(plateRef);
                 
-                // 3. Actualizar interfaz
                 await loadPlates(); 
                 await loadAnuladas(); 
                 
@@ -871,19 +823,16 @@
         
         async function restorePlate(plateId, plateData) {
             try {
-                // 1. Mover de vuelta a placas_destruccion
                 const plateRef = ref(database, `placas_destruccion/${plateId}`);
                 await update(plateRef, {
                     PAIS: plateData.PAIS,
                     PLACA: plateData.PLACA,
-                    FECHA_AGREGADA: new Date().toISOString() // Nueva fecha al restaurar
+                    FECHA_AGREGADA: new Date().toISOString()
                 });
                 
-                // 2. Eliminar de placas_anuladas
                 const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
                 await remove(anuladasRef);
                 
-                // 3. Actualizar interfaz
                 await loadPlates(); 
                 await loadAnuladas(); 
                 renderAnuladasModal(); 
@@ -912,11 +861,9 @@
         
         async function permanentDeletePlate(plateId) {
             try {
-                // Eliminar de placas_anuladas
                 const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
                 await remove(anuladasRef);
                 
-                // Actualizar interfaz
                 await loadAnuladas(); 
                 renderAnuladasModal(); 
                 
@@ -980,6 +927,10 @@
                     updates[`placas_destruccion/${plateId}/LoteDestruccion`] = "";
                 });
                 
+                // ELIMINAR EL LOTE DE LA BASE DE DATOS
+                const lotRef = ref(database, `lotes/${lotName}`);
+                await remove(lotRef);
+                
                 await update(ref(database), updates);
                 
                 alert(`Lote ${lotName} deshecho. ${plateIds.length} placas marcadas como PENDIENTES.`);
@@ -1017,9 +968,18 @@
         async function generateLot(plateIds, lotName, currentDate) {
             try {
                 const updates = {};
+                
+                // 1. Actualizar cada placa con el nombre del lote
                 plateIds.forEach(plateId => {
                     updates[`placas_destruccion/${plateId}/LoteDestruccion`] = lotName;
                 });
+                
+                // 2. ✅ CREAR METADATOS DEL LOTE EN FIREBASE (ESTO ES LO QUE FALTABA)
+                updates[`lotes/${lotName}`] = {
+                    fechaCreacion: currentDate,
+                    totalPlacas: plateIds.length,
+                    eurocop: "" // Inicializar vacío
+                };
                 
                 await update(ref(database), updates);
                 
@@ -1049,29 +1009,22 @@
         }
         
         function handleSort(column) {
-            // Si ya está ordenando por esta columna, cambiar la dirección
             if (currentSort.column === column) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
-                // Si es una nueva columna, ordenar ascendente por defecto
                 currentSort.column = column;
                 currentSort.direction = 'asc';
             }
             
-            // Actualizar iconos de ordenación
             updateSortIcons();
-            
-            // Re-renderizar la tabla
             renderPlates(allPlatesData);
         }
         
         function updateSortIcons() {
-            // Limpiar todos los iconos
             document.querySelectorAll('.sort-icon').forEach(icon => {
                 icon.innerHTML = '';
             });
             
-            // Añadir icono a la columna actualmente ordenada
             const currentIcon = document.getElementById(`sortIcon${currentSort.column}`);
             if (currentIcon) {
                 currentIcon.innerHTML = currentSort.direction === 'asc' ? 
@@ -1089,7 +1042,6 @@
                 return;
             }
             
-            // Verificar si la placa ya existe
             const plateExists = allPlatesData.some(placa => 
                 placa.PLACA === plateNumber && placa.PAIS === country
             );
@@ -1101,7 +1053,7 @@
             
             try {
                 const newPlateRef = push(ref(database, 'placas_destruccion'));
-                const fechaAgregada = new Date().toISOString(); // Fecha automática del día actual
+                const fechaAgregada = new Date().toISOString();
                 
                 await update(newPlateRef, {
                     PAIS: country,
@@ -1110,14 +1062,11 @@
                     LoteDestruccion: ""
                 });
                 
-                // Limpiar formulario
                 document.getElementById('newPlateCountry').value = '';
                 document.getElementById('newPlateNumber').value = '';
                 
-                // Cerrar modal
                 document.getElementById('newPlateModal').style.display = 'none';
                 
-                // Recargar datos
                 await loadPlates();
                 
                 alert(`Placa ${plateNumber} (${country}) añadida correctamente.`);
@@ -1134,13 +1083,11 @@
                 return;
             }
             
-            // Crear contenido CSV
             let csvContent = "PAIS,PLACA\n";
             currentPlatesInConsultedLot.forEach(plate => {
                 csvContent += `"${plate.PAIS || ''}","${plate.PLACA || ''}"\n`;
             });
             
-            // Crear y descargar archivo
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -1154,23 +1101,17 @@
             document.body.removeChild(link);
         }
 
-        // --- INICIALIZACIÓN DE EVENT LISTENERS ---
-
         document.addEventListener('DOMContentLoaded', function() {
-            // Cargar datos iniciales
             loadPlates();
             
-            // Configurar ordenación
             document.querySelectorAll('.sort-header').forEach(header => {
                 header.addEventListener('click', () => {
                     handleSort(header.dataset.sortBy);
                 });
             });
             
-            // Inicializar iconos de ordenación
             updateSortIcons();
             
-            // Event listeners para los botones principales
             document.getElementById('openNewPlateModal').addEventListener('click', () => {
                 document.getElementById('newPlateModal').style.display = 'flex';
             });
@@ -1208,7 +1149,6 @@
             
             document.getElementById('exportLotToExcelButton').addEventListener('click', handleExportToExcel);
             
-            // Cerrar modales al hacer clic fuera
             window.addEventListener('click', function(event) {
                 const newPlateModal = document.getElementById('newPlateModal');
                 const anuladasModal = document.getElementById('anuladasModal');
@@ -1225,7 +1165,6 @@
                 }
             });
             
-            // Permitir Enter para guardar nueva placa
             document.getElementById('newPlateCountry').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     document.getElementById('newPlateNumber').focus();

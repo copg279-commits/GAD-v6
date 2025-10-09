@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos generales para el cuerpo */
+        body {
+            font-family: sans-serif;
+            background-color: #f3f4f6; /* Fondo gris claro */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100svh; /* Para ajuste en móviles */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: hidden; /* Oculta el scroll si la página se desborda ligeramente */
+            -webkit-overflow-scrolling: touch; /* Suaviza el scroll en iOS */
+        }
+        /* Ajuste para el contenido principal, ahora con padding horizontal */
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centra horizontalmente el contenido */
+            flex-grow: 1; /* Permite que crezca para empujar el footer */
+            width: 100%;
+            padding: 0px; /* Padding general eliminado para el wrapper */
+            box-sizing: border-box;
+        }
+        /* Ajuste para el contenedor de la cuadrícula de botones (el "cuadro blanco") */
+        .grid-container {
+            width: 100%; /* Ocupa todo el ancho disponible del main-content-wrapper */
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0.5rem; /* Padding interno reducido para los botones dentro del cuadro blanco */
+            background-color: white; /* Fondo blanco como la tarjeta del otro menú */
+            border-radius: 0.75rem; /* Bordes redondeados */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* Sombra */
+            display: grid; /* Asegura que grid se aplique */
+        }
+        /* Ajustes responsivos para los botones */
+        .menu-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem; /* p-3 para móvil, reducido */
+            font-size: 1rem; /* text-base para móvil, reducido */
+            font-weight: 700; /* font-bold */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-md */
+            transition-property: all;
+            transition-duration: 300ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* transition-all duration-300 ease-in-out */
+        }
+        .menu-button:hover {
+            filter: brightness(0.9); /* Nuevo efecto hover: cambia la intensidad de color */
+        }
+
+        /* MEDIA QUERIES para pantallas grandes (ordenadores) */
+        @media (min-width: 1024px) { /* Breakpoint 'lg' en Tailwind */
+            .menu-button {
+                padding: 1.5rem; /* lg:p-6, más grande para desktop */
+                font-size: 1.25rem; /* lg:text-xl, más grande para desktop */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+        <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+    </div>
+</header>
+
+<h1 class="text-black text-center mt-2 text-xl font-bold px-4"> <!-- mt-2 para reducir espacio arriba del título -->
+    Menú de Herramientas GAD
+</h1>
+
+<!-- Contenedor principal con padding horizontal responsivo para controlar el ancho total -->
+<div class="main-content-wrapper px-2 sm:px-4 lg:px-16"> <!-- Padding horizontal reducido para móviles, ajustado para sm y lg -->
+    <!-- El "cuadro blanco" que contendrá los botones -->
+    <div class="grid grid-cols-2 gap-2 p-2 mt-1 grid-container"> <!-- grid-cols-2 para 2 botones por fila SIEMPRE. gap-2 para separación reducida. p-2 para padding interno del cuadro. mt-1 para reducir espacio con el título -->
+        <!-- Tus botones existentes con los nombres y URLs originales -->
+        <button onclick="window.location.href='COLOMBIA FABRICANTE LC.html'"
+                class="bg-blue-500 text-white menu-button">
+            COLOMBIA FABRICANTE
+        </button>
+        <button onclick="window.location.href='VENEZUELA Nº LICENCIA.html'"
+                class="bg-blue-500 text-white menu-button">
+            VENEZUELA Nº LICENCIA
+        </button>
+        <button onclick="window.location.href='CONVENIO DE CANJE CON ESPAÑA.html'"
+                class="bg-blue-500 text-white menu-button">
+            CONVENIO DE CANJE
+        </button>
+        <button onclick="window.location.href='EQUIVALENCIAS PNC USA-ESPAÑA.html'"
+                class="bg-blue-500 text-white menu-button">
+            EQUIVALENCIAS PNC USA-ESPAÑA
+        </button>
+         <button onclick="window.location.href='EQUIVALENCIAS PNC LATINO AMERICA-ESPAÑA.html'"
+                class="bg-blue-500 text-white menu-button">
+            EQUIVALENCIAS PNC LATINO AMERICA-ESPAÑA
+        </button>
+            <button onclick="window.location.href='CÓDIGOS ARMONIZADOS PNC.html'"
+                class="bg-blue-500 text-white menu-button">
+            CÓDIGOS ARMONIZADOS PNC
+        </button>
+        <button onclick="window.location.href='PERMISO INTERNACIONAL DE CONDUCIR.html'"
+                class="bg-blue-500 text-white menu-button">
+            PERMISO INTERNACIONAL DE CONDUCIR
+        </button>
+                <button onclick="window.location.href='PERMISOS ALEMANIA ANTIGUOS.html'"
+                class="bg-blue-500 text-white menu-button">
+            PERMISOS ALEMANIA ANTIGUOS
+        </button>
+
+        <!-- Botón de Volver al Menú Principal - Ocupa 2 columnas -->
+        <button onclick="window.location.href='index.html'"
+                class="col-span-2 mt-2 p-2.5 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-500 text-base lg:text-xl">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+</body>
+</html>
