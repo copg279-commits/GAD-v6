@@ -975,7 +975,7 @@
                     updates[`placas_destruccion/${plateId}/LoteDestruccion`] = lotName;
                 });
                 
-                // 2. ✅ CREAR METADATOS DEL LOTE EN FIREBASE (ESTO ES LO QUE FALTABA)
+                // 2. CREAR METADATOS DEL LOTE EN FIREBASE (Se crea el nodo 'lotes')
                 updates[`lotes/${lotName}`] = {
                     fechaCreacion: currentDate,
                     totalPlacas: plateIds.length,
