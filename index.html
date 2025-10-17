@@ -494,7 +494,7 @@
 
 <script>
     const firebaseConfig = {
-        databaseURL: "https://gad-alicante-v2-default-rtdb.europe-west1.firebasedatabase.app"
+        databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app/"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -1194,20 +1194,25 @@
         editTitleModal.style.display = 'flex';
     });
 
-    document.getElementById('save-title-changes').addEventListener('click', () => {
-        const newTitle = document.getElementById('edit-title-input').value.trim();
-        const titleRef = editTitleIcon.dataset.ref;
-        if (newTitle) {
-            db.refFromURL(titleRef).set(newTitle)
-                .then(() => {
-                    document.getElementById('edit-title-message').textContent = 'Título guardado con éxito.';
-                    setTimeout(() => editTitleModal.style.display = 'none', 1500);
-                })
-                .catch(() => {
-                    document.getElementById('edit-title-message').textContent = 'Error al guardar el título.';
-                });
-        }
-    });
+document.getElementById('save-title-changes').addEventListener('click', () => {
+    const newTitle = document.getElementById('edit-title-input').value.trim();
+    const titleRef = db.ref(TITLE_NODE); // <--- LÍNEA CORREGIDA: Usa la raíz
+    
+    if (newTitle) {
+        titleRef.set(newTitle) // <--- LÍNEA CORREGIDA: Usa la nueva referencia
+            .then(() => {
+                document.getElementById('edit-title-message').textContent = 'Título guardado con éxito.';
+                
+                // (Opcional, pero recomendado: actualiza el título en pantalla)
+                document.getElementById('main-title-text').textContent = newTitle; 
+
+                setTimeout(() => editTitleModal.style.display = 'none', 1500);
+            })
+            .catch(() => {
+                document.getElementById('edit-title-message').textContent = 'Error al guardar el título.';
+            });
+    }
+});
 
     // Event listeners para los botones de cerrar modales
     document.getElementById('close-edit-button-modal').onclick = () => editButtonModal.style.display = 'none';
