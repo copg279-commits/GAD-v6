@@ -180,13 +180,21 @@
       }
     });
 
+    // === MODIFICACIÓN 1: Lógica de carga para compatibilidad de formatos ===
     cpiRef.on('value', (snapshot) => {
         datosCPI = [];
         snapshot.forEach((childSnapshot) => {
             const data = childSnapshot.val();
+            
+            const keyAsInt = parseInt(childSnapshot.key);
+            // Si la clave es un número (nuevo formato), lo usamos. Si no, usamos el valor de data.numero (formato antiguo).
+            const numeroToUse = !isNaN(keyAsInt) ? keyAsInt : parseInt(data.numero);
+
+            if (isNaN(numeroToUse)) return; // Ignorar registros que no tienen número válido
+            
             datosCPI.push({
                 key: childSnapshot.key,
-                numero: parseInt(data.numero),
+                numero: numeroToUse,
                 fecha: new Date(data.fecha)
             });
         });
@@ -363,6 +371,7 @@
         anioSelector.value = '';
     }
     
+    // === MODIFICACIÓN 2: Lógica de guardado para usar el número como clave ===
     function guardarNuevoCpi() {
         const nuevoNumero = parseInt(nuevoNumeroCpiInput.value);
         const nuevaFechaStr = nuevaFechaCpiInput.value;
@@ -399,12 +408,13 @@
             return;
         }
         
+        // Objeto a guardar: solo la fecha, ya que el número es la clave
         const nuevoDato = {
-            numero: nuevoNumero,
             fecha: nuevaFechaStr
         };
 
-        cpiRef.push(nuevoDato)
+        // Usamos .child(numero).set(fecha) para guardar usando el número como clave
+        cpiRef.child(String(nuevoNumero)).set(nuevoDato)
             .then(() => {
                 mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito!';
                 mensajeGuardadoDiv.style.color = 'green';

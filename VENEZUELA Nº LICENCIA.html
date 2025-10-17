@@ -220,17 +220,25 @@
         const [year, month, day] = nuevaFecha.split('-');
         const fechaFormateada = `${day}/${month}/${year}`;
         const fechaNueva = new Date(`${year}-${month}-${day}`);
+        
+        // Función auxiliar para parsear fechas DD/MM/AAAA
+        const parseDate = (dateStr) => {
+            const [d, m, y] = dateStr.split('/');
+            return new Date(`${y}-${m}-${d}`);
+        };
+
 
         const datosOrdenadosPorNumero = [...datosCompletos].sort((a, b) => a.numero - b.numero);
         const antes = datosOrdenadosPorNumero.filter(d => d.numero <= nuevoNumero).pop();
         const despues = datosOrdenadosPorNumero.find(d => d.numero > nuevoNumero);
 
-        if (antes && fechaNueva < new Date(antes.fecha.split('/').reverse().join('-'))) {
+        // Validación de progresión cronológica/numérica
+        if (antes && fechaNueva < parseDate(antes.fecha)) {
             mensajeGuardadoDiv.innerHTML = `<p class='text-red-500 font-bold'>¡POSIBLE DOCUMENTO FALSO! LA PROGRESIÓN NUMÉRICA NO ES CORRECTA (Número posterior con fecha anterior)</p>`;
             return;
         }
 
-        if (despues && fechaNueva > new Date(despues.fecha.split('/').reverse().join('-'))) {
+        if (despues && fechaNueva > parseDate(despues.fecha)) {
             mensajeGuardadoDiv.innerHTML = `<p class='text-red-500 font-bold'>¡POSIBLE DOCUMENTO FALSO! LA PROGRESIÓN NUMÉRICA NO ES CORRECTA (Número anterior con fecha posterior)</p>`;
             return;
         }
@@ -240,7 +248,10 @@
             fecha: fechaFormateada
         };
 
-        licenciasNuevasRef.push(nuevoDato)
+        // *******************************************************************
+        // LÍNEA MODIFICADA: Ahora usa el número de licencia (String(nuevoNumero)) como clave
+        // *******************************************************************
+        licenciasNuevasRef.child(String(nuevoNumero)).set(nuevoDato)
             .then(() => {
                 mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito en Firebase!';
                 mensajeGuardadoDiv.style.color = 'green';
@@ -261,14 +272,19 @@
       cpiListDiv.innerHTML = '';
       
       const datosOrdenados = [...datosCompletos].sort((a, b) => {
-          const [d1, m1, y1] = a.fecha.split('/');
-          const [d2, m2, y2] = b.fecha.split('/');
-          const fechaA = new Date(`${y1}-${m1}-${d1}`);
-          const fechaB = new Date(`${y2}-${m2}-${d2}`);
+          // Ordenar por fecha descendente, y luego por número descendente
+          const parseDate = (dateStr) => {
+            const [d, m, y] = dateStr.split('/');
+            return new Date(`${y}-${m}-${d}`);
+          };
+          
+          const fechaA = parseDate(a.fecha);
+          const fechaB = parseDate(b.fecha);
+
           if (fechaA.getTime() === fechaB.getTime()) {
-              return b.numero - a.numero;
+              return b.numero - a.numero; // Si las fechas son iguales, el número más alto va primero
           }
-          return fechaB - fechaA;
+          return fechaB - fechaA; // La fecha más reciente (más grande) va primero
       });
       
       datosOrdenados.forEach(dato => {
@@ -289,6 +305,7 @@
         deleteIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 delete-icon inline-block" viewBox="0 0 20 20" fill="currentColor">
                                   <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
                                 </svg>`;
+        // dato.key ahora es el número de licencia
         deleteIcon.onclick = () => confirmarEliminarCpi(dato.key, dato.numero);
         celdaAccion.appendChild(deleteIcon);
 
@@ -306,6 +323,7 @@
     }
 
     function eliminarCpi(key) {
+      // Eliminará usando la clave (que ahora es el número de licencia)
       licenciasNuevasRef.child(key).remove()
         .then(() => {
           console.log("Registro eliminado con éxito.");
@@ -361,12 +379,12 @@
       const [day2, month2, year2] = despues.fecha.split("/");
       const fecha2 = new Date(`${year2}-${month2}-${day2}`);
       
-      if (fecha1 > fecha2) {
+      if (fecha1.getTime() > fecha2.getTime()) {
           output.innerHTML = "<p class='text-red-500 font-bold'>¡POSIBLE DOCUMENTO FALSO! LA PROGRESIÓN NUMÉRICA NO ES CORRECTA</p>";
           return;
       }
 
-      const fechaEstimada = new Date(fecha1.getTime() + prop * (fecha2 - fecha1));
+      const fechaEstimada = new Date(fecha1.getTime() + prop * (fecha2.getTime() - fecha1.getTime()));
       
       output.innerHTML = `
         <p class='text-green-600 font-semibold'>
