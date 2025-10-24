@@ -126,6 +126,9 @@
         enlacesRef.on('value', (snapshot) => {
             enlacesData = snapshot.val() || {};
             const paises = Object.keys(enlacesData).sort();
+            
+            const paisSeleccionadoAnterior = paisesSelect.value;
+            
             paisesSelect.innerHTML = '<option value="">-- Seleccionar país --</option>';
             paises.forEach(pais => {
                 const option = document.createElement('option');
@@ -133,9 +136,17 @@
                 option.textContent = pais;
                 paisesSelect.appendChild(option);
             });
+            
+            if (paisSeleccionadoAnterior) {
+                paisesSelect.value = paisSeleccionadoAnterior;
+            }
+
+            if (paisesSelect.value) {
+                buscar(paisesSelect.value, true); 
+            }
         });
 
-        window.buscar = function(pais) {
+        window.buscar = function(pais, refreshing = false) {
             linksContainer.innerHTML = '';
             if (!pais) {
                 linkList.style.display = 'none';
@@ -148,7 +159,48 @@
             resultsTitle.textContent = title;
 
             if (results) {
-                Object.entries(results).forEach(([key, link]) => {
+                
+                let resultsClone = { ...results };
+                let entries = Object.entries(resultsClone);
+                
+                // Lógica de reparación (comprobar si faltan 'orden' o si hay duplicados)
+                const needsMigration = entries.some(([, link]) => link.orden === undefined);
+                const ordenValues = entries.map(([, link]) => link.orden).filter(o => o !== undefined);
+                const hasDuplicates = ordenValues.length > 0 && new Set(ordenValues).size !== ordenValues.length;
+
+                if (needsMigration || hasDuplicates) {
+                    
+                    if(hasDuplicates) {
+                        console.warn(`REPARANDO DATOS: Se encontraron valores de 'orden' duplicados en ${pais}.`);
+                    } else {
+                        console.log(`Migrando datos de orden para ${pais}.`);
+                    }
+
+                    const updates = {};
+                    const stableSorted = Object.entries(resultsClone).sort(([, a], [, b]) => {
+                        const nombreA = a.nombre || a.descripcion || '';
+                        const nombreB = b.nombre || b.descripcion || '';
+                        return nombreA.localeCompare(nombreB);
+                    });
+
+                    stableSorted.forEach(([key], index) => {
+                        updates[`${pais}/${key}/orden`] = index;
+                    });
+
+                    enlacesRef.update(updates).then(() => {
+                        if (!refreshing) {
+                            alert("¡Datos de orden reparados! La lista se ha reordenado alfabéticamente una vez. Ya puedes reordenar manualmente.");
+                        }
+                    });
+                    
+                    linksContainer.innerHTML = `<p class="text-center text-gray-500">Reparando ordenación de datos, por favor espere...</p>`;
+                    return; 
+                }
+
+                // Si llegamos aquí, los datos están limpios
+                const sortedLinks = Object.entries(resultsClone).sort(([, a], [, b]) => a.orden - b.orden);
+
+                sortedLinks.forEach(([key, link], index) => {
                     const linkItem = document.createElement('div');
                     linkItem.classList.add('bg-white', 'p-4', 'shadow-md', 'rounded-lg', 'mb-4', 'relative');
                     
@@ -176,51 +228,111 @@
                     }
                     
                     linkItem.appendChild(linkAnchor);
-
-                    const statusContainer = document.createElement('div');
-                    statusContainer.classList.add('flex', 'flex-col', 'sm:flex-row', 'items-center', 'justify-center', 'space-y-2', 'sm:space-y-0', 'sm:space-x-4', 'mt-2');
-
-                    const statusSpan = document.createElement('span');
-                    statusSpan.classList.add('font-bold', 'text-center');
                     
-                    const corregirButton = document.createElement('button');
-                    corregirButton.classList.add('text-white', 'font-bold', 'py-1', 'px-2', 'rounded-md', 'transition', 'cursor-pointer');
+                    // --- INICIO DE LA MODIFICACIÓN DE LAYOUT ---
+
+                    // Contenedor principal de estado y botones (con borde superior y espacio)
+                    const statusContainer = document.createElement('div');
+                    statusContainer.classList.add('mt-2', 'pt-2', 'border-t', 'space-y-3'); // espacio vertical de 3
+
+                    // --- Fila 1: Estado y Número de Orden ---
+                    const statusRow = document.createElement('div');
+                    statusRow.classList.add('flex', 'flex-row', 'items-center', 'justify-center', 'space-x-4');
+                    
+                    const statusSpan = document.createElement('span');
+                    statusSpan.classList.add('font-bold', 'text-center', 'text-sm');
+                    
+                    // --- NUEVO: Letrero para el número de orden ---
+                    const ordenLabel = document.createElement('span');
+                    ordenLabel.classList.add('font-bold', 'text-gray-700', 'text-sm');
+                    ordenLabel.textContent = `Orden: ${link.orden}`; // Usamos link.orden
+                    
+                    statusRow.appendChild(statusSpan);
+                    statusRow.appendChild(ordenLabel);
+                    statusContainer.appendChild(statusRow); // Añadir Fila 1
+
+                    // --- Fila 2: Todos los botones ---
+                    const buttonRow = document.createElement('div');
+                    // flex-wrap: si no caben en una línea, saltan abajo
+                    // gap-2: espacio uniforme entre todos los botones
+                    buttonRow.classList.add('flex', 'flex-row', 'flex-wrap', 'items-center', 'justify-center', 'gap-2'); 
+
+                    // --- Clases de estilo comunes para TODOS los botones (mismo tamaño) ---
+                    const buttonClasses = ['font-bold', 'py-1', 'px-2', 'rounded-md', 'transition', 'text-sm'];
+
+                    // --- Botón Subir ---
+                    const subirButton = document.createElement('button');
+                    subirButton.innerHTML = '↑ Subir';
+                    subirButton.classList.add('bg-blue-500', 'text-white', 'hover:bg-blue-600', ...buttonClasses);
+                    subirButton.onclick = () => moverEnlace(pais, sortedLinks, index, 'arriba');
+
+                    // --- Botón Bajar ---
+                    const bajarButton = document.createElement('button');
+                    bajarButton.innerHTML = '↓ Bajar';
+                    bajarButton.classList.add('bg-blue-500', 'text-white', 'hover:bg-blue-600', ...buttonClasses);
+                    bajarButton.onclick = () => moverEnlace(pais, sortedLinks, index, 'abajo');
+
+                    // Deshabilitar botones en los extremos
+                    if (index === 0) {
+                        subirButton.disabled = true;
+                        subirButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                    if (index === sortedLinks.length - 1) {
+                        bajarButton.disabled = true;
+                        bajarButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                    
+                    // --- Botones Corregir y Eliminar ---
+                    const corregirButton = document.createElement('button'); // Nombre genérico
+                    corregirButton.classList.add(...buttonClasses, 'text-white');
 
                     const deleteButton = document.createElement('button');
-                    deleteButton.classList.add('bg-yellow-400', 'text-red-600', 'font-bold', 'py-1', 'px-2', 'rounded-md', 'transition');
+                    deleteButton.classList.add('bg-yellow-400', 'text-red-600', ...buttonClasses);
                     deleteButton.textContent = 'ELIMINAR';
                     deleteButton.onclick = () => eliminarEnlace(pais, key);
+
+                    // --- Añadir botones a la Fila 2 (en orden) ---
+                    buttonRow.appendChild(subirButton);
+                    buttonRow.appendChild(bajarButton);
 
                     if (link.status === 'caido') {
                         statusSpan.textContent = 'Estado: Link Inactivo';
                         statusSpan.classList.add('text-red-600');
+                        
+                        // Botón "Activar Link" (verde)
                         corregirButton.textContent = 'Activar Link';
                         corregirButton.classList.add('bg-green-600', 'hover:bg-green-700');
                         corregirButton.onclick = () => toggleLinkStatus(pais, key, 'activo');
                         
+                        // Botón "Corregir Enlace" (gris)
                         const corregirEnlaceBtn = document.createElement('button');
                         corregirEnlaceBtn.textContent = 'Corregir Enlace';
-                        corregirEnlaceBtn.classList.add('bg-gray-500', 'hover:bg-gray-600', 'text-white', 'font-bold', 'py-1', 'px-2', 'rounded-md', 'transition', 'ml-2');
+                        corregirEnlaceBtn.classList.add('bg-gray-500', 'hover:bg-gray-600', 'text-white', ...buttonClasses);
                         corregirEnlaceBtn.onclick = () => toggleEditForm(linkItem, true);
 
-                        statusContainer.appendChild(statusSpan);
-                        statusContainer.appendChild(corregirButton);
-                        statusContainer.appendChild(corregirEnlaceBtn);
-                        statusContainer.appendChild(deleteButton);
+                        buttonRow.appendChild(corregirButton);
+                        buttonRow.appendChild(corregirEnlaceBtn);
+                        buttonRow.appendChild(deleteButton);
                     } else {
                         statusSpan.textContent = 'Estado: Activo';
                         statusSpan.classList.add('text-green-600');
+                        
+                        // Botón "CORREGIR" (rojo, para marcar como caído)
                         corregirButton.textContent = 'CORREGIR';
                         corregirButton.classList.add('bg-red-500', 'hover:bg-red-600');
                         corregirButton.onclick = () => toggleLinkStatus(pais, key, 'caido');
                         
-                        statusContainer.appendChild(statusSpan);
-                        statusContainer.appendChild(corregirButton);
-                        statusContainer.appendChild(deleteButton);
+                        buttonRow.appendChild(corregirButton);
+                        buttonRow.appendChild(deleteButton);
                     }
+                    
+                    statusContainer.appendChild(buttonRow); // Añadir Fila 2
+                    linkItem.appendChild(statusContainer); // Añadir el contenedor principal al item
 
-                    linkItem.appendChild(statusContainer);
+                    // --- FIN DE LA MODIFICACIÓN DE LAYOUT ---
 
+
+                    // Formulario de edición (sin cambios)
                     const editFormContainer = document.createElement('div');
                     editFormContainer.classList.add('mt-4', 'form-container');
                     
@@ -249,11 +361,43 @@
             }
         };
 
+        window.moverEnlace = function(pais, sortedLinks, index, direccion) {
+            
+            const itemActual = sortedLinks[index];
+            const keyActual = itemActual[0];
+            const ordenActual = itemActual[1].orden; 
+
+            const indexOtro = (direccion === 'arriba') ? index - 1 : index + 1;
+            
+            if (indexOtro < 0 || indexOtro >= sortedLinks.length) {
+                console.error("No se puede mover más allá de los límites.");
+                return;
+            }
+
+            const itemOtro = sortedLinks[indexOtro];
+            const keyOtro = itemOtro[0];
+            const ordenOtro = itemOtro[1].orden;
+            
+            console.log(`Intercambiando: [${keyActual}] (orden ${ordenActual}) con [${keyOtro}] (orden ${ordenOtro})`);
+
+            const updates = {};
+            updates[`${pais}/${keyActual}/orden`] = ordenOtro;
+            updates[`${pais}/${keyOtro}/orden`] = ordenActual;
+
+            enlacesRef.update(updates)
+                .then(() => {
+                    console.log("Orden actualizado en Firebase con éxito.");
+                })
+                .catch(error => {
+                    console.error("Error al mover el enlace:", error);
+                    alert("Hubo un error al cambiar el orden.");
+                });
+        };
+
         window.toggleLinkStatus = function(pais, key, status) {
             enlacesRef.child(pais).child(key).update({ status: status })
                 .then(() => {
                     console.log(`Estado de link actualizado a ${status} en Firebase.`);
-                    buscar(pais);
                 })
                 .catch(error => {
                     console.error("Error al actualizar el estado:", error);
@@ -266,7 +410,6 @@
                     .then(() => {
                         alert("Enlace eliminado con éxito.");
                         console.log("Enlace eliminado de Firebase.");
-                        buscar(pais);
                     })
                     .catch(error => {
                         console.error("Error al eliminar el enlace:", error);
@@ -297,17 +440,20 @@
                 return;
             }
 
+            const currentLink = enlacesData[pais] ? enlacesData[pais][key] : null;
+            const currentOrden = currentLink ? (currentLink.orden !== undefined ? currentLink.orden : 0) : 0; 
+
             const updatedLink = {
                 nombre: nuevoNombre,
                 url: nuevaUrl,
                 descripcion: nuevaDescripcion,
-                status: defaultLinkStatus
+                status: defaultLinkStatus,
+                orden: currentOrden 
             };
             
             enlacesRef.child(pais).child(key).update(updatedLink)
                 .then(() => {
                     console.log("Enlace corregido y guardado con éxito.");
-                    buscar(pais);
                 })
                 .catch(error => {
                     console.error("Error al guardar la corrección:", error);
@@ -342,11 +488,19 @@
                 return;
             }
 
+            const paisLinks = enlacesData[pais] || {};
+            const ordenValues = Object.values(paisLinks)
+                                    .map(link => link.orden)
+                                    .filter(orden => orden !== undefined);
+                                    
+            const maxOrden = ordenValues.length > 0 ? Math.max(...ordenValues) : -1;
+
             const nuevoEnlace = {
                 nombre: descripcion, 
                 url: url,
                 descripcion: descripcion,
-                status: defaultLinkStatus
+                status: defaultLinkStatus,
+                orden: maxOrden + 1 
             };
 
             const paisRef = enlacesRef.child(pais);
