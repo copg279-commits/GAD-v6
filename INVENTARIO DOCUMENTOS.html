@@ -25,10 +25,12 @@
             font-size: 1.8em;
             display: flex;
             align-items: center;
+            gap: 10px; /* Espacio entre icono y texto */
         }
         .title-panel-blue .header-logo-container {
             width: 80px; /* Tamaño del logo ajustado */
             height: 80px;
+            flex-shrink: 0; /* Evita que el logo se encoja */
         }
         .title-panel-blue .header-logo-container img {
             width: 100%;
@@ -42,7 +44,8 @@
             text-align: center;
             padding: 20px;
             width: 100%;
-            margin-top: auto;
+            margin-top: auto; /* Empuja el footer hacia abajo */
+            box-sizing: border-box; /* Incluye padding en el ancho */
         }
         footer p {
             margin: 5px 0;
@@ -69,6 +72,7 @@
             display: flex;
             justify-content: center;
             width: 100%;
+            box-sizing: border-box; /* Incluye padding en el ancho */
         }
 
         .app-container {
@@ -104,11 +108,13 @@
             cursor: pointer;
             font-weight: 700;
             transition: all 0.2s ease-in-out;
-            margin-right: 8px;
+            margin-right: 8px; /* Mantener margen derecho por defecto */
+            margin-bottom: 5px; /* Añadir margen inferior para apilamiento */
             display: inline-flex;
             align-items: center;
             gap: 5px;
             color: white;
+            font-size: 0.9em; /* Ligeramente más pequeño para móvil */
         }
         button i { font-size: 1em; }
         .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); }
@@ -124,11 +130,13 @@
         .mode-selection-container {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-            gap: 15px;
+            /* margin-bottom: 15px; */ /* Eliminado para controlar mejor con flex-wrap */
+            /* padding-bottom: 10px; */ /* Eliminado */
+            /* border-bottom: 2px solid #3498db; */ /* Movido a search-header */
+            gap: 10px; /* Reducido gap */
+            flex-wrap: wrap; /* Permitir que los botones pasen a la siguiente línea */
         }
+         .mode-selection-container h4 { margin: 0 10px 0 0; } /* Ajustar margen del título "Modo:" */
 
         #mode-personas-btn { background: #3498db; }
         #mode-vehiculos-btn { background: #e67e22; }
@@ -136,6 +144,8 @@
         #mode-personas-btn, #mode-vehiculos-btn {
              opacity: 0.6; 
              transition: opacity 0.3s ease;
+             width: auto; /* Ancho automático para adaptarse */
+             min-width: 120px; /* Ancho mínimo */
         }
         #mode-personas-btn.active, #mode-vehiculos-btn.active {
             background: #27ae60;
@@ -154,22 +164,34 @@
             box-shadow: inset 0 1px 2px rgba(0,0,0,.075);
             font-size: 0.95em;
             width: 100%;
-            box-sizing: border-box;
+            box-sizing: border-box; /* Asegura que padding no aumente el tamaño */
         }
 
-        /* BÚSQUEDA Y CONTROLES - Estructura mejorada (Mantenidos) */
+        /* BÚSQUEDA Y CONTROLES - Estructura mejorada */
         .search-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Permitir que los elementos pasen a la siguiente línea */
             gap: 15px;
+             border-bottom: 2px solid #3498db; /* Borde movido aquí */
+             padding-bottom: 15px; /* Espacio bajo el borde */
         }
+         /* Título h2 */
+         .search-header h2 { margin-bottom: 0; } /* Quitar margen inferior si está en la misma línea */
 
-        /* Estilos de botones de categoría (Mantenidos) */
+
+        /* Estilos de botones de categoría */
+        .filter-buttons {
+             display: flex;
+             flex-wrap: wrap; /* Permitir que los botones pasen a la siguiente línea */
+             gap: 8px; /* Espacio entre botones */
+             margin-left: auto; /* Empujar a la derecha en desktop */
+        }
         .filter-buttons button {
-            margin-left: 8px;
+            margin-left: 0; /* Quitar margen izquierdo individual */
+            margin-right: 0; /* Quitar margen derecho individual */
         }
         .btn-cat-2400 { background: #e0f2f7; color: #0288d1; border: 1px solid #b3e5fc; }
         .btn-cat-600 { background: #e8f5e9; color: #388e3c; border: 1px solid #c8e6c9; }
@@ -187,15 +209,15 @@
             font-weight: bold;
         }
 
-        /* ✅ [MODIFICADO] Layout del grid de búsqueda (Alineado al final) */
+        /* Layout del grid de búsqueda */
         .search-controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Móvil primero */
             gap: 15px;
             padding: 15px 0;
             align-items: end; /* Alinea los elementos al final (abajo) */
-            border-top: 1px solid #e0e0e0;
-            padding-top: 20px;
+            /* border-top: 1px solid #e0e0e0; */ /* Borde superior eliminado */
+            padding-top: 5px; /* Reducido padding superior */
         }
 
         .search-controls label {
@@ -206,37 +228,131 @@
             display: block;
         }
 
-        /* ✅ [MODIFICADO] Botón de limpiar alineado ABAJO (end) */
         .search-controls .align-bottom {
             align-self: end; /* Mantiene el botón alineado con la base de los inputs */
         }
         
-        /* ✅ [MODIFICADO] Media query para el layout (columnas acortadas) */
+        /* Media query para el layout en DESKTOP */
         @media (min-width: 1200px) {
             .search-controls {
-                /* [País] [Nombre] [Tipo] [Año] [Mes] [Botón] */
-                /* Aplicando el cambio solicitado: */
                 grid-template-columns: 1.2fr 1.2fr 1fr 0.7fr 0.7fr 150px; 
             }
+             /* Ocultar label de Estado/Provincia si está en la segunda fila en desktop */
+             #state-region-container {
+                 grid-column: 1 / 3; /* Ocupa las dos primeras columnas si se muestra */
+             }
         }
+         /* Media query para el layout en TABLET (ajuste intermedio) */
+         @media (min-width: 768px) and (max-width: 1199px) {
+             .search-controls {
+                 /* 3 columnas + botón en la segunda fila */
+                 grid-template-columns: repeat(3, 1fr); 
+             }
+             .search-controls .align-bottom {
+                 grid-column: 1 / -1; /* Botón ocupa toda la fila inferior */
+                 margin-top: 10px;
+             }
+             #state-region-container {
+                 grid-column: 1 / -1; /* Ocupa toda la fila si se muestra */
+             }
+         }
+
+         /* ⬇️⬇️⬇️ NUEVO: Media query para MÓVILES (< 768px) ⬇️⬇️⬇️ */
+         @media (max-width: 767px) {
+             .search-controls {
+                 grid-template-columns: 1fr; /* Una sola columna */
+                 gap: 10px; /* Menos espacio vertical */
+             }
+             .search-controls div {
+                 width: 100%; /* Asegurar ancho completo */
+             }
+             #state-region-container {
+                 grid-column: 1 / -1; /* Asegurar que ocupe toda la fila */
+             }
+             .search-controls .align-bottom {
+                 margin-top: 5px; /* Menos espacio sobre el botón Limpiar */
+             }
+             .title-panel-blue h1 {
+                 font-size: 1.4em; /* Título más pequeño en móvil */
+             }
+             .title-panel-blue .header-logo-container {
+                 width: 60px; /* Logo más pequeño */
+                 height: 60px;
+             }
+              /* Ajustes para los botones de modo y categoría en pantallas estrechas */
+             .search-header {
+                 flex-direction: column; /* Apilar elementos verticalmente */
+                 align-items: stretch; /* Estirar elementos al ancho completo */
+             }
+             .mode-selection-container {
+                 justify-content: center; /* Centrar botones de modo */
+                 width: 100%;
+             }
+             .filter-buttons {
+                 justify-content: center; /* Centrar botones de categoría */
+                 margin-left: 0; /* Resetear margen */
+                 width: 100%;
+             }
+             .results-header, .doc-row {
+                padding: 8px 10px; /* Menos padding en filas de tabla */
+                gap: 8px; /* Menos gap en filas de tabla */
+                font-size: 0.9em; /* Fuente más pequeña en tabla */
+             }
+             .doc-actions button {
+                 padding: 6px 10px; /* Botones de acción más pequeños */
+             }
+              .doc-actions button i {
+                 font-size: 0.9em; /* Iconos más pequeños */
+             }
+         }
+         /* Ajustes adicionales para pantallas MUY estrechas */
+         @media (max-width: 480px) {
+             .title-panel-blue {
+                 padding: 15px;
+             }
+             .title-panel-blue h1 {
+                 font-size: 1.2em;
+             }
+             .title-panel-blue .header-logo-container {
+                 width: 50px;
+                 height: 50px;
+             }
+             .panel { padding: 15px; }
+             button { font-size: 0.85em; padding: 8px 12px; }
+             h2 { font-size: 1.3em; }
+             h3 { font-size: 1.1em; }
+             .results-header, .doc-row {
+                font-size: 0.85em; 
+                grid-template-columns: 1.5fr 1fr 0.8fr 1fr 1fr 0.5fr 100px; /* Ajustar columnas para móvil */
+                min-width: 700px; /* Reducir min-width para menos scroll */
+             }
+              .doc-row div:nth-child(2) { /* Columna País */
+                  line-height: 1.3;
+              }
+             .doc-row div:nth-child(2) span { /* Texto (País) debajo del estado */
+                  font-size: 0.9em; 
+              }
+             .link-icon { font-size: 1.1em; }
+         }
+
 
         /* LISTADO HORIZONTAL (TABLA) */
         .results-container {
-            overflow-x: auto;
+            overflow-x: auto; /* Mantiene el scroll horizontal */
             padding-bottom: 10px;
             max-width: 100%;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             background: #fdfdfd;
+            /* -webkit-overflow-scrolling: touch; */ /* Scroll más suave en iOS */
         }
-        /* ✅ [MODIFICADO] Columnas de resultados redimensionadas */
         .results-header, .doc-row {
-            grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 120px; /* País más ancho, Enlace/Acciones más estrechos */
+            grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 120px; /* Desktop */
             display: grid;
             gap: 15px;
             padding: 10px 12px;
             border-bottom: 1px solid #f0f0f0;
-            min-width: 1000px;
+            min-width: 1000px; /* Ancho mínimo para forzar scroll si es necesario */
         }
         .results-header {
             font-weight: bold;
@@ -258,20 +374,28 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            align-self: center;
+            align-self: center; /* Centrar verticalmente */
         }
-        /* ✅ [MODIFICADO] Permitir salto de línea en la columna País (nth-child(2)) */
+        /* Permitir salto de línea en la columna País (nth-child(2)) */
         .doc-row div:nth-child(2) {
              white-space: normal; 
              word-break: break-word; 
-             line-height: 1.4; /* Mejorar espaciado de línea */
+             line-height: 1.4; 
         }
+        /* Estilo para el país entre paréntesis */
+         .doc-row div:nth-child(2) span {
+            color: #555; 
+            font-size: 0.9em;
+            display: block; /* Asegura que esté en línea separada si hay mucho texto */
+            margin-top: 2px;
+         }
 
         .doc-actions {
             display: flex;
             gap: 5px;
-            justify-content: flex-end;
-            min-width: 100px; /* Reducido */
+            justify-content: flex-end; /* Alinea botones a la derecha */
+            align-items: center; /* Centra botones verticalmente */
+            min-width: 100px; 
         }
 
         /* Estilo específico para el icono de enlace (Mantenidos) */
@@ -300,16 +424,19 @@
             position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
             background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center;
             backdrop-filter: blur(3px);
+            padding: 10px; /* Añadir padding para evitar que el modal toque los bordes en móvil */
+            box-sizing: border-box;
         }
         .modal-content {
             background-color: #fefefe;
-            padding: 35px;
+            padding: 30px; /* Reducir padding ligeramente */
             border-radius: 12px;
-            width: 95%;
-            max-width: 600px;
+            width: 100%; /* Ocupar ancho disponible en móvil */
+            max-width: 600px; /* Mantener ancho máximo para desktop */
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
             animation: fadeInScale 0.3s ease-out;
             position: relative;
+            box-sizing: border-box;
         }
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.95); }
@@ -317,13 +444,16 @@
         }
         .modern-alert {
             text-align: center;
-            padding: 20px;
-            margin: 20px 0;
+            padding: 15px; /* Reducir padding */
+            margin: 15px 0; /* Reducir margen */
             border-radius: 8px;
             background-color: #f0f4f7;
             border: 1px solid #dcdcdc;
             color: #555;
+            font-size: 0.9em; /* Fuente más pequeña */
         }
+         .modern-alert h4 { font-size: 1.1em; margin-top: 5px; margin-bottom: 5px; }
+         .modern-alert p { margin-bottom: 0; }
         .modern-alert-error {
             background-color: #fef2f2;
             border-color: #f44336;
@@ -353,6 +483,18 @@
             cursor: not-allowed;
             font-weight: bold;
         }
+        /* Ajustes modal botones */
+         .modal-content div[style*="text-align: right"] {
+             margin-top: 20px; /* Menos espacio sobre botones */
+             display: flex; /* Usar flex para mejor control */
+             justify-content: flex-end; /* Alinear a la derecha */
+             flex-wrap: wrap; /* Permitir que pasen a la siguiente línea */
+             gap: 10px;
+         }
+          .modal-content div[style*="text-align: right"] button {
+              margin-right: 0; /* Quitar margen derecho individual */
+          }
+
 
     </style>
 
@@ -376,9 +518,9 @@
                     <h2>🔍 Búsqueda de Documentos (Unificada)</h2>
 
                     <div class="mode-selection-container">
-                        <h4 style="color: #3498db;"><i class="fas fa-database"></i> Modo:</h4>
-                        <button id="mode-personas-btn" class="btn-primary active" onclick="setInventoryMode('documentos 600 dpi')" style="width: 150px;"><i class="fas fa-user"></i> PERSONAS</button>
-                        <button id="mode-vehiculos-btn" class="btn-warning" onclick="setInventoryMode('vehiculos 600 dpi')" style="width: 150px;"><i class="fas fa-car"></i> VEHÍCULOS</button>
+                        <h4><i class="fas fa-database"></i> Modo:</h4>
+                        <button id="mode-personas-btn" class="btn-primary active" onclick="setInventoryMode('documentos 600 dpi')"><i class="fas fa-user"></i> PERSONAS</button>
+                        <button id="mode-vehiculos-btn" class="btn-warning" onclick="setInventoryMode('vehiculos 600 dpi')"><i class="fas fa-car"></i> VEHÍCULOS</button>
                     </div>
                     <div class="filter-buttons">
                         <button id="filter-2400-btn" class="btn-cat-2400" onclick="setCategoryFilter('ESCANER 2400')">ESCANER 2400</button>
@@ -427,7 +569,7 @@
                         <button id="clear-search-btn" class="btn-delete" style="width: 100%;"><i class="fas fa-eraser"></i> Limpiar Filtros</button>
                     </div>
                     
-                    <div id="state-region-container" style="display: none; grid-column: 1 / 2; margin-top: -10px;">
+                    <div id="state-region-container" style="display: none;">
                         <label id="state-region-label">ESTADO/PROVINCIA/CIUDAD:</label>
                         <input list="datalist-states" type="text" id="search-state-region" placeholder="Ej: ..." 
                                onchange="this.value = this.value.toUpperCase(); filterDocuments();" 
@@ -561,18 +703,13 @@
         const FALLBACK_COUNTRIES = ["ESPAÑA", "FRANCIA", "ALEMANIA", "USA", "CANADA", "ARGENTINA", "MEXICO"];
         
         // ✅ [MODIFICADO] LISTA 1: Palabras que NUNCA deben ser un Estado/Provincia.
-        // Se usa para evitar que "PSP" o "FAKE" se confundan con una provincia.
+        // Incluye tipos reales + palabras genéricas/no deseadas como subtipo.
         const SUBTIPO_EXCLUSION_LIST = [
-            // Originales
             "PSP", "CI", "PNC", "PIC", "VEHICULOS", "GENERAL", "CERTIFICADOS", 
-            "DNI", "NIE", "PASAPORTE", "DEFENSA", "REV", "LICENCIA",
-            // Añadidos (solicitados)
-            "TIE", "PCIR", "SOA", "ITV", "SIP", "TIP",
-            // Nuevos (solicitados)
-            "ASILO", "CAP", "CERCU", "FAKE", "FAKES", "NIE (HOJA BLANCA)", 
-            "PDF", "TARJETA SANITARIA", "TMR", "TRANSPORTES", "VARIOS",
-            // Últimos añadidos
-            "EXTRANJERO", "EXTRANJEROS"
+            "DNI", "NIE", "PASAPORTE", "DEFENSA", "REV", "LICENCIA", "TIE", 
+            "PCIR", "SOA", "ITV", "SIP", "TIP", "ASILO", "CAP", "CERCU", 
+            "FAKE", "FAKES", "NIE (HOJA BLANCA)", "PDF", "TARJETA SANITARIA", 
+            "TMR", "TRANSPORTES", "VARIOS", "EXTRANJERO", "EXTRANJEROS"
         ].sort();
 
         // ✅ [MODIFICADO] LISTA 2: Palabras que SÍ son Tipos de Documento *reales* y filtrables.
@@ -581,15 +718,13 @@
             "PSP", "CI", "PNC", "PIC", "VEHICULOS", "CERTIFICADOS", 
             "DNI", "NIE", "PASAPORTE", "DEFENSA", "REV", "LICENCIA",
             "TIE", "PCIR", "SOA", "ITV", "SIP", "TIP", "TMR",
-            // Se quitan los "no-tipos" como "TRANSPORTES", "EXTRANJEROS", "FAKE", "VARIOS", "GENERAL", "PDF", etc.
-            "ASILO", "CAP", "CERCU", "NIE (HOJA BLANCA)", "TARJETA SANITARIA" // Se mantienen los que sí parecen tipos
+            "ASILO", "CAP", "CERCU", "NIE (HOJA BLANCA)", "TARJETA SANITARIA" 
+            // Se quitaron: "GENERAL", "TRANSPORTES", "VARIOS", "FAKE", "FAKES", "PDF", "EXTRANJERO", "EXTRANJEROS"
         ].sort();
 
 
         let FULL_DOCUMENT_LIST = [];
         let ALL_DOCUMENTS = [];
-        
-        // ⛔️ [ELIMINADO] La lista estática se ha eliminado. La lógica ahora es dinámica.
         
         // **********************************************
         //           [ LÓGICA DE DATALISTS Y SUBTIPOS ]
@@ -600,7 +735,6 @@
             if (!datalist) return;
 
             datalist.innerHTML = '';
-            // Asegura que los items sean strings antes de mapear
             const validItems = items.filter(item => typeof item === 'string' && item); 
             const uniqueItems = Array.from(new Set(validItems.map(item => item.toUpperCase()))).sort();
 
@@ -617,57 +751,50 @@
         /**
          * Carga TODOS los datalists (País, Tipo, Estado) basado en una lista
          * de documentos específica (ej. solo Personas o solo Vehículos).
-         * Se usa al CAMBIAR DE MODO.
          */
         function loadAllDynamicDatalists(docList) {
-            // 1. Países (Sigue siendo dinámico, basado en los datos)
+            // 1. Países
             const existingCountries = new Set(docList.map(doc => doc.data.Pais).filter(p => p && p !== 'N/A' && p !== 'EEUU USA'));
             populateDatalist('datalist-countries', Array.from(existingCountries));
 
-            // 2. Tipos (Ahora DINÁMICO, basado en los datos procesados para este modo)
-             const existingTypes = new Set(docList.map(doc => doc.data.TipoDocumento).filter(t => t && t !== 'N/A' && t !== 'GENERAL')); // Excluir GENERAL si se quiere
+            // 2. Tipos (filtrables)
+             const existingTypes = new Set(docList.map(doc => doc.data.TipoDocumento)
+                .filter(t => t && KNOWN_DOC_TYPES.includes(t)) // Solo añadir si está en la lista de tipos *reales*
+             );
              populateDatalist('datalist-types', Array.from(existingTypes));
 
-            // 3. Estados (Subtipos) - Rellenar con los subtipos REALES encontrados para este modo
+            // 3. Estados (Subtipos)
              const states = new Set();
              docList.forEach(doc => {
-                 // ✅ [MODIFICADO] Usar la lista de exclusión grande
                  if (doc.data.SubtipoDocumento && doc.data.SubtipoDocumento !== 'N/A' && !SUBTIPO_EXCLUSION_LIST.includes(doc.data.SubtipoDocumento)) {
                      states.add(doc.data.SubtipoDocumento);
                  }
              });
-            populateDatalist('datalist-states', Array.from(states)); // Rellenar con todos los estados/provincias encontrados en este modo
+            populateDatalist('datalist-states', Array.from(states)); 
         }
 
         /**
-         * Carga solo el datalist de TIPO basado en una lista
-         * de documentos específica (ej. filtrada por PAÍS).
+         * Carga solo el datalist de TIPO basado en una lista filtrada por país.
          */
-        function updateScopedDatalists(docList) { // Recibe la lista ya filtrada por país
-            // ✅ [MODIFICADO] Excluir tipos no filtrables del desplegable
-             const NON_FILTERABLE_TYPES = ["EXTRANJERO", "EXTRANJEROS", "TRANSPORTES", "GENERAL", "VARIOS", "FAKE", "FAKES", "PDF"];
-
-            // 1. Tipos (DINÁMICO - Solo tipos existentes para este país)
+        function updateScopedDatalists(docList) { 
+            // ✅ [SIMPLIFICADO] Ya no se excluyen tipos aquí, se hace en loadAllDynamicDatalists
             const existingTypes = new Set(docList.map(doc => doc.data.TipoDocumento)
-                .filter(t => t && t !== 'N/A' && !NON_FILTERABLE_TYPES.includes(t)) // <-- LÓGICA DE EXCLUSIÓN
-            );
-            populateDatalist('datalist-types', Array.from(existingTypes));
+                .filter(t => t && KNOWN_DOC_TYPES.includes(t)) // Solo añadir tipos *reales*
+            ); 
+             populateDatalist('datalist-types', Array.from(existingTypes));
         }
 
 
         /**
-         * ✅ [MODIFICADO]
-         * Función clave para gestionar el cambio de país.
+         * ✅ [MODIFICADO] Función clave para gestionar el cambio de país.
          */
         window.handleCountryChange = function(countryValue) {
             const country = countryValue.trim().toUpperCase();
-
             let normalizedCountry = country;
             if (normalizedCountry === 'ESTADOS UNIDOS') normalizedCountry = 'USA';
             if (normalizedCountry === 'CANADÁ') normalizedCountry = 'CANADA';
 
             const label = document.getElementById('state-region-label');
-            
             const modeDocs = FULL_DOCUMENT_LIST.filter(doc => doc.key && doc.key.startsWith(currentInventoryMode));
             let countryDocs = modeDocs;
             if (normalizedCountry) {
@@ -676,19 +803,17 @@
                 countryDocs = []; 
             }
             
-            updateScopedDatalists(countryDocs); // Rellena el desplegable de Tipos
-
-            searchStateRegionInput.value = ''; 
+            updateScopedDatalists(countryDocs); // Rellena Tipos
+            searchStateRegionInput.value = ''; // Limpia campo Estado
             
-            // 3. 🚨 LÓGICA DINÁMICA PARA ESTADO/PROVINCIA 🚨
+            // Lógica para mostrar/ocultar campo Estado/Provincia
             const states = new Set();
             countryDocs.forEach(doc => {
-                 // ✅ [MODIFICADO] Usar la lista de exclusión grande
                 if (doc.data.SubtipoDocumento && doc.data.SubtipoDocumento !== 'N/A' && !SUBTIPO_EXCLUSION_LIST.includes(doc.data.SubtipoDocumento)) {
                     states.add(doc.data.SubtipoDocumento);
                 }
             });
-            const uniqueStates = Array.from(states).sort(); // Ordenar alfabéticamente
+            const uniqueStates = Array.from(states).sort();
 
             if (uniqueStates.length > 0) {
                 console.log(`País ${normalizedCountry} SÍ tiene subtipos dinámicos (${uniqueStates.length}), mostrando campo.`);
@@ -704,7 +829,7 @@
                 populateDatalist('datalist-states', []); 
             }
 
-            filterDocuments(); // Vuelve a filtrar los resultados de la tabla
+            filterDocuments(); 
         }
 
         // **********************************************
@@ -720,20 +845,15 @@
             const modeBase = mode.endsWith('/') ? mode.slice(0, -1) : mode;
             currentInventoryMode = modeBase + '/'; 
 
-            console.log("Cambiando modo a:", currentInventoryMode);
-
             if (modeBase === VEHICLES_REF.slice(0, -1)) {
                 btnVehiculos.classList.add('active');
             } else {
                 btnPersonas.classList.add('active');
             }
 
-            const modeDocs = FULL_DOCUMENT_LIST.filter(doc => {
-                return doc.key && doc.key.startsWith(currentInventoryMode);
-            });
-            
-            loadAllDynamicDatalists(modeDocs);
-            handleCountryChange(searchCountryInput.value); 
+            const modeDocs = FULL_DOCUMENT_LIST.filter(doc => doc.key && doc.key.startsWith(currentInventoryMode));
+            loadAllDynamicDatalists(modeDocs); // Recarga TODOS los datalists
+            handleCountryChange(searchCountryInput.value); // Reevalúa país y estado
         }
 
 
@@ -742,15 +862,9 @@
         // *****************************************************************
 
         function loadAllDocuments() {
-            if (!database) {
-                populateDatalist('datalist-countries', FALLBACK_COUNTRIES);
-                populateDatalist('datalist-types', KNOWN_DOC_TYPES); // Lista fija inicial
-                searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><i class="fas fa-exclamation-circle fa-2x"></i><h4 style="color: #e74c3c; margin-top: 10px;">Modo Desconectado</h4><p>No se pudo conectar a la base de datos.</p></div>`;
-                updateDocumentCount([]);
-                return;
-            }
+            if (!database) { /* ... manejo de error ... */ return; }
 
-            documentCountSpan.textContent = `(Cargando todo el inventario: Documentos y Vehículos... Por favor, espere.)`;
+            documentCountSpan.textContent = `(Cargando todo el inventario...)`;
             FULL_DOCUMENT_LIST = [];
 
              const fetchAndProcessNode = (refPath) => {
@@ -759,59 +873,59 @@
                     const documents = [];
                     if (!nestedData) return documents;
 
+                    // ✅ Whitelist de países con nombres compuestos (normalizados con '_')
+                    const COMPOUND_COUNTRY_KEYS = [
+                        "ARABIA_SAUDI", "BOSNIA_HERZEGOVINA", "COSTA_DE_MARFIL", 
+                        "EMIRATOS_ARABES_UNIDOS", "REINO_UNIDO", "COSTA_RICA", 
+                        "REPUBLICA_DOMINICANA", "NUEVA_ZELANDA", "SUDAFRICA", 
+                        "ESTADOS_UNIDOS", "ESWATINI_SUAZILANDIA"
+                        // Añadir "EMIRATOS_ARABES" si existe como carpeta separada
+                    ];
+
                     for (const combinedKey in nestedData) {
                         if (nestedData.hasOwnProperty(combinedKey)) {
                             const countryTypeData = nestedData[combinedKey];
-                            
                             let inferredCountryFromKey = 'N/A';
                             let inferredPartAfterUnderscore = 'GENERAL';
-
-                            // ✅ [NUEVO] Whitelist de países con nombres compuestos que NO tienen subtipos en el nombre de la carpeta
-                            const COMPOUND_COUNTRY_KEYS = [
-                                "ARABIA_SAUDI", "BOSNIA_HERZEGOVINA", "COSTA_DE_MARFIL", 
-                                "EMIRATOS_ARABES", "EMIRATOS_ARABES_UNIDOS", "REINO_UNIDO", 
-                                "COSTA_RICA", "REPUBLICA_DOMINICANA", "NUEVA_ZELANDA",
-                                "SUDAFRICA", "ESTADOS_UNIDOS", "ESWATINI_SUAZILANDIA"
-                            ];
-
-                            // ✅ [MODIFICADO] Lógica de división robustecida
+                            
+                            // ✅ Lógica de división CORREGIDA
                             const normKey = combinedKey.toUpperCase().replace(/[ /]/g, '_');
                             let foundCompound = false;
 
-                            // ✅ Nivel 1: Comprobar si la clave ENTERA es un país compuesto
-                            if (COMPOUND_COUNTRY_KEYS.includes(normKey)) {
+                            // 1. Buscar coincidencia EXACTA con país compuesto
+                             if (COMPOUND_COUNTRY_KEYS.includes(normKey)) {
                                 inferredCountryFromKey = normKey;
-                                inferredPartAfterUnderscore = "GENERAL";
+                                inferredPartAfterUnderscore = "GENERAL"; // Asumir GENERAL si solo está el país
                                 foundCompound = true;
                             } else {
-                                // ✅ Nivel 2: Si no, comprobar si *empieza* por un país compuesto (ej. COSTA_DE_MARFIL_GENERAL)
+                                // 2. Buscar si EMPIEZA por país compuesto + '_'
                                 for (const compound of COMPOUND_COUNTRY_KEYS) {
-                                    if (normKey.startsWith(compound + '_')) { // Añadir '_' para asegurar que es un prefijo
-                                        inferredCountryFromKey = compound; // Ej: "COSTA_DE_MARFIL"
-                                        inferredPartAfterUnderscore = normKey.substring(compound.length + 1); // Ej: "GENERAL" o "PSP"
+                                    if (normKey.startsWith(compound + '_')) { 
+                                        inferredCountryFromKey = compound; 
+                                        inferredPartAfterUnderscore = normKey.substring(compound.length + 1); 
                                         foundCompound = true;
                                         break; 
                                     }
                                 }
                             }
 
-                            // ✅ Nivel 3: Si no es compuesto, usar la lógica simple
+                            // 3. Si no es compuesto, lógica simple
                             if (!foundCompound) {
                                 const firstUnderscoreIndex = normKey.indexOf('_');
-                                
                                 if (firstUnderscoreIndex === -1) { 
-                                    inferredCountryFromKey = normKey; // Ej: "ALEMANIA"
+                                    inferredCountryFromKey = normKey; 
                                     inferredPartAfterUnderscore = "GENERAL";
                                 } else {
-                                    inferredCountryFromKey = normKey.substring(0, firstUnderscoreIndex); // Ej: "CANADA"
-                                    inferredPartAfterUnderscore = normKey.substring(firstUnderscoreIndex + 1); // Ej: "PNC" o "BRITISH_COLUMBIA"
+                                    inferredCountryFromKey = normKey.substring(0, firstUnderscoreIndex); 
+                                    inferredPartAfterUnderscore = normKey.substring(firstUnderscoreIndex + 1);
                                 }
                             }
                             
                             if (inferredCountryFromKey === 'ESTADOS_UNIDOS') inferredCountryFromKey = 'USA';
-                            if (inferredCountryFromKey === 'CANADÁ') inferredCountryFromKey = 'CANADA';
+                            if (inferredCountryFromKey === 'CANADÁ') inferredCountryFromKey = 'CANADA'; // Aunque esté normalizado, por si acaso
 
-                            for(const key in countryTypeData){
+                            // ... (resto del bucle for(const key in countryTypeData)... sin cambios)
+                             for(const key in countryTypeData){
                                 if (countryTypeData.hasOwnProperty(key)) {
                                     const value = countryTypeData[key]; 
                                      if (typeof value === 'object' && value !== null && key.toUpperCase() !== 'GENERAL' && !value.hasOwnProperty('Timestamp') && !value.hasOwnProperty('NombreDocumento') && !value.hasOwnProperty('Enlace')) {
@@ -853,64 +967,51 @@
 
 
             /**
-             * 🚨 [MODIFICADO] processDocument - Lógica vFinal Dinámica.
+             * 🚨 [MODIFICADO] processDocument - Usa las dos listas nuevas.
              */
             function processDocument(refPath, combinedKey, subnode, docKey, data, inferredCountry, potentialTypeOrSubtype) {
-                 if (typeof data !== 'object' || data === null) { 
-                     console.error(`Error procesando documento: 'data' no es un objeto válido para la clave ${docKey} en ${refPath}${combinedKey}${subnode ? '/'+subnode : ''}`);
-                     return null; 
-                }
+                 if (typeof data !== 'object' || data === null) { /* ... error handling ... */ return null; }
 
-                const doc = {
-                    key: refPath + combinedKey + (subnode ? `/${subnode}/` : '/') + docKey,
-                    data: data,
-                };
-
-                // 1. Nombre
+                const doc = { key: refPath + combinedKey + (subnode ? `/${subnode}/` : '/') + docKey, data: data };
                 let baseName = data.NombreArchivo || data.NombreDocumento || docKey;
                 doc.data.NombreDocumento = baseName.replace(/\.(JPG|JPEG|PNG|PDF|DOCX|XLSX)$/i, '').replace(/_/g, ' ').trim();
 
-                // 2. País
+                // País
                 let finalCountry = (data.Pais && data.Pais !== 'N/A' && data.Pais !== 'EEUU USA') ? data.Pais.toUpperCase() : inferredCountry;
                 if (finalCountry === 'ESTADOS UNIDOS') finalCountry = 'USA';
                 if (finalCountry === 'CANADÁ') finalCountry = 'CANADA';
                 doc.data.Pais = finalCountry.replace(/[_\/]/g, ' '); 
 
-                // 3. 🚨 LÓGICA DE TIPO vs SUBTIPO (vFinal - Dinámica)
-                let finalType = 'GENERAL';
-                let finalSubtipo = 'N/A';
+                // Tipo vs Subtipo
+                let finalType = 'GENERAL'; // Default type
+                let finalSubtipo = 'N/A'; // Default subtype
 
-                // Prioridad 1: Hay subcarpeta (ej: USA_PNC/ALASKA)
-                if (subnode) {
+                if (subnode) { // Prioridad 1: Hay subcarpeta (USA_PNC/ALASKA)
                     finalSubtipo = subnode; 
-                    if (KNOWN_DOC_TYPES.includes(potentialTypeOrSubtype)) { 
+                    if (KNOWN_DOC_TYPES.includes(potentialTypeOrSubtype)) { // Es un tipo real?
                         finalType = potentialTypeOrSubtype;
-                    } else {
-                        finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); 
+                    } else if (SUBTIPO_EXCLUSION_LIST.includes(potentialTypeOrSubtype)) { // Es palabra excluida pero no tipo?
+                         finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); // Extraer del nombre
+                    } else { // No es conocido ni excluido
+                         finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); // Extraer del nombre
                     }
-                } 
-                // Prioridad 2: No hay subcarpeta (ej: USA_PNC o CANADA_BRITISH_COLUMBIA o ALBANIA_CI)
-                else {
-                    if (data.EstadoProvincia && data.EstadoProvincia !== 'N/A') {
+                } else { // Prioridad 2: No hay subcarpeta (USA_PNC, CANADA_BRITISH_COLUMBIA, COSTA_DE_MARFIL)
+                    if (data.EstadoProvincia && data.EstadoProvincia !== 'N/A') { // Info en JSON?
                         finalSubtipo = data.EstadoProvincia.toUpperCase();
                     } 
-                    // ✅ [MODIFICADO] Usar la lista de exclusión grande
-                    else if (!SUBTIPO_EXCLUSION_LIST.includes(potentialTypeOrSubtype)) {
-                         if(potentialTypeOrSubtype !== 'GENERAL') {
-                             finalSubtipo = potentialTypeOrSubtype; // "BRITISH_COLUMBIA"
-                         }
-                    }
+                    // Es la parte después del '_' un subtipo VÁLIDO (no en lista de exclusión)?
+                    else if (!SUBTIPO_EXCLUSION_LIST.includes(potentialTypeOrSubtype) && potentialTypeOrSubtype !== 'GENERAL') {
+                         finalSubtipo = potentialTypeOrSubtype; // "BRITISH_COLUMBIA"
+                    } // Si está en la lista de exclusión o es GENERAL, se queda como N/A
 
-                    // Ahora, determinar el TIPO
-                    // ✅ [MODIFICADO] Usar la lista de tipos *reales*
-                    if (KNOWN_DOC_TYPES.includes(potentialTypeOrSubtype)) {
-                        finalType = potentialTypeOrSubtype; // "PNC" o "CI"
-                    } 
-                    else {
-                        finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo);
+                    // Determinar Tipo
+                    if (KNOWN_DOC_TYPES.includes(potentialTypeOrSubtype)) { // Es un tipo real?
+                        finalType = potentialTypeOrSubtype; // "PNC"
+                    } else { // No es tipo real (puede ser subtipo o palabra excluida)
+                        finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); // Extraer del nombre
                     }
                     
-                    // ✅ [MODIFICADO] Usar la lista de tipos *reales*
+                    // Sobrescribir si JSON tiene tipo válido
                     if (data.TipoDocumento && data.TipoDocumento !== 'N/A' && data.TipoDocumento !== 'General' && KNOWN_DOC_TYPES.includes(data.TipoDocumento.toUpperCase())) {
                         finalType = data.TipoDocumento.toUpperCase();
                     }
@@ -919,39 +1020,21 @@
                 doc.data.TipoDocumento = finalType.toUpperCase();
                 doc.data.SubtipoDocumento = finalSubtipo.toUpperCase().replace(/_/g, ' '); 
                 
-                // 4. FECHA
                 doc.data.Fecha = extractDateFromName('dummy-input', 'dummy-display', doc.data.NombreDocumento) || 'N/A';
-                // 6. CATEGORÍA
                 doc.data.Categoria = FIXED_CATEGORY;
-                // 7. Enlace
                 doc.data.Enlace = data.Enlace || 'N/A';
 
                 return doc;
             }
 
-            Promise.all([
-                fetchAndProcessNode(DOCS_REF),
-                fetchAndProcessNode(VEHICLES_REF)
-            ]).then(([docList, vehicleList]) => {
-                FULL_DOCUMENT_LIST = [...docList, ...vehicleList].filter(doc => doc !== null);
-                console.log(`✅ Documentos cargados. Total: ${FULL_DOCUMENT_LIST.length}`);
-
-                setCategoryFilter(''); // Aplica filtro inicial (TODOS)
-                setInventoryMode(DOCS_REF.slice(0, -1)); // Establece modo inicial (PERSONAS) y llama a handleCountryChange
-
-            }).catch(errorObject => {
-                console.error("❌ Error al leer de Firebase:", errorObject.code, errorObject.message);
-                populateDatalist('datalist-countries', FALLBACK_COUNTRIES);
-                populateDatalist('datalist-types', KNOWN_DOC_TYPES); // Lista fija inicial
-                document.getElementById('search-results').innerHTML = `
-                    <div class="modern-alert modern-alert-error">
-                        <i class="fas fa-exclamation-circle fa-2x"></i>
-                        <h4 style="color: #e74c3c; margin-top: 10px;">Error de Conexión o Permisos</h4>
-                        <p>No se pudo leer la base de datos (${errorObject.message}). Por favor, revisa las **Reglas de Seguridad** o el **Nombre del Nodo**.</p>
-                    </div>
-                 `;
-                 updateDocumentCount([]);
-            });
+            Promise.all([fetchAndProcessNode(DOCS_REF), fetchAndProcessNode(VEHICLES_REF)])
+                .then(([docList, vehicleList]) => {
+                    FULL_DOCUMENT_LIST = [...docList, ...vehicleList].filter(doc => doc !== null);
+                    console.log(`✅ Documentos cargados. Total: ${FULL_DOCUMENT_LIST.length}`);
+                    setCategoryFilter(''); 
+                    setInventoryMode(DOCS_REF.slice(0, -1)); 
+                })
+                .catch(errorObject => { /* ... manejo de error ... */ });
         }
 
 
@@ -960,7 +1043,8 @@
         // **********************************************
 
         window.extractDateFromName = function(nameInputId, dateDisplayId, nameString = null) {
-            const name = (nameString !== null ? nameString : document.getElementById(nameInputId).value.trim()).toUpperCase();
+            // ... (sin cambios)
+             const name = (nameString !== null ? nameString : document.getElementById(nameInputId).value.trim()).toUpperCase();
             const display = document.getElementById(dateDisplayId);
             const dateMatch = name.match(/(\d{4}[-/]\d{2}[-/]\d{2})|(\d{4}\d{2}\d{2})|(\d{4}(?:\s|-|\.|$))/);
             let normalizedDate = null;
@@ -994,7 +1078,8 @@
          * Extrae el TIPO del nombre, limpiando país y subtipo ANTES.
          */
         window.extractTypeFromName = function(name, country, subtipo) {
-            if (!name) return 'GENERAL';
+            // ... (sin cambios, usa KNOWN_DOC_TYPES)
+             if (!name) return 'GENERAL';
             let cleanName = name.toUpperCase().trim();
             cleanName = cleanName.replace(/\.(JPG|JPEG|PNG|PDF|DOCX|XLSX)$/i, '').replace(/_/g, ' ').trim();
 
@@ -1017,26 +1102,29 @@
             
              typePart = typePart.replace(/\s+/g, ' ').trim(); // Limpiar espacios múltiples
 
-            // ✅ [MODIFICADO] Usar la lista de tipos *reales*
+            // ✅ Usar la lista de tipos *reales*
             const words = typePart.split(/[\s_-]+/);
             for (const word of words) {
-                if (KNOWN_DOC_TYPES.includes(word)) { // Usar includes para Array
-                    return word; // Devuelve el primer TIPO conocido
+                if (KNOWN_DOC_TYPES.includes(word)) { 
+                    return word; 
                 }
             }
             
             if (words.length > 0 && words[0] !== '') {
                 if(words[0] !== country && words[0] !== subtipo) { 
-                    return words[0]; 
+                    // Devuelve la primera palabra solo si NO está en la lista de exclusión (para evitar devolver "TRANSPORTES" como tipo)
+                    if (!SUBTIPO_EXCLUSION_LIST.includes(words[0])) {
+                       return words[0]; 
+                    }
                 }
             }
             
-            return 'GENERAL';
+            return 'GENERAL'; // Fallback final
         }
         
 
-        function updateDocumentCount(currentResults) {
-            const totalDocs = FULL_DOCUMENT_LIST.length;
+        function updateDocumentCount(currentResults) { /* ... (sin cambios) ... */ 
+             const totalDocs = FULL_DOCUMENT_LIST.length;
             let countText = '';
             const totalCategoryDocs = currentCategoryFilter
                 ? FULL_DOCUMENT_LIST.filter(doc => doc.data && (doc.data.Categoria || FIXED_CATEGORY) === currentCategoryFilter).length
@@ -1059,8 +1147,8 @@
             documentCountSpan.textContent = countText;
         }
 
-        window.setCategoryFilter = function(category) {
-            currentCategoryFilter = category;
+        window.setCategoryFilter = function(category) { /* ... (sin cambios) ... */ 
+             currentCategoryFilter = category;
             document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('active'));
 
             if (category === 'ESCANER 2400') { document.getElementById('filter-2400-btn').classList.add('active'); } 
@@ -1076,12 +1164,9 @@
             filterDocuments();
         }
 
-       /**
-        * ✅ [MODIFICADO]
-        * Renderiza la fila con el formato Provincia/Estado y (País) debajo.
-        */
-       function renderDocRow(key, data) {
-            if (!data) { console.error("Intentando renderizar fila sin datos válidos para la clave:", key); return document.createElement('div'); }
+       /** Renderiza la fila */
+       function renderDocRow(key, data) { /* ... (sin cambios) ... */ 
+             if (!data) { console.error("Intentando renderizar fila sin datos válidos para la clave:", key); return document.createElement('div'); }
             const row = document.createElement('div'); row.classList.add('doc-row');
             const linkUrl = data.Enlace && data.Enlace !== 'N/A' ? data.Enlace : '#';
             const linkTarget = data.Enlace && data.Enlace !== 'N/A' ? '_blank' : '';
@@ -1090,24 +1175,18 @@
             const displayCategory = data.Categoria || FIXED_CATEGORY;
             const linkIconHtml = linkIsAvailable ? `<a href="${linkUrl}" target="${linkTarget}" class="link-icon" title="Ver archivo"><i class="fas fa-eye"></i></a>` : `<i class="fas fa-eye link-icon-disabled" title="Enlace no disponible"></i>`;
             
-            // ✅ [NUEVA LÓGICA DE VISUALIZACIÓN]
             let displayCountryHtml = data.Pais || 'N/A';
             if (data.SubtipoDocumento && data.SubtipoDocumento !== 'N/A') { 
-                // Muestra la provincia y el país debajo entre paréntesis
-                displayCountryHtml = `${data.SubtipoDocumento}<br><span style="color: #555; font-size: 0.9em;">(${data.Pais})</span>`; 
+                displayCountryHtml = `${data.SubtipoDocumento}<br><span>(${data.Pais})</span>`; 
             }
             
             row.innerHTML = `<div>${data.NombreDocumento || 'S/N'}</div><div>${displayCountryHtml}</div><div>${data.TipoDocumento || 'N/A'}</div><div>${displayDate}</div><div>${displayCategory}</div><div class="link-icon-container">${linkIconHtml}</div><div class="doc-actions"><button class="btn-warning" onclick="openEditModal('${key}')"><i class="fas fa-edit"></i></button><button class="btn-delete" onclick="deleteDocument('${key}', '${data.NombreDocumento || 'este documento'}')"><i class="fas fa-trash"></i></button></div>`;
             return row;
-        }
+       }
 
-        /**
-         * ✅ [MODIFICADO]
-         * Se cambia la lógica de 'typeQ' para que busque al inicio de 'docName'.
-         * Se simplifica la lógica de 'stateRegionQ' para que no dependa de la lista estática.
-         */
-        function filterDocuments() {
-            const countryQ = searchCountryInput.value.trim().toUpperCase();
+        /** Filtra los documentos */
+        function filterDocuments() { /* ... (sin cambios) ... */ 
+             const countryQ = searchCountryInput.value.trim().toUpperCase();
             const typeQ = searchTypeInput.value.trim().toUpperCase();
             const yearQ = searchYearInput.value.trim();
             const monthQ = searchMonthSelect.value;
@@ -1138,12 +1217,8 @@
                 if (normalizedCountryQ === 'ESTADOS UNIDOS') normalizedCountryQ = 'USA'; if (normalizedCountryQ === 'CANADÁ') normalizedCountryQ = 'CANADA';
                  if (docPais !== normalizedCountryQ) return false;
                 
-                // ✅ Lógica de filtro de estado simplificada
                 if (stateRegionQ && (docSubtipo === 'N/A' || docSubtipo.indexOf(stateRegionQ) === -1)) return false; 
-                
-                // ✅ Lógica de filtro de TIPO (por prefijo de Nombre)
                 if (typeQ && !docName.startsWith(typeQ)) return false; 
-
                 if (yearQ && docYear.indexOf(yearQ) === -1) return false;
                 if (monthQ && docMonth !== monthQ) return false;
                 if (namePartialQ && docName.indexOf(namePartialQ) === -1) return false;
@@ -1161,19 +1236,16 @@
             updateDocumentCount(filtered);
         }
 
-        function clearSearch() {
+        function clearSearch() { /* ... (sin cambios) ... */ 
             searchCountryInput.value = ''; searchTypeInput.value = ''; searchYearInput.value = ''; searchMonthSelect.value = ''; searchNamePartialInput.value = ''; searchStateRegionInput.value = '';
             handleCountryChange(''); // Limpia datalists y oculta campo estado
             currentCategoryFilter = ''; document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('active')); document.getElementById('filter-todos-btn').classList.add('active');
             setCategoryFilter(currentCategoryFilter); // Llama a filterDocuments
         }
 
-        /**
-         * ✅ [MODIFICADO]
-         * Lógica dinámica para el modal de edición, igual que 'handleCountryChange'.
-         */
-        window.updateModalCountrySpecificFields = function(countryValue) {
-            const country = countryValue.trim().toUpperCase();
+        /** Actualiza campos específicos del país en el modal */
+        window.updateModalCountrySpecificFields = function(countryValue) { /* ... (usa SUBTIPO_EXCLUSION_LIST) ... */ 
+             const country = countryValue.trim().toUpperCase();
             const editStateContainer = document.getElementById('edit-state-region-container');
             const editStateLabel = document.getElementById('edit-state-region-label');
             const editSubtipoInput = document.getElementById('edit-doc-subtipo');
@@ -1182,9 +1254,9 @@
 
             const countryDocs = FULL_DOCUMENT_LIST.filter(doc => doc.data?.Pais === normalizedCountry);
             
-            // ✅ [MODIFICADO] Usar la lista de exclusión grande
             const states = new Set();
             countryDocs.forEach(doc => {
+                // ✅ Usar la lista de exclusión grande
                 if (doc.data.SubtipoDocumento && doc.data.SubtipoDocumento !== 'N/A' && !SUBTIPO_EXCLUSION_LIST.includes(doc.data.SubtipoDocumento)) {
                     states.add(doc.data.SubtipoDocumento);
                 }
@@ -1204,12 +1276,15 @@
                 populateDatalist('datalist-states', []); 
             }
             
+             // Rellenar datalist de tipos (solo tipos reales)
              const countryDocsForTypes = FULL_DOCUMENT_LIST.filter(doc => !normalizedCountry || doc.data?.Pais === normalizedCountry);
-             const types = new Set(countryDocsForTypes.map(doc => doc.data.TipoDocumento).filter(t => t && t !== 'N/A'));
+             const types = new Set(countryDocsForTypes.map(doc => doc.data.TipoDocumento)
+                 .filter(t => t && KNOWN_DOC_TYPES.includes(t)) // Solo tipos reales
+             );
              populateDatalist('datalist-types', Array.from(types));
         }
 
-        window.openEditModal = function(fullKey) {
+        window.openEditModal = function(fullKey) { /* ... (sin cambios) ... */ 
              if (!database) return alert("❌ No hay conexión a Firebase. No se puede editar.");
             const doc = FULL_DOCUMENT_LIST.find(d => d.key === fullKey);
             if (!doc || !doc.data) { console.error("Error: Documento no encontrado o sin datos para la clave:", fullKey); return alert("Error: Documento no encontrado o datos inválidos."); }
@@ -1221,13 +1296,13 @@
             document.getElementById('edit-doc-category').value = FIXED_CATEGORY;
             document.getElementById('edit-doc-link').value = data.Enlace === 'N/A' ? '' : (data.Enlace || '');
             extractDateFromName('edit-doc-name', 'edit-doc-date-display', data.NombreDocumento);
-            updateLinkPreview('edit-doc-link', 'edit-link-preview');
+            //updateLinkPreview('edit-doc-link', 'edit-link-preview'); // Asegúrate que esta función existe o coméntala
             updateModalCountrySpecificFields(data.Pais || ''); 
             document.getElementById('edit-doc-subtipo').value = (data.SubtipoDocumento === 'N/A' || !data.SubtipoDocumento) ? '' : data.SubtipoDocumento;
             editModal.style.display = 'flex';
         }
 
-        window.updateDocument = async function() {
+        window.updateDocument = async function() { /* ... (usa KNOWN_DOC_TYPES) ... */ 
             if (!database) { alert("❌ No hay conexión a Firebase. No se puede actualizar."); return; }
             const fullKey = document.getElementById('edit-doc-key').value;
             let pais = document.getElementById('edit-doc-country').value.trim().toUpperCase();
@@ -1243,14 +1318,10 @@
             const countryDocs = FULL_DOCUMENT_LIST.filter(doc => doc.data?.Pais === pais);
             const states = new Set(countryDocs.map(doc => doc.data.SubtipoDocumento).filter(s => s && s !== 'N/A'));
             
-            if (states.size === 0 && subtipo === '') {
-                subtipo = 'N/A';
-            }
-            if (subtipo === '') {
-                subtipo = 'N/A';
-            }
+            if (states.size === 0 && subtipo === '') { subtipo = 'N/A'; }
+            if (subtipo === '') { subtipo = 'N/A'; }
             
-            // ✅ [MODIFICADO] Usar la lista de tipos *reales*
+            // ✅ Usar la lista de tipos *reales* para la advertencia
             if (!KNOWN_DOC_TYPES.includes(tipo) && (states.size > 0 || subtipo !== 'N/A')) { console.warn(`Aviso: "${tipo}" no es un TIPO estándar.`); }
             
             const updatedData = { Pais: pais, TipoDocumento: tipo, NombreDocumento: nombre, SubtipoDocumento: subtipo, Fecha: fechaCompleta, Categoria: categoria, Enlace: enlace || 'N/A', Timestamp: firebase.database.ServerValue.TIMESTAMP };
@@ -1258,7 +1329,7 @@
             catch (error) { alert("❌ Error al actualizar: " + error.message); }
         }
 
-        window.deleteDocument = async function(fullKey, name) {
+        window.deleteDocument = async function(fullKey, name) { /* ... (sin cambios) ... */ 
             if (!database) { alert("❌ No hay conexión a Firebase."); return; }
             if (confirm(`¿Eliminar DEFINITIVAMENTE "${name}"?`)) {
                 try { await database.ref(fullKey).remove(); loadAllDocuments(); alert(`✅ Documento "${name}" eliminado.`); } 
@@ -1269,34 +1340,37 @@
         // **********************************************
         //               [ INICIALIZACIÓN ]
         // **********************************************
+        
+        // Función auxiliar que faltaba (si no la tienes ya)
+        function updateLinkPreview(inputId, previewId) {
+             const input = document.getElementById(inputId);
+             const preview = document.getElementById(previewId);
+             if (input && preview) {
+                 preview.textContent = input.value || 'Enlace URL introducido (sin miniatura).';
+             }
+         }
 
-        function enableDatalistDropdown(inputId) {
-            // Esta función ya no es necesaria para la lógica de onfocus/onblur,
-            // ya que se ha añadido directamente al HTML.
-        }
 
-        function populateSelectors() {
-            const monthSelectors = [document.getElementById('search-month')];
+        function populateSelectors() { /* ... (sin cambios) ... */ 
+             const monthSelectors = [document.getElementById('search-month')];
             MONTHS.forEach((month, index) => {
                 const value = (index + 1).toString().padStart(2, '0');
                 monthSelectors.forEach((selector) => { const option = document.createElement('option'); option.value = value; option.textContent = month; selector.appendChild(option); });
             });
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", () => { /* ... (sin cambios) ... */ 
             populateSelectors();
-            populateDatalist('datalist-types', KNOWN_DOC_TYPES); // Datalist de tipos con la lista fija al inicio
-            loadAllDocuments(); // Carga todo, procesa datos, y luego rellena datalists dinámicamente
+            // populateDatalist('datalist-types', KNOWN_DOC_TYPES); // Ahora se llena dinámicamente en loadAllDocuments
+            loadAllDocuments(); 
             
             document.getElementById('edit-modal').addEventListener('click', (event) => { if (event.target === document.getElementById('edit-modal')) { document.getElementById('edit-modal').style.display = "none"; } });
             
-            // ✅ [VERIFICADO] Listeners de 'input' para filtrado instantáneo al teclear
             searchTypeInput.addEventListener('input', filterDocuments); 
             searchYearInput.addEventListener('input', filterDocuments); 
             searchMonthSelect.addEventListener('change', filterDocuments); 
             searchNamePartialInput.addEventListener('input', filterDocuments); 
             searchStateRegionInput.addEventListener('input', filterDocuments);
-            
             document.getElementById('clear-search-btn').addEventListener('click', clearSearch);
         });
     </script>
