@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de denuncias ORA - GAD</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* ESTILOS DE LA CABECERA (Reutilizados) */
+        .title-panel-blue {
+            background-color: #3b82f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+        .title-panel-blue h1 {
+            color: white;
+            margin: 0;
+            padding: 0;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .title-panel-blue .header-logo-container {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+        .title-panel-blue .header-logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* ESTILOS DEL PIE DE PÁGINA (Reutilizados) */
+        footer {
+            background-color: #e0e0e0;
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            margin-top: auto;
+            box-sizing: border-box;
+        }
+        footer p {
+            margin: 5px 0;
+            font-size: 1em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* ESTILOS BASE Y PANELES (Reutilizados) */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .app-container {
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-weight: 700;
+        }
+        h2 { font-size: 1.5em; }
+        h3 { font-size: 1.2em; }
+
+        /* Controles y Botones (Reutilizados) */
+        button {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease-in-out;
+            margin-right: 8px;
+            margin-bottom: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: white;
+            font-size: 0.9em;
+        }
+        button i { font-size: 1em; }
+        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-primary:hover { box-shadow: 0 4px 10px rgba(41, 128, 185, 0.4); }
+        .btn-delete { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-delete:hover { box-shadow: 0 4px 10px rgba(192, 57, 43, 0.4); }
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-success:hover { box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-warning:hover { box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); }
+        .btn-info { background: linear-gradient(135deg, #5bc0de, #31b0d5); }
+        .btn-info:hover { box-shadow: 0 4px 10px rgba(49, 176, 213, 0.4); }
+        
+        /* --- INICIO DE LA MODIFICACIÓN (Botón Reincidentes) --- */
+        .btn-danger { background: linear-gradient(135deg, #f0ad4e, #d9534f); }
+        .btn-danger:hover { box-shadow: 0 4px 10px rgba(217, 83, 79, 0.4); }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+
+
+        /* Estilos generales de inputs (Reutilizados) */
+        input[type="text"], input[type="number"], input[type="url"], select {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 8px 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.075);
+            font-size: 0.95em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Zona para arrastrar y soltar archivos */
+        #drop-zone {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #555;
+            background-color: #f8f9fa;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+        #drop-zone.dragover {
+            background-color: #e0f2f7;
+            border-color: #0288d1;
+        }
+        #drop-zone i {
+            font-size: 3em;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        /* Layout del grid de búsqueda y filtros */
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .search-controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            align-items: end;
+            flex-grow: 1;
+            max-width: 500px;
+        }
+        .search-controls label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .search-controls .align-bottom {
+            align-self: end;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        /* LISTADO (Reutilizado) */
+        .results-container {
+            overflow-x: auto;
+            padding-bottom: 10px;
+            max-width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fdfdfd;
+        }
+        .results-header, .doc-row {
+            display: grid;
+            gap: 15px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            min-width: 600px;
+            /* --- INICIO DE LA MODIFICACIÓN (Transición de color) --- */
+            transition: background-color 0.3s ease;
+            /* --- FIN DE LA MODIFICACIÓN --- */
+        }
+        .results-header {
+            font-weight: bold;
+            background: #e9f2f7;
+            border-bottom: 2px solid #3498db;
+            border-radius: 8px 8px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            color: #2c3e50;
+        }
+        .doc-row:nth-child(even) { background: #f9f9f9; }
+        .doc-row:hover { background: #eef4f9; }
+        .doc-row div {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            align-self: center;
+        }
+
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Checkbox y Colores) --- */
+        .doc-row .checkbox-cell {
+            text-align: center;
+            align-self: center;
+        }
+        .doc-row.highlight-yellow {
+            background-color: #fffde7; 
+        }
+        .doc-row.highlight-yellow:hover {
+            background-color: #fff9c4; 
+        }
+        .doc-row.highlight-green {
+            background-color: #e8f5e9;
+        }
+        .doc-row.highlight-green:hover {
+            background-color: #c8e6c9;
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+        
+        /* Mensajes de estado (Reutilizado) */
+        #status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+        }
+        #status-message.success {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            border: 1px solid #c8e6c9;
+        }
+        #status-message.error {
+            background-color: #fef2f2;
+            color: #c0392b;
+            border: 1px solid #f44336;
+        }
+        #status-message.loading {
+            background-color: #e0f2f7;
+            color: #0288d1;
+            border: 1px solid #b3e5fc;
+        }
+        #status-message.info {
+            background-color: #e0f2f7;
+            color: #0288d1;
+            border: 1px solid #b3e5fc;
+        }
+        
+        /* Spinner (Reutilizado) */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alertas (Reutilizado) */
+        .modern-alert {
+            text-align: center;
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px;
+            background-color: #f0f4f7;
+            border: 1px solid #dcdcdc;
+            color: #555;
+            font-size: 0.9em; 
+        }
+         .modern-alert h4 { font-size: 1.1em; margin-top: 5px; margin-bottom: 5px; }
+         .modern-alert p { margin-bottom: 0; }
+        .modern-alert-error {
+            background-color: #fef2f2;
+            border-color: #f44336;
+        }
+         
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Leyenda) --- */
+        #legend-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        #legend-panel p {
+            margin: 2px 0;
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+         
+         /* Media queries (Reutilizados) */
+         @media (max-width: 767px) {
+             .controls-container {
+                 flex-direction: column;
+                 align-items: stretch;
+             }
+             .search-controls {
+                 grid-template-columns: 1fr;
+                 max-width: 100%;
+             }
+             .filter-controls {
+                 justify-content: center;
+             }
+             .title-panel-blue h1 {
+                 font-size: 1.4em; 
+             }
+             .title-panel-blue .header-logo-container {
+                 width: 60px; 
+                 height: 60px;
+             }
+         }
+         @media (max-width: 480px) {
+             .title-panel-blue {
+                 padding: 15px;
+             }
+             .title-panel-blue h1 {
+                 font-size: 1.2em;
+             }
+             .title-panel-blue .header-logo-container {
+                 width: 50px;
+                 height: 50px;
+             }
+             .panel { padding: 15px; }
+             button { font-size: 0.85em; padding: 8px 12px; }
+             h2 { font-size: 1.3em; }
+             h3 { font-size: 1.1em; }
+         }
+
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="app-container">
+
+            <div class="title-panel-blue">
+                <h1><i class="fas fa-file-invoice-dollar"></i> Listado de denuncias ORA</h1>
+                <div class="header-logo-container">
+                    <img src="logogad.png" alt="Logo GAD">
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fas fa-upload"></i> Cargar Archivo Excel</h2>
+                <p>Arrastra y suelta un archivo Excel (.xls, .xlsx) en la zona o haz clic para seleccionarlo. <strong>Esto AÑADIRÁ los datos del archivo a los ya existentes.</strong></p>
+                
+                <div id="drop-zone">
+                    <i class="fas fa-file-excel"></i>
+                    <p>Arrastra tu archivo aquí o haz clic para seleccionar</p>
+                </div>
+                <input type="file" id="file-input" accept=".xls, .xlsx" style="display: none;">
+                
+                <div id="status-message"></div>
+
+                <h2 style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;"><i class="fas fa-search"></i> Buscar Denuncias</h2>
+                
+                <div class="controls-container">
+                    <div class="search-controls">
+                        <div>
+                            <label for="search-matricula">MATRÍCULA A BUSCAR (Exacta):</label>
+                            <input type="text" id="search-matricula" placeholder="Introduce la matrícula...">
+                        </div>
+                        <div class="align-bottom">
+                            <button id="search-btn" class="btn-success" style="width: 100%;"><i class="fas fa-search"></i> Buscar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <button id="sort-matricula-btn" class="btn-primary"><i class="fas fa-sort-alpha-down"></i> Matrícula (A-Z)</button>
+                        <button id="sort-fecha-asc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Antigua)</button>
+                        <button id="sort-fecha-desc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Reciente)</button>
+                        <button id="show-all-btn" class="btn-warning"><i class="fas fa-list"></i> Mostrar Todos</button>
+                        <button id="find-duplicates-btn" class="btn-danger"><i class="fas fa-copy"></i> Reincidentes</button>
+                        <button id="delete-all-btn" class="btn-delete"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Resultados <span id="results-count">(0)</span></h3>
+                
+                <div id="legend-panel">
+                  <p>Activa casilla <strong>Eurocop</strong> si tenemos datos.</p>
+                  <p>Activa casilla <strong>Notificado</strong> si hemos enviado datos a Sanciones.</p>
+                </div>
+                <div class="results-container">
+                    <div id="results-header" class="results-header" style="display: none;">
+                        </div>
+                    <div id="search-results">
+                        <div class="modern-alert">
+                            <i class="fas fa-list-alt fa-2x"></i>
+                            <h4 style="color: #3498db; margin-top: 10px;">Sin Datos</h4>
+                            <p>Carga un archivo Excel o pulsa "Mostrar Todos" para ver las denuncias.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p>POLICÍA LOCAL DE ALICANTE</p>
+        <p>© GAD - Todos los derechos reservados</p>
+    </footer>
+
+
+    <script>
+        // **********************************************
+        //      ✅ [ CONFIGURACIÓN DE FIREBASE ]
+        // **********************************************
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasestorage.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+        };
+
+        let app = null;
+        let database = null;
+
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log("✅ Firebase inicializado correctamente.");
+        } catch (error) {
+            console.error("❌ ERROR CRÍTICO DE FIREBASE:", error.message);
+            alert("❌ Error al inicializar Firebase. Revisa tus credenciales.");
+        }
+
+        // --- INICIO DE LA NUEVA LÓGICA ---
+
+        const DENUNCIAS_ORA_REF = 'denuncias_ORA';
+        
+        // --- INICIO DE LA MODIFICACIÓN (JS - Config Checkboxes) ---
+        // Añadimos las nuevas claves a la lista de cabeceras
+        const HEADER_DISPLAY_NAMES = {
+            'matricula': 'MATRÍCULA',
+            'fecha_de_creacion': 'FECHA DENUNCIA', 
+            'marca': 'MARCA',
+            'modelo': 'MODELO',
+            'color': 'COLOR',
+            'eurocop': 'EUROCOP',      // <- AÑADIDO
+            'notificado': 'NOTIFICADO' // <- AÑADIDO
+        };
+        // --- FIN DE LA MODIFICACIÓN ---
+
+        const CANONICAL_KEYS_LIST = Object.keys(HEADER_DISPLAY_NAMES);
+        
+        let allDenuncias = []; // Almacén en memoria para los datos
+
+        // Elementos del DOM
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const statusMessage = document.getElementById('status-message');
+        
+        const searchInput = document.getElementById('search-matricula');
+        const searchBtn = document.getElementById('search-btn');
+        
+        const sortMatriculaBtn = document.getElementById('sort-matricula-btn');
+        const sortFechaAscBtn = document.getElementById('sort-fecha-asc-btn');
+        const sortFechaDescBtn = document.getElementById('sort-fecha-desc-btn');
+        const showAllBtn = document.getElementById('show-all-btn');
+        const deleteAllBtn = document.getElementById('delete-all-btn');
+        
+        // --- INICIO DE LA MODIFICACIÓN (JS - Botón Reincidentes) ---
+        const findDuplicatesBtn = document.getElementById('find-duplicates-btn');
+        // --- FIN DE LA MODIFICACIÓN ---
+        
+        const resultsHeader = document.getElementById('results-header');
+        const searchResultsDiv = document.getElementById('search-results');
+        const resultsCount = document.getElementById('results-count');
+
+        
+        /**
+         * Muestra un mensaje de estado (carga, éxito, error)
+         */
+        function showStatus(message, type = 'loading') {
+            statusMessage.textContent = message;
+            statusMessage.className = type;
+            statusMessage.style.display = 'block';
+
+            if (type === 'loading') {
+                statusMessage.innerHTML = `<span class="loader"></span> ${message}`;
+            }
+        }
+
+        // --- LÓGICA DE CARGA DE ARCHIVO ---
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        /**
+         * Limpia las claves de objeto
+         */
+        function sanitizeKey(key) {
+            if (!key) return '';
+            return key
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") 
+                .replace(/[.$#\[\]\/]/g, '_') 
+                .replace(/\s/g, '_');
+        }
+        
+        /**
+         * Resuelve variaciones de claves a una clave canónica.
+         */
+        function getCanonicalKey(sanitizedKey) {
+            if (sanitizedKey === 'matricula') return 'matricula';
+
+            if (sanitizedKey === 'fecha_de_creacion' || 
+                sanitizedKey === 'fecha_creacion' || 
+                sanitizedKey === 'fechacreacion' || 
+                sanitizedKey === 'fecha') {
+                return 'fecha_de_creacion';
+            }
+
+            if (sanitizedKey === 'marca') return 'marca';
+            if (sanitizedKey === 'modelo') return 'modelo';
+            if (sanitizedKey === 'color') return 'color';
+            
+            if (sanitizedKey === 'eurocop') return 'eurocop';
+            if (sanitizedKey === 'notificado') return 'notificado';
+
+            return null;
+        }
+
+
+        /**
+         * Procesa el archivo Excel seleccionado
+         */
+        function handleFile(file) {
+            if (!file || !/\.(xlsx|xls)$/i.test(file.name)) {
+                showStatus("Error: El archivo debe ser un .xls o .xlsx", 'error');
+                return;
+            }
+
+            showStatus("Procesando archivo Excel...", 'loading');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (jsonData.length === 0) {
+                        throw new Error("El archivo Excel está vacío o no tiene datos.");
+                    }
+
+                    // 1. PROCESAR DATOS Y CONVERTIR FECHAS
+                    const sanitizedJsonData = jsonData.map(row => {
+                        const newRow = {};
+                        Object.keys(row).forEach(excelKey => {
+                            const sanitizedExcelKey = sanitizeKey(excelKey);
+                            const canonicalKey = getCanonicalKey(sanitizedExcelKey);
+                            
+                            if (canonicalKey) {
+                                if (canonicalKey === 'fecha_de_creacion') {
+                                    let value = row[excelKey];
+                                    if (value instanceof Date) {
+                                        newRow[canonicalKey] = value.toISOString();
+                                    } else if (typeof value === 'number' && value > 10000) {
+                                        let converted = new Date(Math.round((value - 25569) * 86400 * 1000));
+                                        newRow[canonicalKey] = converted.toISOString();
+                                    } else if (typeof value === 'string' && value.includes('/')) {
+                                        let [fecha, hora] = value.split(' ');
+                                        let [d, m, y] = fecha.split('/');
+                                        let [hh, mm] = hora ? hora.split(':') : [0, 0];
+                                        if (y && m && d) {
+                                            let fixed = new Date(Date.UTC(y, m - 1, d, hh || 0, mm || 0));
+                                            newRow[canonicalKey] = fixed.toISOString();
+                                        } else {
+                                             newRow[canonicalKey] = value ?? null;
+                                        }
+                                    } else {
+                                        newRow[canonicalKey] = value ?? null;
+                                    }
+                                } else {
+                                    newRow[canonicalKey] = row[excelKey];
+                                }
+                            }
+                        });
+                        return newRow;
+                    });
+                    
+                    const intermediateData = sanitizedJsonData.filter(row => Object.keys(row).length > 0);
+                    console.log(`Datos leídos del Excel (antes de filtrar): ${intermediateData.length} registros.`);
+
+
+                    // 2. FILTRAR MATRÍCULAS ESPAÑOLAS (1234ABC)
+                    const spanishPlateRegex = /^\d{4}[A-Z]{3}$/i;
+                    let spanishPlatesCount = 0;
+                    const matriculaKey = 'matricula'; 
+
+                    const finalData = intermediateData.filter(row => {
+                        const plateValue = row[matriculaKey]; 
+                        if (plateValue) {
+                            const plate = String(plateValue).trim().replace(/\s/g, '');
+                            if (spanishPlateRegex.test(plate)) {
+                                spanishPlatesCount++; 
+                                return false; 
+                            }
+                        }
+                        return true; 
+                    });
+
+                    console.log(`Datos después de filtrar: ${finalData.length} registros.`);
+
+                    if (spanishPlatesCount > 0) {
+                        const message = `Se han detectado y eliminado ${spanishPlatesCount} matrículas con formato español (1234ABC). No se guardarán en la base de datos.`;
+                        console.warn(message);
+                        alert(message);
+                    }
+                    
+                    if (finalData.length === 0) {
+                         if (intermediateData.length > 0 && spanishPlatesCount > 0) {
+                            throw new Error("El archivo no contiene matrículas válidas (todas las encontradas tenían formato español 1234ABC y han sido filtradas).");
+                        } else {
+                            throw new Error("El archivo no contiene ninguna de las columnas requeridas (matrícula, fecha de creación, marca, modelo, color) o está vacío.");
+                        }
+                    }
+                    
+                    addAndSaveToFirebase(finalData);
+
+                } catch (error) {
+                    console.error("Error al leer el archivo Excel:", error);
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        /**
+         * Añade y guarda los datos JSON en Firebase, ACUMULÁNDOLOS
+         */
+        async function addAndSaveToFirebase(newData) {
+            if (!database) {
+                showStatus("Error: Firebase no está inicializado.", 'error');
+                return;
+            }
+            
+            showStatus("Cargando datos existentes de Firebase...", 'loading');
+            
+            try {
+                const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
+                const existingData = snapshot.val() || [];
+                const existingArray = Array.isArray(existingData) ? existingData : Object.values(existingData);
+
+                const combinedData = [...existingArray, ...newData];
+                
+                showStatus(`Guardando ${newData.length} nuevos registros... (Total: ${combinedData.length})`, 'loading');
+                
+                await database.ref(DENUNCIAS_ORA_REF).set(combinedData);
+
+                showStatus(`¡Éxito! Se han añadido ${newData.length} registros. (Total: ${combinedData.length})`, 'success');
+                
+                loadAndDisplayData();
+
+            } catch (error) {
+                console.error("Error al guardar en Firebase:", error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // --- LÓGICA DE BÚSQUEDA Y VISUALIZACIÓN ---
+
+        /**
+         * Carga los datos de Firebase al almacén en memoria y los muestra
+         */
+        async function loadAndDisplayData() {
+            if (!database) return;
+            
+            showStatus("Cargando datos desde Firebase...", 'loading');
+            
+            try {
+                const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
+                const data = snapshot.val();
+
+                if (!data) {
+                    allDenuncias = [];
+                    showStatus("No hay datos en Firebase. Carga un archivo Excel.", 'error');
+                } else {
+                    allDenuncias = Array.isArray(data) ? data : Object.values(data);
+                    showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
+                }
+                
+                displayResults(allDenuncias);
+
+            } catch (error) {
+                 console.error("Error al cargar datos:", error);
+                 showStatus(`Error: ${error.message}`, 'error');
+                 displayResults([]);
+            }
+        }
+        
+        /**
+         * Formateador de valores para la tabla
+         */
+        function formatDisplayValue(value, key) {
+            if (value === null || typeof value === 'undefined') {
+                return 'N/A';
+            }
+            
+            if (key === 'fecha_de_creacion') {
+                let date;
+                if (value instanceof Date) {
+                    date = value;
+                } 
+                else if (typeof value === 'string' && (value.includes('T') || value.includes('-'))) {
+                    date = new Date(value);
+                }
+                else if (typeof value === 'number' && value > 10000) {
+                     date = new Date(Math.round((value - 25569) * 86400 * 1000));
+                }
+
+                if (date instanceof Date && !isNaN(date.getTime())) {
+                    try {
+                        const y = date.getUTCFullYear();
+                        const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+                        const d = String(date.getUTCDate()).padStart(2, '0');
+                        const h = String(date.getUTCHours()).padStart(2, '0');
+                        const min = String(date.getUTCMinutes()).padStart(2, '0');
+                        
+                        if (y < 1970 || y > 2100) return value; 
+
+                        return `${d}/${m}/${y} ${h}:${min}`;
+                    } catch (e) {
+                        return value;
+                    }
+                }
+            }
+            
+            return value;
+        }
+
+        /**
+         * Muestra los resultados (un array de denuncias) en la tabla
+         */
+        function displayResults(results) {
+             searchResultsDiv.innerHTML = '';
+             resultsHeader.innerHTML = '';
+             resultsHeader.style.display = 'none';
+             resultsCount.textContent = `(${results.length})`;
+            
+            if (results.length === 0) {
+                searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><h4>Sin Resultados</h4><p>No se encontraron denuncias que coincidan con los criterios.</p></div>`;
+                return;
+            }
+
+            // --- INICIO DE LA MODIFICACIÓN (JS - displayResults) ---
+            const headers = CANONICAL_KEYS_LIST; // Ahora tiene 7 columnas
+            
+            // Layout comprimido: 5 columnas principales y 2 estrechas (0.8fr)
+            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1.5fr 0.8fr 0.8fr';
+
+            // 1. Generar cabecera
+            resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
+            resultsHeader.style.gridTemplateColumns = gridLayout;
+            resultsHeader.style.display = 'grid';
+
+            // 2. Generar filas
+            results.forEach(item => {
+                const row = document.createElement('div');
+                row.classList.add('doc-row');
+
+                let rowHTML = '';
+                headers.forEach(h => {
+                    if (h === 'eurocop' || h === 'notificado') {
+                        // Comprobamos si el valor es true (para el estado inicial)
+                        const isChecked = item[h] === true; 
+                        // Añadimos clases para poder encontrarlos luego
+                        const checkboxClass = (h === 'eurocop') ? 'check-eurocop' : 'check-notificado';
+                        
+                        rowHTML += `<div class="checkbox-cell"><input type="checkbox" class="${checkboxClass}" ${isChecked ? 'checked' : ''}></div>`;
+                    } else {
+                        const value = item[h];
+                        rowHTML += `<div>${formatDisplayValue(value, h)}</div>`;
+                    }
+                });
+                row.innerHTML = rowHTML;
+                row.style.gridTemplateColumns = gridLayout;
+                searchResultsDiv.appendChild(row);
+
+                // Aplicar color inicial basado en datos cargados
+                const notificadoCheck = row.querySelector('.check-notificado');
+                const eurocopCheck = row.querySelector('.check-eurocop');
+
+                if (notificadoCheck && notificadoCheck.checked) {
+                    row.classList.add('highlight-green');
+                } else if (eurocopCheck && eurocopCheck.checked) {
+                    row.classList.add('highlight-yellow');
+                }
+            });
+            // --- FIN DE LA MODIFICACIÓN ---
+        }
+        
+        // --- EVENT LISTENERS PARA BOTONES ---
+        
+        /**
+         * Función reutilizable para buscar/filtrar
+         */
+        function performSearch() {
+            const searchQuery = searchInput.value.trim().toUpperCase();
+            
+            if (!searchQuery) {
+                displayResults(allDenuncias);
+                return;
+            }
+            const matriculaKey = 'matricula';
+            const results = allDenuncias.filter(item => {
+                return item && item[matriculaKey] && 
+                       String(item[matriculaKey]).toUpperCase().includes(searchQuery);
+            });
+            displayResults(results);
+        }
+
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('input', performSearch);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                performSearch();
+            }
+        });
+        
+        showAllBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            displayResults(allDenuncias);
+        });
+
+        // (Función de Ordenar por Matrícula - Corregida)
+        sortMatriculaBtn.addEventListener('click', () => {
+            const matriculaKey = 'matricula'; 
+            if (!allDenuncias[0] || typeof allDenuncias[0][matriculaKey] === 'undefined') {
+                alert("No se puede ordenar: la columna 'matrícula' no existe.");
+                return;
+            }
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const matA = String(a[matriculaKey] || '').trim().toUpperCase();
+                const matB = String(b[matriculaKey] || '').trim().toUpperCase();
+                return matA.localeCompare(matB);
+            });
+            displayResults(sorted);
+        });
+        
+        
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) { return dateStr; }
+            if (String(dateStr).includes('/')) {
+                const parts = String(dateStr).split(' ');
+                const dateParts = parts[0].split('/');
+                if (dateParts.length === 3) {
+                    if (parts.length > 1) {
+                        const timeParts = parts[1].split(':');
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0] || 0, timeParts[1] || 0);
+                    } else {
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+                    }
+                }
+            }
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) { return date; }
+            if (typeof dateStr === 'number' && dateStr > 10000) {
+                return new Date(Math.round((dateStr - 25569) * 86400 * 1000));
+            }
+            return null;
+        }
+
+        sortFechaAscBtn.addEventListener('click', () => {
+            const fechaKey = 'fecha_de_creacion'; 
+            if (!allDenuncias[0] || typeof allDenuncias[0][fechaKey] === 'undefined') {
+                alert("No se puede ordenar: la columna 'fecha de creación' no existe.");
+                return;
+            }
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return dateA - dateB;
+            });
+            displayResults(sorted);
+        });
+        
+        sortFechaDescBtn.addEventListener('click', () => {
+             const fechaKey = 'fecha_de_creacion';
+             if (!allDenuncias[0] || typeof allDenuncias[0][fechaKey] === 'undefined') {
+                alert("No se puede ordenar: la columna 'fecha de creación' no existe.");
+            }
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return dateB - dateA;
+            });
+            displayResults(sorted);
+        });
+        
+        /**
+         * Borra todos los datos del nodo DENUNCIAS_ORA_REF previa confirmación
+         */
+        async function deleteAllData() {
+            const confirmation = window.prompt(
+                'Esto borrará PERMANENTEMENTE todos los datos de denuncias ORA. \n\nSi estás seguro, escribe "BORRAR" y pulsa Aceptar.'
+            );
+            
+            if (confirmation !== 'BORRAR') {
+                showStatus("Borrado cancelado.", 'info'); 
+                return;
+            }
+            if (!database) {
+                showStatus("Error: Firebase no está inicializado.", 'error');
+                return;
+            }
+            showStatus("Borrando todos los datos de Firebase...", 'loading');
+            try {
+                await database.ref(DENUNCIAS_ORA_REF).remove();
+                showStatus("¡Éxito! Todos los datos han sido borrados.", 'success');
+                allDenuncias = [];
+                displayResults([]);
+            } catch (error) {
+                console.error("Error al borrar datos:", error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // --- INICIO DE LA MODIFICACIÓN (JS - Nuevas Funciones) ---
+
+        /**
+         * Gestiona el clic en cualquier checkbox de la tabla para colorear la fila
+         */
+        function handleCheckboxClick(clickedCheckbox) {
+            const row = clickedCheckbox.closest('.doc-row');
+            if (!row) return;
+
+            // Encontrar AMBOS checkboxes en esta fila
+            const eurocopCheck = row.querySelector('.check-eurocop');
+            const notificadoCheck = row.querySelector('.check-notificado');
+
+            // 1. Limpiar colores antiguos
+            row.classList.remove('highlight-yellow', 'highlight-green');
+
+            // 2. Aplicar nuevas reglas (verde gana)
+            if (notificadoCheck && notificadoCheck.checked) {
+                row.classList.add('highlight-green');
+            } else if (eurocopCheck && eurocopCheck.checked) {
+                row.classList.add('highlight-yellow');
+            }
+        }
+
+        /**
+         * Busca y muestra solo las matrículas reincidentes
+         */
+        function findAndDisplayDuplicates() {
+            if (!allDenuncias.length) {
+                showStatus("No hay datos cargados para buscar reincidentes.", "info");
+                return;
+            }
+
+            showStatus("Buscando reincidentes...", "loading");
+
+            const matriculaCounts = new Map();
+            const matriculaKey = 'matricula';
+
+            // 1. Contar todas las matrículas
+            for (const item of allDenuncias) {
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
+                if (matricula) {
+                    matriculaCounts.set(matricula, (matriculaCounts.get(matricula) || 0) + 1);
+                }
+            }
+
+            // 2. Crear un Set de las matrículas que aparecen más de una vez
+            const duplicateMatriculas = new Set();
+            for (const [matricula, count] of matriculaCounts.entries()) {
+                if (count > 1) {
+                    duplicateMatriculas.add(matricula);
+                }
+            }
+
+            if (duplicateMatriculas.size === 0) {
+                showStatus("No se encontraron matrículas reincidentes.", "info");
+                displayResults([]); // Mostramos tabla vacía
+                return;
+            }
+
+            // 3. Filtrar el array original para quedarnos solo con las duplicadas
+            const duplicatesList = allDenuncias.filter(item => {
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
+                return duplicateMatriculas.has(matricula);
+            });
+
+            // 4. Ordenar la lista de duplicados por matrícula
+            const sortedDuplicates = duplicatesList.sort((a, b) => {
+                const matA = String(a[matriculaKey] || '').trim().toUpperCase();
+                const matB = String(b[matriculaKey] || '').trim().toUpperCase();
+                return matA.localeCompare(matB);
+            });
+
+            showStatus(`Se encontraron ${sortedDuplicates.length} registros de ${duplicateMatriculas.size} matrículas reincidentes.`, "success");
+            displayResults(sortedDuplicates);
+        }
+
+        // --- FIN DE LA MODIFICACIÓN ---
+        
+
+        // Carga inicial de datos al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAndDisplayData();
+            
+            // Listeners de los botones
+            deleteAllBtn.addEventListener('click', deleteAllData);
+            findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); // <-- AÑADIDO
+
+            // Listener de eventos para los checkboxes (delegado al contenedor)
+            searchResultsDiv.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    handleCheckboxClick(e.target);
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
