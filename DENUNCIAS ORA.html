@@ -52,7 +52,7 @@
         }
         /* --- FIN DE LA MODIFICACIÓN --- */
 
-        /* ESTILOS DEL PIE DE PÁGNA (Reutilizados) */
+        /* ESTILOS DEL PIE DE PÁGINA (Reutilizados) */
         footer {
             background-color: #e0e0e0;
             text-align: center;
@@ -144,7 +144,7 @@
 
 
         /* Estilos generales de inputs (Reutilizados) */
-        input[type="text"], input[type="number"], input[type="url"], select {
+        input[type="text"], input[type="number"], input[type="url"], input[type="date"], select {
             border: 1px solid #ced4da;
             border-radius: 5px;
             padding: 8px 12px;
@@ -384,6 +384,64 @@
             font-weight: bold;
         }
         /* --- FIN DE LA MODIFICACIÓN --- */
+        
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Modal Notificación) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+        }
+        .modal-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            width: 90%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+        .modal-header {
+            background: #f1f1f1;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        .modal-content {
+            padding: 20px;
+            display: grid;
+            gap: 15px;
+            max-height: 60vh; /* Para evitar que sea muy alto en pantallas pequeñas */
+            overflow-y: auto; /* Scroll si hay muchos campos */
+        }
+        .modal-content label {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: -10px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f9f9f9;
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+
          
          /* Media queries (Reutilizados) */
          @media (max-width: 767px) {
@@ -507,7 +565,36 @@
 
         </div>
     </main>
+    
+    <div id="notification-modal-overlay" class="modal-overlay"></div>
+    <div id="notification-modal" class="modal-container">
+        <div class="modal-header">
+            <h2><i class="fas fa-paper-plane"></i> Notificar Datos Eurocop</h2>
+        </div>
+        <div class="modal-content">
+            <label for="modal-nombre">Nombre:</label>
+            <input type="text" id="modal-nombre" placeholder="Nombre completo...">
+            
+            <label for="modal-doi">DOI:</label>
+            <input type="text" id="modal-doi" placeholder="Nº de identificación NIE, DNI, otros">
+            
+            <label for="modal-direccion">Dirección:</label>
+            <input type="text" id="modal-direccion" placeholder="Dirección...">
+            
+            <label for="modal-localidad">Localidad:</label>
+            <input type="text" id="modal-localidad" placeholder="Localidad...">
 
+            <label for="modal-fecha-nacimiento">Fecha de Nacimiento:</label>
+            <input type="date" id="modal-fecha-nacimiento">
+            
+            <label for="modal-telefono">Teléfono:</label>
+            <input type="text" id="modal-telefono" placeholder="Teléfono...">
+        </div>
+        <div class="modal-buttons">
+            <button id="modal-cancel-btn" class="btn-warning"><i class="fas fa-times"></i> Cancelar</button>
+            <button id="modal-accept-btn" class="btn-success"><i class="fas fa-copy"></i> Aceptar y Copiar</button>
+        </div>
+    </div>
     <footer>
         <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
         <p>POLICÍA LOCAL DE ALICANTE</p>
@@ -581,6 +668,11 @@
         const resultsHeader = document.getElementById('results-header');
         const searchResultsDiv = document.getElementById('search-results');
         const resultsCount = document.getElementById('results-count');
+
+        // --- INICIO MODIFICACIÓN: Variables para el Modal y persistencia ---
+        let currentNotificadoCheckbox = null;
+        let currentNotificadoDataObject = null;
+        // --- FIN MODIFICACIÓN ---
 
         
         /**
@@ -885,7 +977,7 @@
 
         /**
          * Muestra los resultados (un array de denuncias) en la tabla
-         * --- INICIO DE LA MODIFICACIÓN (Parámetro isDuplicateSearch y Enumeración) ---
+         * --- INICIO DE LA MODIFICACIÓN (Identificador por Índice) ---
          */
         function displayResults(results, isDuplicateSearch = false) {
              searchResultsDiv.innerHTML = '';
@@ -914,13 +1006,22 @@
             let lastColorIndex = -1;
             let currentColorIndex = 0;
             let currentMatricula = null;
-            let matriculaCounter = 0; // <-- AÑADIDO: Contador para enumerar
+            let matriculaCounter = 0; 
             // --- Fin lógica reincidentes ---
 
             // 2. Generar filas
-            results.forEach(item => {
+            results.forEach(item => { // 'item' es la referencia al objeto en 'allDenuncias'
                 const row = document.createElement('div');
                 row.classList.add('doc-row');
+
+                // --- INICIO MODIFICACIÓN: Añadir data-original-index para persistencia ---
+                // Buscamos el índice del 'item' (que es una referencia) en el array maestro 'allDenuncias'
+                const originalIndex = allDenuncias.indexOf(item);
+                if (originalIndex !== -1) {
+                    row.dataset.originalIndex = originalIndex;
+                }
+                // --- FIN MODIFICACIÓN ---
+
 
                 // --- Determinar color y número de matrícula para reincidentes ---
                 let matriculaColorClass = '';
@@ -951,11 +1052,13 @@
                 let rowHTML = '';
                 headers.forEach(h => {
                     if (h === 'eurocop' || h === 'notificado') {
+                        // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
                         const isChecked = item[h] === true; 
                         const checkboxClass = (h === 'eurocop') ? 'check-eurocop' : 'check-notificado';
                         rowHTML += `<div class="checkbox-cell"><input type="checkbox" class="${checkboxClass}" ${isChecked ? 'checked' : ''}></div>`;
                     
                     } else if (h === 'revisado') {
+                        // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
                         const revisadoDate = item[h]; // ISO string from data
                         const formattedDate = formatRevisadoDate(revisadoDate);
                         
@@ -1233,60 +1336,209 @@
             
             // Listeners de los botones
             deleteAllBtn.addEventListener('click', deleteAllData);
-            findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); // <-- Llama a la nueva función
+            findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
 
-            // Listener de eventos para los checkboxes (delegado al contenedor)
+            // --- INICIO MODIFICACIÓN: Listener de 'change' para persistencia (Eurocop/Notificado) ---
             searchResultsDiv.addEventListener('change', (e) => {
-                // Ignoramos el check-revisado aquí, se gestiona con 'click'
-                if (e.target.type === 'checkbox' && !e.target.classList.contains('check-revisado')) {
-                    updateRowColor(e.target.closest('.doc-row'));
+                const row = e.target.closest('.doc-row');
+                // --- CORRECCIÓN: Usar data-original-index ---
+                if (!row || typeof row.dataset.originalIndex === 'undefined') return;
+                const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
+                
+                const dataObject = allDenuncias[dataIndex];
+                if (!dataObject) return;
+                // --- FIN CORRECCIÓN ---
+
+                if (e.target.type === 'checkbox' && e.target.classList.contains('check-eurocop')) {
+                    // --- EUROCOP ---
+                    dataObject.eurocop = e.target.checked;
+                    updateRowColor(row);
+                
+                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-notificado')) {
+                    // --- NOTIFICADO (CON NUEVA LÓGICA DE MODAL) ---
+                    
+                    if (e.target.checked) {
+                        // ---- Si se está MARCANDO la casilla ----
+                        // 1. Prevenir el chequeo inmediato
+                        e.preventDefault(); 
+                        
+                        // 2. Store state and show modal
+                        currentNotificadoCheckbox = e.target;
+                        currentNotificadoDataObject = dataObject;
+
+                        // 3. Clear form and show
+                        document.getElementById('modal-nombre').value = '';
+                        // --- INICIO MODIFICACIÓN: Limpiar nuevos campos ---
+                        document.getElementById('modal-doi').value = '';
+                        document.getElementById('modal-direccion').value = '';
+                        document.getElementById('modal-localidad').value = '';
+                        // --- FIN MODIFICACIÓN ---
+                        document.getElementById('modal-fecha-nacimiento').value = '';
+                        document.getElementById('modal-telefono').value = '';
+                        
+                        document.getElementById('notification-modal').style.display = 'block';
+                        document.getElementById('notification-modal-overlay').style.display = 'block';
+                        document.getElementById('modal-nombre').focus(); // Focus on the first field
+                
+                    } else {
+                        // El usuario está *desmarcando* la casilla
+                        dataObject.notificado = false;
+                        updateRowColor(row);
+                    }
                 }
             });
+            // --- FIN MODIFICACIÓN ---
             
-            // --- INICIO DE LA MODIFICACIÓN (Lógica de clic en Fecha) ---
-            // Listener de CLICK para 'revisado' (checkbox y celda de fecha)
+            // --- INICIO DE LA MODIFICACIÓN (Lógica de clic en Fecha y Persistencia 'Revisado') ---
             searchResultsDiv.addEventListener('click', (e) => {
                 const target = e.target;
+                const cell = target.closest('.revisado-cell');
+                if (!cell) return; // Salir si no es clic en celda 'revisado'
+
+                const row = cell.closest('.doc-row');
+                // --- CORRECCIÓN: Usar data-original-index ---
+                if (!row || typeof row.dataset.originalIndex === 'undefined') return;
+                const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
+                
+                const dataObject = allDenuncias[dataIndex];
+                if (!dataObject) return;
+                // --- FIN CORRECCIÓN ---
+
                 
                 // Caso 1: Clic en el checkbox 'revisado'
                 if (target.classList.contains('check-revisado')) {
-                    const cell = target.closest('.revisado-cell');
-                    if (cell) {
-                        const today = new Date();
-                        const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
-                        
-                        cell.innerHTML = formattedDate;
-                        cell.classList.add('date-set');
-                        cell.dataset.state = 'date'; // Actualizar estado
-                        
-                        // Actualizar color
-                        updateRowColor(cell.closest('.doc-row'));
-                    }
+                    const today = new Date();
+                    const isoDate = today.toISOString();
+                    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+                    
+                    // Actualizar HTML
+                    cell.innerHTML = formattedDate;
+                    cell.classList.add('date-set');
+                    cell.dataset.state = 'date';
+                    
+                    // Guardar en datos
+                    dataObject.revisado = isoDate;
+                    
+                    // Actualizar color
+                    updateRowColor(row);
                 }
                 
                 // Caso 2: Clic en la celda de fecha 'revisado' (para actualizarla o resetearla)
                 else if (target.classList.contains('revisado-cell') && target.classList.contains('date-set')) {
-                    const cell = target;
-                    const row = cell.closest('.doc-row');
                     
-                    const confirmation = window.confirm("Deseas volver a revisar");
+                    // --- MODIFICACIÓN: Texto del Pop-up ---
+                    const confirmation = window.confirm(
+                        "Si has vuelto a revisar Eurocop pulsa Aceptar.\n\nSi quieres desactivar la revisión pulsa Cancelar."
+                    );
                     
                     if (confirmation) {
                         // SÍ: Actualizar la fecha
                         const today = new Date();
+                        const isoDate = today.toISOString();
                         const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
-                        cell.innerHTML = formattedDate; // Actualiza la fecha
-                        // No es necesario llamar a updateRowColor, sigue azul
+                        
+                        // Actualizar HTML
+                        cell.innerHTML = formattedDate; 
+                        
+                        // Guardar en datos
+                        dataObject.revisado = isoDate;
+                        
                     } else {
                         // NO: Volver a la casilla de verificación
+                        
+                        // Actualizar HTML
                         cell.innerHTML = '<input type="checkbox" class="check-revisado">';
                         cell.classList.remove('date-set');
                         cell.dataset.state = 'check';
+                        
+                        // Guardar en datos
+                        dataObject.revisado = null; 
                         
                         // Quitar el color azul (si procede)
                         updateRowColor(row);
                     }
                 }
+            });
+            // --- FIN DE LA MODIFICACIÓN ---
+            
+            // --- INICIO DE LA MODIFICACIÓN (Listeners para el nuevo Modal) ---
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationOverlay = document.getElementById('notification-modal-overlay');
+            const modalAcceptBtn = document.getElementById('modal-accept-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            
+            // Función para cerrar el modal
+            function closeModal() {
+                notificationModal.style.display = 'none';
+                notificationOverlay.style.display = 'none';
+                // Limpiar estado
+                currentNotificadoCheckbox = null;
+                currentNotificadoDataObject = null;
+            }
+
+            modalCancelBtn.addEventListener('click', closeModal);
+            notificationOverlay.addEventListener('click', closeModal);
+
+            // Lógica al Aceptar el modal
+            modalAcceptBtn.addEventListener('click', () => {
+                if (!currentNotificadoDataObject || !currentNotificadoCheckbox) return;
+
+                // 1. Get data from modal form
+                const nombre = document.getElementById('modal-nombre').value;
+                // --- INICIO MODIFICACIÓN: Obtener nuevos campos ---
+                const doi = document.getElementById('modal-doi').value;
+                const direccion = document.getElementById('modal-direccion').value;
+                const localidad = document.getElementById('modal-localidad').value;
+                // --- FIN MODIFICACIÓN ---
+                const fechaNac = document.getElementById('modal-fecha-nacimiento').value;
+                const telefono = document.getElementById('modal-telefono').value;
+
+                // 2. Build the text to copy
+                // --- INICIO MODIFICACIÓN: Actualizar texto a copiar ---
+                const textToCopy = `
+Grupo de Análisis Documental (GAD) Policía Local de Alicante
+Le informamos de que disponemos de los siguientes datos en relación a este vehículo
+---
+DENUNCIA ORA:
+- Matrícula: ${currentNotificadoDataObject.matricula || 'N/A'}
+- Fecha: ${formatDisplayValue(currentNotificadoDataObject.fecha_de_creacion, 'fecha_de_creacion') || 'N/A'}
+- Marca: ${currentNotificadoDataObject.marca || 'N/A'}
+- Modelo: ${currentNotificadoDataObject.modelo || 'N/A'}
+---
+DATOS PERSONALES:
+- Nombre: ${nombre || 'N/A'}
+- DOI: ${doi || 'N/A'}
+- Dirección: ${direccion || 'N/A'}
+- Localidad: ${localidad || 'N/A'}
+- F. Nacimiento: ${fechaNac || 'N/A'}
+- Teléfono: ${telefono || 'N/A'}
+                `.trim().replace(/^\s+/gm, ''); // Limpia saltos de línea al inicio
+                // --- FIN MODIFICACIÓN ---
+
+                // 3. Copy to clipboard
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        // 4. Update data object
+                        currentNotificadoDataObject.notificado = true;
+                        
+                        // 5. Update UI (check the box, set color)
+                        currentNotificadoCheckbox.checked = true;
+                        const row = currentNotificadoCheckbox.closest('.doc-row');
+                        updateRowColor(row);
+                        
+                        // 6. Hide modal & clean up
+                        closeModal();
+                        
+                        // 7. Notify user
+                        alert('¡Notificación copiada al portapapeles! La fila se ha marcado como Notificada.');
+                    })
+                    .catch(err => {
+                        console.error('Error al copiar:', err);
+                        alert('Error al copiar al portapapeles. La fila no se ha marcado.');
+                        closeModal();
+                    });
             });
             // --- FIN DE LA MODIFICACIÓN ---
         });
