@@ -1399,43 +1399,22 @@
          * Genera y copia un texto de alerta para vehículos reincidentes
          */
         function crearAlertaEurocop() {
-            // --- INICIO MODIFICACIÓN: Usar la matrícula del buscador ---
-            const matriculaToCompare = searchInput.value.trim().toUpperCase();
             
-            if (!matriculaToCompare) {
-                alert("Por favor, busca primero la matrícula para la que quieres crear la alerta.");
-                return;
-            }
-            // --- FIN MODIFICACIÓN ---
+            // --- INICIO MODIFICACIÓN: Se eliminan todas las comprobaciones ---
 
-            // 2. Verificar que este vehículo ES REINCIDENTE en la base de datos completa
-            let count = 0;
-            const matriculaKey = 'matricula';
-            for (const item of allDenuncias) {
-                if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToCompare) {
-                    count++;
-                }
-            }
-            
-            if (count <= 1) {
-                alert("Este vehículo no es reincidente. La alerta solo es para reincidentes.");
-                return;
-            }
-
-            // 3. Si es reincidente, generar el texto y copiar
-            // --- INICIO MODIFICACIÓN: Texto de alerta actualizado ---
+            // 1. Generar el texto de la alerta
             const alertText = 'Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Es necesario tratar de obtener un domicilio para notificaciones, número de identificación DNI o NIE, e identificar plenamente al conductor. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación. Si el vehículo fuera inmovilizado por cualquier causa debe quedar "A disposición del GAD"';
-            // --- FIN MODIFICACIÓN ---
 
+            // 2. Copiar al portapapeles
             navigator.clipboard.writeText(alertText)
                 .then(() => {
                     alert("¡Texto de Alerta Eurocop copiado al portapapeles!");
-                    // NOTA: La funcionalidad de marcar automáticamente la casilla se ha eliminado según la nueva petición.
                 })
                 .catch(err => {
                     console.error('Error al copiar alerta:', err);
                     alert('Error al copiar el texto de la alerta.');
                 });
+            // --- FIN MODIFICACIÓN ---
         }
         // --- FIN DE LA MODIFICACIÓN ---
 
