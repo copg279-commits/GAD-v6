@@ -271,6 +271,13 @@
         .doc-row.highlight-blue:hover {
             background-color: #bbdefb; /* Lighter blue */
         }
+        /* --- AÑADIDO: Color Rojo Intenso --- */
+        .doc-row.highlight-red {
+            background-color: #ffcdd2; 
+        }
+        .doc-row.highlight-red:hover {
+            background-color: #ef9a9a; 
+        }
         
         /* Estilos para la celda REVISADO cuando tiene fecha */
         .revisado-cell {
@@ -381,6 +388,11 @@
         }
         .legend-green {
             color: #1b5e20; /* Verde oscuro */
+            font-weight: bold;
+        }
+        /* --- AÑADIDO: Color Rojo Intenso --- */
+        .legend-red {
+            color: #c62828; 
             font-weight: bold;
         }
         /* --- FIN DE LA MODIFICACIÓN --- */
@@ -539,16 +551,18 @@
                         <button id="sort-fecha-desc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Reciente)</button>
                         <button id="show-all-btn" class="btn-warning"><i class="fas fa-list"></i> Mostrar Todos</button>
                         <button id="find-duplicates-btn" class="btn-danger"><i class="fas fa-copy"></i> Reincidentes</button>
+                        <button id="crear-alerta-btn" class="btn-info"><i class="fas fa-exclamation-triangle"></i> Crear Alerta Eurocop</button>
                         <button id="delete-all-btn" class="btn-delete"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
                     </div>
-                </div>
+                    </div>
                 
                 <h3 style="margin-top: 30px;">Resultados <span id="results-count">(0)</span></h3>
                 
                 <div id="legend-panel">
                   <p>Activa la casilla <span class="legend-blue">Revisado</span> si ya se ha hecho comprobación.</p>
-                  <p>Activa casilla <span class="legend-yellow">Eurocop</span> si tenemos datos.</p>
-                  <p>Activa casilla <span class="legend-green">Notificado</span> si hemos enviado datos a Sanciones.</p>
+                  <p>Activa la casilla <span class="legend-yellow">Eurocop</span> si tenemos datos.</p>
+                  <p>Activa la casilla <span class="legend-red">Alerta</span> cuando hayas puesto alerta en eurocop a un vehículo reincidente.</p>
+                  <p>Activa la casilla <span class="legend-green">Notificado</span> si hemos enviado datos a Sanciones.</p>
                 </div>
                 <div class="results-container">
                     <div id="results-header" class="results-header" style="display: none;">
@@ -639,8 +653,9 @@
             'fecha_de_creacion': 'FECHA DENUNCIA', 
             'marca': 'MARCA',
             'modelo': 'MODELO',
-            'revisado': 'REVISADO', // <-- MOVIDO
+            'revisado': 'REVISADO', 
             'eurocop': 'EUROCOP',      
+            'alerta': 'ALERTA', // <-- AÑADIDO
             'notificado': 'NOTIFICADO'
         };
         // --- FIN DE LA MODIFICACIÓN ---
@@ -664,6 +679,7 @@
         const deleteAllBtn = document.getElementById('delete-all-btn');
         
         const findDuplicatesBtn = document.getElementById('find-duplicates-btn');
+        const crearAlertaBtn = document.getElementById('crear-alerta-btn'); // <-- AÑADIDO
         
         const resultsHeader = document.getElementById('results-header');
         const searchResultsDiv = document.getElementById('search-results');
@@ -745,6 +761,7 @@
             if (sanitizedKey === 'eurocop') return 'eurocop';
             if (sanitizedKey === 'notificado') return 'notificado';
             if (sanitizedKey === 'revisado') return 'revisado';
+            if (sanitizedKey === 'alerta') return 'alerta'; // <-- AÑADIDO
 
             return null;
         }
@@ -903,6 +920,7 @@
 
         /**
          * Carga los datos de Firebase al almacén en memoria y los muestra
+         * --- INICIO MODIFICACIÓN: Orden por defecto (Fecha Descendente) ---
          */
         async function loadAndDisplayData() {
             if (!database) return;
@@ -921,7 +939,17 @@
                     showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
                 }
                 
+                // --- APLICAR ORDEN POR DEFECTO ---
+                const fechaKey = 'fecha_de_creacion';
+                const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                    const dateA = parseDate(a[fechaKey]) || new Date(0);
+                    const dateB = parseDate(b[fechaKey]) || new Date(0);
+                    return dateB - dateA; // Descendente
+                });
+                // Actualizar allDenuncias para que tenga el orden por defecto
+                allDenuncias = sortedByDefault;
                 displayResults(allDenuncias);
+                // --- FIN MODIFICACIÓN ---
 
             } catch (error) {
                  console.error("Error al cargar datos:", error);
@@ -929,6 +957,7 @@
                  displayResults([]);
             }
         }
+        // --- FIN MODIFICACIÓN ---
         
         /**
          * Formateador de valores para la tabla
@@ -990,10 +1019,10 @@
                 return;
             }
 
-            const headers = CANONICAL_KEYS_LIST; // 7 columnas, nuevo orden
+            const headers = CANONICAL_KEYS_LIST; // 8 columnas, nuevo orden
             
-            // Layout: 7 columnas (Mat, Fec, Mar, Mod, Rev, Eur, Not)
-            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1.2fr 0.8fr 0.8fr';
+            // Layout: 8 columnas (Mat, Fec, Mar, Mod, Rev, Eur, Ale, Not)
+            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 
             // 1. Generar cabecera
             resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
@@ -1051,13 +1080,19 @@
 
                 let rowHTML = '';
                 headers.forEach(h => {
-                    if (h === 'eurocop' || h === 'notificado') {
+                    // --- INICIO MODIFICACIÓN: Añadida 'alerta' a la lógica de checkboxes ---
+                    if (h === 'eurocop' || h === 'notificado' || h === 'alerta') {
                         // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
                         const isChecked = item[h] === true; 
-                        const checkboxClass = (h === 'eurocop') ? 'check-eurocop' : 'check-notificado';
+                        let checkboxClass = '';
+                        if (h === 'eurocop') checkboxClass = 'check-eurocop';
+                        else if (h === 'notificado') checkboxClass = 'check-notificado';
+                        else if (h === 'alerta') checkboxClass = 'check-alerta'; // <-- AÑADIDO
+                        
                         rowHTML += `<div class="checkbox-cell"><input type="checkbox" class="${checkboxClass}" ${isChecked ? 'checked' : ''}></div>`;
                     
                     } else if (h === 'revisado') {
+                    // --- FIN MODIFICACIÓN ---
                         // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
                         const revisadoDate = item[h]; // ISO string from data
                         const formattedDate = formatRevisadoDate(revisadoDate);
@@ -1104,7 +1139,15 @@
             const searchQuery = searchInput.value.trim().toUpperCase();
             
             if (!searchQuery) {
-                displayResults(allDenuncias); // Llama normal
+                // --- MODIFICACIÓN: Si la búsqueda está vacía, mostrar orden por defecto ---
+                const fechaKey = 'fecha_de_creacion';
+                const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                    const dateA = parseDate(a[fechaKey]) || new Date(0);
+                    const dateB = parseDate(b[fechaKey]) || new Date(0);
+                    return dateB - dateA; // Descendente
+                });
+                displayResults(sortedByDefault);
+                // --- FIN MODIFICACIÓN ---
                 return;
             }
             const matriculaKey = 'matricula';
@@ -1126,7 +1169,15 @@
         
         showAllBtn.addEventListener('click', () => {
             searchInput.value = '';
-            displayResults(allDenuncias); // Llama normal
+            // --- MODIFICACIÓN: Al mostrar todos, volver al orden por defecto (fecha desc) ---
+            const fechaKey = 'fecha_de_creacion';
+            const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return dateB - dateA; // Descendente
+            });
+            displayResults(sortedByDefault);
+            // --- FIN MODIFICACIÓN ---
         });
 
         sortMatriculaBtn.addEventListener('click', () => {
@@ -1247,7 +1298,7 @@
 
         /**
          * Aplica el color a una fila según la precedencia de los checkboxes/estado
-         * PRECEDENCIA: Verde (Notificado) > Amarillo (Eurocop) > Azul (Revisado)
+         * --- INICIO MODIFICACIÓN: Añadida Precedencia de Rojo (Alerta) ---
          */
         function updateRowColor(row) {
             if (!row) return;
@@ -1255,27 +1306,31 @@
             // Encontrar los elementos
             const eurocopCheck = row.querySelector('.check-eurocop');
             const notificadoCheck = row.querySelector('.check-notificado');
+            const alertaCheck = row.querySelector('.check-alerta'); // <-- AÑADIDO
             
             // Para 'revisado', miramos si la celda tiene la fecha puesta
             const revisadoCell = row.querySelector('.revisado-cell');
             const isRevisado = (revisadoCell && revisadoCell.classList.contains('date-set'));
 
             // 1. Limpiar colores antiguos
-            row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue');
+            row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-red');
 
-            // 2. Aplicar nuevas reglas (Precedencia: Verde > Amarillo > Azul)
+            // 2. Aplicar nuevas reglas (Precedencia: Verde > Rojo > Amarillo > Azul)
             if (notificadoCheck && notificadoCheck.checked) {
                 row.classList.add('highlight-green');
+            } else if (alertaCheck && alertaCheck.checked) { // <-- AÑADIDO
+                row.classList.add('highlight-red');
             } else if (eurocopCheck && eurocopCheck.checked) {
                 row.classList.add('highlight-yellow');
             } else if (isRevisado) { 
                 row.classList.add('highlight-blue');
             }
         }
+        // --- FIN MODIFICACIÓN ---
 
         /**
          * Busca y muestra solo las matrículas reincidentes
-         * --- INICIO DE LA MODIFICACIÓN (Llamada a displayResults) ---
+         * --- INICIO DE LA MODIFICACIÓN (Ordenación secundaria por fecha) ---
          */
         function findAndDisplayDuplicates() {
             if (!allDenuncias.length) {
@@ -1316,11 +1371,21 @@
                 return duplicateMatriculas.has(matricula);
             });
 
-            // 4. Ordenar la lista de duplicados por matrícula
+            // 4. Ordenar la lista de duplicados: 1º por matrícula, 2º por FECHA DESCENDENTE
             const sortedDuplicates = duplicatesList.sort((a, b) => {
                 const matA = String(a[matriculaKey] || '').trim().toUpperCase();
                 const matB = String(b[matriculaKey] || '').trim().toUpperCase();
-                return matA.localeCompare(matB);
+                
+                const matriculaComparison = matA.localeCompare(matB);
+                
+                if (matriculaComparison !== 0) {
+                    return matriculaComparison; // Different matrícula, sort by that
+                }
+                
+                // Same matrícula, sort by date descending
+                const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
+                const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
+                return dateB - dateA; // Descending (Reciente a Antigua)
             });
 
             showStatus(`Se encontraron ${sortedDuplicates.length} registros de ${duplicateMatriculas.size} matrículas reincidentes.`, "success");
@@ -1329,6 +1394,50 @@
         }
         // --- FIN DE LA MODIFICACIÓN ---
         
+        // --- INICIO DE LA MODIFICACIÓN (Nueva función Crear Alerta Eurocop) ---
+        /**
+         * Genera y copia un texto de alerta para vehículos reincidentes
+         */
+        function crearAlertaEurocop() {
+            // --- INICIO MODIFICACIÓN: Usar la matrícula del buscador ---
+            const matriculaToCompare = searchInput.value.trim().toUpperCase();
+            
+            if (!matriculaToCompare) {
+                alert("Por favor, busca primero la matrícula para la que quieres crear la alerta.");
+                return;
+            }
+            // --- FIN MODIFICACIÓN ---
+
+            // 2. Verificar que este vehículo ES REINCIDENTE en la base de datos completa
+            let count = 0;
+            const matriculaKey = 'matricula';
+            for (const item of allDenuncias) {
+                if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToCompare) {
+                    count++;
+                }
+            }
+            
+            if (count <= 1) {
+                alert("Este vehículo no es reincidente. La alerta solo es para reincidentes.");
+                return;
+            }
+
+            // 3. Si es reincidente, generar el texto y copiar
+            // --- INICIO MODIFICACIÓN: Texto de alerta actualizado ---
+            const alertText = 'Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Es necesario tratar de obtener un domicilio para notificaciones, número de identificación DNI o NIE, e identificar plenamente al conductor. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación. Si el vehículo fuera inmovilizado por cualquier causa debe quedar "A disposición del GAD"';
+            // --- FIN MODIFICACIÓN ---
+
+            navigator.clipboard.writeText(alertText)
+                .then(() => {
+                    alert("¡Texto de Alerta Eurocop copiado al portapapeles!");
+                    // NOTA: La funcionalidad de marcar automáticamente la casilla se ha eliminado según la nueva petición.
+                })
+                .catch(err => {
+                    console.error('Error al copiar alerta:', err);
+                    alert('Error al copiar el texto de la alerta.');
+                });
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
 
         // Carga inicial de datos al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
@@ -1337,8 +1446,9 @@
             // Listeners de los botones
             deleteAllBtn.addEventListener('click', deleteAllData);
             findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
+            crearAlertaBtn.addEventListener('click', crearAlertaEurocop); // <-- AÑADIDO
 
-            // --- INICIO MODIFICACIÓN: Listener de 'change' para persistencia (Eurocop/Notificado) ---
+            // --- INICIO MODIFICACIÓN: Listener de 'change' para persistencia (Eurocop/Alerta/Notificado) ---
             searchResultsDiv.addEventListener('change', (e) => {
                 const row = e.target.closest('.doc-row');
                 // --- CORRECCIÓN: Usar data-original-index ---
@@ -1354,6 +1464,44 @@
                     // --- EUROCOP ---
                     dataObject.eurocop = e.target.checked;
                     updateRowColor(row);
+                
+                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-alerta')) {
+                    // --- ALERTA (con cascada) ---
+                    
+                    const isChecked = e.target.checked;
+                    const matriculaKey = 'matricula';
+                    const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
+
+                    if (matriculaToUpdate) {
+                        // 1. Actualizar todos los datos en la memoria (allDenuncias)
+                        allDenuncias.forEach(item => {
+                            if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
+                                item.alerta = isChecked;
+                            }
+                        });
+
+                        // 2. Actualizar todas las filas visibles en la tabla
+                        const visibleRows = searchResultsDiv.querySelectorAll('.doc-row');
+                        visibleRows.forEach(visibleRow => {
+                            const rowIndex = visibleRow.dataset.originalIndex;
+                            if (rowIndex) {
+                                const rowData = allDenuncias[parseInt(rowIndex, 10)];
+                                if (String(rowData[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
+                                    // Sincronizar el checkbox
+                                    const alertaCheck = visibleRow.querySelector('.check-alerta');
+                                    if (alertaCheck) {
+                                        alertaCheck.checked = isChecked;
+                                    }
+                                    // Actualizar el color de la fila
+                                    updateRowColor(visibleRow);
+                                }
+                            }
+                        });
+                    } else {
+                        // Si no hay matrícula, al menos actualiza la fila actual
+                        dataObject.alerta = isChecked;
+                        updateRowColor(row);
+                    }
                 
                 } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-notificado')) {
                     // --- NOTIFICADO (CON NUEVA LÓGICA DE MODAL) ---
