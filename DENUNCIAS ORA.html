@@ -300,6 +300,26 @@
         .doc-row .cell-matricula.group-color-6 { color: #5D4037; font-weight: bold; }
         /* --- FIN DE LA MODIFICACIÓN --- */
         
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Botón Borrar Fila) --- */
+        .delete-cell {
+            text-align: center;
+            align-self: center;
+        }
+        .delete-row-btn {
+            background: none;
+            border: none;
+            color: #e74c3c; /* Rojo */
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 0;
+            margin: 0;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .delete-row-btn:hover {
+            color: #c0392b; /* Rojo oscuro */
+            transform: scale(1.1);
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
         
         /* Mensajes de estado (Reutilizado) */
         #status-message {
@@ -943,14 +963,8 @@
             }
         }
         
-        // --- INICIO DE LA SOLUCIÓN (NUEVA FUNCIÓN DE ACTUALIZACIÓN MÚLTIPLE) ---
         /**
          * Actualiza un campo para todas las matrículas coincidentes, tanto en la UI como en Firebase.
-         * @param {string} matriculaToUpdate - La matrícula a buscar.
-         * @param {string} fieldName - El nombre de la propiedad a cambiar (ej: 'eurocop', 'revisado').
-         * @param {*} newValue - El nuevo valor a asignar.
-         * @param {string} uiUpdateType - 'checkbox' o 'revisado-date'.
-         * @param {string} [formattedDate] - (Opcional) La fecha formateada para la UI si uiUpdateType es 'revisado-date'.
          */
         async function updateAllByMatricula(matriculaToUpdate, fieldName, newValue, uiUpdateType, formattedDate = '') {
             if (!matriculaToUpdate || !database) return;
@@ -1010,7 +1024,51 @@
                 showStatus(`Error al guardar cambios de ${fieldName}.`, "error");
             }
         }
-        // --- FIN DE LA SOLUCIÓN ---
+
+        // --- INICIO DE LA MODIFICACIÓN (Nueva Función Borrar Fila) ---
+        /**
+         * Borra un único registro de la base de datos y recarga la vista.
+         * @param {number} indexToDelete - El índice original del objeto en el array 'allDenuncias'.
+         */
+        async function deleteSingleItem(indexToDelete) {
+            if (typeof indexToDelete === 'undefined' || indexToDelete < 0 || indexToDelete >= allDenuncias.length) {
+                console.error("Índice de borrado no válido:", indexToDelete);
+                return;
+            }
+            
+            // 1. Confirmación
+            const matricula = allDenuncias[indexToDelete].matricula || 'este registro';
+            const confirmation = window.confirm(`¿Estás seguro de que quieres borrar PERMANENTEMENTE el registro de la matrícula ${matricula}?\n\nEste cambio no se puede deshacer.`);
+            
+            if (!confirmation) {
+                showStatus("Borrado cancelado.", "info");
+                return;
+            }
+
+            showStatus("Borrando registro...", "loading");
+
+            // 2. Modificar el array local
+            allDenuncias.splice(indexToDelete, 1);
+
+            // 3. Guardar el array modificado (COMPLETO) en Firebase
+            try {
+                // Esto re-indexa toda la base de datos. Es la única forma segura.
+                await database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
+                
+                // 4. Recargar y redibujar TODO. 
+                // Es crucial para re-asignar los data-original-index correctos.
+                await loadAndDisplayData(); 
+                
+                showStatus(`Registro borrado. Quedan ${allDenuncias.length} registros.`, "success");
+
+            } catch (error) {
+                console.error("Error al borrar el registro:", error);
+                showStatus(`Error al borrar: ${error.message}. Recargue la página.`, "error");
+                // Si falla, forzamos recarga para re-sincronizar
+                loadAndDisplayData();
+            }
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
 
 
         // --- LÓGICA DE BÚSQUEDA Y VISUALIZACIÓN ---
@@ -1031,7 +1089,9 @@
                     allDenuncias = [];
                     showStatus("No hay datos en Firebase. Carga un archivo Excel.", 'error');
                 } else {
-                    allDenuncias = Array.isArray(data) ? data : Object.values(data);
+                    // Filtrar cualquier 'null' que haya quedado de borrados fallidos
+                    const rawData = Array.isArray(data) ? data : Object.values(data);
+                    allDenuncias = rawData.filter(item => item !== null);
                     showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
                 }
                 
@@ -1110,10 +1170,18 @@
             }
 
             const headers = CANONICAL_KEYS_LIST; 
-            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr';
+            
+            // --- INICIO DE LA MODIFICACIÓN (Grid Layout con 9 columnas) ---
+            // 8 columnas de datos + 1 columna de borrado
+            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.5fr';
+            // --- FIN DE LA MODIFICACIÓN ---
 
             // 1. Generar cabecera
             resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
+            // --- INICIO DE LA MODIFICACIÓN (Añadir cabecera Borrar) ---
+            resultsHeader.innerHTML += '<div>BORRAR</div>';
+            // --- FIN DE LA MODIFICACIÓN ---
+            
             resultsHeader.style.gridTemplateColumns = gridLayout;
             resultsHeader.style.display = 'grid';
 
@@ -1190,6 +1258,11 @@
                         rowHTML += `<div class="${cellClasses}">${displayValue}</div>`;
                     }
                 });
+                
+                // --- INICIO DE LA MODIFICACIÓN (Añadir celda de borrado) ---
+                rowHTML += `<div class="delete-cell"><button class="delete-row-btn" title="Borrar este registro"><i class="fas fa-trash-alt"></i></button></div>`;
+                // --- FIN DE LA MODIFICACIÓN ---
+                
                 row.innerHTML = rowHTML;
                 row.style.gridTemplateColumns = gridLayout;
                 searchResultsDiv.appendChild(row);
@@ -1469,7 +1542,7 @@
             findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
             crearAlertaBtn.addEventListener('click', crearAlertaEurocop); 
 
-            // --- INICIO DE LA SOLUCIÓN (Listener de 'change' modificado) ---
+            // --- Listener de 'change' para checkboxes (Eurocop, Alerta, Notificado) ---
             searchResultsDiv.addEventListener('change', (e) => {
                 const row = e.target.closest('.doc-row');
                 if (!row || typeof row.dataset.originalIndex === 'undefined') return;
@@ -1537,11 +1610,26 @@
                     }
                 }
             });
-            // --- FIN DE LA SOLUCIÓN ---
             
-            // --- INICIO DE LA SOLUCIÓN (Listener de 'click' modificado) ---
+            // --- Listener de 'click' para (Revisado y Borrar Fila) ---
             searchResultsDiv.addEventListener('click', (e) => {
                 const target = e.target;
+
+                // --- INICIO DE LA MODIFICACIÓN (Lógica de Borrado) ---
+                const deleteButton = target.closest('.delete-row-btn');
+                if (deleteButton) {
+                    const row = deleteButton.closest('.doc-row');
+                    if (row && typeof row.dataset.originalIndex !== 'undefined') {
+                        const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                        if (!isNaN(dataIndex)) {
+                            deleteSingleItem(dataIndex); // Llamar a la nueva función
+                        }
+                    }
+                    return; // Fin, no hacer nada más
+                }
+                // --- FIN DE LA MODIFICACIÓN ---
+
+                // --- Lógica de 'Revisado' (Existente) ---
                 const cell = target.closest('.revisado-cell');
                 if (!cell) return; // Salir si no es clic en celda 'revisado'
 
@@ -1611,9 +1699,8 @@
                     }
                 }
             });
-            // --- FIN DE LA SOLUCIÓN ---
             
-            // --- INICIO DE LA SOLUCIÓN (Modal 'Aceptar' modificado) ---
+            // --- Lógica del Modal 'Aceptar' (Existente, sin cambios) ---
             const notificationModal = document.getElementById('notification-modal');
             const notificationOverlay = document.getElementById('notification-modal-overlay');
             const modalAcceptBtn = document.getElementById('modal-accept-btn');
@@ -1661,14 +1748,12 @@ DATOS PERSONALES:
 
                 navigator.clipboard.writeText(textToCopy)
                     .then(() => {
-                        // --- APLICAR CASCADA AL ACEPTAR EL MODAL ---
                         const matriculaKey = 'matricula';
                         const matriculaToUpdate = String(currentNotificadoDataObject[matriculaKey] || '').trim().toUpperCase();
 
                         if (matriculaToUpdate) {
                             updateAllByMatricula(matriculaToUpdate, 'notificado', true, 'checkbox');
                         } else {
-                            // Fallback si no hay matrícula (improbable pero seguro)
                             currentNotificadoDataObject.notificado = true;
                             currentNotificadoCheckbox.checked = true;
                             const row = currentNotificadoCheckbox.closest('.doc-row');
@@ -1685,7 +1770,6 @@ DATOS PERSONALES:
                         closeModal();
                     });
             });
-            // --- FIN DE LA SOLUCIÓN ---
         });
 
     </script>
