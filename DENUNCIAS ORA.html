@@ -688,6 +688,7 @@
         // --- INICIO MODIFICACIÓN: Variables para el Modal y persistencia ---
         let currentNotificadoCheckbox = null;
         let currentNotificadoDataObject = null;
+        let currentNotificadoDataIndex = null; // <-- AÑADIDO PARA PERSISTENCIA
         // --- FIN MODIFICACIÓN ---
 
         
@@ -915,12 +916,107 @@
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
+        
+        /**
+         * Guarda los cambios de un único objeto (fila) en Firebase.
+         */
+        async function saveItemChanges(index, dataObject) {
+            if (!database) {
+                console.error("Firebase no está inicializado. No se pueden guardar cambios.");
+                return;
+            }
+            if (typeof index === 'undefined' || index < 0) {
+                console.error("Índice no válido. No se pueden guardar cambios.", index);
+                return;
+            }
+
+            try {
+                // Usamos el índice como 'child' para actualizar ese elemento específico en el array de Firebase
+                await database.ref(DENUNCIAS_ORA_REF).child(index).set(dataObject);
+                // Opcional: un pequeño log de éxito
+                console.log(`Cambios guardados en Firebase para el índice ${index}`);
+            } catch (error)
+            {
+                console.error(`Error al guardar cambios en Firebase para el índice ${index}:`, error);
+                // Mostrar un error más visible si falla la persistencia
+                showStatus(`Error al guardar el cambio. Reinténtelo o recargue la página.`, 'error');
+            }
+        }
+        
+        // --- INICIO DE LA SOLUCIÓN (NUEVA FUNCIÓN DE ACTUALIZACIÓN MÚLTIPLE) ---
+        /**
+         * Actualiza un campo para todas las matrículas coincidentes, tanto en la UI como en Firebase.
+         * @param {string} matriculaToUpdate - La matrícula a buscar.
+         * @param {string} fieldName - El nombre de la propiedad a cambiar (ej: 'eurocop', 'revisado').
+         * @param {*} newValue - El nuevo valor a asignar.
+         * @param {string} uiUpdateType - 'checkbox' o 'revisado-date'.
+         * @param {string} [formattedDate] - (Opcional) La fecha formateada para la UI si uiUpdateType es 'revisado-date'.
+         */
+        async function updateAllByMatricula(matriculaToUpdate, fieldName, newValue, uiUpdateType, formattedDate = '') {
+            if (!matriculaToUpdate || !database) return;
+
+            const updates = {}; // Para el batch de Firebase
+            const matriculaKey = 'matricula';
+
+            // 1. Actualizar datos en memoria (allDenuncias) y preparar el batch
+            allDenuncias.forEach((item, index) => {
+                if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
+                    item[fieldName] = newValue;
+                    updates[`${index}/${fieldName}`] = newValue;
+                }
+            });
+
+            // 2. Actualizar todas las filas visibles en la tabla (UI)
+            const visibleRows = searchResultsDiv.querySelectorAll('.doc-row');
+            visibleRows.forEach(visibleRow => {
+                const rowIndex = visibleRow.dataset.originalIndex;
+                if (rowIndex) {
+                    const rowData = allDenuncias[parseInt(rowIndex, 10)];
+                    if (String(rowData[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
+                        
+                        // Actualizar UI específica
+                        if (uiUpdateType === 'checkbox') {
+                            const check = visibleRow.querySelector(`.check-${fieldName}`);
+                            if (check) {
+                                check.checked = newValue;
+                            }
+                        } else if (uiUpdateType === 'revisado-date-set') {
+                            const cell = visibleRow.querySelector('.revisado-cell');
+                            if (cell) {
+                                cell.innerHTML = formattedDate;
+                                cell.classList.add('date-set');
+                                cell.dataset.state = 'date';
+                            }
+                        } else if (uiUpdateType === 'revisado-date-reset') {
+                             const cell = visibleRow.querySelector('.revisado-cell');
+                            if (cell) {
+                                cell.innerHTML = '<input type="checkbox" class="check-revisado">';
+                                cell.classList.remove('date-set');
+                                cell.dataset.state = 'check';
+                            }
+                        }
+                        
+                        // Actualizar color de la fila
+                        updateRowColor(visibleRow);
+                    }
+                }
+            });
+
+            // 3. Guardar todos los cambios en Firebase
+            try {
+                await database.ref(DENUNCIAS_ORA_REF).update(updates);
+            } catch (err) {
+                console.error(`Error al guardar cambios en cascada para ${fieldName}:`, err);
+                showStatus(`Error al guardar cambios de ${fieldName}.`, "error");
+            }
+        }
+        // --- FIN DE LA SOLUCIÓN ---
+
 
         // --- LÓGICA DE BÚSQUEDA Y VISUALIZACIÓN ---
 
         /**
          * Carga los datos de Firebase al almacén en memoria y los muestra
-         * --- INICIO MODIFICACIÓN: Orden por defecto (Fecha Descendente) ---
          */
         async function loadAndDisplayData() {
             if (!database) return;
@@ -939,17 +1035,14 @@
                     showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
                 }
                 
-                // --- APLICAR ORDEN POR DEFECTO ---
                 const fechaKey = 'fecha_de_creacion';
                 const sortedByDefault = [...allDenuncias].sort((a, b) => {
                     const dateA = parseDate(a[fechaKey]) || new Date(0);
                     const dateB = parseDate(b[fechaKey]) || new Date(0);
                     return dateB - dateA; // Descendente
                 });
-                // Actualizar allDenuncias para que tenga el orden por defecto
                 allDenuncias = sortedByDefault;
                 displayResults(allDenuncias);
-                // --- FIN MODIFICACIÓN ---
 
             } catch (error) {
                  console.error("Error al cargar datos:", error);
@@ -957,7 +1050,6 @@
                  displayResults([]);
             }
         }
-        // --- FIN MODIFICACIÓN ---
         
         /**
          * Formateador de valores para la tabla
@@ -996,7 +1088,6 @@
                 }
             }
             
-            // Para 'revisado', se formatea en formatRevisadoDate
             if (key === 'revisado') {
                 return formatRevisadoDate(value);
             }
@@ -1006,7 +1097,6 @@
 
         /**
          * Muestra los resultados (un array de denuncias) en la tabla
-         * --- INICIO DE LA MODIFICACIÓN (Identificador por Índice) ---
          */
         function displayResults(results, isDuplicateSearch = false) {
              searchResultsDiv.innerHTML = '';
@@ -1019,9 +1109,7 @@
                 return;
             }
 
-            const headers = CANONICAL_KEYS_LIST; // 8 columnas, nuevo orden
-            
-            // Layout: 8 columnas (Mat, Fec, Mar, Mod, Rev, Eur, Ale, Not)
+            const headers = CANONICAL_KEYS_LIST; 
             const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 
             // 1. Generar cabecera
@@ -1029,40 +1117,31 @@
             resultsHeader.style.gridTemplateColumns = gridLayout;
             resultsHeader.style.display = 'grid';
 
-            // --- Lógica para colorear y enumerar matrículas reincidentes ---
             const matriculaKey = 'matricula';
             const colorClasses = ['group-color-1', 'group-color-2', 'group-color-3', 'group-color-4', 'group-color-5', 'group-color-6'];
             let lastColorIndex = -1;
             let currentColorIndex = 0;
             let currentMatricula = null;
             let matriculaCounter = 0; 
-            // --- Fin lógica reincidentes ---
 
             // 2. Generar filas
-            results.forEach(item => { // 'item' es la referencia al objeto en 'allDenuncias'
+            results.forEach(item => { 
                 const row = document.createElement('div');
                 row.classList.add('doc-row');
 
-                // --- INICIO MODIFICACIÓN: Añadir data-original-index para persistencia ---
-                // Buscamos el índice del 'item' (que es una referencia) en el array maestro 'allDenuncias'
                 const originalIndex = allDenuncias.indexOf(item);
                 if (originalIndex !== -1) {
                     row.dataset.originalIndex = originalIndex;
                 }
-                // --- FIN MODIFICACIÓN ---
 
-
-                // --- Determinar color y número de matrícula para reincidentes ---
                 let matriculaColorClass = '';
-                const matricula = String(item[matriculaKey] || '').trim().toUpperCase(); // Obtener matrícula actual
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase(); 
 
                 if (isDuplicateSearch) {
                     if (matricula !== currentMatricula) {
-                        // Es una nueva matrícula
                         currentMatricula = matricula;
-                        matriculaCounter = 1; // <-- REINICIAR contador a 1
+                        matriculaCounter = 1; 
                         
-                        // Lógica de color (sin cambios)
                         let newColorIndex = Math.floor(Math.random() * colorClasses.length);
                         while (newColorIndex === lastColorIndex && colorClasses.length > 1) { 
                             newColorIndex = Math.floor(Math.random() * colorClasses.length);
@@ -1070,30 +1149,24 @@
                         lastColorIndex = newColorIndex;
                         currentColorIndex = newColorIndex;
                     } else {
-                        // Es la misma matrícula, incrementar contador
-                        matriculaCounter++; // <-- INCREMENTAR contador
+                        matriculaCounter++; 
                     }
                     matriculaColorClass = colorClasses[currentColorIndex];
                 }
-                // --- Fin determinación color/número ---
 
 
                 let rowHTML = '';
                 headers.forEach(h => {
-                    // --- INICIO MODIFICACIÓN: Añadida 'alerta' a la lógica de checkboxes ---
                     if (h === 'eurocop' || h === 'notificado' || h === 'alerta') {
-                        // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
                         const isChecked = item[h] === true; 
                         let checkboxClass = '';
                         if (h === 'eurocop') checkboxClass = 'check-eurocop';
                         else if (h === 'notificado') checkboxClass = 'check-notificado';
-                        else if (h === 'alerta') checkboxClass = 'check-alerta'; // <-- AÑADIDO
+                        else if (h === 'alerta') checkboxClass = 'check-alerta';
                         
                         rowHTML += `<div class="checkbox-cell"><input type="checkbox" class="${checkboxClass}" ${isChecked ? 'checked' : ''}></div>`;
                     
                     } else if (h === 'revisado') {
-                    // --- FIN MODIFICACIÓN ---
-                        // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
                         const revisadoDate = item[h]; // ISO string from data
                         const formattedDate = formatRevisadoDate(revisadoDate);
                         
@@ -1104,30 +1177,25 @@
                         }
                     
                     } else {
-                        // --- Modificación para añadir clase de color y número a matrícula ---
                         const value = item[h];
                         let cellClasses = '';
-                        let displayValue = formatDisplayValue(value, h); // Valor formateado
+                        let displayValue = formatDisplayValue(value, h); 
 
                         if (h === 'matricula') {
-                            cellClasses = 'cell-matricula ' + matriculaColorClass; // Añade la clase de color
+                            cellClasses = 'cell-matricula ' + matriculaColorClass; 
                             if (isDuplicateSearch) {
-                                // AÑADIR NÚMERO
                                 displayValue = `${displayValue} (${matriculaCounter})`; 
                             }
                         }
                         rowHTML += `<div class="${cellClasses}">${displayValue}</div>`;
-                        // --- Fin Modificación ---
                     }
                 });
                 row.innerHTML = rowHTML;
                 row.style.gridTemplateColumns = gridLayout;
                 searchResultsDiv.appendChild(row);
 
-                // Aplicar color de fondo inicial
                 updateRowColor(row);
             });
-            // --- FIN DE LA MODIFICACIÓN (displayResults) ---
         }
         
         // --- EVENT LISTENERS PARA BOTONES ---
@@ -1139,7 +1207,6 @@
             const searchQuery = searchInput.value.trim().toUpperCase();
             
             if (!searchQuery) {
-                // --- MODIFICACIÓN: Si la búsqueda está vacía, mostrar orden por defecto ---
                 const fechaKey = 'fecha_de_creacion';
                 const sortedByDefault = [...allDenuncias].sort((a, b) => {
                     const dateA = parseDate(a[fechaKey]) || new Date(0);
@@ -1147,7 +1214,6 @@
                     return dateB - dateA; // Descendente
                 });
                 displayResults(sortedByDefault);
-                // --- FIN MODIFICACIÓN ---
                 return;
             }
             const matriculaKey = 'matricula';
@@ -1155,7 +1221,7 @@
                 return item && item[matriculaKey] && 
                        String(item[matriculaKey]).toUpperCase().includes(searchQuery);
             });
-            displayResults(results); // Llama normal
+            displayResults(results); 
         }
 
         searchBtn.addEventListener('click', performSearch);
@@ -1169,7 +1235,6 @@
         
         showAllBtn.addEventListener('click', () => {
             searchInput.value = '';
-            // --- MODIFICACIÓN: Al mostrar todos, volver al orden por defecto (fecha desc) ---
             const fechaKey = 'fecha_de_creacion';
             const sortedByDefault = [...allDenuncias].sort((a, b) => {
                 const dateA = parseDate(a[fechaKey]) || new Date(0);
@@ -1177,7 +1242,6 @@
                 return dateB - dateA; // Descendente
             });
             displayResults(sortedByDefault);
-            // --- FIN MODIFICACIÓN ---
         });
 
         sortMatriculaBtn.addEventListener('click', () => {
@@ -1191,7 +1255,7 @@
                 const matB = String(b[matriculaKey] || '').trim().toUpperCase();
                 return matA.localeCompare(matB);
             });
-            displayResults(sorted); // Llama normal
+            displayResults(sorted); 
         });
         
         
@@ -1229,7 +1293,7 @@
                 const dateB = parseDate(b[fechaKey]) || new Date(0);
                 return dateA - dateB;
             });
-            displayResults(sorted); // Llama normal
+            displayResults(sorted); 
         });
         
         sortFechaDescBtn.addEventListener('click', () => {
@@ -1242,7 +1306,7 @@
                 const dateB = parseDate(b[fechaKey]) || new Date(0);
                 return dateB - dateA;
             });
-            displayResults(sorted); // Llama normal
+            displayResults(sorted); 
         });
         
         /**
@@ -1273,15 +1337,12 @@
             }
         }
         
-        // --- INICIO DE LA MODIFICACIÓN (JS - Nuevas Funciones) ---
-
         /**
          * Formatea una fecha ISO (o de Excel) a DD-MM-AAAA
          */
         function formatRevisadoDate(dateValue) {
             if (!dateValue) return '';
             try {
-                // parseDate puede manejar ISO, números de Excel, fechas /
                 let date = parseDate(dateValue); 
                 
                 if (date && !isNaN(date.getTime())) {
@@ -1290,7 +1351,7 @@
                     const y = date.getFullYear();
                     return `${d}-${m}-${y}`;
                 }
-                return ''; // Retorna vacío si la fecha no es válida
+                return ''; 
             } catch (e) {
                 return '';
             }
@@ -1298,27 +1359,23 @@
 
         /**
          * Aplica el color a una fila según la precedencia de los checkboxes/estado
-         * --- INICIO MODIFICACIÓN: Añadida Precedencia de Rojo (Alerta) ---
          */
         function updateRowColor(row) {
             if (!row) return;
 
-            // Encontrar los elementos
             const eurocopCheck = row.querySelector('.check-eurocop');
             const notificadoCheck = row.querySelector('.check-notificado');
-            const alertaCheck = row.querySelector('.check-alerta'); // <-- AÑADIDO
+            const alertaCheck = row.querySelector('.check-alerta');
             
-            // Para 'revisado', miramos si la celda tiene la fecha puesta
             const revisadoCell = row.querySelector('.revisado-cell');
             const isRevisado = (revisadoCell && revisadoCell.classList.contains('date-set'));
 
-            // 1. Limpiar colores antiguos
             row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-red');
 
-            // 2. Aplicar nuevas reglas (Precedencia: Verde > Rojo > Amarillo > Azul)
+            // Precedencia: Verde > Rojo > Amarillo > Azul
             if (notificadoCheck && notificadoCheck.checked) {
                 row.classList.add('highlight-green');
-            } else if (alertaCheck && alertaCheck.checked) { // <-- AÑADIDO
+            } else if (alertaCheck && alertaCheck.checked) { 
                 row.classList.add('highlight-red');
             } else if (eurocopCheck && eurocopCheck.checked) {
                 row.classList.add('highlight-yellow');
@@ -1326,11 +1383,9 @@
                 row.classList.add('highlight-blue');
             }
         }
-        // --- FIN MODIFICACIÓN ---
 
         /**
          * Busca y muestra solo las matrículas reincidentes
-         * --- INICIO DE LA MODIFICACIÓN (Ordenación secundaria por fecha) ---
          */
         function findAndDisplayDuplicates() {
             if (!allDenuncias.length) {
@@ -1343,7 +1398,6 @@
             const matriculaCounts = new Map();
             const matriculaKey = 'matricula';
 
-            // 1. Contar todas las matrículas
             for (const item of allDenuncias) {
                 const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
                 if (matricula) {
@@ -1351,7 +1405,6 @@
                 }
             }
 
-            // 2. Crear un Set de las matrículas que aparecen más de una vez
             const duplicateMatriculas = new Set();
             for (const [matricula, count] of matriculaCounts.entries()) {
                 if (count > 1) {
@@ -1361,17 +1414,16 @@
 
             if (duplicateMatriculas.size === 0) {
                 showStatus("No se encontraron matrículas reincidentes.", "info");
-                displayResults([], false); // Tabla vacía, sin formato especial
+                displayResults([], false); 
                 return;
             }
 
-            // 3. Filtrar el array original para quedarnos solo con las duplicadas
             const duplicatesList = allDenuncias.filter(item => {
                 const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
                 return duplicateMatriculas.has(matricula);
             });
 
-            // 4. Ordenar la lista de duplicados: 1º por matrícula, 2º por FECHA DESCENDENTE
+            // Ordenar: 1º por matrícula, 2º por FECHA DESCENDENTE
             const sortedDuplicates = duplicatesList.sort((a, b) => {
                 const matA = String(a[matriculaKey] || '').trim().toUpperCase();
                 const matB = String(b[matriculaKey] || '').trim().toUpperCase();
@@ -1379,33 +1431,26 @@
                 const matriculaComparison = matA.localeCompare(matB);
                 
                 if (matriculaComparison !== 0) {
-                    return matriculaComparison; // Different matrícula, sort by that
+                    return matriculaComparison; 
                 }
                 
-                // Same matrícula, sort by date descending
+                // Misma matrícula, ordenar por fecha descendente
                 const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
                 const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
-                return dateB - dateA; // Descending (Reciente a Antigua)
+                return dateB - dateA; 
             });
 
             showStatus(`Se encontraron ${sortedDuplicates.length} registros de ${duplicateMatriculas.size} matrículas reincidentes.`, "success");
-            // 5. Llamar a displayResults con la bandera isDuplicateSearch = true
             displayResults(sortedDuplicates, true);
         }
-        // --- FIN DE LA MODIFICACIÓN ---
         
-        // --- INICIO DE LA MODIFICACIÓN (Nueva función Crear Alerta Eurocop) ---
         /**
          * Genera y copia un texto de alerta para vehículos reincidentes
          */
         function crearAlertaEurocop() {
             
-            // --- INICIO MODIFICACIÓN: Se eliminan todas las comprobaciones ---
-
-            // 1. Generar el texto de la alerta
             const alertText = 'Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Es necesario tratar de obtener un domicilio para notificaciones, número de identificación DNI o NIE, e identificar plenamente al conductor. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación. Si el vehículo fuera inmovilizado por cualquier causa debe quedar "A disposición del GAD"';
 
-            // 2. Copiar al portapapeles
             navigator.clipboard.writeText(alertText)
                 .then(() => {
                     alert("¡Texto de Alerta Eurocop copiado al portapapeles!");
@@ -1414,124 +1459,102 @@
                     console.error('Error al copiar alerta:', err);
                     alert('Error al copiar el texto de la alerta.');
                 });
-            // --- FIN MODIFICACIÓN ---
         }
-        // --- FIN DE LA MODIFICACIÓN ---
 
         // Carga inicial de datos al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayData();
             
-            // Listeners de los botones
             deleteAllBtn.addEventListener('click', deleteAllData);
             findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
-            crearAlertaBtn.addEventListener('click', crearAlertaEurocop); // <-- AÑADIDO
+            crearAlertaBtn.addEventListener('click', crearAlertaEurocop); 
 
-            // --- INICIO MODIFICACIÓN: Listener de 'change' para persistencia (Eurocop/Alerta/Notificado) ---
+            // --- INICIO DE LA SOLUCIÓN (Listener de 'change' modificado) ---
             searchResultsDiv.addEventListener('change', (e) => {
                 const row = e.target.closest('.doc-row');
-                // --- CORRECCIÓN: Usar data-original-index ---
                 if (!row || typeof row.dataset.originalIndex === 'undefined') return;
                 const dataIndex = parseInt(row.dataset.originalIndex, 10);
                 if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
                 
                 const dataObject = allDenuncias[dataIndex];
                 if (!dataObject) return;
-                // --- FIN CORRECCIÓN ---
-
-                if (e.target.type === 'checkbox' && e.target.classList.contains('check-eurocop')) {
-                    // --- EUROCOP ---
-                    dataObject.eurocop = e.target.checked;
-                    updateRowColor(row);
                 
-                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-alerta')) {
-                    // --- ALERTA (con cascada) ---
-                    
-                    const isChecked = e.target.checked;
-                    const matriculaKey = 'matricula';
-                    const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
+                const matriculaKey = 'matricula';
+                const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
+                const isChecked = e.target.checked;
 
+                // --- EUROCOP (con cascada) ---
+                if (e.target.type === 'checkbox' && e.target.classList.contains('check-eurocop')) {
                     if (matriculaToUpdate) {
-                        // 1. Actualizar todos los datos en la memoria (allDenuncias)
-                        allDenuncias.forEach(item => {
-                            if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
-                                item.alerta = isChecked;
-                            }
-                        });
-
-                        // 2. Actualizar todas las filas visibles en la tabla
-                        const visibleRows = searchResultsDiv.querySelectorAll('.doc-row');
-                        visibleRows.forEach(visibleRow => {
-                            const rowIndex = visibleRow.dataset.originalIndex;
-                            if (rowIndex) {
-                                const rowData = allDenuncias[parseInt(rowIndex, 10)];
-                                if (String(rowData[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
-                                    // Sincronizar el checkbox
-                                    const alertaCheck = visibleRow.querySelector('.check-alerta');
-                                    if (alertaCheck) {
-                                        alertaCheck.checked = isChecked;
-                                    }
-                                    // Actualizar el color de la fila
-                                    updateRowColor(visibleRow);
-                                }
-                            }
-                        });
+                        updateAllByMatricula(matriculaToUpdate, 'eurocop', isChecked, 'checkbox');
                     } else {
-                        // Si no hay matrícula, al menos actualiza la fila actual
-                        dataObject.alerta = isChecked;
+                        dataObject.eurocop = isChecked;
                         updateRowColor(row);
+                        saveItemChanges(dataIndex, dataObject);
                     }
                 
+                // --- ALERTA (con cascada) ---
+                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-alerta')) {
+                    if (matriculaToUpdate) {
+                         updateAllByMatricula(matriculaToUpdate, 'alerta', isChecked, 'checkbox');
+                    } else {
+                        dataObject.alerta = isChecked;
+                        updateRowColor(row);
+                        saveItemChanges(dataIndex, dataObject);
+                    }
+                
+                // --- NOTIFICADO (con cascada) ---
                 } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-notificado')) {
-                    // --- NOTIFICADO (CON NUEVA LÓGICA DE MODAL) ---
                     
-                    if (e.target.checked) {
-                        // ---- Si se está MARCANDO la casilla ----
-                        // 1. Prevenir el chequeo inmediato
+                    if (isChecked) {
+                        // ---- MARCAR (abre modal) ----
                         e.preventDefault(); 
                         
-                        // 2. Store state and show modal
                         currentNotificadoCheckbox = e.target;
                         currentNotificadoDataObject = dataObject;
+                        currentNotificadoDataIndex = dataIndex; // Guardamos para el modal
 
-                        // 3. Clear form and show
                         document.getElementById('modal-nombre').value = '';
-                        // --- INICIO MODIFICACIÓN: Limpiar nuevos campos ---
                         document.getElementById('modal-doi').value = '';
                         document.getElementById('modal-direccion').value = '';
                         document.getElementById('modal-localidad').value = '';
-                        // --- FIN MODIFICACIÓN ---
                         document.getElementById('modal-fecha-nacimiento').value = '';
                         document.getElementById('modal-telefono').value = '';
                         
                         document.getElementById('notification-modal').style.display = 'block';
                         document.getElementById('notification-modal-overlay').style.display = 'block';
-                        document.getElementById('modal-nombre').focus(); // Focus on the first field
+                        document.getElementById('modal-nombre').focus();
                 
                     } else {
-                        // El usuario está *desmarcando* la casilla
-                        dataObject.notificado = false;
-                        updateRowColor(row);
+                        // ---- DESMARCAR (con cascada) ----
+                        if (matriculaToUpdate) {
+                            updateAllByMatricula(matriculaToUpdate, 'notificado', false, 'checkbox');
+                        } else {
+                            dataObject.notificado = false;
+                            updateRowColor(row);
+                            saveItemChanges(dataIndex, dataObject);
+                        }
                     }
                 }
             });
-            // --- FIN MODIFICACIÓN ---
+            // --- FIN DE LA SOLUCIÓN ---
             
-            // --- INICIO DE LA MODIFICACIÓN (Lógica de clic en Fecha y Persistencia 'Revisado') ---
+            // --- INICIO DE LA SOLUCIÓN (Listener de 'click' modificado) ---
             searchResultsDiv.addEventListener('click', (e) => {
                 const target = e.target;
                 const cell = target.closest('.revisado-cell');
                 if (!cell) return; // Salir si no es clic en celda 'revisado'
 
                 const row = cell.closest('.doc-row');
-                // --- CORRECCIÓN: Usar data-original-index ---
                 if (!row || typeof row.dataset.originalIndex === 'undefined') return;
                 const dataIndex = parseInt(row.dataset.originalIndex, 10);
                 if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
                 
                 const dataObject = allDenuncias[dataIndex];
                 if (!dataObject) return;
-                // --- FIN CORRECCIÓN ---
+                
+                const matriculaKey = 'matricula';
+                const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
 
                 
                 // Caso 1: Clic en el checkbox 'revisado'
@@ -1540,24 +1563,23 @@
                     const isoDate = today.toISOString();
                     const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
                     
-                    // Actualizar HTML
-                    cell.innerHTML = formattedDate;
-                    cell.classList.add('date-set');
-                    cell.dataset.state = 'date';
-                    
-                    // Guardar en datos
-                    dataObject.revisado = isoDate;
-                    
-                    // Actualizar color
-                    updateRowColor(row);
+                    if (matriculaToUpdate) {
+                        updateAllByMatricula(matriculaToUpdate, 'revisado', isoDate, 'revisado-date-set', formattedDate);
+                    } else {
+                        cell.innerHTML = formattedDate;
+                        cell.classList.add('date-set');
+                        cell.dataset.state = 'date';
+                        dataObject.revisado = isoDate;
+                        updateRowColor(row);
+                        saveItemChanges(dataIndex, dataObject);
+                    }
                 }
                 
-                // Caso 2: Clic en la celda de fecha 'revisado' (para actualizarla o resetearla)
+                // Caso 2: Clic en la celda de fecha 'revisado'
                 else if (target.classList.contains('revisado-cell') && target.classList.contains('date-set')) {
                     
-                    // --- MODIFICACIÓN: Texto del Pop-up ---
                     const confirmation = window.confirm(
-                        "Si has vuelto a revisar Eurocop pulsa Aceptar.\n\nSi quieres desactivar la revisión pulsa Cancelar."
+                        "Si has vuelto a revisar Eurocop pulsa Aceptar (actualizará la fecha).\n\nSi quieres desactivar la revisión (volver a la casilla) pulsa Cancelar."
                     );
                     
                     if (confirmation) {
@@ -1566,64 +1588,58 @@
                         const isoDate = today.toISOString();
                         const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
                         
-                        // Actualizar HTML
-                        cell.innerHTML = formattedDate; 
-                        
-                        // Guardar en datos
-                        dataObject.revisado = isoDate;
+                        if (matriculaToUpdate) {
+                             updateAllByMatricula(matriculaToUpdate, 'revisado', isoDate, 'revisado-date-set', formattedDate);
+                        } else {
+                            cell.innerHTML = formattedDate; 
+                            dataObject.revisado = isoDate;
+                            saveItemChanges(dataIndex, dataObject); 
+                        }
                         
                     } else {
                         // NO: Volver a la casilla de verificación
-                        
-                        // Actualizar HTML
-                        cell.innerHTML = '<input type="checkbox" class="check-revisado">';
-                        cell.classList.remove('date-set');
-                        cell.dataset.state = 'check';
-                        
-                        // Guardar en datos
-                        dataObject.revisado = null; 
-                        
-                        // Quitar el color azul (si procede)
-                        updateRowColor(row);
+                        if (matriculaToUpdate) {
+                            updateAllByMatricula(matriculaToUpdate, 'revisado', null, 'revisado-date-reset');
+                        } else {
+                            cell.innerHTML = '<input type="checkbox" class="check-revisado">';
+                            cell.classList.remove('date-set');
+                            cell.dataset.state = 'check';
+                            dataObject.revisado = null; 
+                            updateRowColor(row);
+                            saveItemChanges(dataIndex, dataObject);
+                        }
                     }
                 }
             });
-            // --- FIN DE LA MODIFICACIÓN ---
+            // --- FIN DE LA SOLUCIÓN ---
             
-            // --- INICIO DE LA MODIFICACIÓN (Listeners para el nuevo Modal) ---
+            // --- INICIO DE LA SOLUCIÓN (Modal 'Aceptar' modificado) ---
             const notificationModal = document.getElementById('notification-modal');
             const notificationOverlay = document.getElementById('notification-modal-overlay');
             const modalAcceptBtn = document.getElementById('modal-accept-btn');
             const modalCancelBtn = document.getElementById('modal-cancel-btn');
             
-            // Función para cerrar el modal
             function closeModal() {
                 notificationModal.style.display = 'none';
                 notificationOverlay.style.display = 'none';
-                // Limpiar estado
                 currentNotificadoCheckbox = null;
                 currentNotificadoDataObject = null;
+                currentNotificadoDataIndex = null;
             }
 
             modalCancelBtn.addEventListener('click', closeModal);
             notificationOverlay.addEventListener('click', closeModal);
 
-            // Lógica al Aceptar el modal
             modalAcceptBtn.addEventListener('click', () => {
-                if (!currentNotificadoDataObject || !currentNotificadoCheckbox) return;
+                if (!currentNotificadoDataObject || !currentNotificadoCheckbox || typeof currentNotificadoDataIndex === 'undefined') return;
 
-                // 1. Get data from modal form
                 const nombre = document.getElementById('modal-nombre').value;
-                // --- INICIO MODIFICACIÓN: Obtener nuevos campos ---
                 const doi = document.getElementById('modal-doi').value;
                 const direccion = document.getElementById('modal-direccion').value;
                 const localidad = document.getElementById('modal-localidad').value;
-                // --- FIN MODIFICACIÓN ---
                 const fechaNac = document.getElementById('modal-fecha-nacimiento').value;
                 const telefono = document.getElementById('modal-telefono').value;
 
-                // 2. Build the text to copy
-                // --- INICIO MODIFICACIÓN: Actualizar texto a copiar ---
                 const textToCopy = `
 Grupo de Análisis Documental (GAD) Policía Local de Alicante
 Le informamos de que disponemos de los siguientes datos en relación a este vehículo
@@ -1641,25 +1657,27 @@ DATOS PERSONALES:
 - Localidad: ${localidad || 'N/A'}
 - F. Nacimiento: ${fechaNac || 'N/A'}
 - Teléfono: ${telefono || 'N/A'}
-                `.trim().replace(/^\s+/gm, ''); // Limpia saltos de línea al inicio
-                // --- FIN MODIFICACIÓN ---
+                `.trim().replace(/^\s+/gm, ''); 
 
-                // 3. Copy to clipboard
                 navigator.clipboard.writeText(textToCopy)
                     .then(() => {
-                        // 4. Update data object
-                        currentNotificadoDataObject.notificado = true;
+                        // --- APLICAR CASCADA AL ACEPTAR EL MODAL ---
+                        const matriculaKey = 'matricula';
+                        const matriculaToUpdate = String(currentNotificadoDataObject[matriculaKey] || '').trim().toUpperCase();
+
+                        if (matriculaToUpdate) {
+                            updateAllByMatricula(matriculaToUpdate, 'notificado', true, 'checkbox');
+                        } else {
+                            // Fallback si no hay matrícula (improbable pero seguro)
+                            currentNotificadoDataObject.notificado = true;
+                            currentNotificadoCheckbox.checked = true;
+                            const row = currentNotificadoCheckbox.closest('.doc-row');
+                            updateRowColor(row);
+                            saveItemChanges(currentNotificadoDataIndex, currentNotificadoDataObject);
+                        }
                         
-                        // 5. Update UI (check the box, set color)
-                        currentNotificadoCheckbox.checked = true;
-                        const row = currentNotificadoCheckbox.closest('.doc-row');
-                        updateRowColor(row);
-                        
-                        // 6. Hide modal & clean up
                         closeModal();
-                        
-                        // 7. Notify user
-                        alert('¡Notificación copiada al portapapeles! La fila se ha marcado como Notificada.');
+                        alert('¡Notificación copiada al portapapeles! La fila (y sus duplicados) se han marcado como Notificados.');
                     })
                     .catch(err => {
                         console.error('Error al copiar:', err);
@@ -1667,7 +1685,7 @@ DATOS PERSONALES:
                         closeModal();
                     });
             });
-            // --- FIN DE LA MODIFICACIÓN ---
+            // --- FIN DE LA SOLUCIÓN ---
         });
 
     </script>
