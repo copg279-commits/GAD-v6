@@ -2,161 +2,165 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Permiso Internacional de Conducir (PIC)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .flag-button-spain {
             background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
         }
-        /* Ajuste para móviles para evitar scroll lateral innecesario */
-        body {
+        /* Asegura que no haya scroll horizontal */
+        body, html {
             overflow-x: hidden;
+            width: 100%;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center font-sans">
 
-<header class="bg-blue-600 w-full flex justify-center items-center py-2">
-    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg">
+<header class="bg-blue-600 w-full flex justify-center items-center py-4 shadow-md">
+    <div class="w-32 h-32 rounded-full overflow-hidden shadow-lg bg-blue-600 flex items-center justify-center">
         <img
             src="logogad.png"
             alt="Logo GAD"
-            class="w-full h-full object-cover block"
+            class="w-full h-full object-cover"
         >
     </div>
 </header>
 
-<h1 class="text-black text-center mt-6 text-xl md:text-2xl font-bold px-4">
-    Permiso Internacional de Conducir (PIC)
-</h1>
+<main class="w-full flex flex-col items-center px-4 flex-grow">
+    
+    <h1 class="text-black text-center mt-6 text-xl font-bold leading-tight">
+        Permiso Internacional de Conducir (PIC)
+    </h1>
 
-<p class="text-center mt-2 px-4 text-base md:text-lg">
-    Selecciona un país para verificar si precisa o no Permiso Internacional de Conducir y si tiene convenio de canje con España.
-</p>
+    <p class="text-center mt-3 text-gray-800 text-base max-w-md">
+        Selecciona un país para verificar si precisa o no Permiso Internacional de Conducir y si tiene convenio de canje con España.
+    </p>
 
-<select id="paises" onchange="mostrarInfoPais()"
-    class="block mx-auto mt-4 p-3 text-lg w-11/12 max-w-md border border-gray-300 rounded-lg bg-white shadow-sm">
-    <option value="">-- Seleccionar país --</option>
-    <option value="Albania">Albania</option>
-    <option value="Argelia">Argelia</option>
-    <option value="Argentina">Argentina</option>
-    <option value="Australia">Australia</option>
-    <option value="Bahamas (The)">Bahamas (The)</option>
-    <option value="Bangladesh">Bangladesh</option>
-    <option value="Barbados">Barbados</option>
-    <option value="Benin">Benin</option>
-    <option value="Bielorrusia">Bielorrusia</option>
-    <option value="Bolivia">Bolivia</option>
-    <option value="Bosnia y Herzegovina">Bosnia y Herzegovina</option>
-    <option value="Botswana">Botswana</option>
-    <option value="Brasil">Brasil</option>
-    <option value="Brunei Darussalam">Brunei Darussalam</option>
-    <option value="Burkina Faso">Burkina Faso</option>
-    <option value="Camboya">Camboya</option>
-    <option value="Canadá">Canadá</option>
-    <option value="Chile">Chile</option>
-    <option value="Colombia">Colombia</option>
-    <option value="Congo">Congo</option>
-    <option value="Corea del Sur">Corea del Sur</option>
-    <option value="Costa de Marfil">Costa de Marfil</option>
-    <option value="Costa Rica">Costa Rica</option>
-    <option value="Cuba">Cuba</option>
-    <option value="Ecuador">Ecuador</option>
-    <option value="Egipto">Egipto</option>
-    <option value="El Salvador">El Salvador</option>
-    <option value="Emiratos Árabes">Emiratos Árabes</option>
-    <option value="Estados Unidos">Estados Unidos</option>
-    <option value="Filipinas">Filipinas</option>
-    <option value="Fiji">Fiji</option>
-    <option value="Georgia">Georgia</option>
-    <option value="Ghana">Ghana</option>
-    <option value="Guatemala">Guatemala</option>
-    <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
-    <option value="Honduras">Honduras</option>
-    <option value="India">India</option>
-    <option value="Islandia">Islandia</option>
-    <option value="Israel">Israel</option>
-    <option value="Jamaica">Jamaica</option>
-    <option value="Japón">Japón</option>
-    <option value="Jordania">Jordania</option>
-    <option value="Kirguistán">Kirguistán</option>
-    <option value="Laos">Laos</option>
-    <option value="Líbano">Líbano</option>
-    <option value="Lesoto">Lesoto</option>
-    <option value="Liechtenstein">Liechtenstein</option>
-    <option value="Macedonia del Norte">Macedonia del Norte</option>
-    <option value="Madagascar">Madagascar</option>
-    <option value="Malawi">Malawi</option>
-    <option value="Malasia">Malasia</option>
-    <option value="Mali">Mali</option>
-    <option value="Malta">Malta</option>
-    <option value="Marruecos">Marruecos</option>
-    <option value="México">México</option>
-    <option value="Moldavia">República de Moldova</option>
-    <option value="Mónaco">Mónaco</option>
-    <option value="Montenegro">Montenegro</option>
-    <option value="Namibia">Namibia</option>
-    <option value="Nicaragua">Nicaragua</option>
-    <option value="Níger">Níger</option>
-    <option value="Nigeria">Nigeria</option>
-    <option value="Noruega">Noruega</option>
-    <option value="Nueva Zelanda">Nueva Zelanda</option>
-    <option value="Panamá">Panamá</option>
-    <option value="Paraguay">Paraguay</option>
-    <option value="Papúa Nueva Guinea">Papúa Nueva Guinea</option>
-    <option value="Perú">Perú</option>
-    <option value="Puerto Rico">Puerto Rico</option>
-    <option value="Reino Unido e Irlanda del Norte">Reino Unido e Irlanda del Norte</option>
-    <option value="República Árabe Siria">República Árabe Siria</option>
-    <option value="República Centroafricana">República Centroafricana</option>
-    <option value="República Democrática del Congo">República Democrática del Congo</option>
-    <option value="República Dominicana">República Dominicana</option>
-    <option value="Rusia">Rusia</option>
-    <option value="Ruanda">Ruanda</option>
-    <option value="San Marino">San Marino</option>
-    <option value="Santa Sede">Santa Sede</option>
-    <option value="Santo Tomé y Príncipe">Santo Tomé y Príncipe</option>
-    <option value="Senegal">Senegal</option>
-    <option value="Serbia">Serbia</option>
-    <option value="Sierra Leona">Sierra Leona</option>
-    <option value="Singapur">Singapur</option>
-    <option value="Sri Lanka">Sri Lanka</option>
-    <option value="Sudáfrica">Sudáfrica</option>
-    <option value="Suiza">Suiza</option>
-    <option value="Tailandia">Tailandia</option>
-    <option value="Togo">Togo</option>
-    <option value="Trinidad y Tobago">Trinidad y Tobago</option>
-    <option value="Túnez">Túnez</option>
-    <option value="Turquía">Turquía</option>
-    <option value="Ucrania">Ucrania</option>
-    <option value="Uganda">Uganda</option>
-    <option value="Uruguay">Uruguay</option>
-    <option value="Venezuela">Venezuela</option>
-    <option value="Vietnam">Vietnam</option>
-    <option value="Zimbabue">Zimbabue</option>
-    <option value="Sin Convenio">País sin convenio (ejemplo)</option>
-</select>
+    <div class="w-full max-w-md mt-6">
+        <select id="paises" onchange="mostrarInfoPais()"
+            class="block w-full p-3 text-lg bg-white border border-gray-400 rounded-lg shadow-sm text-center appearance-none">
+            <option value="">-- TOCA AQUÍ PARA ELEGIR --</option>
+            <option value="Albania">Albania</option>
+            <option value="Argelia">Argelia</option>
+            <option value="Argentina">Argentina</option>
+            <option value="Australia">Australia</option>
+            <option value="Bahamas (The)">Bahamas (The)</option>
+            <option value="Bangladesh">Bangladesh</option>
+            <option value="Barbados">Barbados</option>
+            <option value="Benin">Benin</option>
+            <option value="Bielorrusia">Bielorrusia</option>
+            <option value="Bolivia">Bolivia</option>
+            <option value="Bosnia y Herzegovina">Bosnia y Herzegovina</option>
+            <option value="Botswana">Botswana</option>
+            <option value="Brasil">Brasil</option>
+            <option value="Brunei Darussalam">Brunei Darussalam</option>
+            <option value="Burkina Faso">Burkina Faso</option>
+            <option value="Camboya">Camboya</option>
+            <option value="Canadá">Canadá</option>
+            <option value="Chile">Chile</option>
+            <option value="Colombia">Colombia</option>
+            <option value="Congo">Congo</option>
+            <option value="Corea del Sur">Corea del Sur</option>
+            <option value="Costa de Marfil">Costa de Marfil</option>
+            <option value="Costa Rica">Costa Rica</option>
+            <option value="Cuba">Cuba</option>
+            <option value="Ecuador">Ecuador</option>
+            <option value="Egipto">Egipto</option>
+            <option value="El Salvador">El Salvador</option>
+            <option value="Emiratos Árabes">Emiratos Árabes</option>
+            <option value="Estados Unidos">Estados Unidos</option>
+            <option value="Filipinas">Filipinas</option>
+            <option value="Fiji">Fiji</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Ghana">Ghana</option>
+            <option value="Guatemala">Guatemala</option>
+            <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
+            <option value="Honduras">Honduras</option>
+            <option value="India">India</option>
+            <option value="Islandia">Islandia</option>
+            <option value="Israel">Israel</option>
+            <option value="Jamaica">Jamaica</option>
+            <option value="Japón">Japón</option>
+            <option value="Jordania">Jordania</option>
+            <option value="Kirguistán">Kirguistán</option>
+            <option value="Laos">Laos</option>
+            <option value="Líbano">Líbano</option>
+            <option value="Lesoto">Lesoto</option>
+            <option value="Liechtenstein">Liechtenstein</option>
+            <option value="Macedonia del Norte">Macedonia del Norte</option>
+            <option value="Madagascar">Madagascar</option>
+            <option value="Malawi">Malawi</option>
+            <option value="Malasia">Malasia</option>
+            <option value="Mali">Mali</option>
+            <option value="Malta">Malta</option>
+            <option value="Marruecos">Marruecos</option>
+            <option value="México">México</option>
+            <option value="Moldavia">República de Moldova</option>
+            <option value="Mónaco">Mónaco</option>
+            <option value="Montenegro">Montenegro</option>
+            <option value="Namibia">Namibia</option>
+            <option value="Nicaragua">Nicaragua</option>
+            <option value="Níger">Níger</option>
+            <option value="Nigeria">Nigeria</option>
+            <option value="Noruega">Noruega</option>
+            <option value="Nueva Zelanda">Nueva Zelanda</option>
+            <option value="Panamá">Panamá</option>
+            <option value="Paraguay">Paraguay</option>
+            <option value="Papúa Nueva Guinea">Papúa Nueva Guinea</option>
+            <option value="Perú">Perú</option>
+            <option value="Puerto Rico">Puerto Rico</option>
+            <option value="Reino Unido e Irlanda del Norte">Reino Unido e Irlanda del Norte</option>
+            <option value="República Árabe Siria">República Árabe Siria</option>
+            <option value="República Centroafricana">República Centroafricana</option>
+            <option value="República Democrática del Congo">República Democrática del Congo</option>
+            <option value="República Dominicana">República Dominicana</option>
+            <option value="Rusia">Rusia</option>
+            <option value="Ruanda">Ruanda</option>
+            <option value="San Marino">San Marino</option>
+            <option value="Santa Sede">Santa Sede</option>
+            <option value="Santo Tomé y Príncipe">Santo Tomé y Príncipe</option>
+            <option value="Senegal">Senegal</option>
+            <option value="Serbia">Serbia</option>
+            <option value="Sierra Leona">Sierra Leona</option>
+            <option value="Singapur">Singapur</option>
+            <option value="Sri Lanka">Sri Lanka</option>
+            <option value="Sudáfrica">Sudáfrica</option>
+            <option value="Suiza">Suiza</option>
+            <option value="Tailandia">Tailandia</option>
+            <option value="Togo">Togo</option>
+            <option value="Trinidad y Tobago">Trinidad y Tobago</option>
+            <option value="Túnez">Túnez</option>
+            <option value="Turquía">Turquía</option>
+            <option value="Ucrania">Ucrania</option>
+            <option value="Uganda">Uganda</option>
+            <option value="Uruguay">Uruguay</option>
+            <option value="Venezuela">Venezuela</option>
+            <option value="Vietnam">Vietnam</option>
+            <option value="Zimbabue">Zimbabue</option>
+            <option value="Sin Convenio">País sin convenio (ejemplo)</option>
+        </select>
+    </div>
 
-<div id="resultado" class="w-11/12 max-w-md mx-auto mt-6"></div>
+    <div id="resultado" class="w-full max-w-md mt-6"></div>
 
-<div class="mt-8 flex justify-center">
-    <button onclick="window.location.href='index.html'"
-            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200 text-lg">
-        MENÚ PRINCIPAL
-    </button>
-</div>
+    <div class="mt-8 mb-8 w-full flex justify-center">
+        <button onclick="window.location.href='index.html'"
+                class="w-full max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200 text-lg border-none">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
+</main>
 
- <footer class="mt-auto text-center py-6 bg-gray-200">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
-    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
-    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
-    <p>&copy; GAD - Todos los derechos reservados</p>
-  </footer>
+<footer class="w-full bg-gray-200 py-6 mt-auto text-center">
+    <div class="max-w-md mx-auto w-11/12">
+        <hr class="border-t border-gray-400 mb-4 mx-auto">
+        <p class="font-bold text-sm">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p class="font-bold text-sm">POLICÍA LOCAL DE ALICANTE</p>
+        <p class="text-xs mt-2">&copy; GAD - Todos los derechos reservados</p>
+    </div>
+</footer>
 
 <script>
     const conveniosCanje = {
