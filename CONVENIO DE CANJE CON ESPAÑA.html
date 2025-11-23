@@ -2,27 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Canje de Permisos de Conducir con España</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .flag-button-spain {
             background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
         }
-        .flag-button-white {
-            background-color: #fff;
-            color: #000;
+        /* Asegura que no haya scroll horizontal y ocupe el ancho correcto */
+        body, html {
+            overflow-x: hidden;
+            width: 100%;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center font-sans">
 
-<header class="bg-blue-600 w-full flex justify-center items-center py-2">
-    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+<header class="bg-blue-600 w-full flex justify-center items-center py-4 shadow-md">
+    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg bg-blue-600 flex items-center justify-center">
         <img
             src="logogad.png"
             alt="Logo GAD"
@@ -31,72 +28,80 @@
     </div>
 </header>
 
-<h1 class="text-black text-center mt-6 text-xl font-bold px-4">
-    Convenio de canje de permisos de conducir con España
-</h1>
+<main class="w-full flex flex-col items-center px-4 flex-grow">
 
-<div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto">
-    <h2 class="text-lg font-semibold mb-4">Verifique si existe convenio de canje</h2>
-    <div class="mb-4">
-        <label for="pais" class="block text-center text-sm font-bold text-gray-700 mb-1">País</label>
-        <select id="pais" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">Seleccione un país</option>
-            <option value="andorra">Andorra</option>
-            <option value="argelia">Argelia</option>
-            <option value="argentina">Argentina</option>
-            <option value="bolivia">Bolivia</option>
-            <option value="brasil">Brasil</option>
-            <option value="chile">Chile</option>
-            <option value="colombia">Colombia</option>
-            <option value="corea_del_sur">Corea del Sur</option>
-            <option value="costa_rica">Costa Rica</option>
-            <option value="ecuador">Ecuador</option>
-            <option value="el_salvador">El Salvador</option>
-            <option value="filipinas">Filipinas</option>
-            <option value="georgia">Georgia</option>
-            <option value="guatemala">Guatemala</option>
-            <option value="honduras">Honduras</option>
-            <option value="japon">Japón</option>
-            <option value="macedonia_del_norte">Macedonia del Norte</option>
-            <option value="marruecos">Marruecos</option>
-            <option value="moldavia">Moldavia</option>
-            <option value="monaco">Mónaco</option>
-            <option value="nicaragua">Nicaragua</option>
-            <option value="nueva_zelanda">Nueva Zelanda</option>
-            <option value="panama">Panamá</option>
-            <option value="paraguay">Paraguay</option>
-            <option value="peru">Perú</option>
-            <option value="reino_unido">Reino Unido e Irlanda del Norte</option>
-            <option value="republica_dominicana">República Dominicana</option>
-            <option value="serbia">Serbia</option>
-            <option value="suiza">Suiza</option>
-            <option value="tunez">Túnez</option>
-            <option value="turquia">Turquía</option>
-            <option value="ucrania">Ucrania</option>
-            <option value="uruguay">Uruguay</option>
-            <option value="venezuela">Venezuela</option>
-        </select>
+    <h1 class="text-black text-center mt-6 text-xl md:text-2xl font-bold leading-tight max-w-md">
+        Convenio de canje de permisos de conducir con España
+    </h1>
+
+    <div class="bg-white shadow-lg rounded-xl p-6 mt-6 w-full max-w-md mx-auto border border-gray-200">
+        <h2 class="text-lg font-semibold mb-4 text-center text-gray-800">Verifique si existe convenio</h2>
+        <div class="mb-4">
+            <label for="pais" class="block text-center text-sm font-bold text-gray-600 mb-2 uppercase">Seleccionar País</label>
+            <select id="pais" class="block w-full p-3 text-lg bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-center shadow-inner text-gray-800">
+                <option value="">-- TOCA AQUÍ --</option>
+                <option value="andorra">Andorra</option>
+                <option value="argelia">Argelia</option>
+                <option value="argentina">Argentina</option>
+                <option value="bolivia">Bolivia</option>
+                <option value="brasil">Brasil</option>
+                <option value="chile">Chile</option>
+                <option value="colombia">Colombia</option>
+                <option value="corea_del_sur">Corea del Sur</option>
+                <option value="costa_rica">Costa Rica</option>
+                <option value="ecuador">Ecuador</option>
+                <option value="el_salvador">El Salvador</option>
+                <option value="filipinas">Filipinas</option>
+                <option value="georgia">Georgia</option>
+                <option value="guatemala">Guatemala</option>
+                <option value="honduras">Honduras</option>
+                <option value="japon">Japón</option>
+                <option value="macedonia_del_norte">Macedonia del Norte</option>
+                <option value="marruecos">Marruecos</option>
+                <option value="moldavia">Moldavia</option>
+                <option value="monaco">Mónaco</option>
+                <option value="nicaragua">Nicaragua</option>
+                <option value="nueva_zelanda">Nueva Zelanda</option>
+                <option value="panama">Panamá</option>
+                <option value="paraguay">Paraguay</option>
+                <option value="peru">Perú</option>
+                <option value="reino_unido">Reino Unido e Irlanda del Norte</option>
+                <option value="republica_dominicana">República Dominicana</option>
+                <option value="serbia">Serbia</option>
+                <option value="suiza">Suiza</option>
+                <option value="tunez">Túnez</option>
+                <option value="turquia">Turquía</option>
+                <option value="ucrania">Ucrania</option>
+                <option value="uruguay">Uruguay</option>
+                <option value="venezuela">Venezuela</option>
+            </select>
+        </div>
+        <div id="resultado" class="mt-4"></div>
     </div>
-    <div id="resultado"></div>
-</div>
 
-<div class="mt-8 flex flex-col items-center justify-center space-y-4">
-    <p class="text-center font-bold">¿Quieres saber si precisa PIC?</p>
-    <button onclick="window.location.href='PERMISO INTERNACIONAL DE CONDUCIR.html'"
-            class="w-11/12 max-w-md p-4 text-white font-bold rounded-lg shadow-md transition bg-blue-800 hover:bg-red-900">
-        PERMISO INTERNACIONAL DE CONDUCIR
-    </button>
-    <button onclick="window.location.href='index.html'"
-            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
-        MENÚ PRINCIPAL
-    </button>
-</div>
+    <div class="mt-8 mb-8 w-full max-w-md space-y-4">
+        <p class="text-center font-bold text-gray-700">¿Quieres saber si precisa PIC?</p>
+        
+        <button onclick="window.location.href='PERMISO INTERNACIONAL DE CONDUCIR.html'"
+                class="w-full p-4 text-white text-lg font-bold rounded-xl shadow-md transition transform active:scale-95 bg-blue-800 hover:bg-blue-900 border-none">
+            CONSULTAR P.I.C.
+        </button>
+        
+        <button onclick="window.location.href='index.html'"
+                class="w-full p-4 bg-yellow-400 text-black text-lg font-bold rounded-xl shadow-md transition transform active:scale-95 hover:bg-yellow-300 border-none">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
 
- <footer class="mt-auto text-center py-6 bg-gray-200">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
-    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
-    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
-    <p>&copy; GAD - Todos los derechos reservados</p>
+</main>
+
+ <footer class="w-full bg-gray-200 py-6 mt-auto text-center">
+    <div class="max-w-md mx-auto w-11/12">
+        <hr class="border-t border-gray-400 mb-4 mx-auto w-1/2">
+        <p class="font-bold text-sm text-gray-800">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p class="font-bold text-sm text-gray-800">POLICÍA LOCAL DE ALICANTE</p>
+        <p class="text-xs text-gray-600 mt-2">&copy; GAD - Todos los derechos reservados</p>
+    </div>
   </footer>
 
 <script>
@@ -170,7 +175,7 @@
                         <p class="text-green-700 text-center mt-2">
                             ${fechaTexto}
                         </p>
-                 <a href="https://www.dgt.es/nuestros-servicios/permisos-de-conducir/permisos-extranjeros-y-de-fuerzas-y-cuerpos-de-seguridad/canjes-de-permisos/paises-con-convenio-de-canjes/" target="_blank" class="block w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700 mt-4">Ver equivalencias DGT</a>
+                 <a href="https://www.dgt.es/nuestros-servicios/permisos-de-conducir/permisos-extranjeros-y-de-fuerzas-y-cuerpos-de-seguridad/canjes-de-permisos/paises-con-convenio-de-canjes/" target="_blank" class="block w-full bg-blue-600 text-white py-3 font-bold rounded-lg shadow hover:bg-blue-700 mt-4 text-center">Ver equivalencias DGT</a>
                     </div>
                 `;
             } else {
