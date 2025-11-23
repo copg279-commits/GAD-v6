@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Permiso Internacional de Conducir (PIC)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -13,12 +13,16 @@
             justify-content: center;
             text-align: center;
         }
+        /* Ajuste para móviles para evitar scroll lateral innecesario */
+        body {
+            overflow-x: hidden;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col pb-16">
 
 <header class="bg-blue-600 w-full flex justify-center items-center py-2">
-    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg">
         <img
             src="logogad.png"
             alt="Logo GAD"
@@ -27,16 +31,16 @@
     </div>
 </header>
 
-<h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+<h1 class="text-black text-center mt-6 text-xl md:text-2xl font-bold px-4">
     Permiso Internacional de Conducir (PIC)
 </h1>
 
-<p class="text-center mt-2 px-4">
+<p class="text-center mt-2 px-4 text-base md:text-lg">
     Selecciona un país para verificar si precisa o no Permiso Internacional de Conducir y si tiene convenio de canje con España.
 </p>
 
 <select id="paises" onchange="mostrarInfoPais()"
-    class="block mx-auto mt-4 p-2 text-base w-11/12 max-w-md border border-gray-300 rounded-lg">
+    class="block mx-auto mt-4 p-3 text-lg w-11/12 max-w-md border border-gray-300 rounded-lg bg-white shadow-sm">
     <option value="">-- Seleccionar país --</option>
     <option value="Albania">Albania</option>
     <option value="Argelia">Argelia</option>
@@ -142,7 +146,7 @@
 
 <div class="mt-8 flex justify-center">
     <button onclick="window.location.href='index.html'"
-            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200 text-lg">
         MENÚ PRINCIPAL
     </button>
 </div>
@@ -363,7 +367,7 @@
         }
         html += picNecesidadHtml;
 
-        // Sección de información sobre la expedición del PIC (restaurada)
+        // Sección de información sobre la expedición del PIC
         html += `<h3 class="text-center text-black text-lg font-bold mb-2">¿PUEDE EXPEDIR PERMISO INTERNACIONAL?</h3>`;
         
         let picExpedicionHtml = '';
