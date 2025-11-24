@@ -11,11 +11,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* --- INICIO DE LA MODIFICACIÓN (Encabezado) --- */
+        /* --- ESTILOS GENERALES --- */
         .title-panel-blue {
             background-color: #3b82f6;
-            display: grid; /* Cambiado a grid */
-            grid-template-columns: auto 1fr auto; /* 3 columnas */
+            display: grid; 
+            grid-template-columns: auto 1fr auto; 
             align-items: center;
             padding: 20px;
             border-radius: 10px;
@@ -30,7 +30,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            justify-content: center; /* Centrar el H1 */
+            justify-content: center;
             text-align: center;
         }
         .title-panel-blue .header-logo-container {
@@ -38,21 +38,14 @@
             height: 80px;
             flex-shrink: 0;
         }
-        /* Justificar logos a los lados */
-        .title-panel-blue .header-logo-container:first-child {
-            justify-self: start;
-        }
-        .title-panel-blue .header-logo-container:last-child {
-            justify-self: end;
-        }
+        .title-panel-blue .header-logo-container:first-child { justify-self: start; }
+        .title-panel-blue .header-logo-container:last-child { justify-self: end; }
         .title-panel-blue .header-logo-container img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
-        /* --- FIN DE LA MODIFICACIÓN --- */
 
-        /* ESTILOS DEL PIE DE PÁGINA (Reutilizados) */
         footer {
             background-color: #e0e0e0;
             text-align: center;
@@ -61,14 +54,8 @@
             margin-top: auto;
             box-sizing: border-box;
         }
-        footer p {
-            margin: 5px 0;
-            font-size: 1em;
-            color: #333;
-            font-weight: bold;
-        }
+        footer p { margin: 5px 0; font-size: 1em; color: #333; font-weight: bold; }
 
-        /* ESTILOS BASE Y PANELES (Reutilizados) */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f8f9fa;
@@ -111,7 +98,6 @@
         h2 { font-size: 1.5em; }
         h3 { font-size: 1.2em; }
 
-        /* Controles y Botones (Reutilizados) */
         button {
             border: none;
             padding: 10px 15px;
@@ -138,12 +124,51 @@
         .btn-warning:hover { box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); }
         .btn-info { background: linear-gradient(135deg, #5bc0de, #31b0d5); }
         .btn-info:hover { box-shadow: 0 4px 10px rgba(49, 176, 213, 0.4); }
-        
-        .btn-danger { background: linear-gradient(135deg, #ff8c00, #dc143c); } /* Naranja-Rojo Vívido */
+        .btn-danger { background: linear-gradient(135deg, #ff8c00, #dc143c); } 
         .btn-danger:hover { box-shadow: 0 4px 10px rgba(220, 20, 60, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #6c757d, #5a6268); }
+        .btn-secondary:hover { box-shadow: 0 4px 10px rgba(92, 98, 104, 0.4); }
 
+        /* Icono papelera roja sin borde */
+        .btn-icon-delete {
+            background-color: transparent;
+            color: #ef4444; 
+            padding: 5px;
+            margin: 0;
+            border: none; 
+            font-size: 1.3em; 
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-icon-delete:hover {
+            transform: scale(1.1);
+            background-color: transparent;
+            box-shadow: none;
+        }
+        
+        /* Nuevo estilo para el botón de copiar matrícula */
+        .btn-copy-matricula {
+            background-color: transparent;
+            color: #4CAF50; /* Un color de éxito intenso */
+            padding: 0;
+            margin-right: 5px; /* Ajuste para alinear a la izquierda */
+            border: none; 
+            font-size: 0.9em; 
+            cursor: pointer;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .btn-copy-matricula:hover {
+            color: #388E3C; /* Verde más oscuro al pasar el ratón */
+            background-color: transparent;
+            box-shadow: none;
+        }
 
-        /* Estilos generales de inputs (Reutilizados) */
         input[type="text"], input[type="number"], input[type="url"], input[type="date"], select {
             border: 1px solid #ced4da;
             border-radius: 5px;
@@ -154,8 +179,24 @@
             width: 100%;
             box-sizing: border-box;
         }
+        
+        /* Estilos específicos para el modal de ordenar */
+        #sort-by-state-modal .modal-content {
+            display: block;
+        }
+        #sort-by-state-modal .modal-content button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: left;
+            padding: 12px 15px;
+            justify-content: flex-start;
+        }
+        #sort-by-state-modal .modal-content button i {
+            width: 20px;
+            text-align: center;
+        }
 
-        /* Zona para arrastrar y soltar archivos */
         #drop-zone {
             border: 2px dashed #3498db;
             border-radius: 10px;
@@ -176,7 +217,6 @@
             margin-bottom: 15px;
         }
 
-        /* Layout del grid de búsqueda y filtros */
         .controls-container {
             display: flex;
             flex-wrap: wrap;
@@ -185,7 +225,6 @@
             align-items: flex-end;
             margin-bottom: 20px;
         }
-        
         .search-controls {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -201,10 +240,6 @@
             margin-bottom: 5px;
             display: block;
         }
-        .search-controls .align-bottom {
-            align-self: end;
-        }
-        
         .filter-controls {
             display: flex;
             flex-wrap: wrap;
@@ -212,7 +247,6 @@
             align-items: flex-end;
         }
 
-        /* LISTADO (Reutilizado) */
         .results-container {
             overflow-x: auto;
             padding-bottom: 10px;
@@ -247,81 +281,75 @@
             text-overflow: ellipsis;
             align-self: center;
         }
+        .doc-row .cell-matricula {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            overflow: visible; /* Permitir que el botón de copiar sea visible */
+        }
+        .doc-row .matricula-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-        /* --- INICIO DE LA MODIFICACIÓN (CSS Checkbox y Colores) --- */
-        .doc-row .checkbox-cell {
-            text-align: center;
-            align-self: center;
-        }
-        .doc-row.highlight-yellow {
-            background-color: #fffde7; 
-        }
-        .doc-row.highlight-yellow:hover {
-            background-color: #fff9c4; 
-        }
-        .doc-row.highlight-green {
-            background-color: #e8f5e9;
-        }
-        .doc-row.highlight-green:hover {
-            background-color: #c8e6c9;
-        }
-        .doc-row.highlight-blue {
-            background-color: #e3f2fd; /* Light blue */
-        }
-        .doc-row.highlight-blue:hover {
-            background-color: #bbdefb; /* Lighter blue */
-        }
-        /* --- AÑADIDO: Color Rojo Intenso --- */
-        .doc-row.highlight-red {
-            background-color: #ffcdd2; 
-        }
-        .doc-row.highlight-red:hover {
-            background-color: #ef9a9a; 
-        }
+        /* --- ESTILOS DE COLOR DE FILA INTENSOS (Modificados según prioridad) --- */
         
-        /* Estilos para la celda REVISADO cuando tiene fecha */
-        .revisado-cell {
-            text-align: center;
-            align-self: center;
-        }
+        /* 1. Base/Pendiente (Sin color) */
+        
+        /* 2. Azul (Revisado sin estado específico, menor prioridad) */
+        .doc-row.highlight-blue { background-color: #bbdefb; } 
+        .doc-row.highlight-blue:hover { background-color: #64b5f6; }
+        
+        /* 3. Amarillo (Sin datos en Eurocop) - SUAVIZADO */
+        .doc-row.highlight-yellow { background-color: #fffde7; border-left: 5px solid #ffc107; } 
+        .doc-row.highlight-yellow:hover { background-color: #fff9c4; }
+        
+        /* 4. Rojo (Alerta grabada en Eurocop) */
+        .doc-row.highlight-red { background-color: #ef9a9a; border-left: 5px solid #d32f2f; } 
+        .doc-row.highlight-red:hover { background-color: #e57373; }
+        
+        /* 5. Verde (Notificado a sanciones - Máxima prioridad visual) */
+        .doc-row.highlight-green { background-color: #a5d6a7; border-left: 5px solid #388e3c; } 
+        .doc-row.highlight-green:hover { background-color: #81c784; }
+        
+        .revisado-cell { text-align: center; align-self: center; }
         .revisado-cell.date-set {
             font-weight: bold;
-            color: #0d47a1; /* Azul oscuro */
+            color: #0d47a1;
             cursor: pointer;
             font-size: 0.95em;
         }
         
-        /* --- INICIO DE LA MODIFICACIÓN (Colores Texto Matrícula) --- */
+        /* Estilos Select Estado - APLICAR COLOR DE FONDO INTENSO AL VALOR SELECCIONADO */
+        .estado-select {
+            width: 100%;
+            padding: 5px;
+            font-size: 0.9em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white; /* Base */
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .estado-select:focus { border-color: #3498db; outline: none; }
+        
+        /* Colores para las opciones seleccionadas */
+        /* MODIFICACIÓN: Eurocop con letra NEGRA y NEGRIITA para mejor visibilidad */
+        .estado-select[value="eurocop"] { background-color: #ffeb3b; color: #000000; font-weight: 700; } 
+        .estado-select[value="alerta"] { background-color: #f44336; color: white; } /* Rojo */
+        .estado-select[value="notificado"] { background-color: #4CAF50; color: white; } /* Verde */
+        
+        /* Estilos Colores Matrícula */
         .doc-row .cell-matricula.group-color-1 { color: #D32F2F; font-weight: bold; }
         .doc-row .cell-matricula.group-color-2 { color: #1976D2; font-weight: bold; }
         .doc-row .cell-matricula.group-color-3 { color: #388E3C; font-weight: bold; }
         .doc-row .cell-matricula.group-color-4 { color: #F57C00; font-weight: bold; }
         .doc-row .cell-matricula.group-color-5 { color: #7B1FA2; font-weight: bold; }
         .doc-row .cell-matricula.group-color-6 { color: #5D4037; font-weight: bold; }
-        /* --- FIN DE LA MODIFICACIÓN --- */
         
-        /* --- INICIO DE LA MODIFICACIÓN (CSS Botón Borrar Fila) --- */
-        .delete-cell {
-            text-align: center;
-            align-self: center;
-        }
-        .delete-row-btn {
-            background: none;
-            border: none;
-            color: #e74c3c; /* Rojo */
-            cursor: pointer;
-            font-size: 1.1em;
-            padding: 0;
-            margin: 0;
-            transition: color 0.2s ease, transform 0.2s ease;
-        }
-        .delete-row-btn:hover {
-            color: #c0392b; /* Rojo oscuro */
-            transform: scale(1.1);
-        }
-        /* --- FIN DE LA MODIFICACIÓN --- */
-        
-        /* Mensajes de estado (Reutilizado) */
         #status-message {
             margin-top: 15px;
             padding: 10px;
@@ -329,28 +357,11 @@
             display: none;
             font-weight: bold;
         }
-        #status-message.success {
-            background-color: #e8f5e9;
-            color: #27ae60;
-            border: 1px solid #c8e6c9;
-        }
-        #status-message.error {
-            background-color: #fef2f2;
-            color: #c0392b;
-            border: 1px solid #f44336;
-        }
-        #status-message.loading {
-            background-color: #e0f2f7;
-            color: #0288d1;
-            border: 1px solid #b3e5fc;
-        }
-        #status-message.info {
-            background-color: #e0f2f7;
-            color: #0288d1;
-            border: 1px solid #b3e5fc;
-        }
+        #status-message.success { background-color: #e8f5e9; color: #27ae60; border: 1px solid #c8e6c9; }
+        #status-message.error { background-color: #fef2f2; color: #c0392b; border: 1px solid #f44336; }
+        #status-message.loading { background-color: #e0f2f7; color: #0288d1; border: 1px solid #b3e5fc; }
+        #status-message.info { background-color: #e0f2f7; color: #0288d1; border: 1px solid #b3e5fc; }
         
-        /* Spinner (Reutilizado) */
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -361,12 +372,8 @@
             display: inline-block;
             margin-right: 10px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Alertas (Reutilizado) */
         .modern-alert {
             text-align: center;
             padding: 15px; 
@@ -377,14 +384,11 @@
             color: #555;
             font-size: 0.9em; 
         }
-         .modern-alert h4 { font-size: 1.1em; margin-top: 5px; margin-bottom: 5px; }
-         .modern-alert p { margin-bottom: 0; }
-        .modern-alert-error {
-            background-color: #fef2f2;
-            border-color: #f44336;
-        }
+        .modern-alert h4 { font-size: 1.1em; margin-top: 5px; margin-bottom: 5px; }
+        .modern-alert p { margin-bottom: 0; }
+        .modern-alert-error { background-color: #fef2f2; border-color: #f44336; }
          
-        /* --- INICIO DE LA MODIFICACIÓN (CSS Leyenda) --- */
+        /* --- CSS Leyenda --- */
         #legend-panel {
             background-color: #f8f9fa;
             border: 1px solid #e0e0e0;
@@ -394,30 +398,13 @@
             font-size: 0.9em;
             color: #555;
         }
-        #legend-panel p {
-            margin: 2px 0;
-        }
-        /* Estilos para los colores de la leyenda */
-        .legend-blue {
-            color: #0d47a1; /* Azul oscuro */
-            font-weight: bold;
-        }
-        .legend-yellow {
-            color: #f57f17; /* Naranja/amarillo oscuro */
-            font-weight: bold;
-        }
-        .legend-green {
-            color: #1b5e20; /* Verde oscuro */
-            font-weight: bold;
-        }
-        /* --- AÑADIDO: Color Rojo Intenso --- */
-        .legend-red {
-            color: #c62828; 
-            font-weight: bold;
-        }
-        /* --- FIN DE LA MODIFICACIÓN --- */
+        #legend-panel p { margin: 2px 0; }
+        .legend-blue { color: #0d47a1; font-weight: bold; }
+        .legend-yellow { color: #f57f17; font-weight: bold; }
+        .legend-green { color: #1b5e20; font-weight: bold; }
+        .legend-red { color: #c62828; font-weight: bold; }
         
-        /* --- INICIO DE LA MODIFICACIÓN (CSS Modal Notificación) --- */
+        /* --- CSS Modal --- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -447,16 +434,13 @@
             padding: 15px 20px;
             border-bottom: 1px solid #e0e0e0;
         }
-        .modal-header h2 {
-            margin: 0;
-            color: #333;
-        }
+        .modal-header h2 { margin: 0; color: #333; }
         .modal-content {
             padding: 20px;
             display: grid;
             gap: 15px;
-            max-height: 60vh; /* Para evitar que sea muy alto en pantallas pequeñas */
-            overflow-y: auto; /* Scroll si hay muchos campos */
+            max-height: 60vh;
+            overflow-y: auto;
         }
         .modal-content label {
             font-weight: bold;
@@ -472,55 +456,27 @@
             padding: 15px 20px;
             border-top: 1px solid #e0e0e0;
         }
-        /* --- FIN DE LA MODIFICACIÓN --- */
 
-         
-         /* Media queries (Reutilizados) */
          @media (max-width: 767px) {
-             /* --- INICIO DE LA MODIFICACIÓN (Media Query Encabezado) --- */
              .title-panel-blue {
                 grid-template-columns: auto 1fr auto;
                 padding: 15px;
              }
-             .title-panel-blue .header-logo-container {
-                 width: 60px; 
-                 height: 60px;
-             }
-             .title-panel-blue h1 {
-                 font-size: 1.4em; 
-                 gap: 5px;
-             }
-             /* --- FIN DE LA MODIFICACIÓN --- */
-             
-             .controls-container {
-                 flex-direction: column;
-                 align-items: stretch;
-             }
-             .search-controls {
-                 grid-template-columns: 1fr;
-                 max-width: 100%;
-             }
-             .filter-controls {
-                 justify-content: center;
-             }
+             .title-panel-blue .header-logo-container { width: 60px; height: 60px; }
+             .title-panel-blue h1 { font-size: 1.4em; gap: 5px; }
+             .controls-container { flex-direction: column; align-items: stretch; }
+             .search-controls { grid-template-columns: 1fr; max-width: 100%; }
+             .filter-controls { justify-content: center; }
          }
          @media (max-width: 480px) {
-             .title-panel-blue {
-                 padding: 15px;
-             }
-             .title-panel-blue .header-logo-container {
-                 width: 50px;
-                 height: 50px;
-             }
-             .title-panel-blue h1 {
-                 font-size: 1.2em;
-             }
+             .title-panel-blue { padding: 15px; }
+             .title-panel-blue .header-logo-container { width: 50px; height: 50px; }
+             .title-panel-blue h1 { font-size: 1.2em; }
              .panel { padding: 15px; }
              button { font-size: 0.85em; padding: 8px 12px; }
              h2 { font-size: 1.3em; }
              h3 { font-size: 1.1em; }
          }
-
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -567,8 +523,8 @@
                     
                     <div class="filter-controls">
                         <button id="sort-matricula-btn" class="btn-primary"><i class="fas fa-sort-alpha-down"></i> Matrícula (A-Z)</button>
-                        <button id="sort-fecha-asc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Antigua)</button>
-                        <button id="sort-fecha-desc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Reciente)</button>
+                        <button id="sort-fecha-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Reciente)</button>
+                        <button id="sort-estado-btn" class="btn-secondary"><i class="fas fa-filter"></i> Mostrar por Estado</button>
                         <button id="show-all-btn" class="btn-warning"><i class="fas fa-list"></i> Mostrar Todos</button>
                         <button id="find-duplicates-btn" class="btn-danger"><i class="fas fa-copy"></i> Reincidentes</button>
                         <button id="crear-alerta-btn" class="btn-info"><i class="fas fa-exclamation-triangle"></i> Crear Alerta Eurocop</button>
@@ -579,10 +535,11 @@
                 <h3 style="margin-top: 30px;">Resultados <span id="results-count">(0)</span></h3>
                 
                 <div id="legend-panel">
-                  <p>Activa la casilla <span class="legend-blue">Revisado</span> si ya se ha hecho comprobación.</p>
-                  <p>Activa la casilla <span class="legend-yellow">Eurocop</span> si tenemos datos.</p>
-                  <p>Activa la casilla <span class="legend-red">Alerta</span> cuando hayas puesto alerta en eurocop a un vehículo reincidente.</p>
-                  <p>Activa la casilla <span class="legend-green">Notificado</span> si hemos enviado datos a Sanciones.</p>
+                  <p>Activa la casilla <span class="legend-blue">Revisado</span> si ya se ha hecho comprobación. Si no hay estado definido, pasará automáticamente a <span class="legend-yellow">Sin datos en Eurocop</span>.</p>
+                  <p>ESTADO EXPEDIENTE (Prioridad de color: Verde > Rojo > Amarillo > Azul):</p>
+                  <p>- Selecciona <span class="legend-yellow">Sin datos en Eurocop</span>.</p>
+                  <p>- Selecciona <span class="legend-red">Alerta grabada en Eurocop</span>.</p>
+                  <p>- Selecciona <span class="legend-green">Notificado a sanciones</span>.</p>
                 </div>
                 <div class="results-container">
                     <div id="results-header" class="results-header" style="display: none;">
@@ -629,6 +586,33 @@
             <button id="modal-accept-btn" class="btn-success"><i class="fas fa-copy"></i> Aceptar y Copiar</button>
         </div>
     </div>
+    
+    <div id="sort-by-state-modal" class="modal-container">
+        <div class="modal-header">
+            <h2><i class="fas fa-filter"></i> Seleccionar Estado a Mostrar</h2>
+        </div>
+        <div class="modal-content">
+            <button class="btn-primary sort-by-state-option" data-state-value="notificado" data-state-icon="fas fa-check-circle" style="background: #4CAF50;">
+                <i class="fas fa-check-circle"></i> Notificado a Sanciones
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="alerta" data-state-icon="fas fa-exclamation-triangle" style="background: #f44336;">
+                <i class="fas fa-exclamation-triangle"></i> Alerta Grabada en Eurocop
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="eurocop" data-state-icon="fas fa-file" style="background: #ffeb3b; color: #333;">
+                <i class="fas fa-file"></i> Sin datos en Eurocop
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="revisado" data-state-icon="fas fa-eye" style="background: #bbdefb; color: #333;">
+                <i class="fas fa-eye"></i> Solo Revisado (Sin estado)
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="" data-state-icon="fas fa-hourglass-half" style="background: #6c757d;">
+                <i class="fas fa-hourglass-half"></i> Pendiente Revisión
+            </button>
+        </div>
+        <div class="modal-buttons">
+            <button id="modal-sort-cancel-btn" class="btn-warning"><i class="fas fa-times"></i> Cancelar</button>
+        </div>
+    </div>
+    
     <footer>
         <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
         <p>POLICÍA LOCAL DE ALICANTE</p>
@@ -637,9 +621,6 @@
 
 
     <script>
-        // **********************************************
-        //      ✅ [ CONFIGURACIÓN DE FIREBASE ]
-        // **********************************************
         const firebaseConfig = {
             apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
             authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -662,29 +643,22 @@
             alert("❌ Error al inicializar Firebase. Revisa tus credenciales.");
         }
 
-        // --- INICIO DE LA NUEVA LÓGICA ---
-
         const DENUNCIAS_ORA_REF = 'denuncias_ORA';
         
-        // --- INICIO DE LA MODIFICACIÓN (JS - Config Checkboxes y Orden) ---
-        // Nuevo orden de columnas
         const HEADER_DISPLAY_NAMES = {
             'matricula': 'MATRÍCULA',
             'fecha_de_creacion': 'FECHA DENUNCIA', 
             'marca': 'MARCA',
             'modelo': 'MODELO',
             'revisado': 'REVISADO', 
-            'eurocop': 'EUROCOP',      
-            'alerta': 'ALERTA', // <-- AÑADIDO
-            'notificado': 'NOTIFICADO'
+            'estado_expediente': 'ESTADO EXPEDIENTE',
+            'acciones': 'BORRAR' 
         };
-        // --- FIN DE LA MODIFICACIÓN ---
-
+        
         const CANONICAL_KEYS_LIST = Object.keys(HEADER_DISPLAY_NAMES);
         
-        let allDenuncias = []; // Almacén en memoria para los datos
+        let allDenuncias = []; 
 
-        // Elementos del DOM
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const statusMessage = document.getElementById('status-message');
@@ -693,28 +667,23 @@
         const searchBtn = document.getElementById('search-btn');
         
         const sortMatriculaBtn = document.getElementById('sort-matricula-btn');
-        const sortFechaAscBtn = document.getElementById('sort-fecha-asc-btn');
-        const sortFechaDescBtn = document.getElementById('sort-fecha-desc-btn');
+        const sortFechaBtn = document.getElementById('sort-fecha-btn'); 
+        const sortEstadoBtn = document.getElementById('sort-estado-btn'); 
         const showAllBtn = document.getElementById('show-all-btn');
         const deleteAllBtn = document.getElementById('delete-all-btn');
         
         const findDuplicatesBtn = document.getElementById('find-duplicates-btn');
-        const crearAlertaBtn = document.getElementById('crear-alerta-btn'); // <-- AÑADIDO
+        const crearAlertaBtn = document.getElementById('crear-alerta-btn'); 
         
         const resultsHeader = document.getElementById('results-header');
         const searchResultsDiv = document.getElementById('search-results');
         const resultsCount = document.getElementById('results-count');
 
-        // --- INICIO MODIFICACIÓN: Variables para el Modal y persistencia ---
-        let currentNotificadoCheckbox = null;
+        let currentNotificadoSelect = null; 
         let currentNotificadoDataObject = null;
-        let currentNotificadoDataIndex = null; // <-- AÑADIDO PARA PERSISTENCIA
-        // --- FIN MODIFICACIÓN ---
+        let previousSelectValue = ""; 
+        let currentFechaSortOrder = 'desc'; 
 
-        
-        /**
-         * Muestra un mensaje de estado (carga, éxito, error)
-         */
         function showStatus(message, type = 'loading') {
             statusMessage.textContent = message;
             statusMessage.className = type;
@@ -724,16 +693,40 @@
                 statusMessage.innerHTML = `<span class="loader"></span> ${message}`;
             }
         }
+        
+        // --- FUNCIÓN ROBUSTA COPIAR PORTAPAPELES ---
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            } else {
+                let textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                return new Promise((resolve, reject) => {
+                    try {
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        if (successful) resolve();
+                        else reject(new Error("Fallback copy failed"));
+                    } catch (err) {
+                        document.body.removeChild(textArea);
+                        reject(err);
+                    }
+                });
+            }
+        }
 
-        // --- LÓGICA DE CARGA DE ARCHIVO ---
-
+        // --- CARGA DE ARCHIVO ---
         dropZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length) {
                 handleFile(e.target.files[0]);
             }
         });
-
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropZone.classList.add('dragover');
@@ -749,9 +742,6 @@
             }
         });
 
-        /**
-         * Limpia las claves de objeto
-         */
         function sanitizeKey(key) {
             if (!key) return '';
             return key
@@ -763,34 +753,18 @@
                 .replace(/\s/g, '_');
         }
         
-        /**
-         * Resuelve variaciones de claves a una clave canónica.
-         */
         function getCanonicalKey(sanitizedKey) {
             if (sanitizedKey === 'matricula') return 'matricula';
-
-            if (sanitizedKey === 'fecha_de_creacion' || 
-                sanitizedKey === 'fecha_creacion' || 
-                sanitizedKey === 'fechacreacion' || 
-                sanitizedKey === 'fecha') {
-                return 'fecha_de_creacion';
-            }
-
+            if (sanitizedKey === 'fecha_de_creacion' || sanitizedKey === 'fecha_creacion' || sanitizedKey === 'fechacreacion' || sanitizedKey === 'fecha') return 'fecha_de_creacion';
             if (sanitizedKey === 'marca') return 'marca';
             if (sanitizedKey === 'modelo') return 'modelo';
-            
+            if (sanitizedKey === 'revisado') return 'revisado';
             if (sanitizedKey === 'eurocop') return 'eurocop';
             if (sanitizedKey === 'notificado') return 'notificado';
-            if (sanitizedKey === 'revisado') return 'revisado';
-            if (sanitizedKey === 'alerta') return 'alerta'; // <-- AÑADIDO
-
+            if (sanitizedKey === 'alerta') return 'alerta';
             return null;
         }
 
-
-        /**
-         * Procesa el archivo Excel seleccionado
-         */
         function handleFile(file) {
             if (!file || !/\.(xlsx|xls)$/i.test(file.name)) {
                 showStatus("Error: El archivo debe ser un .xls o .xlsx", 'error');
@@ -808,11 +782,8 @@
                     const worksheet = workbook.Sheets[sheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-                    if (jsonData.length === 0) {
-                        throw new Error("El archivo Excel está vacío o no tiene datos.");
-                    }
+                    if (jsonData.length === 0) throw new Error("El archivo Excel está vacío o no tiene datos.");
 
-                    // 1. PROCESAR DATOS Y CONVERTIR FECHAS
                     const sanitizedJsonData = jsonData.map(row => {
                         const newRow = {};
                         Object.keys(row).forEach(excelKey => {
@@ -820,7 +791,6 @@
                             const canonicalKey = getCanonicalKey(sanitizedExcelKey);
                             
                             if (canonicalKey) {
-                                // Claves de fecha (se guardan como ISO)
                                 if (canonicalKey === 'fecha_de_creacion' || canonicalKey === 'revisado') {
                                     let value = row[excelKey];
                                     if (value instanceof Date) {
@@ -839,15 +809,13 @@
                                              newRow[canonicalKey] = value ?? null;
                                         }
                                     } else if (typeof value === 'string' && value.includes('-')) {
-                                        // Aceptar fechas ISO o similares
                                         let parsed = new Date(value);
                                         if (!isNaN(parsed.getTime())) {
                                             newRow[canonicalKey] = parsed.toISOString();
                                         } else {
                                             newRow[canonicalKey] = value ?? null;
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         newRow[canonicalKey] = value ?? null;
                                     }
                                 } else {
@@ -859,10 +827,6 @@
                     });
                     
                     const intermediateData = sanitizedJsonData.filter(row => Object.keys(row).length > 0);
-                    console.log(`Datos leídos del Excel (antes de filtrar): ${intermediateData.length} registros.`);
-
-
-                    // 2. FILTRAR MATRÍCULAS ESPAÑOLAS (1234ABC)
                     const spanishPlateRegex = /^\d{4}[A-Z]{3}$/i;
                     let spanishPlatesCount = 0;
                     const matriculaKey = 'matricula'; 
@@ -879,20 +843,12 @@
                         return true; 
                     });
 
-                    console.log(`Datos después de filtrar: ${finalData.length} registros.`);
-
                     if (spanishPlatesCount > 0) {
-                        const message = `Se han detectado y eliminado ${spanishPlatesCount} matrículas con formato español (1234ABC). No se guardarán en la base de datos.`;
-                        console.warn(message);
-                        alert(message);
+                        alert(`Se han detectado y eliminado ${spanishPlatesCount} matrículas con formato español (1234ABC).`);
                     }
                     
                     if (finalData.length === 0) {
-                         if (intermediateData.length > 0 && spanishPlatesCount > 0) {
-                            throw new Error("El archivo no contiene matrículas válidas (todas las encontradas tenían formato español 1234ABC y han sido filtradas).");
-                        } else {
-                            throw new Error("El archivo no contiene ninguna de las columnas requeridas (matrícula, fecha de creación, marca, modelo, etc) o está vacío.");
-                        }
+                        throw new Error("El archivo no contiene datos válidos tras el filtrado.");
                     }
                     
                     addAndSaveToFirebase(finalData);
@@ -905,30 +861,72 @@
             reader.readAsArrayBuffer(file);
         }
 
-        /**
-         * Añade y guarda los datos JSON en Firebase, ACUMULÁNDOLOS
-         */
         async function addAndSaveToFirebase(newData) {
             if (!database) {
                 showStatus("Error: Firebase no está inicializado.", 'error');
                 return;
             }
             
-            showStatus("Cargando datos existentes de Firebase...", 'loading');
+            showStatus("Cargando datos existentes para comparar...", 'loading');
             
             try {
                 const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
                 const existingData = snapshot.val() || [];
                 const existingArray = Array.isArray(existingData) ? existingData : Object.values(existingData);
 
-                const combinedData = [...existingArray, ...newData];
+                const matriculaKey = 'matricula';
                 
-                showStatus(`Guardando ${newData.length} nuevos registros... (Total: ${combinedData.length})`, 'loading');
+                const existingStatusMap = {};
+                const existingCountMap = {};
+
+                existingArray.forEach(item => {
+                    const mat = String(item[matriculaKey] || '').trim().toUpperCase();
+                    if (mat) {
+                        if (item.alerta || item.notificado) {
+                            existingStatusMap[mat] = {
+                                alerta: item.alerta,
+                                notificado: item.notificado,
+                                revisado: item.revisado
+                            };
+                        }
+                        existingCountMap[mat] = (existingCountMap[mat] || 0) + 1;
+                    }
+                });
+
+                let reincidenciasAlertMsg = [];
+
+                const processedNewData = newData.map(newItem => {
+                    const newMat = String(newItem[matriculaKey] || '').trim().toUpperCase();
+                    
+                    if (newMat && existingCountMap[newMat]) {
+                        const count = existingCountMap[newMat];
+                        reincidenciasAlertMsg.push(`- ${newMat}: Constaba ${count} veces.`);
+
+                        if (existingStatusMap[newMat]) {
+                            if (existingStatusMap[newMat].alerta) newItem.alerta = true;
+                            if (existingStatusMap[newMat].notificado) newItem.notificado = true;
+                        }
+                    }
+                    return newItem;
+                });
+
+                if (reincidenciasAlertMsg.length > 0) {
+                    let msgText = "Se han detectado que estos vehículos ya se encontraban como reincidentes:\n\n";
+                    if (reincidenciasAlertMsg.length > 10) {
+                        msgText += reincidenciasAlertMsg.slice(0, 10).join('\n') + `\n... y ${reincidenciasAlertMsg.length - 10} más.`;
+                    } else {
+                        msgText += reincidenciasAlertMsg.join('\n');
+                    }
+                    msgText += "\n\nSe les ha aplicado el estado (Alerta/Notificado) correspondiente si lo tenían.";
+                    alert(msgText);
+                }
+
+                const combinedData = [...existingArray, ...processedNewData];
                 
+                showStatus(`Guardando ${newData.length} nuevos registros...`, 'loading');
                 await database.ref(DENUNCIAS_ORA_REF).set(combinedData);
 
-                showStatus(`¡Éxito! Se han añadido ${newData.length} registros. (Total: ${combinedData.length})`, 'success');
-                
+                showStatus(`¡Éxito! Se han añadido ${newData.length} registros.`, 'success');
                 loadAndDisplayData();
 
             } catch (error) {
@@ -936,172 +934,32 @@
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
-        
-        /**
-         * Guarda los cambios de un único objeto (fila) en Firebase.
-         */
-        async function saveItemChanges(index, dataObject) {
-            if (!database) {
-                console.error("Firebase no está inicializado. No se pueden guardar cambios.");
-                return;
-            }
-            if (typeof index === 'undefined' || index < 0) {
-                console.error("Índice no válido. No se pueden guardar cambios.", index);
-                return;
-            }
 
-            try {
-                // Usamos el índice como 'child' para actualizar ese elemento específico en el array de Firebase
-                await database.ref(DENUNCIAS_ORA_REF).child(index).set(dataObject);
-                // Opcional: un pequeño log de éxito
-                console.log(`Cambios guardados en Firebase para el índice ${index}`);
-            } catch (error)
-            {
-                console.error(`Error al guardar cambios en Firebase para el índice ${index}:`, error);
-                // Mostrar un error más visible si falla la persistencia
-                showStatus(`Error al guardar el cambio. Reinténtelo o recargue la página.`, 'error');
-            }
-        }
-        
-        /**
-         * Actualiza un campo para todas las matrículas coincidentes, tanto en la UI como en Firebase.
-         */
-        async function updateAllByMatricula(matriculaToUpdate, fieldName, newValue, uiUpdateType, formattedDate = '') {
-            if (!matriculaToUpdate || !database) return;
-
-            const updates = {}; // Para el batch de Firebase
-            const matriculaKey = 'matricula';
-
-            // 1. Actualizar datos en memoria (allDenuncias) y preparar el batch
-            allDenuncias.forEach((item, index) => {
-                if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
-                    item[fieldName] = newValue;
-                    updates[`${index}/${fieldName}`] = newValue;
-                }
-            });
-
-            // 2. Actualizar todas las filas visibles en la tabla (UI)
-            const visibleRows = searchResultsDiv.querySelectorAll('.doc-row');
-            visibleRows.forEach(visibleRow => {
-                const rowIndex = visibleRow.dataset.originalIndex;
-                if (rowIndex) {
-                    const rowData = allDenuncias[parseInt(rowIndex, 10)];
-                    if (String(rowData[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
-                        
-                        // Actualizar UI específica
-                        if (uiUpdateType === 'checkbox') {
-                            const check = visibleRow.querySelector(`.check-${fieldName}`);
-                            if (check) {
-                                check.checked = newValue;
-                            }
-                        } else if (uiUpdateType === 'revisado-date-set') {
-                            const cell = visibleRow.querySelector('.revisado-cell');
-                            if (cell) {
-                                cell.innerHTML = formattedDate;
-                                cell.classList.add('date-set');
-                                cell.dataset.state = 'date';
-                            }
-                        } else if (uiUpdateType === 'revisado-date-reset') {
-                             const cell = visibleRow.querySelector('.revisado-cell');
-                            if (cell) {
-                                cell.innerHTML = '<input type="checkbox" class="check-revisado">';
-                                cell.classList.remove('date-set');
-                                cell.dataset.state = 'check';
-                            }
-                        }
-                        
-                        // Actualizar color de la fila
-                        updateRowColor(visibleRow);
-                    }
-                }
-            });
-
-            // 3. Guardar todos los cambios en Firebase
-            try {
-                await database.ref(DENUNCIAS_ORA_REF).update(updates);
-            } catch (err) {
-                console.error(`Error al guardar cambios en cascada para ${fieldName}:`, err);
-                showStatus(`Error al guardar cambios de ${fieldName}.`, "error");
-            }
-        }
-
-        // --- INICIO DE LA MODIFICACIÓN (Nueva Función Borrar Fila) ---
-        /**
-         * Borra un único registro de la base de datos y recarga la vista.
-         * @param {number} indexToDelete - El índice original del objeto en el array 'allDenuncias'.
-         */
-        async function deleteSingleItem(indexToDelete) {
-            if (typeof indexToDelete === 'undefined' || indexToDelete < 0 || indexToDelete >= allDenuncias.length) {
-                console.error("Índice de borrado no válido:", indexToDelete);
-                return;
-            }
-            
-            // 1. Confirmación
-            const matricula = allDenuncias[indexToDelete].matricula || 'este registro';
-            const confirmation = window.confirm(`¿Estás seguro de que quieres borrar PERMANENTEMENTE el registro de la matrícula ${matricula}?\n\nEste cambio no se puede deshacer.`);
-            
-            if (!confirmation) {
-                showStatus("Borrado cancelado.", "info");
-                return;
-            }
-
-            showStatus("Borrando registro...", "loading");
-
-            // 2. Modificar el array local
-            allDenuncias.splice(indexToDelete, 1);
-
-            // 3. Guardar el array modificado (COMPLETO) en Firebase
-            try {
-                // Esto re-indexa toda la base de datos. Es la única forma segura.
-                await database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
-                
-                // 4. Recargar y redibujar TODO. 
-                // Es crucial para re-asignar los data-original-index correctos.
-                await loadAndDisplayData(); 
-                
-                showStatus(`Registro borrado. Quedan ${allDenuncias.length} registros.`, "success");
-
-            } catch (error) {
-                console.error("Error al borrar el registro:", error);
-                showStatus(`Error al borrar: ${error.message}. Recargue la página.`, "error");
-                // Si falla, forzamos recarga para re-sincronizar
-                loadAndDisplayData();
-            }
-        }
-        // --- FIN DE LA MODIFICACIÓN ---
-
-
-        // --- LÓGICA DE BÚSQUEDA Y VISUALIZACIÓN ---
-
-        /**
-         * Carga los datos de Firebase al almacén en memoria y los muestra
-         */
         async function loadAndDisplayData() {
             if (!database) return;
-            
             showStatus("Cargando datos desde Firebase...", 'loading');
-            
             try {
                 const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
                 const data = snapshot.val();
 
                 if (!data) {
                     allDenuncias = [];
-                    showStatus("No hay datos en Firebase. Carga un archivo Excel.", 'error');
+                    showStatus("No hay datos en Firebase.", 'error');
                 } else {
-                    // Filtrar cualquier 'null' que haya quedado de borrados fallidos
-                    const rawData = Array.isArray(data) ? data : Object.values(data);
-                    allDenuncias = rawData.filter(item => item !== null);
+                    allDenuncias = Array.isArray(data) ? data : Object.values(data);
                     showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
                 }
                 
+                // Mostrar datos ordenados por defecto (fecha descendente)
                 const fechaKey = 'fecha_de_creacion';
                 const sortedByDefault = [...allDenuncias].sort((a, b) => {
                     const dateA = parseDate(a[fechaKey]) || new Date(0);
                     const dateB = parseDate(b[fechaKey]) || new Date(0);
-                    return dateB - dateA; // Descendente
+                    return dateB - dateA; 
                 });
                 allDenuncias = sortedByDefault;
+                currentFechaSortOrder = 'desc';
+                sortFechaBtn.innerHTML = '<i class="fas fa-calendar-alt"></i> Fecha (Reciente)';
                 displayResults(allDenuncias);
 
             } catch (error) {
@@ -1111,53 +969,53 @@
             }
         }
         
-        /**
-         * Formateador de valores para la tabla
-         */
         function formatDisplayValue(value, key) {
-            if (value === null || typeof value === 'undefined') {
-                return 'N/A';
-            }
-            
+            if (value === null || typeof value === 'undefined') return 'N/A';
             if (key === 'fecha_de_creacion') {
                 let date;
-                if (value instanceof Date) {
-                    date = value;
-                } 
-                else if (typeof value === 'string' && (value.includes('T') || value.includes('-'))) {
-                    date = new Date(value);
-                }
-                else if (typeof value === 'number' && value > 10000) {
-                     date = new Date(Math.round((value - 25569) * 86400 * 1000));
-                }
+                if (value instanceof Date) date = value; 
+                else if (typeof value === 'string') date = new Date(value);
+                else if (typeof value === 'number') date = new Date(Math.round((value - 25569) * 86400 * 1000));
 
                 if (date instanceof Date && !isNaN(date.getTime())) {
-                    try {
-                        const y = date.getUTCFullYear();
-                        const m = String(date.getUTCMonth() + 1).padStart(2, '0');
-                        const d = String(date.getUTCDate()).padStart(2, '0');
-                        const h = String(date.getUTCHours()).padStart(2, '0');
-                        const min = String(date.getUTCMinutes()).padStart(2, '0');
-                        
-                        if (y < 1970 || y > 2100) return value; 
-
-                        return `${d}/${m}/${y} ${h}:${min}`;
-                    } catch (e) {
-                        return value;
-                    }
+                    const y = date.getUTCFullYear();
+                    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const d = String(date.getUTCDate()).padStart(2, '0');
+                    const h = String(date.getUTCHours()).padStart(2, '0');
+                    const min = String(date.getUTCMinutes()).padStart(2, '0');
+                    return `${d}/${m}/${y} ${h}:${min}`;
                 }
             }
-            
-            if (key === 'revisado') {
-                return formatRevisadoDate(value);
-            }
-            
+            if (key === 'revisado') return formatRevisadoDate(value);
             return value;
         }
 
-        /**
-         * Muestra los resultados (un array de denuncias) en la tabla
-         */
+        // Función para actualizar el color del select en la fila
+        function updateSelectColor(select) {
+            const selectedValue = select.value;
+            
+            // Revertir a valores por defecto
+            select.style.backgroundColor = 'white';
+            select.style.color = '#333';
+            select.style.fontWeight = 'bold'; // Mantener negrita por defecto
+            
+            if (selectedValue === 'eurocop') {
+                select.style.backgroundColor = '#ffeb3b'; 
+                select.style.color = '#000000'; // Letra negra
+                select.style.fontWeight = '700';
+            } else if (selectedValue === 'alerta') {
+                select.style.backgroundColor = '#f44336'; 
+                select.style.color = 'white'; 
+                select.style.fontWeight = '700';
+            } else if (selectedValue === 'notificado') {
+                select.style.backgroundColor = '#4CAF50';
+                select.style.color = 'white'; 
+                select.style.fontWeight = '700';
+            }
+            
+            select.setAttribute('value', selectedValue);
+        }
+
         function displayResults(results, isDuplicateSearch = false) {
              searchResultsDiv.innerHTML = '';
              resultsHeader.innerHTML = '';
@@ -1165,23 +1023,15 @@
              resultsCount.textContent = `(${results.length})`;
             
             if (results.length === 0) {
-                searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><h4>Sin Resultados</h4><p>No se encontraron denuncias que coincidan con los criterios.</p></div>`;
+                searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><h4>Sin Resultados</h4><p>No se encontraron denuncias.</p></div>`;
                 return;
             }
 
             const headers = CANONICAL_KEYS_LIST; 
-            
-            // --- INICIO DE LA MODIFICACIÓN (Grid Layout con 9 columnas) ---
-            // 8 columnas de datos + 1 columna de borrado
-            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr 0.5fr';
-            // --- FIN DE LA MODIFICACIÓN ---
+            // Grid: Matricula | Fecha | Marca | Modelo | Revisado | Estado | Borrar
+            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 2fr 0.5fr';
 
-            // 1. Generar cabecera
             resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
-            // --- INICIO DE LA MODIFICACIÓN (Añadir cabecera Borrar) ---
-            resultsHeader.innerHTML += '<div>BORRAR</div>';
-            // --- FIN DE LA MODIFICACIÓN ---
-            
             resultsHeader.style.gridTemplateColumns = gridLayout;
             resultsHeader.style.display = 'grid';
 
@@ -1192,16 +1042,14 @@
             let currentMatricula = null;
             let matriculaCounter = 0; 
 
-            // 2. Generar filas
             results.forEach(item => { 
                 const row = document.createElement('div');
                 row.classList.add('doc-row');
 
                 const originalIndex = allDenuncias.indexOf(item);
-                if (originalIndex !== -1) {
-                    row.dataset.originalIndex = originalIndex;
-                }
+                row.dataset.originalIndex = originalIndex;
 
+                // Color Reincidentes
                 let matriculaColorClass = '';
                 const matricula = String(item[matriculaKey] || '').trim().toUpperCase(); 
 
@@ -1209,7 +1057,6 @@
                     if (matricula !== currentMatricula) {
                         currentMatricula = matricula;
                         matriculaCounter = 1; 
-                        
                         let newColorIndex = Math.floor(Math.random() * colorClasses.length);
                         while (newColorIndex === lastColorIndex && colorClasses.length > 1) { 
                             newColorIndex = Math.floor(Math.random() * colorClasses.length);
@@ -1222,71 +1069,78 @@
                     matriculaColorClass = colorClasses[currentColorIndex];
                 }
 
-
                 let rowHTML = '';
+                let selectValue = "";
+                if (item.notificado === true) selectValue = "notificado";
+                else if (item.alerta === true) selectValue = "alerta";
+                else if (item.eurocop === true) selectValue = "eurocop";
+
                 headers.forEach(h => {
-                    if (h === 'eurocop' || h === 'notificado' || h === 'alerta') {
-                        const isChecked = item[h] === true; 
-                        let checkboxClass = '';
-                        if (h === 'eurocop') checkboxClass = 'check-eurocop';
-                        else if (h === 'notificado') checkboxClass = 'check-notificado';
-                        else if (h === 'alerta') checkboxClass = 'check-alerta';
-                        
-                        rowHTML += `<div class="checkbox-cell"><input type="checkbox" class="${checkboxClass}" ${isChecked ? 'checked' : ''}></div>`;
+                    if (h === 'estado_expediente') {
+                        rowHTML += `
+                        <div>
+                            <select class="estado-select" value="${selectValue}">
+                                <option value="" ${selectValue === "" ? "selected" : ""}>Pendiente Revisión</option>
+                                <option value="eurocop" ${selectValue === "eurocop" ? "selected" : ""}>Sin datos en Eurocop</option>
+                                <option value="alerta" ${selectValue === "alerta" ? "selected" : ""}>Alerta grabada en Eurocop</option>
+                                <option value="notificado" ${selectValue === "notificado" ? "selected" : ""}>Notificado a sanciones</option>
+                            </select>
+                        </div>`;
                     
                     } else if (h === 'revisado') {
-                        const revisadoDate = item[h]; // ISO string from data
+                        const revisadoDate = item[h]; 
                         const formattedDate = formatRevisadoDate(revisadoDate);
-                        
                         if (formattedDate) {
                             rowHTML += `<div class="revisado-cell date-set" data-state="date">${formattedDate}</div>`;
                         } else {
                             rowHTML += `<div class="revisado-cell" data-state="check"><input type="checkbox" class="check-revisado"></div>`;
                         }
                     
+                    } else if (h === 'acciones') {
+                        rowHTML += `<div style="text-align: center;"><button class="btn-icon-delete" title="Eliminar registro"><i class="fas fa-trash"></i></button></div>`;
                     } else {
                         const value = item[h];
                         let cellClasses = '';
-                        let displayValue = formatDisplayValue(value, h); 
+                        let displayValue = formatDisplayValue(value, h);
+                        let matriculaContent = '';
 
                         if (h === 'matricula') {
-                            cellClasses = 'cell-matricula ' + matriculaColorClass; 
+                            cellClasses = 'cell-matricula ' + matriculaColorClass;
+                            
+                            let matriculaText = displayValue;
                             if (isDuplicateSearch) {
-                                displayValue = `${displayValue} (${matriculaCounter})`; 
+                                matriculaText = `${displayValue} (${matriculaCounter})`; 
                             }
+                            
+                            // Botón de copiar al principio (alineado a la izquierda)
+                            matriculaContent += `<button class="btn-copy-matricula" title="Copiar" data-matricula="${matricula}"><i class="fas fa-copy"></i></button>`;
+                            matriculaContent += `<span class="matricula-text">${matriculaText}</span>`;
+                            
+                            rowHTML += `<div class="${cellClasses}">${matriculaContent}</div>`;
+                        } else {
+                            rowHTML += `<div>${displayValue}</div>`;
                         }
-                        rowHTML += `<div class="${cellClasses}">${displayValue}</div>`;
                     }
                 });
-                
-                // --- INICIO DE LA MODIFICACIÓN (Añadir celda de borrado) ---
-                rowHTML += `<div class="delete-cell"><button class="delete-row-btn" title="Borrar este registro"><i class="fas fa-trash-alt"></i></button></div>`;
-                // --- FIN DE LA MODIFICACIÓN ---
-                
                 row.innerHTML = rowHTML;
                 row.style.gridTemplateColumns = gridLayout;
                 searchResultsDiv.appendChild(row);
+
+                // Después de añadir la fila, actualizar el color del select
+                const selectElement = row.querySelector('.estado-select');
+                if (selectElement) {
+                    updateSelectColor(selectElement);
+                }
 
                 updateRowColor(row);
             });
         }
         
-        // --- EVENT LISTENERS PARA BOTONES ---
-        
-        /**
-         * Función reutilizable para buscar/filtrar
-         */
         function performSearch() {
             const searchQuery = searchInput.value.trim().toUpperCase();
-            
             if (!searchQuery) {
-                const fechaKey = 'fecha_de_creacion';
-                const sortedByDefault = [...allDenuncias].sort((a, b) => {
-                    const dateA = parseDate(a[fechaKey]) || new Date(0);
-                    const dateB = parseDate(b[fechaKey]) || new Date(0);
-                    return dateB - dateA; // Descendente
-                });
-                displayResults(sortedByDefault);
+                // Si no hay búsqueda, mostramos todos con el orden de fecha actual
+                performSortFecha(true);
                 return;
             }
             const matriculaKey = 'matricula';
@@ -1296,45 +1150,28 @@
             });
             displayResults(results); 
         }
-
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('input', performSearch);
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault(); 
-                performSearch();
-            }
-        });
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); performSearch(); }});
         
         showAllBtn.addEventListener('click', () => {
             searchInput.value = '';
-            const fechaKey = 'fecha_de_creacion';
-            const sortedByDefault = [...allDenuncias].sort((a, b) => {
-                const dateA = parseDate(a[fechaKey]) || new Date(0);
-                const dateB = parseDate(b[fechaKey]) || new Date(0);
-                return dateB - dateA; // Descendente
-            });
-            displayResults(sortedByDefault);
+            performSortFecha(true); // Mostrar todos con el orden de fecha actual (sin cambiar el orden)
         });
 
         sortMatriculaBtn.addEventListener('click', () => {
             const matriculaKey = 'matricula'; 
-            if (!allDenuncias[0] || typeof allDenuncias[0][matriculaKey] === 'undefined') {
-                alert("No se puede ordenar: la columna 'matrícula' no existe.");
-                return;
-            }
             const sorted = [...allDenuncias].sort((a, b) => {
                 const matA = String(a[matriculaKey] || '').trim().toUpperCase();
                 const matB = String(b[matriculaKey] || '').trim().toUpperCase();
                 return matA.localeCompare(matB);
             });
-            displayResults(sorted); 
+            displayResults(sorted);
         });
-        
         
         function parseDate(dateStr) {
             if (!dateStr) return null;
-            if (dateStr instanceof Date) { return dateStr; }
+            if (dateStr instanceof Date) return dateStr;
             if (String(dateStr).includes('/')) {
                 const parts = String(dateStr).split(' ');
                 const dateParts = parts[0].split('/');
@@ -1348,378 +1185,441 @@
                 }
             }
             const date = new Date(dateStr);
-            if (!isNaN(date.getTime())) { return date; }
-            if (typeof dateStr === 'number' && dateStr > 10000) {
-                return new Date(Math.round((dateStr - 25569) * 86400 * 1000));
-            }
+            if (!isNaN(date.getTime())) return date;
             return null;
         }
 
-        sortFechaAscBtn.addEventListener('click', () => {
+        // Función unificada para ordenar por fecha
+        function performSortFecha(keepOrder = false) {
             const fechaKey = 'fecha_de_creacion'; 
-            if (!allDenuncias[0] || typeof allDenuncias[0][fechaKey] === 'undefined') {
-                alert("No se puede ordenar: la columna 'fecha de creación' no existe.");
-                return;
-            }
-            const sorted = [...allDenuncias].sort((a, b) => {
-                const dateA = parseDate(a[fechaKey]) || new Date(0);
-                const dateB = parseDate(b[fechaKey]) || new Date(0);
-                return dateA - dateB;
-            });
-            displayResults(sorted); 
-        });
-        
-        sortFechaDescBtn.addEventListener('click', () => {
-             const fechaKey = 'fecha_de_creacion';
-             if (!allDenuncias[0] || typeof allDenuncias[0][fechaKey] === 'undefined') {
-                alert("No se puede ordenar: la columna 'fecha de creación' no existe.");
-            }
-            const sorted = [...allDenuncias].sort((a, b) => {
-                const dateA = parseDate(a[fechaKey]) || new Date(0);
-                const dateB = parseDate(b[fechaKey]) || new Date(0);
-                return dateB - dateA;
-            });
-            displayResults(sorted); 
-        });
-        
-        /**
-         * Borra todos los datos del nodo DENUNCIAS_ORA_REF previa confirmación
-         */
-        async function deleteAllData() {
-            const confirmation = window.prompt(
-                'Esto borrará PERMANENTEMENTE todos los datos de denuncias ORA. \n\nSi estás seguro, escribe "BORRAR" y pulsa Aceptar.'
-            );
             
-            if (confirmation !== 'BORRAR') {
-                showStatus("Borrado cancelado.", 'info'); 
-                return;
+            // Determinar el orden actual para la clasificación
+            const currentOrder = keepOrder ? currentFechaSortOrder : (currentFechaSortOrder === 'desc' ? 'asc' : 'desc');
+            
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return currentOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
+            // Si no mantenemos el orden, lo alternamos para la próxima vez
+            if (!keepOrder) {
+                currentFechaSortOrder = currentOrder;
             }
-            if (!database) {
-                showStatus("Error: Firebase no está inicializado.", 'error');
-                return;
-            }
-            showStatus("Borrando todos los datos de Firebase...", 'loading');
+
+            // Actualizar el texto del botón
+            const text = currentFechaSortOrder === 'desc' ? 'Reciente' : 'Antigua';
+            sortFechaBtn.innerHTML = `<i class="fas fa-calendar-alt"></i> Fecha (${text})`;
+
+            displayResults(sorted); 
+        }
+
+        sortFechaBtn.addEventListener('click', () => performSortFecha(false));
+
+        // Función para mostrar por estado
+        function performSortByState(stateValue) {
+            // El mapeo de prioridad ya no se usa aquí, solo se filtra por estado.
+
+            const filteredAndSorted = [...allDenuncias]
+                .filter(item => {
+                    if (stateValue === 'revisado') {
+                        // Filtra solo los revisados que NO tienen un estado específico (eurocop, alerta, notificado)
+                        return !!item.revisado && !item.eurocop && !item.alerta && !item.notificado;
+                    }
+                    if (stateValue === '') {
+                        // Filtra los pendientes (sin revisado Y sin estado)
+                        return !item.revisado && !item.eurocop && !item.alerta && !item.notificado;
+                    }
+                    return item[stateValue] === true;
+                })
+                .sort((a, b) => {
+                    // Ordenar por fecha de creación (Reciente primero) dentro del mismo estado
+                    const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
+                    const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
+                    return dateB - dateA;
+                });
+
+            // Si se busca 'Pendiente Revisión' o 'Solo Revisado (Sin estado)', se muestra el conteo correcto
+            const countName = 
+                stateValue === 'notificado' ? 'Notificado a Sanciones' :
+                stateValue === 'alerta' ? 'Alerta Eurocop' :
+                stateValue === 'eurocop' ? 'Sin Datos Eurocop' :
+                stateValue === 'revisado' ? 'Solo Revisado' :
+                'Pendiente Revisión';
+
+            showStatus(`Mostrando ${filteredAndSorted.length} registros en estado: ${countName}`, "info");
+            displayResults(filteredAndSorted, false);
+            
+            // Cerrar el modal
+            document.getElementById('sort-by-state-modal').style.display = 'none';
+            document.getElementById('notification-modal-overlay').style.display = 'none';
+        }
+
+        sortEstadoBtn.addEventListener('click', () => {
+             document.getElementById('sort-by-state-modal').style.display = 'block';
+             document.getElementById('notification-modal-overlay').style.display = 'block';
+        });
+
+        // Event listener para las opciones dentro del modal de ordenar por estado
+        document.querySelectorAll('.sort-by-state-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                performSortByState(e.currentTarget.dataset.stateValue);
+            });
+        });
+        
+        // Listener para cerrar el modal de ordenar
+        document.getElementById('modal-sort-cancel-btn').addEventListener('click', () => {
+            document.getElementById('sort-by-state-modal').style.display = 'none';
+            document.getElementById('notification-modal-overlay').style.display = 'none';
+        });
+
+        async function deleteAllData() {
+            const confirmation = window.prompt('Esto borrará PERMANENTEMENTE todos los datos. \n\nEscribe "BORRAR" y pulsa Aceptar.');
+            if (confirmation !== 'BORRAR') return;
+            if (!database) return;
+            showStatus("Borrando todo...", 'loading');
             try {
                 await database.ref(DENUNCIAS_ORA_REF).remove();
-                showStatus("¡Éxito! Todos los datos han sido borrados.", 'success');
+                showStatus("Datos borrados.", 'success');
                 allDenuncias = [];
                 displayResults([]);
             } catch (error) {
-                console.error("Error al borrar datos:", error);
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
         
-        /**
-         * Formatea una fecha ISO (o de Excel) a DD-MM-AAAA
-         */
         function formatRevisadoDate(dateValue) {
             if (!dateValue) return '';
             try {
                 let date = parseDate(dateValue); 
-                
                 if (date && !isNaN(date.getTime())) {
                     const d = String(date.getDate()).padStart(2, '0');
                     const m = String(date.getMonth() + 1).padStart(2, '0');
                     const y = date.getFullYear();
                     return `${d}-${m}-${y}`;
                 }
-                return ''; 
-            } catch (e) {
                 return '';
-            }
+            } catch (e) { return ''; }
         }
 
-        /**
-         * Aplica el color a una fila según la precedencia de los checkboxes/estado
-         */
+        // Precedencia de colores de fila
         function updateRowColor(row) {
             if (!row) return;
+            const dataIndex = parseInt(row.dataset.originalIndex, 10);
+            const item = allDenuncias[dataIndex];
+            if (!item) return;
 
-            const eurocopCheck = row.querySelector('.check-eurocop');
-            const notificadoCheck = row.querySelector('.check-notificado');
-            const alertaCheck = row.querySelector('.check-alerta');
-            
-            const revisadoCell = row.querySelector('.revisado-cell');
-            const isRevisado = (revisadoCell && revisadoCell.classList.contains('date-set'));
-
+            // Limpiar clases
             row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-red');
 
-            // Precedencia: Verde > Rojo > Amarillo > Azul
-            if (notificadoCheck && notificadoCheck.checked) {
+            // Establecer color por prioridad (Verde > Rojo > Amarillo > Azul)
+            if (item.notificado) {
                 row.classList.add('highlight-green');
-            } else if (alertaCheck && alertaCheck.checked) { 
+            } else if (item.alerta) {
                 row.classList.add('highlight-red');
-            } else if (eurocopCheck && eurocopCheck.checked) {
+            } else if (item.eurocop) {
                 row.classList.add('highlight-yellow');
-            } else if (isRevisado) { 
-                row.classList.add('highlight-blue');
+            } else if (item.revisado) { 
+                row.classList.add('highlight-blue'); // Solo revisado, sin estado específico
             }
         }
 
-        /**
-         * Busca y muestra solo las matrículas reincidentes
-         */
         function findAndDisplayDuplicates() {
             if (!allDenuncias.length) {
-                showStatus("No hay datos cargados para buscar reincidentes.", "info");
+                showStatus("No hay datos cargados.", "info");
                 return;
             }
-
             showStatus("Buscando reincidentes...", "loading");
-
             const matriculaCounts = new Map();
             const matriculaKey = 'matricula';
-
             for (const item of allDenuncias) {
                 const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
-                if (matricula) {
-                    matriculaCounts.set(matricula, (matriculaCounts.get(matricula) || 0) + 1);
-                }
+                if (matricula) matriculaCounts.set(matricula, (matriculaCounts.get(matricula) || 0) + 1);
             }
-
             const duplicateMatriculas = new Set();
             for (const [matricula, count] of matriculaCounts.entries()) {
-                if (count > 1) {
-                    duplicateMatriculas.add(matricula);
-                }
+                if (count > 1) duplicateMatriculas.add(matricula);
             }
-
             if (duplicateMatriculas.size === 0) {
-                showStatus("No se encontraron matrículas reincidentes.", "info");
-                displayResults([], false); 
+                showStatus("No se encontraron reincidentes.", "info");
+                displayResults([], false);
                 return;
             }
-
             const duplicatesList = allDenuncias.filter(item => {
                 const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
                 return duplicateMatriculas.has(matricula);
             });
-
-            // Ordenar: 1º por matrícula, 2º por FECHA DESCENDENTE
             const sortedDuplicates = duplicatesList.sort((a, b) => {
                 const matA = String(a[matriculaKey] || '').trim().toUpperCase();
                 const matB = String(b[matriculaKey] || '').trim().toUpperCase();
-                
                 const matriculaComparison = matA.localeCompare(matB);
-                
-                if (matriculaComparison !== 0) {
-                    return matriculaComparison; 
-                }
-                
-                // Misma matrícula, ordenar por fecha descendente
+                if (matriculaComparison !== 0) return matriculaComparison;
                 const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
                 const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
-                return dateB - dateA; 
+                return dateB - dateA;
             });
-
             showStatus(`Se encontraron ${sortedDuplicates.length} registros de ${duplicateMatriculas.size} matrículas reincidentes.`, "success");
             displayResults(sortedDuplicates, true);
         }
         
-        /**
-         * Genera y copia un texto de alerta para vehículos reincidentes
-         */
         function crearAlertaEurocop() {
-            
             const alertText = 'Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Es necesario tratar de obtener un domicilio para notificaciones, número de identificación DNI o NIE, e identificar plenamente al conductor. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación. Si el vehículo fuera inmovilizado por cualquier causa debe quedar "A disposición del GAD"';
-
-            navigator.clipboard.writeText(alertText)
-                .then(() => {
-                    alert("¡Texto de Alerta Eurocop copiado al portapapeles!");
-                })
-                .catch(err => {
-                    console.error('Error al copiar alerta:', err);
-                    alert('Error al copiar el texto de la alerta.');
-                });
+            copyToClipboard(alertText)
+                .then(() => alert("¡Texto de Alerta copiado!"))
+                .catch(err => alert('Error al copiar el texto: ' + err));
         }
 
-        // Carga inicial de datos al cargar la página
+        // --- FUNCIÓN SINCRONIZAR DUPLICADOS ---
+        function syncDuplicatesState(matriculaRaw, sourceDataObject) {
+            if (!matriculaRaw) return;
+            
+            const matTarget = String(matriculaRaw).trim().toUpperCase();
+            
+            // 1. Actualizar Data Model global
+            allDenuncias.forEach(item => {
+                const m = String(item.matricula || '').trim().toUpperCase();
+                if (m === matTarget) {
+                    
+                    if (sourceDataObject.revisado !== undefined) item.revisado = sourceDataObject.revisado;
+                    
+                    if (sourceDataObject.alerta !== undefined) item.alerta = sourceDataObject.alerta;
+                    if (sourceDataObject.notificado !== undefined) item.notificado = sourceDataObject.notificado;
+                    if (sourceDataObject.eurocop !== undefined) item.eurocop = sourceDataObject.eurocop; 
+
+                    // 2. Automatismo: Si se acaba de REVISAR y NO tiene estado (alerta o notificado), se pone en 'eurocop'
+                    if (item.revisado && !item.alerta && !item.notificado && !item.eurocop) {
+                        item.eurocop = true; 
+                    } 
+                    
+                    // Si se desactiva revisado, se quitan todos los flags de estado
+                    if (!item.revisado) {
+                        item.eurocop = false;
+                        item.alerta = false;
+                        item.notificado = false;
+                    }
+                }
+            });
+
+            // 3. Actualizar DOM visible
+            const allRows = searchResultsDiv.querySelectorAll('.doc-row');
+            allRows.forEach(row => {
+                const idx = row.dataset.originalIndex;
+                if (idx) {
+                    const data = allDenuncias[parseInt(idx, 10)];
+                    if (data && String(data.matricula||'').trim().toUpperCase() === matTarget) {
+                        
+                        // Determinar valor del select en base a los flags actualizados
+                        let selectedValue = "";
+                        if (data.notificado) selectedValue = "notificado";
+                        else if (data.alerta) selectedValue = "alerta";
+                        else if (data.eurocop) selectedValue = "eurocop";
+
+                        // Sincronizar Select
+                        const select = row.querySelector('.estado-select');
+                        if (select) {
+                            select.value = selectedValue;
+                            select.setAttribute('value', selectedValue);
+                            updateSelectColor(select); 
+                        }
+
+                        // Sincronizar Celda Revisado
+                        const revisadoCell = row.querySelector('.revisado-cell');
+                        if (revisadoCell) {
+                            const fDate = formatRevisadoDate(data.revisado);
+                            if (fDate) {
+                                revisadoCell.innerHTML = fDate;
+                                revisadoCell.classList.add('date-set');
+                                revisadoCell.dataset.state = 'date';
+                            } else {
+                                revisadoCell.innerHTML = '<input type="checkbox" class="check-revisado">';
+                                revisadoCell.classList.remove('date-set');
+                                revisadoCell.dataset.state = 'check';
+                            }
+                        }
+                        
+                        // Sincronizar Color de Fila
+                        updateRowColor(row);
+                    }
+                }
+            });
+            
+            // 4. Guardar en Firebase
+            database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
+        }
+
+        async function deleteRow(index) {
+            if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+            
+            allDenuncias.splice(index, 1);
+            
+            if (database) {
+                 await database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
+            }
+            
+            const isSearchingDuplicates = document.getElementById('results-count').textContent.includes('reincidentes');
+            if (isSearchingDuplicates) findAndDisplayDuplicates();
+            else if (searchInput.value.trim() !== '') performSearch();
+            else showAllBtn.click();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayData();
             
             deleteAllBtn.addEventListener('click', deleteAllData);
             findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
-            crearAlertaBtn.addEventListener('click', crearAlertaEurocop); 
+            crearAlertaBtn.addEventListener('click', crearAlertaEurocop);
+            
+            // Listener para el botón de copiar matrícula
+            searchResultsDiv.addEventListener('click', (e) => {
+                const copyBtn = e.target.closest('.btn-copy-matricula');
+                if (copyBtn) {
+                    const matricula = copyBtn.dataset.matricula;
+                    copyToClipboard(matricula)
+                        .then(() => {
+                            const originalTitle = copyBtn.title;
+                            copyBtn.title = '¡Copiado!';
+                            setTimeout(() => { copyBtn.title = originalTitle; }, 1000);
+                        })
+                        .catch(err => alert('Error al copiar: ' + err));
+                }
+            });
 
-            // --- Listener de 'change' para checkboxes (Eurocop, Alerta, Notificado) ---
+            searchResultsDiv.addEventListener('focusin', (e) => {
+                if (e.target.classList.contains('estado-select')) {
+                    previousSelectValue = e.target.value;
+                }
+            });
+
+            // Listener GLOBAL CHANGE para el Select 
             searchResultsDiv.addEventListener('change', (e) => {
                 const row = e.target.closest('.doc-row');
                 if (!row || typeof row.dataset.originalIndex === 'undefined') return;
                 const dataIndex = parseInt(row.dataset.originalIndex, 10);
-                if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
-                
                 const dataObject = allDenuncias[dataIndex];
                 if (!dataObject) return;
-                
-                const matriculaKey = 'matricula';
-                const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
-                const isChecked = e.target.checked;
 
-                // --- EUROCOP (con cascada) ---
-                if (e.target.type === 'checkbox' && e.target.classList.contains('check-eurocop')) {
-                    if (matriculaToUpdate) {
-                        updateAllByMatricula(matriculaToUpdate, 'eurocop', isChecked, 'checkbox');
-                    } else {
-                        dataObject.eurocop = isChecked;
-                        updateRowColor(row);
-                        saveItemChanges(dataIndex, dataObject);
-                    }
-                
-                // --- ALERTA (con cascada) ---
-                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-alerta')) {
-                    if (matriculaToUpdate) {
-                         updateAllByMatricula(matriculaToUpdate, 'alerta', isChecked, 'checkbox');
-                    } else {
-                        dataObject.alerta = isChecked;
-                        updateRowColor(row);
-                        saveItemChanges(dataIndex, dataObject);
-                    }
-                
-                // --- NOTIFICADO (con cascada) ---
-                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-notificado')) {
-                    
-                    if (isChecked) {
-                        // ---- MARCAR (abre modal) ----
-                        e.preventDefault(); 
-                        
-                        currentNotificadoCheckbox = e.target;
-                        currentNotificadoDataObject = dataObject;
-                        currentNotificadoDataIndex = dataIndex; // Guardamos para el modal
+                if (e.target.classList.contains('estado-select')) {
+                    const newValue = e.target.value;
+                    e.target.setAttribute('value', newValue); 
 
-                        document.getElementById('modal-nombre').value = '';
-                        document.getElementById('modal-doi').value = '';
-                        document.getElementById('modal-direccion').value = '';
-                        document.getElementById('modal-localidad').value = '';
-                        document.getElementById('modal-fecha-nacimiento').value = '';
-                        document.getElementById('modal-telefono').value = '';
+                    // 1. Resetear flags de estado
+                    dataObject.eurocop = false;
+                    dataObject.alerta = false;
+                    dataObject.notificado = false;
+
+                    // 2. Aplicar nuevo valor
+                    if (newValue !== "") {
+                        // Al cambiar el estado manualmente, garantizamos que quede revisado
+                        const today = new Date();
+                        dataObject.revisado = dataObject.revisado || today.toISOString(); 
                         
-                        document.getElementById('notification-modal').style.display = 'block';
-                        document.getElementById('notification-modal-overlay').style.display = 'block';
-                        document.getElementById('modal-nombre').focus();
-                
-                    } else {
-                        // ---- DESMARCAR (con cascada) ----
-                        if (matriculaToUpdate) {
-                            updateAllByMatricula(matriculaToUpdate, 'notificado', false, 'checkbox');
-                        } else {
-                            dataObject.notificado = false;
-                            updateRowColor(row);
-                            saveItemChanges(dataIndex, dataObject);
+                        if (newValue === 'eurocop') { 
+                            dataObject.eurocop = true;
+                            syncDuplicatesState(dataObject.matricula, dataObject);
+
+                        } else if (newValue === 'alerta') {
+                            dataObject.alerta = true;
+                            syncDuplicatesState(dataObject.matricula, dataObject);
+
+                        } else if (newValue === 'notificado') {
+                            // Abrir Modal
+                            currentNotificadoSelect = e.target;
+                            currentNotificadoDataObject = dataObject;
+                            
+                            document.getElementById('modal-nombre').value = '';
+                            document.getElementById('modal-doi').value = '';
+                            document.getElementById('modal-direccion').value = '';
+                            document.getElementById('modal-localidad').value = '';
+                            document.getElementById('modal-fecha-nacimiento').value = '';
+                            document.getElementById('modal-telefono').value = '';
+                            document.getElementById('notification-modal').style.display = 'block';
+                            document.getElementById('notification-modal-overlay').style.display = 'block';
+                            document.getElementById('modal-nombre').focus(); 
                         }
+                    } else {
+                        // Estado Pendiente (newValue === "") -> Quitar revisado y flags
+                        dataObject.revisado = null;
+                        syncDuplicatesState(dataObject.matricula, dataObject);
                     }
+                    
+                    updateSelectColor(e.target); 
                 }
             });
             
-            // --- Listener de 'click' para (Revisado y Borrar Fila) ---
             searchResultsDiv.addEventListener('click', (e) => {
                 const target = e.target;
 
-                // --- INICIO DE LA MODIFICACIÓN (Lógica de Borrado) ---
-                const deleteButton = target.closest('.delete-row-btn');
-                if (deleteButton) {
-                    const row = deleteButton.closest('.doc-row');
-                    if (row && typeof row.dataset.originalIndex !== 'undefined') {
-                        const dataIndex = parseInt(row.dataset.originalIndex, 10);
-                        if (!isNaN(dataIndex)) {
-                            deleteSingleItem(dataIndex); // Llamar a la nueva función
-                        }
-                    }
-                    return; // Fin, no hacer nada más
+                // Botón Papelera
+                const deleteBtn = target.closest('.btn-icon-delete');
+                if (deleteBtn) {
+                    const row = deleteBtn.closest('.doc-row');
+                    const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                    deleteRow(dataIndex);
+                    return;
                 }
-                // --- FIN DE LA MODIFICACIÓN ---
 
-                // --- Lógica de 'Revisado' (Existente) ---
                 const cell = target.closest('.revisado-cell');
-                if (!cell) return; // Salir si no es clic en celda 'revisado'
+                if (!cell) return;
 
                 const row = cell.closest('.doc-row');
                 if (!row || typeof row.dataset.originalIndex === 'undefined') return;
                 const dataIndex = parseInt(row.dataset.originalIndex, 10);
-                if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
-                
                 const dataObject = allDenuncias[dataIndex];
-                if (!dataObject) return;
                 
-                const matriculaKey = 'matricula';
-                const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
-
-                
-                // Caso 1: Clic en el checkbox 'revisado'
-                if (target.classList.contains('check-revisado')) {
+                // Clic checkbox/celda revisado
+                if (target.classList.contains('check-revisado') || (target.classList.contains('revisado-cell') && target.dataset.state === 'check')) {
                     const today = new Date();
-                    const isoDate = today.toISOString();
-                    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+                    dataObject.revisado = today.toISOString();
                     
-                    if (matriculaToUpdate) {
-                        updateAllByMatricula(matriculaToUpdate, 'revisado', isoDate, 'revisado-date-set', formattedDate);
-                    } else {
-                        cell.innerHTML = formattedDate;
-                        cell.classList.add('date-set');
-                        cell.dataset.state = 'date';
-                        dataObject.revisado = isoDate;
-                        updateRowColor(row);
-                        saveItemChanges(dataIndex, dataObject);
-                    }
+                    // 2. Automatismo: Si no tiene estado, se pone en 'eurocop' (lo gestiona syncDuplicatesState)
+                    syncDuplicatesState(dataObject.matricula, dataObject);
                 }
-                
-                // Caso 2: Clic en la celda de fecha 'revisado'
+                // Clic fecha puesta (para quitar o actualizar)
                 else if (target.classList.contains('revisado-cell') && target.classList.contains('date-set')) {
-                    
-                    const confirmation = window.confirm(
-                        "Si has vuelto a revisar Eurocop pulsa Aceptar (actualizará la fecha).\n\nSi quieres desactivar la revisión (volver a la casilla) pulsa Cancelar."
-                    );
-                    
+                    const confirmation = window.confirm("Aceptar: Actualizar fecha revisión.\nCancelar: Desactivar revisión.");
                     if (confirmation) {
-                        // SÍ: Actualizar la fecha
                         const today = new Date();
-                        const isoDate = today.toISOString();
-                        const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
-                        
-                        if (matriculaToUpdate) {
-                             updateAllByMatricula(matriculaToUpdate, 'revisado', isoDate, 'revisado-date-set', formattedDate);
-                        } else {
-                            cell.innerHTML = formattedDate; 
-                            dataObject.revisado = isoDate;
-                            saveItemChanges(dataIndex, dataObject); 
-                        }
-                        
+                        dataObject.revisado = today.toISOString();
                     } else {
-                        // NO: Volver a la casilla de verificación
-                        if (matriculaToUpdate) {
-                            updateAllByMatricula(matriculaToUpdate, 'revisado', null, 'revisado-date-reset');
-                        } else {
-                            cell.innerHTML = '<input type="checkbox" class="check-revisado">';
-                            cell.classList.remove('date-set');
-                            cell.dataset.state = 'check';
-                            dataObject.revisado = null; 
-                            updateRowColor(row);
-                            saveItemChanges(dataIndex, dataObject);
-                        }
+                        dataObject.revisado = null; 
                     }
+                    syncDuplicatesState(dataObject.matricula, dataObject);
                 }
             });
             
-            // --- Lógica del Modal 'Aceptar' (Existente, sin cambios) ---
+            // Lógica Modal
             const notificationModal = document.getElementById('notification-modal');
             const notificationOverlay = document.getElementById('notification-modal-overlay');
             const modalAcceptBtn = document.getElementById('modal-accept-btn');
             const modalCancelBtn = document.getElementById('modal-cancel-btn');
             
-            function closeModal() {
+            function closeModal(cancelled = false) {
                 notificationModal.style.display = 'none';
                 notificationOverlay.style.display = 'none';
-                currentNotificadoCheckbox = null;
+                if (cancelled && currentNotificadoSelect) {
+                    // Si cancela, revertimos el select al valor que tenía antes de abrir el modal
+                    currentNotificadoSelect.value = previousSelectValue;
+                    currentNotificadoSelect.setAttribute('value', previousSelectValue);
+                    updateSelectColor(currentNotificadoSelect);
+                    
+                    const row = currentNotificadoSelect.closest('.doc-row');
+                    if (row) updateRowColor(row);
+
+                    // Revertir el revisado solo si se puso a propósito para abrir el modal Y el valor anterior era ""
+                    if (previousSelectValue === "") {
+                        currentNotificadoDataObject.revisado = null;
+                    }
+                }
+                currentNotificadoSelect = null;
                 currentNotificadoDataObject = null;
-                currentNotificadoDataIndex = null;
             }
 
-            modalCancelBtn.addEventListener('click', closeModal);
-            notificationOverlay.addEventListener('click', closeModal);
+            modalCancelBtn.addEventListener('click', () => closeModal(true));
+            notificationOverlay.addEventListener('click', () => closeModal(true));
 
             modalAcceptBtn.addEventListener('click', () => {
-                if (!currentNotificadoDataObject || !currentNotificadoCheckbox || typeof currentNotificadoDataIndex === 'undefined') return;
-
+                if (!currentNotificadoDataObject || !currentNotificadoSelect) return;
+                
                 const nombre = document.getElementById('modal-nombre').value;
                 const doi = document.getElementById('modal-doi').value;
                 const direccion = document.getElementById('modal-direccion').value;
@@ -1727,6 +1627,7 @@
                 const fechaNac = document.getElementById('modal-fecha-nacimiento').value;
                 const telefono = document.getElementById('modal-telefono').value;
 
+                // --- PLANTILLA DE TEXTO COMPLETA ---
                 const textToCopy = `
 Grupo de Análisis Documental (GAD) Policía Local de Alicante
 Le informamos de que disponemos de los siguientes datos en relación a este vehículo
@@ -1746,32 +1647,31 @@ DATOS PERSONALES:
 - Teléfono: ${telefono || 'N/A'}
                 `.trim().replace(/^\s+/gm, ''); 
 
-                navigator.clipboard.writeText(textToCopy)
+                // Usamos la función robusta copyToClipboard
+                copyToClipboard(textToCopy)
                     .then(() => {
-                        const matriculaKey = 'matricula';
-                        const matriculaToUpdate = String(currentNotificadoDataObject[matriculaKey] || '').trim().toUpperCase();
-
-                        if (matriculaToUpdate) {
-                            updateAllByMatricula(matriculaToUpdate, 'notificado', true, 'checkbox');
-                        } else {
-                            currentNotificadoDataObject.notificado = true;
-                            currentNotificadoCheckbox.checked = true;
-                            const row = currentNotificadoCheckbox.closest('.doc-row');
-                            updateRowColor(row);
-                            saveItemChanges(currentNotificadoDataIndex, currentNotificadoDataObject);
+                        // Establecer el estado 'notificado'
+                        currentNotificadoDataObject.notificado = true;
+                        currentNotificadoDataObject.eurocop = false;
+                        currentNotificadoDataObject.alerta = false;
+                        
+                        // Asegurar que revisado esté marcado
+                        if (!currentNotificadoDataObject.revisado) {
+                             const today = new Date();
+                             currentNotificadoDataObject.revisado = today.toISOString();
                         }
                         
-                        closeModal();
-                        alert('¡Notificación copiada al portapapeles! La fila (y sus duplicados) se han marcado como Notificados.');
+                        syncDuplicatesState(currentNotificadoDataObject.matricula, currentNotificadoDataObject);
+                        
+                        closeModal(false);
+                        alert('¡Notificación copiada! Estado actualizado para todos los duplicados.');
                     })
                     .catch(err => {
-                        console.error('Error al copiar:', err);
-                        alert('Error al copiar al portapapeles. La fila no se ha marcado.');
-                        closeModal();
+                        alert('Error al copiar: ' + err);
+                        closeModal(true); // Cancelar la acción del select si falla la copia
                     });
             });
         });
-
     </script>
 </body>
 </html>
