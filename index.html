@@ -403,7 +403,31 @@
         a.onclick = () => {
             if (isEditMode) return;
             if (data.type === 'parent') { currentMenuPath.push(key); renderMenuButtons(); }
-            else if (data.htmlCode) { const w = window.open('', '_blank'); w ? (w.document.write(data.htmlCode), w.document.close()) : alert("Popup bloqueado"); }
+            // --- INICIO DE LA CORRECCIÓN AUTOMÁTICA ---
+            else if (data.htmlCode) {
+                const w = window.open('', '_blank');
+                if (w) {
+                    let content = data.htmlCode;
+                    // Forzamos el viewport correcto para móviles
+                    const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
+
+                    // Lógica para reemplazar o insertar el viewport
+                    if (content.includes('<meta name="viewport"')) {
+                        content = content.replace(/<meta name="viewport"[^>]*>/i, viewportTag);
+                    } else if (content.includes('<head>')) {
+                        content = content.replace('<head>', '<head>' + viewportTag);
+                    } else {
+                        // Si no hay head, lo ponemos al principio
+                        content = viewportTag + content;
+                    }
+
+                    w.document.write(content);
+                    w.document.close();
+                } else {
+                    alert("Popup bloqueado. Por favor, permite ventanas emergentes.");
+                }
+            }
+            // --- FIN DE LA CORRECCIÓN AUTOMÁTICA ---
             else if (data.href) window.open(data.href, '_blank');
         };
         div.appendChild(a);
