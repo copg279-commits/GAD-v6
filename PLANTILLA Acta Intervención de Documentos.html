@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA INTERVENCIÓN - V18 (ESPACIO FIRMAS AMPLIADO)</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* ESTILOS BÁSICOS */
+        * { box-sizing: border-box; }
+        body { background-color: #374151; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        
+        /* HOJA A4 */
+        .page-a4 {
+            width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 10mm;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        /* ESTRUCTURA FORMULARIO */
+        .form-container { 
+            border: 2px solid black; 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            background: white; 
+        }
+        
+        .acta-row { display: flex; width: 100%; border-bottom: 1px solid black; }
+        .section-bar { 
+            background-color: #e5e7eb; border-bottom: 1px solid black; font-weight: 800; 
+            text-align: left; font-size: 11px; padding: 4px 8px; width: 100%; font-style: italic;
+            display: flex; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
+
+        .form-container > :last-child { border-bottom: none; }
+
+        /* CELDAS Y TEXTOS */
+        .field-container { 
+            position: relative; display: flex; flex-direction: column; padding: 7px 8px 4px 8px; 
+            min-width: 0; border-right: 1px solid black; overflow: hidden; justify-content: center;
+        }
+        .field-container.is-last { border-right: none; flex-grow: 1 !important; width: auto !important; }
+
+        .label { font-size: 11px; font-weight: 800; margin-bottom: 4px; white-space: nowrap; overflow: hidden; color: #000; line-height: 1.1; }
+        .input-data { width: 100%; font-family: 'Courier New', Courier, monospace; font-weight: 600; outline: none; background: transparent; border: none; padding: 0; color: #000; line-height: 1.2; }
+        
+        /* CHECKBOXES GENERALES */
+        .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 8px; background: white; }
+        .checkbox-item { display: flex; align-items: flex-start; font-size: 11px; color: black; padding: 2px 0; cursor: pointer; }
+        .custom-checkbox {
+            width: 16px; height: 16px; border: 1.5px solid black; display: flex; align-items: center; justify-content: center;
+            font-family: sans-serif; font-weight: bold; font-size: 14px; line-height: 1; margin-right: 8px; flex-shrink: 0;
+        }
+        .custom-checkbox:hover { background-color: #f3f4f6; }
+        .checkbox-label { margin-top: 1px; }
+
+        /* --- ZONA BLINDADA (SPLIT) --- */
+        .split-container { 
+            display: flex; 
+            width: 100%; 
+            border-bottom: 1px solid black; 
+            height: 145px; 
+            overflow: hidden; 
+        }
+        
+        .split-left { 
+            width: 60%; 
+            border-right: 1px solid black; 
+            padding: 8px; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 1px 8px; 
+            align-content: start;
+            overflow: hidden;
+        }
+        
+        .split-right { 
+            width: 40%; 
+            height: 100%; 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            background-color: white;
+        }
+        
+        .image-dropzone {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; text-align: center; padding: 5px;
+        }
+        .image-dropzone:hover { background-color: #f9fafb; }
+        
+        .image-placeholder-text {
+            color: #9ca3af; font-size: 10px; font-weight: bold; pointer-events: none; 
+            border: 2px dashed #d1d5db; padding: 8px; border-radius: 8px; width: 90%;
+        }
+
+        .attached-image { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            display: block;
+        }
+
+        /* MENÚ CONTEXTUAL */
+        .context-menu {
+            position: fixed; z-index: 1000; width: 150px; background: white; border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2); border-radius: 4px; padding: 5px 0;
+            display: flex; flex-direction: column;
+        }
+        .context-menu-item {
+            padding: 8px 12px; font-size: 12px; cursor: pointer; color: #333; display: flex; align-items: center; gap: 5px;
+        }
+        .context-menu-item:hover { background-color: #f3f4f6; color: #000; }
+
+        /* LEGAL Y PIE */
+        .legal-text { font-size: 10px; text-align: justify; line-height: 1.2; color: #000; margin-top: 10px; }
+        
+        /* AQUÍ ESTÁ EL CAMBIO: MARGIN-TOP DE 10MM (1CM) */
+        .footnotes { 
+            font-size: 9px; 
+            margin-top: 10mm; /* Se ha desplazado 1cm hacia abajo */
+            color: #444; 
+            line-height: 1.2; 
+            padding-top: 3px; 
+            border-top: 1px solid #ccc; 
+        }
+        
+        .header-text { font-size: 11px; line-height: 1.3; text-align: center; color: #000; }
+        .header-title { font-weight: bold; font-size: 13px; margin-bottom: 2px; }
+
+        /* EDICIÓN E IMPRESIÓN */
+        .editing .field-container { background: rgba(59, 130, 246, 0.05); box-shadow: inset 0 0 0 1px #3b82f6; }
+        .editing { user-select: none; } 
+        .resizer { position: absolute; right: -5px; top: 0; bottom: 0; width: 10px; cursor: col-resize; z-index: 50; }
+        .edit-controls { position: absolute; top: 0; right: 0; display: none; background: white; border: 1px solid #ccc; z-index: 60; }
+        .editing .field-container:hover .edit-controls { display: flex; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 0; }
+            body * { visibility: hidden; }
+            body { margin: 0; padding: 0; background: white; height: 100%; overflow: visible; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { position: absolute; left: 0; top: 0; width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            .form-container { border: 2px solid black !important; }
+            .acta-row, .section-bar, .split-container { border-bottom: 1px solid black !important; }
+            .field-container, .split-left { border-right: 1px solid black !important; }
+            .form-container > :last-child { border-bottom: none !important; }
+            .custom-checkbox { border: 1.5px solid black !important; }
+            
+            .no-print, .edit-controls, .resizer, .image-placeholder-text, .context-menu { display: none !important; }
+            .image-dropzone { background: transparent !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // =================================================================================
+        // HELPERS
+        // =================================================================================
+        const formatToDateInit = (value) => {
+            let cleaned = value.replace(/-/g, '/').replace(/[^\d]/g, '');
+            cleaned = cleaned.substring(0, 8);
+            if (cleaned.length > 2 && cleaned.length <= 4) {
+                return `${cleaned.substring(0, 2)}/${cleaned.substring(2)}`;
+            } else if (cleaned.length > 4) {
+                return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}/${cleaned.substring(4)}`;
+            }
+            return cleaned;
+        };
+
+        const SHIFT_MORNING = { a1: "G-118", a2: "G-448" };
+        const SHIFT_AFTERNOON = { a1: "G-279", a2: "G-496" };
+
+        const initialTemplate = [
+            { type: 'row', id: 'r1', fields: [{id:'agente1', label:'Agente 1:', width:50}, {id:'agente2', label:'Agente 2:', width:50}] },
+            { type: 'row', id: 'r2', fields: [{id:'lugar', label:'Autoridad que interviene el documento:', width:60}, {id:'fecha', label:'Fecha:', width:20, isDate: true}, {id:'hora', label:'Hora:', width:20}] },
+            
+            { type: 'section', title: 'DOCUMENTO / CERTIFICACIÓN OBJETO DE LA INTERVENCIÓN:' },
+            { type: 'checkbox-group', id: 'cb_docs', allowImage: true, items: [
+                {key:'doc_pasaporte', label:'Pasaporte'},
+                {key:'doc_carta', label:'Carta de Identidad'},
+                {key:'doc_permiso_con', label:'Permiso de Conducción'},
+                {key:'doc_permiso_cir', label:'Permiso de Circulación'},
+                {key:'doc_itv_tarjeta', label:'Tarjeta Insp. Técnica (ITV)'},
+                {key:'doc_itv_sello', label:'Sello ITV'},
+                {key:'doc_placas', label:'Placas de Matrícula'},
+                {key:'doc_movilidad', label:'Tarjeta Movilidad Reducida'},
+                {key:'doc_otro', label:'Otro:'}
+            ]},
+            { type: 'row', id: 'r_detalles', fields: [{id:'doc_numero', label:'Número de Documento / Placa / Detalle:', width:100}] },
+
+            { type: 'section', title: 'MOTIVO DE LA INTERVENCIÓN:' },
+            { type: 'checkbox-group', id: 'cb_motivos', items: [
+                {key:'mot_judicial', label:'Estudio y remisión a la Autoridad Judicial.'},
+                {key:'mot_destruccion', label:'Destrucción (No procede devolución).'},
+                {key:'mot_jefatura', label:'Remisión a Jefatura Provincial de Tráfico.'},
+                {key:'mot_otro', label:'Otros.'}
+            ]},
+
+            { type: 'section', title: 'DATOS DEL TITULAR / PORTADOR DEL DOCUMENTO:' },
+            { type: 'row', id: 'r4', fields: [{id:'p_nom', label:'Nombre y Apellidos', width:65}, {id:'p_doc', label:'DNI / NIE / Pasaporte', width:35}] },
+            { type: 'row', id: 'r5', fields: [{id:'p_dom', label:'Domicilio', width:60}, {id:'p_mun', label:'Municipio / Provincia', width:40}] },
+            { type: 'row', id: 'r6', fields: [{id:'p_nac_lugar', label:'Nacido/a en (País/Ciudad)', width:40}, {id:'p_nac_fecha', label:'Fecha Nacimiento', width:30, isDate: true}, {id:'p_tel', label:'Teléfono / Email', width:30}] },
+        ];
+
+        // =================================================================================
+        // COMPONENTE INPUT
+        // =================================================================================
+        const AutoResizingInput = ({ value, onChange, disabled, widthDependency, isDate }) => {
+            const inputRef = React.useRef(null);
+            const [fontSize, setFontSize] = React.useState(15); 
+            
+            const getTextWidth = (text, font) => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                context.font = font;
+                return context.measureText(text).width;
+            };
+
+            React.useLayoutEffect(() => {
+                const input = inputRef.current;
+                if (!input || !value) { setFontSize(15); return; }
+                const availableWidth = input.clientWidth;
+                const textWidthAtBase = getTextWidth(value, "600 15px 'Courier New', Courier, monospace");
+                if (textWidthAtBase <= availableWidth) setFontSize(15);
+                else {
+                    const ratio = availableWidth / textWidthAtBase;
+                    setFontSize(Math.max(10, Math.floor(15 * ratio))); 
+                }
+            }, [value, widthDependency]);
+
+            const handleChange = (e) => {
+                let newVal = e.target.value;
+                if (isDate) {
+                    const digits = newVal.replace(/\D/g, '').slice(0, 8);
+                    if (digits.length >= 5) {
+                        newVal = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                    } else if (digits.length >= 3) {
+                        newVal = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+                    } else {
+                        newVal = digits;
+                    }
+                }
+                onChange({ target: { value: newVal } });
+            };
+
+            return <input 
+                        ref={inputRef} 
+                        className="input-data" 
+                        value={value || ''} 
+                        onChange={handleChange} 
+                        disabled={disabled} 
+                        autoComplete="off" 
+                        style={{ fontSize: `${fontSize}px` }} 
+                    />;
+        };
+
+
+        const App = () => {
+            const [template, setTemplate] = React.useState(initialTemplate);
+            const [formData, setFormData] = React.useState({});
+            const [actas, setActas] = React.useState({});
+            const [isEditMode, setIsEditMode] = React.useState(false);
+            const [logos, setLogos] = React.useState({ left: 'policia2.PNG', right: 'logogad.png' });
+            const [dragState, setDragState] = React.useState(null);
+            const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0 });
+
+            React.useEffect(() => {
+                const stored = JSON.parse(localStorage.getItem('mis_actas_intervencion_v15') || "{}");
+                setActas(stored);
+                const l = JSON.parse(localStorage.getItem('mis_logos_intervencion_v15'));
+                if(l) setLogos(l);
+                autoFillData();
+                const handleClickOutside = () => setContextMenu({ ...contextMenu, visible: false });
+                window.addEventListener('click', handleClickOutside);
+                return () => window.removeEventListener('click', handleClickOutside);
+            }, []);
+
+            const autoFillData = () => {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                
+                const currentHour = now.getHours();
+                let agente1 = "", agente2 = "";
+                if (currentHour >= 6 && currentHour < 14) { agente1 = SHIFT_MORNING.a1; agente2 = SHIFT_MORNING.a2; } 
+                else if (currentHour >= 14 && currentHour < 22) { agente1 = SHIFT_AFTERNOON.a1; agente2 = SHIFT_AFTERNOON.a2; } 
+                else { agente1 = "G-"; agente2 = "G-"; }
+
+                setFormData(prev => {
+                    if (Object.keys(prev).length === 0) {
+                        return { 
+                            ...prev, 
+                            fecha: formatToDateInit(`${day}${month}${year}`), 
+                            hora: now.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}), 
+                            lugar: "Policía Local de Alicante GAD", 
+                            agente1, 
+                            agente2 
+                        };
+                    }
+                    return prev;
+                });
+            };
+
+            const toggleCheckbox = (key) => setFormData(prev => ({...prev, [key]: !prev[key]}));
+
+            const processImageFile = (file) => {
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    setFormData(prev => ({ ...prev, doc_image: ev.target.result }));
+                };
+                reader.readAsDataURL(file);
+            };
+
+            const handleImageUpload = (e) => { processImageFile(e.target.files[0]); };
+            const handleDrop = (e) => { e.preventDefault(); e.stopPropagation(); if (e.dataTransfer.files[0]) processImageFile(e.dataTransfer.files[0]); };
+            const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); };
+            const handlePaste = (e) => {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        processImageFile(items[i].getAsFile());
+                        e.preventDefault(); break;
+                    }
+                }
+            };
+            const handleContextMenu = (e) => { e.preventDefault(); setContextMenu({ visible: true, x: e.pageX, y: e.pageY }); };
+            const pasteFromMenu = async () => {
+                try {
+                    const items = await navigator.clipboard.read();
+                    for (const item of items) {
+                        if (item.types.some(type => type.startsWith('image/'))) {
+                            processImageFile(await item.getType(item.types.find(type => type.startsWith('image/'))));
+                            return;
+                        }
+                    }
+                    alert("No hay imagen en el portapapeles.");
+                } catch (err) { alert("Usa CTRL+V o 'Examinar' si el navegador bloquea el acceso."); }
+            };
+
+            React.useEffect(() => {
+                const handleMouseMove = (e) => {
+                    if (!dragState) return;
+                    e.preventDefault(); 
+                    const row = document.getElementById(`row-${dragState.rIdx}`);
+                    if (!row) return;
+                    const deltaPercent = ((e.clientX - dragState.startX) / row.offsetWidth) * 100;
+                    setTemplate(prev => {
+                        const newT = [...prev]; newT[dragState.rIdx].fields[dragState.fIdx].width = Math.max(5, dragState.startW + deltaPercent); 
+                        return newT;
+                    });
+                };
+                const handleMouseUp = () => setDragState(null);
+                if (dragState) { document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp); }
+                return () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
+            }, [dragState]);
+
+            const startResize = (e, rIdx, fIdx, w) => { e.preventDefault(); e.stopPropagation(); setDragState({rIdx, fIdx, startX: e.clientX, startW: w}); };
+            const duplicateField = (r, f) => { const t=[...template]; const o=t[r].fields[f]; t[r].fields.splice(f+1,0,{...o, id:Date.now(), label:o.label+' (C)', width:15, isDate: o.isDate}); o.width-=15; setTemplate(t); };
+            const deleteField = (r, f) => { const t=[...template]; const w=t[r].fields[f].width; t[r].fields.splice(f,1); if(t[r].fields[0]) t[r].fields[0].width+=w; setTemplate(t); };
+
+            const saveActa = () => { 
+                const defaultName = formData['p_nom'] || "Acta Int "+Date.now();
+                const id=prompt("Nombre para guardar:", defaultName); 
+                if(!id) return; 
+                const n={...actas, [id]:{id, nombre:id, fecha:new Date(), data:formData, template}}; 
+                setActas(n); localStorage.setItem('mis_actas_intervencion_v15',JSON.stringify(n)); 
+            };
+            const loadActa = (id) => { const a=actas[id]; if(a){ setFormData(a.data); if(a.template) setTemplate(a.template); } };
+            const deleteActa = (e,id) => { e.stopPropagation(); const n={...actas}; delete n[id]; setActas(n); localStorage.setItem('mis_actas_intervencion_v15',JSON.stringify(n)); };
+            const handleLogoUpload = (e, key) => {
+                const f = e.target.files[0];
+                if(f){
+                    const r = new FileReader();
+                    r.onload = (ev) => {
+                        const newLogos = {...logos, [key]: ev.target.result};
+                        setLogos(newLogos);
+                        localStorage.setItem('mis_logos_intervencion_v15', JSON.stringify(newLogos));
+                    };
+                    r.readAsDataURL(f);
+                }
+            };
+
+            return (
+                <div className="flex h-screen">
+                    {contextMenu.visible && (
+                        <div className="context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+                            <div className="context-menu-item" onClick={pasteFromMenu}>📋 Pegar imagen</div>
+                            <div className="context-menu-item" onClick={()=>document.getElementById('imageInput').click()}>📂 Examinar equipo...</div>
+                        </div>
+                    )}
+
+                    <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
+                        <h2 className="text-lg font-bold text-blue-400">📂 Actas (V18)</h2>
+                        <button onClick={()=>{setFormData({});setTemplate(initialTemplate);autoFillData()}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ACTA</button>
+                        <div className="flex-1 space-y-1 overflow-y-auto">
+                            {Object.values(actas).map(a=>(
+                                <div key={a.id} onClick={()=>loadActa(a.id)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded flex justify-between cursor-pointer text-xs border border-gray-700 items-center mb-1">
+                                    <span className="truncate flex-1">{a.nombre}</span>
+                                    <span onClick={(e)=>deleteActa(e,a.id)} className="text-red-400 font-bold px-2 hover:bg-red-900/50 rounded ml-2">x</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
+                        <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
+                            <div className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                                <span>ACTA INTERVENCIÓN (OPTIMIZADA)</span>
+                                {isEditMode && <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded border border-yellow-300">DISEÑO</span>}
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <button onClick={()=>setIsEditMode(!isEditMode)} className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${isEditMode ? 'bg-yellow-500 text-black shadow-inner' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}>{isEditMode ? '🔒 Terminar' : '🛠️ Editar'}</button>
+                                <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 shadow-sm font-medium">Guardar</button>
+                                <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1.5 rounded text-sm hover:bg-gray-900 shadow-sm font-medium">🖨️ Imprimir</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-gray-500">
+                            <div className={`page-a4 ${isEditMode?'editing':''}`}>
+                                <div className="flex justify-between items-start mb-4 relative">
+                                    <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">policia2.PNG</span> : <img src={logos.left} className="w-full h-full object-contain" alt="policia2"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
+                                    </div>
+                                    <div className="flex-1 px-2 text-center" contentEditable={isEditMode} suppressContentEditableWarning>
+                                        <div className="header-title">EXCMO. AYUNTAMIENTO DE ALICANTE</div>
+                                        <div className="header-title">POLICÍA LOCAL</div>
+                                        <div className="header-text mt-3 font-bold">Grupo de Análisis Documental</div>
+                                        <div className="header-text font-bold">Unidad Judicial de Tráfico</div>
+                                        <div className="header-text mt-1">Av. Julián Besteiro 15</div>
+                                        <div className="header-text text-blue-800 underline">Email: policia.gad@alicante.es</div>
+                                        <div className="header-text">TEL: +34629111387 - Central PL 965107200</div>
+                                    </div>
+                                    <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
+                                        {!logos.right ? <span className="text-[9px] text-gray-400">logogad.png</span> : <img src={logos.right} className="w-full h-full object-contain" alt="logogad"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'right')}/>
+                                    </div>
+                                </div>
+
+                                <div className="text-center font-bold mb-4 text-[13px] tracking-tighter uppercase bg-gray-100 py-2 border border-black w-full leading-tight" contentEditable={isEditMode} suppressContentEditableWarning>
+                                    ACTA DE INTERVENCIÓN / DESTRUCCIÓN DE DOCUMENTO
+                                </div>
+
+                                <div className="form-container">
+                                    {template.map((item, rIdx) => {
+                                        if(item.type === 'section') return <div key={rIdx} className="section-bar" contentEditable={isEditMode} suppressContentEditableWarning>{item.title}</div>;
+                                        
+                                        if(item.type === 'checkbox-group' && item.allowImage) {
+                                            return (
+                                                <div key={item.id} className="split-container">
+                                                    <div className="split-left">
+                                                        {item.items.map(cb => (
+                                                            <div key={cb.key} className="checkbox-item" onClick={()=>!isEditMode && toggleCheckbox(cb.key)}>
+                                                                <div className="custom-checkbox">{formData[cb.key] ? 'X' : ''}</div>
+                                                                <span className="checkbox-label">{cb.label}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="split-right" onPaste={handlePaste} onContextMenu={handleContextMenu} tabIndex="0">
+                                                        <div className="image-dropzone" onDrop={handleDrop} onDragOver={handleDragOver} onClick={() => document.getElementById('imageInput').click()} title="Clic izq: Abrir / Clic der: Pegar">
+                                                            {formData.doc_image ? <img src={formData.doc_image} className="attached-image" alt="Documento" /> : <div className="image-placeholder-text">CLIC O ARRASTRAR<br/>(CLIC DCHO PEGAR)</div>}
+                                                            <input type="file" id="imageInput" style={{display:'none'}} accept="image/*" onChange={handleImageUpload}/>
+                                                        </div>
+                                                        {formData.doc_image && !isEditMode && <button onClick={(e)=>{e.stopPropagation(); setFormData(prev => ({...prev, doc_image: null}))}} className="no-print absolute top-1 right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full hover:bg-red-700 z-10" title="Eliminar imagen">X</button>}
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
+                                        if(item.type === 'checkbox-group') {
+                                            return (
+                                                <div key={item.id} className="acta-row" style={{display:'block'}}>
+                                                    <div className="checkbox-grid">
+                                                        {item.items.map(cb => (
+                                                            <div key={cb.key} className="checkbox-item" onClick={()=>!isEditMode && toggleCheckbox(cb.key)}>
+                                                                <div className="custom-checkbox">{formData[cb.key] ? 'X' : ''}</div>
+                                                                <span className="checkbox-label">{cb.label}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
+                                        if(item.type === 'row') {
+                                            return (
+                                                <div key={item.id} id={`row-${rIdx}`} className="acta-row">
+                                                    {item.fields.map((f, fIdx) => {
+                                                        const isLast = fIdx === item.fields.length - 1;
+                                                        return (
+                                                            <div key={f.id} className={`field-container ${isLast ? 'is-last' : ''}`} style={{ width: isLast ? 'auto' : `${f.width}%` }}>
+                                                                <div className="label" contentEditable={isEditMode} suppressContentEditableWarning>{f.label}</div>
+                                                                <AutoResizingInput value={formData[f.id]} onChange={(e)=>setFormData({...formData, [f.id]:e.target.value})} disabled={isEditMode} widthDependency={f.width} isDate={f.isDate}/>
+                                                                {isEditMode && (<><div className="edit-controls"><button onClick={()=>duplicateField(rIdx,fIdx)} className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 hover:bg-blue-200 border-r border-blue-200">+</button><button onClick={()=>deleteField(rIdx,fIdx)} className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 hover:bg-red-200">x</button></div>{!isLast && <div className="resizer" onMouseDown={(e)=>startResize(e, rIdx, fIdx, f.width)}></div>}</>)}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+
+                                <div className="legal-text">
+                                    <p><strong>ADVERTENCIA:</strong> TRANSCURRIDO EL CITADO PLAZO LA PRESENTE ACTA CARECERÁ DE VALIDEZ A TODOS LOS EFECTOS. El titular/poseedor del documento queda advertido que en el plazo de <strong>15 días</strong> y de no existir motivo que lo justifique, podrá recoger el mismo en las dependencias de la Policía Local sita en la <strong>Calle Julián Besteiro 15 (G.A.D)</strong>.</p>
+                                    <p>En su caso y para la devolución del documento intervenido, deberá hacerse entrega de esta Acta de intervención. La mera presentación del Acta ante las autoridades competentes <strong>no acredita</strong> a su titular que el documento intervenido sea de legal expedición.</p>
+                                </div>
+
+                                {/* FIRMAS */}
+                                <div className="mt-0 mb-2 flex justify-between text-xs font-bold pt-2 select-none">
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo.- Implicado/a</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-14"></div> 
+                                    </div>
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo. Agente {formData.agente1}</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-14"></div>
+                                    </div>
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo. Agente {formData.agente2}</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-14"></div>
+                                    </div>
+                                </div>
+
+                                <div className="footnotes">
+                                    <strong>LEGISLACIÓN INFORMATIVA:</strong><br/>
+                                    <strong>Art. 282 LECRIM:</strong> “La Policía Judicial tiene la obligación de averiguar los delitos públicos y practicar las diligencias necesarias para comprobarlos”.<br/>
+                                    <strong>Art. 770.3º LECRIM:</strong> “Recoger y custodiar los efectos, instrumentos o pruebas del delito”.<br/>
+                                    <strong>Art. 19.2 LO 4/2015:</strong> “Aprehensión durante diligencias de identificación u otros efectos procedentes de delito o infracción administrativa....”.<br/>
+                                    <strong>Art. 1.4 R.G.Conductores:</strong> “En el supuesto de que alguna persona esté en posesión de más de un permiso de conducción, le será retirado el que proceda”.<br/>
+                                    <strong>Art. 56 Ley 39/2015, de 1 de octubre:</strong> del Procedimiento Administrativo Común de las Administraciones Públicas.<br/>
+                                    <strong>Anexos 9 y 10 del Tratado Internacional de Ginebra</strong> sobre circulación por carretera.<br/>
+                                    <strong>Anexos 6 y E del Tratado Internacional de Viena</strong> sobre circulación Vial.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
