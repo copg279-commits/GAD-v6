@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAD MANAGER V15 - VERTICAL STACK</title>
+    <title>GAD MANAGER V16 - TOP 10</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -55,17 +55,10 @@
             cursor: pointer;
         }
 
-        /* DRAGGABLES SOLO EN MODO EDICIÓN */
-        .draggable-enabled { cursor: grab; }
-        .draggable-enabled:active { cursor: grabbing; }
-
         /* HEADER EDITABLE */
-        .editable-header {
-            border: 1px dashed transparent;
-        }
         .editable-mode .editable-header:hover {
-            border-color: rgba(255,255,255,0.3);
             background: rgba(255,255,255,0.05);
+            cursor: text;
         }
 
         /* NEON TEXT */
@@ -99,7 +92,7 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
         const DB_TEMPLATES_PATH = 'actas'; 
-        const DB_SETTINGS_PATH = 'gad_settings_v15'; // Nueva ruta V15
+        const DB_SETTINGS_PATH = 'gad_settings_v15'; // Mantenemos compatibilidad con V15
 
         // --- ICONS ---
         const Icons = {
@@ -125,10 +118,9 @@
             const [logo, setLogo] = React.useState('logogad.png'); 
             const [viewMode, setViewMode] = React.useState('dashboard'); 
             const [isLoading, setIsLoading] = React.useState(true);
-            const [isEditMode, setIsEditMode] = React.useState(false); // NUEVO ESTADO: MODO EDICIÓN
+            const [isEditMode, setIsEditMode] = React.useState(false); 
 
             // -- ESTADO LAYOUT --
-            // Structure: Array of Cols. Each Col has array of 'sections' (category keys)
             const [layout, setLayout] = React.useState([]);
             const [catTitles, setCatTitles] = React.useState({});
             
@@ -190,7 +182,7 @@
                 db.ref(DB_SETTINGS_PATH).set({ layout: l, titles: t });
             };
 
-            // --- DRAG & DROP DE SECCIONES (TÍTULOS) ---
+            // --- DRAG & DROP LOGIC ---
             const handleSectionDragStart = (e, catKey, fromColId) => {
                 if(!isEditMode) return;
                 e.dataTransfer.setData("type", "SECTION");
@@ -205,25 +197,13 @@
                     e.stopPropagation();
                     const catKey = e.dataTransfer.getData("catKey");
                     const fromColId = e.dataTransfer.getData("fromColId");
-
-                    if (fromColId === targetColId) {
-                        // Mismo columna, quizás reordenar verticalmente? (Simplificado: al final)
-                        return; 
-                    }
+                    if (fromColId === targetColId) return;
 
                     let newLayout = JSON.parse(JSON.stringify(layout));
-
-                    // 1. Quitar de origen
                     const sourceCol = newLayout.find(c => c.id === fromColId);
                     sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
-
-                    // 2. Añadir a destino (AL FINAL, STACKED)
                     const targetCol = newLayout.find(c => c.id === targetColId);
-                    if (!targetCol.sections.includes(catKey)) {
-                        targetCol.sections.push(catKey);
-                    }
-
-                    // 3. Limpiar columnas vacías
+                    if (!targetCol.sections.includes(catKey)) targetCol.sections.push(catKey);
                     newLayout = newLayout.filter(c => c.sections.length > 0);
                     saveSettings(newLayout);
                 }
@@ -239,15 +219,12 @@
                     let newLayout = JSON.parse(JSON.stringify(layout));
                     const sourceCol = newLayout.find(c => c.id === fromColId);
                     sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
-
                     newLayout.push({ id: 'col-' + Date.now(), sections: [catKey] });
                     newLayout = newLayout.filter(c => c.sections.length > 0);
-                    
                     saveSettings(newLayout);
                 }
             };
 
-            // --- DRAG & DROP DE ACTAS (ITEMS) ---
             const handleItemDragStart = (e, id) => {
                 if(!isEditMode) return;
                 e.stopPropagation();
@@ -267,7 +244,6 @@
                 }
             };
 
-            // --- EDICIÓN TÍTULOS ---
             const startEditTitle = (key, currentVal) => {
                 if(!isEditMode) return;
                 setEditingTitle(key);
@@ -281,9 +257,8 @@
                 setEditingTitle(null);
             };
 
-            // --- OTROS ---
             const updateUsage = (id, file) => {
-                if(isEditMode) return; // En modo edición no abre, para evitar clicks accidentales
+                if(isEditMode) return;
                 const newT = templates.map(t => t.id === id ? { ...t, usageCount: (t.usageCount || 0) + 1 } : t);
                 setTemplates(newT);
                 db.ref(DB_TEMPLATES_PATH).set(newT);
@@ -311,13 +286,14 @@
                 }
             };
 
-            if (isLoading) return <div className="h-screen flex items-center justify-center text-cyan-500">Cargando Sistema V15...</div>;
+            if (isLoading) return <div className="h-screen flex items-center justify-center text-cyan-500">Cargando Sistema V16...</div>;
 
-            const topUsed = [...templates].sort((a,b) => (b.usageCount || 0) - (a.usageCount || 0)).slice(0, 5);
+            // --- AQUÍ ESTÁ EL CAMBIO A TOP 10 ---
+            const topUsed = [...templates].sort((a,b) => (b.usageCount || 0) - (a.usageCount || 0)).slice(0, 10);
 
             return (
                 <div className={`flex flex-col h-full bg-[#0f172a] text-slate-200 overflow-hidden ${isEditMode ? 'editable-mode' : ''}`}>
-                    {/* CABECERA */}
+                    
                     <header className="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-lg z-20 shrink-0 h-24">
                         <div className="flex items-center gap-6">
                             <div className={`h-20 w-20 relative group ${isEditMode ? 'cursor-pointer hover:scale-105' : ''} transition-transform`}>
@@ -336,16 +312,10 @@
                             </div>
                         </div>
                         <div className="flex gap-4 items-center">
-                            
-                            {/* SWITCH EDIT MODE */}
                             <button onClick={() => setIsEditMode(!isEditMode)} className={`px-4 py-2 rounded-lg font-black text-xs flex items-center gap-2 shadow-lg border transition-all ${isEditMode ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'}`}>
-                                <span>{isEditMode ? '🔓 MODO EDICIÓN ACTIVO' : '🔒 BLOQUEADO'}</span>
+                                <span>{isEditMode ? '🔓 MODO EDICIÓN' : '🔒 BLOQUEADO'}</span>
                             </button>
-
-                            {isEditMode && (
-                                <button onClick={() => openModal()} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2"><span>+</span> NUEVA</button>
-                            )}
-                            
+                            {isEditMode && <button onClick={() => openModal()} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2"><span>+</span> NUEVA</button>}
                             <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
                                 <button onClick={() => setViewMode('dashboard')} className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 ${viewMode==='dashboard'?'bg-cyan-600 text-white shadow':'text-slate-400'}`}>🗂️ CLASIFICACIÓN</button>
                                 <button onClick={() => setViewMode('list')} className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 ${viewMode==='list'?'bg-cyan-600 text-white shadow':'text-slate-400'}`}>📝 LISTADO</button>
@@ -354,9 +324,9 @@
                     </header>
 
                     <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
-                        {/* SIDEBAR */}
+                        {/* SIDEBAR TOP 10 */}
                         <aside className="w-full md:w-64 bg-slate-900/80 border-r border-slate-800 flex flex-col shrink-0 z-10">
-                            <div className="p-4 border-b border-slate-800 bg-slate-900"><h2 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><span className="text-yellow-500 text-base">★</span> Top 5 Frecuentes</h2></div>
+                            <div className="p-4 border-b border-slate-800 bg-slate-900"><h2 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><span className="text-yellow-500 text-base">★</span> Top 10 Frecuentes</h2></div>
                             <div className="p-3 space-y-2 overflow-y-auto flex-1">
                                 {topUsed.map((t, i) => (
                                     <div key={t.id} onClick={() => updateUsage(t.id, t.file)} className="group flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700 cursor-pointer transition-all">
@@ -385,19 +355,15 @@
                                                      onDrop={(e) => handleColumnDrop(e, col.id)}
                                                      className={`flex flex-col w-full md:w-80 h-full rounded-xl transition-colors ${isEditMode ? 'border-2 border-dashed border-slate-700 bg-slate-800/20' : ''}`}>
                                                     
-                                                    {/* Iteramos SECCIONES dentro de la columna (STACKED VERTICAL) */}
                                                     <div className="flex-1 overflow-y-auto space-y-4 p-1">
                                                         {col.sections.map(sectionKey => {
                                                             const items = templates.filter(t => t.category === sectionKey);
-                                                            
                                                             return (
                                                                 <div key={sectionKey} className="flex flex-col bg-slate-800/40 border border-slate-600 rounded-xl overflow-hidden shrink-0">
-                                                                    
-                                                                    {/* CABECERA SECCIÓN (GRANDE Y ARRASTRABLE) */}
                                                                     <div 
                                                                         draggable={isEditMode}
                                                                         onDragStart={(e) => handleSectionDragStart(e, sectionKey, col.id)}
-                                                                        className={`p-3 bg-slate-900 border-b border-slate-700 flex justify-between items-center group/header ${isEditMode ? 'cursor-move hover:bg-slate-800' : ''}`}>
+                                                                        className={`p-3 bg-slate-900 border-b border-slate-700 flex justify-between items-center group/header editable-header ${isEditMode ? 'cursor-move' : ''}`}>
                                                                         
                                                                         {sectionKey === editingTitle ? (
                                                                             <input autoFocus value={tempTitle} onChange={e => setTempTitle(e.target.value)} onBlur={saveTitle} onKeyDown={e => e.key === 'Enter' && saveTitle()} className="bg-transparent border-b border-cyan-500 outline-none w-full text-white font-bold" />
@@ -409,23 +375,17 @@
 
                                                                         <div className="flex items-center gap-2">
                                                                             <span className="bg-slate-800 text-slate-500 text-[9px] px-1.5 py-0.5 rounded font-bold">{items.length}</span>
-                                                                            {isEditMode && (
-                                                                                <button onClick={() => startEditTitle(sectionKey, catTitles[sectionKey])} className="text-slate-600 hover:text-white">✏️</button>
-                                                                            )}
+                                                                            {isEditMode && <button onClick={() => startEditTitle(sectionKey, catTitles[sectionKey])} className="text-slate-600 hover:text-white">✏️</button>}
                                                                         </div>
                                                                     </div>
 
-                                                                    {/* LISTA ITEMS */}
                                                                     <div className={`p-2 space-y-2 min-h-[60px] ${isEditMode ? 'bg-slate-800/30' : ''}`}
                                                                          onDragOver={(e) => isEditMode && e.preventDefault()}
                                                                          onDrop={(e) => handleItemDrop(e, sectionKey)}>
-                                                                        
                                                                         {items.map(t => (
                                                                             <div key={t.id} draggable={isEditMode} onDragStart={(e) => handleItemDragStart(e, t.id)}
                                                                                  className={`${t.name.includes("IA") ? "acta-card-ia" : "acta-card"} p-3 rounded-lg relative group select-none`}>
-                                                                                
                                                                                 {isEditMode && <button onClick={(e) => {e.stopPropagation(); openModal(t);}} className="absolute top-2 right-2 text-slate-400 hover:text-white bg-slate-900 p-1 rounded z-20">✏️</button>}
-                                                                                
                                                                                 <div className="flex items-start gap-3" onClick={() => updateUsage(t.id, t.file)}>
                                                                                     <div className="p-2 rounded bg-slate-900 text-cyan-500 shrink-0"><SVG i={t.icon} c="w-4 h-4" /></div>
                                                                                     <div className="min-w-0 pr-4">
@@ -437,7 +397,7 @@
                                                                                 </div>
                                                                             </div>
                                                                         ))}
-                                                                        {items.length === 0 && isEditMode && <div className="text-center py-4 text-slate-600 text-[10px] border border-dashed border-slate-700 rounded">Vacío (Arrastra actas aquí)</div>}
+                                                                        {items.length === 0 && isEditMode && <div className="text-center py-4 text-slate-600 text-[10px] border border-dashed border-slate-700 rounded">Vacío</div>}
                                                                     </div>
                                                                 </div>
                                                             );
@@ -447,7 +407,6 @@
                                             );
                                         })}
                                         
-                                        {/* ZONA DERECHA VACÍA (Para crear nuevas columnas) */}
                                         {isEditMode && (
                                             <div className="w-16 border-2 border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-700 text-[10px] font-bold text-center p-2 hover:border-slate-600 transition-colors">
                                                 + COL
@@ -481,7 +440,6 @@
                         </main>
                     </div>
 
-                    {/* MODAL */}
                     {showModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
                             <div className="bg-slate-800 w-full max-w-lg rounded-2xl border border-slate-600 shadow-2xl overflow-hidden">
@@ -490,7 +448,7 @@
                                     <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white">✕</button>
                                 </div>
                                 <div className="p-6 space-y-4">
-                                    <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded p-2 text-white outline-none" placeholder="Nombre (Ej: IA Acta...)" />
+                                    <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded p-2 text-white outline-none" placeholder="Nombre" />
                                     <div className="grid grid-cols-2 gap-4">
                                         <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="bg-slate-700 border border-slate-600 rounded p-2 text-white">
                                             {Object.keys(catTitles).map(k => <option key={k} value={k}>{catTitles[k]}</option>)}
