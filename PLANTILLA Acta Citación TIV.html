@@ -194,7 +194,7 @@
             const [defaultCitaHora, setDefaultCitaHora] = React.useState(DEFAULT_CITA_HORA_VALUE); // Almacenar la hora por defecto
 
             const [logos, setLogos] = React.useState({ 
-                left: 'policia2.png', 
+                left: 'judicial.png', 
                 right: 'logogad.png', 
                 qr: 'ubicacionTIV.png' 
             });
@@ -408,7 +408,7 @@
                                 {/* CABECERA */}
                                 <div className="flex justify-between items-start mb-4 relative">
                                     <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
-                                        {!logos.left ? <span className="text-[9px] text-gray-400">policia2.png</span> : <img src={logos.left} className="w-full h-full object-contain" alt="policia2"/>}
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">judicial.png</span> : <img src={logos.left} className="w-full h-full object-contain" alt="judicial"/>}
                                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
                                     </div>
 

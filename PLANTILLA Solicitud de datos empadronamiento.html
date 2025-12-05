@@ -150,7 +150,7 @@
             const [actas, setActas] = React.useState({});
             const [isEditMode, setIsEditMode] = React.useState(false);
             const [dragState, setDragState] = React.useState(null);
-            const [logos, setLogos] = React.useState({ left: 'policia2.png', right: 'logogad.png' });
+            const [logos, setLogos] = React.useState({ left: 'judicial.png', right: 'logogad.png' });
 
             React.useEffect(() => {
                 const stored = JSON.parse(localStorage.getItem(storageKey) || "{}");
@@ -273,7 +273,7 @@
                                 
                                 <div className="flex justify-between items-start mb-2 relative">
                                     <div className="w-24 h-24 relative cursor-pointer hover:bg-gray-50 group flex items-center justify-center">
-                                        {!logos.left ? <span className="text-[9px] text-gray-400">policia2.png</span> : <img src={logos.left} className="w-full h-full object-contain"/>}
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">judicial.png</span> : <img src={logos.left} className="w-full h-full object-contain"/>}
                                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
                                     </div>
                                     <div className="flex-1 px-2 text-center">
