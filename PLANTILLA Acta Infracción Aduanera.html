@@ -374,14 +374,14 @@
                             <div className={`page-a4 ${isEditMode?'editing':''}`}>
                                 {/* CABECERA */}
                                 <div className="flex justify-between items-center mb-1 h-20 shrink-0 select-none">
-                                    <div className="w-20 h-20 flex items-center justify-center relative cursor-pointer hover:bg-gray-50 transition-colors group">
+                                    <div className="w-24 h-24 flex items-center justify-center relative cursor-pointer hover:bg-gray-50 transition-colors group">
                                         {!logos.left ? <span className="text-[9px] text-gray-400">AYTO</span> : <img src={logos.left} className="w-full h-full object-contain"/>}
                                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=(ev)=>{setLogos(p=>({...p,left:ev.target.result}));localStorage.setItem('mis_logos_aduanas_v2',JSON.stringify({...logos,left:ev.target.result}));};r.readAsDataURL(f)}}}/>
                                     </div>
                                     <div className="text-center font-bold text-sm flex-1 mx-4 leading-tight" contentEditable={isEditMode} suppressContentEditableWarning>
                                         EXCMO. AYUNTAMIENTO DE ALICANTE<br/>POLICÍA LOCAL
                                     </div>
-                                    <div className="w-20 h-20 flex items-center justify-center relative cursor-pointer hover:bg-gray-50 transition-colors group">
+                                    <div className="w-24 h-24 flex items-center justify-center relative cursor-pointer hover:bg-gray-50 transition-colors group">
                                         {!logos.right ? <span className="text-[9px] text-gray-400">POLICÍA</span> : <img src={logos.right} className="w-full h-full object-contain"/>}
                                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=(ev)=>{setLogos(p=>({...p,right:ev.target.result}));localStorage.setItem('mis_logos_aduanas_v2',JSON.stringify({...logos,right:ev.target.result}));};r.readAsDataURL(f)}}}/>
                                     </div>
