@@ -259,9 +259,9 @@
 
 
             const [logos, setLogos] = React.useState({ 
-                left: 'policia2.PNG', 
+                left: 'policia2.png', 
                 right: 'logogad.png', 
-                qr: 'ubicacionTIV.PNG' 
+                qr: 'ubicacionTIV.png' 
             });
             const [dragState, setDragState] = React.useState(null);
 
@@ -486,7 +486,7 @@
                                 {/* CABECERA */}
                                 <div className="flex justify-between items-start mb-4 relative">
                                     <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
-                                        {!logos.left ? <span className="text-[9px] text-gray-400">policia2.PNG</span> : <img src={logos.left} className="w-full h-full object-contain" alt="policia2"/>}
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">policia2.png</span> : <img src={logos.left} className="w-full h-full object-contain" alt="policia2"/>}
                                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
                                     </div>
 
@@ -600,7 +600,7 @@
                                     {/* QR UBICACIÓN - AJUSTADO CON MARGEN SUPERIOR Y DERECHO */}
                                     <div className="qr-container group relative cursor-pointer"> 
                                         {!logos.qr ? (
-                                            <div className="w-24 h-24 border border-dashed border-gray-400 flex items-center justify-center text-[10px] text-gray-500 text-center p-1">ubicaciónTIV.PNG</div>
+                                            <div className="w-24 h-24 border border-dashed border-gray-400 flex items-center justify-center text-[10px] text-gray-500 text-center p-1">ubicaciónTIV.png</div>
                                         ) : (
                                             <img src={logos.qr} className="qr-img" alt="QR Ubicación" />
                                         )}
