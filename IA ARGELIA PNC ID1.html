@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación Permiso Argelia + IA (Anti-Fraude)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Estilos originales conservados */
+    .flag-button-algeria {
+      background: linear-gradient(to right, #006a4e 50%, #e2b404 50%);
+      position: relative;
+    }
+    .flag-button-algeria:before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 70%;
+      width: 30px;
+      height: 30px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="%23e2b404" d="M256 0c141.4 0 256 114.6 256 256S397.4 512 256 512 0 397.4 0 256 114.6 0 256 0zm-7.6 150.9c25.4-8.8 54.4-13.4 83.6-13.4 89.2 0 161.6 72.4 161.6 161.6s-72.4 161.6-161.6 161.6-161.6-72.4-161.6-161.6c0-29.2 4.6-58.2 13.4-83.6L256 256l-7.6-105.1z"/></svg>');
+      background-size: contain;
+      background-repeat: no-repeat;
+      transform: translate(-50%, -50%);
+    }
+    .delete-icon {
+      cursor: pointer;
+      transition: transform 0.2s;
+      color: #ef4444;
+    }
+    .delete-icon:hover { transform: scale(1.1); }
+    .listado-container { max-height: 300px; overflow-y: auto; }
+    .cpi-table-container { max-height: 400px; overflow-y: auto; overflow-x: auto; }
+    .cpi-table-header th { white-space: nowrap; }
+    .cpi-table-cell { white-space: nowrap; }
+    @media (max-width: 640px) {
+        .cpi-table-header th, .cpi-table-cell { padding-left: 0.75rem; padding-right: 0.75rem; }
+    }
+
+    /* ESTILOS IA & DRAG DROP MEJORADOS */
+    .drop-zone {
+        transition: all 0.2s ease;
+        border: 2px solid transparent; /* Invisible por defecto */
+        border-radius: 0.5rem;
+        position: relative;
+    }
+    
+    /* Efecto Verde SOLO al Arrastrar */
+    .drop-zone.drag-active {
+        background-color: rgba(34, 197, 94, 0.15) !important; 
+        border-color: #22c55e !important;
+        border-style: dashed;
+        transform: scale(1.02);
+        z-index: 50;
+    }
+    
+    .loading-overlay {
+        position: fixed; inset: 0; background: rgba(255,255,255,0.9); 
+        z-index: 50; display: flex; flex-direction: column; 
+        align-items: center; justify-content: center;
+    }
+    .spinner {
+        width: 50px; height: 50px; border: 5px solid #e5e7eb; 
+        border-top: 5px solid #2563eb; border-radius: 50%; 
+        animation: spin 1s linear infinite; margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    #aiResultBox { animation: slideDown 0.5s ease-out; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Animación Alerta Roja */
+    .alert-pulse { animation: alertPulse 2s infinite; }
+    @keyframes alertPulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16 relative">
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <h3 class="text-blue-600 font-bold text-lg animate-pulse">Verificando autenticidad...</h3>
+  </div>
+
+  <div class="absolute top-2 right-2 z-40">
+      <button onclick="toggleSettings()" class="bg-gray-800 text-white text-xs px-3 py-1 rounded shadow hover:bg-gray-700 flex items-center gap-1">
+          ⚙️ Configurar IA
+      </button>
+  </div>
+  <div id="settingsPanel" class="hidden absolute top-10 right-2 w-72 bg-gray-800 border border-gray-600 shadow-xl rounded p-3 z-40 text-white">
+      <div class="text-xs text-gray-400 mb-2">Proveedor: Google Gemini (Fijo)</div>
+      
+      <label class="block text-xs font-bold text-gray-300 mb-1">API Key:</label>
+      <input type="password" id="apiKeyInput" class="w-full bg-gray-900 text-white text-xs border border-gray-700 p-1 rounded mb-2" placeholder="Pegar API Key aquí...">
+      
+      <label class="block text-xs font-bold text-gray-300 mb-1">Modelo:</label>
+      <input type="text" id="modelInput" class="w-full bg-gray-900 text-white text-xs border border-gray-700 p-1 rounded mb-3" placeholder="gemini-1.5-flash">
+      
+      <button onclick="saveSettings()" class="w-full bg-blue-600 text-white text-xs py-1.5 rounded hover:bg-blue-700 font-bold">GUARDAR CONFIGURACIÓN</button>
+  </div>
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Verificación Permiso de Conducir Argelia
+  </h1>
+  <h2 class="text-gray-700 text-center mt-2 px-4 text-sm">
+    Arrastra la imagen del permiso o escribe el Nº de Serie
+  </h2>
+  
+  <div id="mainDropZone" class="drop-zone w-11/12 max-w-md mx-auto mt-4 p-2">
+    <div class="w-full pointer-events-none select-none">
+      <img src="logoargelia.png" alt="Logo Argelia" class="w-full">
+    </div>
+
+    <input 
+      type="text" 
+      id="numero" 
+      placeholder="Ingresa el número o pega imagen (Ctrl+V)" 
+      class="block mx-auto mt-4 p-3 text-base w-full border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+    />
+  </div>
+
+  <button 
+    onclick="buscarFecha()" 
+    class="block mx-auto mt-4 w-11/12 max-w-md bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition shadow-lg"
+  >
+    Consultar Manualmente
+  </button>
+
+  <div id="output" class="mt-6 text-gray-700 text-center w-11/12 max-w-md mx-auto"></div>
+
+  <div id="aiResultBox" class="hidden mt-4 w-11/12 max-w-md mx-auto bg-white border-2 rounded-lg p-0 text-center shadow-xl overflow-hidden">
+      
+      <div id="aiHeader" class="bg-gray-100 p-3 border-b">
+          <h3 class="font-bold text-lg" id="aiTitle">🔍 Análisis Completado</h3>
+      </div>
+      
+      <div class="p-4">
+          <div class="grid grid-cols-2 gap-2 text-sm text-gray-800 text-left mb-4">
+              <div class="bg-gray-50 p-2 rounded border">
+                  <span class="text-xs text-gray-500 block uppercase">Nº Soporte</span>
+                  <span id="aiNumero" class="font-mono font-bold text-black text-lg break-all"></span>
+              </div>
+              <div class="bg-gray-50 p-2 rounded border">
+                  <span class="text-xs text-gray-500 block uppercase">Fecha Exp.</span>
+                  <span id="aiFecha" class="font-mono font-bold text-black text-lg"></span>
+              </div>
+          </div>
+
+          <div id="aiValidationMsg" class="mb-4 text-sm p-2 rounded border"></div>
+          
+          <div id="aiActions"></div>
+          
+          <button onclick="document.getElementById('aiResultBox').classList.add('hidden')" class="w-full mt-3 text-gray-400 text-xs underline">
+              Cerrar panel
+          </button>
+      </div>
+  </div>
+  
+  <div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto border border-gray-200">
+    <h3 class="text-lg font-semibold mb-4">Gestión de Datos</h3>
+    <button id="mostrarFormularioBtn" class="w-full bg-gray-600 text-white py-2 rounded-md shadow hover:bg-gray-700 text-sm">
+      Introducción Manual
+    </button>
+    <button id="mostrarListadoBtn" class="w-full bg-blue-500 text-white py-2 rounded-md shadow hover:bg-blue-600 mt-2 text-sm">
+      Consultar Lista Completa
+    </button>
+    
+    <div id="cpiDataTable" class="mt-4 hidden">
+        <h3 class="text-lg font-semibold mb-4 text-center">Listado Completo</h3>
+        <div class="cpi-table-container">
+            <table class="w-full min-w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 cpi-table-header">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Número</th>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
+                        <th scope="col" class="px-6 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody id="cpiList"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="formularioNuevosDatos" class="mt-4 hidden text-left">
+      <div class="mb-4">
+        <label class="block text-sm font-bold text-gray-700 mb-1">Número de Identificación:</label>
+        <input type="text" id="nuevoNumero" class="w-full border border-gray-300 rounded px-3 py-2">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-bold text-gray-700 mb-1">Fecha de expedición:</label>
+        <input type="date" id="nuevaFecha" class="w-full border border-gray-300 rounded px-3 py-2">
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="guardarNuevoNumero()" class="w-1/2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Guardar</button>
+        <button onclick="limpiarCampos()" class="w-1/2 bg-gray-400 text-white py-2 rounded hover:bg-gray-500">Limpiar</button>
+      </div>
+      <div id="mensajeGuardado" class="mt-4 text-sm font-medium text-center"></div>
+    </div>
+  </div>
+
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+  </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold text-sm">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold text-xs">POLICÍA LOCAL DE ALICANTE</p>
+ </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script>
+    // --- 1. CONFIGURACIÓN FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const licenciasNuevasRef = database.ref('licencias_argelia_nuevas');
+    let datosCompletos = [];
+
+    // --- 2. CONFIGURACIÓN IA (API KEY Y MODELO) ---
+    let geminiApiKey = localStorage.getItem('ai_api_key') || '';
+    let geminiModelName = localStorage.getItem('gemini_model_name') || 'gemini-1.5-flash';
+
+    function toggleSettings() {
+        document.getElementById('settingsPanel').classList.toggle('hidden');
+        document.getElementById('apiKeyInput').value = geminiApiKey;
+        document.getElementById('modelInput').value = geminiModelName;
+    }
+
+    function saveSettings() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        const model = document.getElementById('modelInput').value.trim();
+        
+        if(key && model) {
+            geminiApiKey = key;
+            geminiModelName = model;
+            localStorage.setItem('ai_api_key', key);
+            localStorage.setItem('gemini_model_name', model);
+            alert("Configuración guardada correctamente.");
+            toggleSettings();
+        } else {
+            alert("Por favor, rellena ambos campos.");
+        }
+    }
+
+    // --- 3. LÓGICA GEMINI (OCR) ---
+    async function callGemini(base64Image) {
+        if (!geminiApiKey) {
+            alert("⚠️ Falta la API Key de Google Gemini. Configúrala en el botón superior derecho.");
+            return null;
+        }
+
+        const PROMPT = `Analiza la imagen de este permiso de conducir de Argelia.
+        Identifica y extrae:
+        1. "numero": El Número de Licencia/Soporte (Campo 1). Suele empezar por A o B seguido de digitos.
+        2. "fecha": La Fecha de Expedición (Campo 4a).
+        
+        Devuelve SOLO un JSON con formato: {"numero": "...", "fecha": "DD/MM/AAAA"}`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: PROMPT },
+                            { inline_data: { mime_type: "image/jpeg", data: base64Image } }
+                        ]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            
+            let rawText = data.candidates[0].content.parts[0].text;
+            rawText = rawText.replace(/```json|```/g, '').trim();
+            
+            return JSON.parse(rawText);
+
+        } catch (error) {
+            console.error("Error AI:", error);
+            alert(`Error al analizar (Modelo: ${geminiModelName}): ` + error.message);
+            return null;
+        }
+    }
+
+    function processImage(file) {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.remove('hidden');
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64 = reader.result.toString().replace(/^data:(.*,)?/, '');
+            const result = await callGemini(base64);
+            
+            overlay.classList.add('hidden');
+
+            if (result) {
+                // Limpiar datos
+                const numLimpio = result.numero.replace(/\s/g, '').toUpperCase();
+                const fechaLimpia = formatoFechaIA(result.fecha);
+
+                // Rellenar input
+                document.getElementById('numero').value = numLimpio;
+                buscarFecha();
+
+                // UI Elements
+                const aiBox = document.getElementById('aiResultBox');
+                const aiHeader = document.getElementById('aiHeader');
+                const aiTitle = document.getElementById('aiTitle');
+                const aiNum = document.getElementById('aiNumero');
+                const aiDate = document.getElementById('aiFecha');
+                const aiMsg = document.getElementById('aiValidationMsg');
+                const aiActions = document.getElementById('aiActions');
+                
+                aiNum.textContent = numLimpio;
+                aiDate.textContent = fechaLimpia;
+                
+                // --- VERIFICACIÓN DE INTEGRIDAD Y FRAUDE ---
+                const chequeo = verificarCongruencia(numLimpio, fechaLimpia);
+
+                if (chequeo.esFraude) {
+                    // ROJO: FRAUDE
+                    aiBox.classList.add('border-red-500', 'alert-pulse');
+                    aiBox.classList.remove('border-green-500', 'border-blue-500');
+                    aiHeader.classList.add('bg-red-600', 'text-white');
+                    aiHeader.classList.remove('bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-800');
+                    aiTitle.textContent = "⚠️ POSIBLE DOCUMENTO FALSO";
+                    
+                    aiMsg.className = "bg-red-50 text-red-800 p-3 rounded font-bold border border-red-200 text-left";
+                    aiMsg.innerHTML = chequeo.mensaje;
+                    aiActions.innerHTML = ""; // No permitir añadir si es fraude obvio
+
+                } else if (chequeo.existe) {
+                    // AZUL: YA EXISTE
+                    aiBox.classList.add('border-blue-500');
+                    aiBox.classList.remove('border-red-500', 'alert-pulse', 'border-green-500');
+                    aiHeader.classList.add('bg-blue-100', 'text-blue-800');
+                    aiHeader.classList.remove('bg-red-600', 'text-white', 'bg-green-100', 'text-green-700');
+                    aiTitle.textContent = "ℹ️ Documento Registrado";
+                    
+                    aiMsg.className = "bg-blue-50 text-blue-800 p-3 rounded border border-blue-200 text-left";
+                    aiMsg.innerHTML = "Este número ya consta en la base de datos.";
+                    aiActions.innerHTML = "";
+
+                } else {
+                    // VERDE: NUEVO Y CORRECTO
+                    aiBox.classList.add('border-green-500');
+                    aiBox.classList.remove('border-red-500', 'alert-pulse', 'border-blue-500');
+                    aiHeader.classList.add('bg-green-100', 'text-green-700');
+                    aiHeader.classList.remove('bg-red-600', 'text-white', 'bg-blue-100', 'text-blue-800');
+                    aiTitle.textContent = "✅ Documento Coherente";
+                    
+                    aiMsg.className = "bg-green-50 text-green-800 p-3 rounded border border-green-200 text-left";
+                    aiMsg.innerHTML = "La numeración y fecha siguen la secuencia lógica de la base de datos.";
+                    
+                    // Preparar botón de guardar
+                    window.tempAiData = { numero: numLimpio, fecha: fechaLimpia }; 
+                    aiActions.innerHTML = `
+                        <button onclick="guardarDesdeAI()" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 transition flex justify-center items-center gap-2 shadow-lg transform active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+                            AÑADIR A BASE DE DATOS
+                        </button>
+                    `;
+                }
+                
+                aiBox.classList.remove('hidden');
+            }
+        };
+    }
+
+    function verificarCongruencia(numeroDoc, fechaDocStr) {
+        // Convertir fecha doc (DD/MM/YYYY) a objeto Date
+        const [d, m, y] = fechaDocStr.split('/').map(Number);
+        const fechaDoc = new Date(y, m - 1, d);
+
+        // 1. Chequeo de Existencia
+        const existente = datosCompletos.find(d => d.numero === numeroDoc);
+        if (existente) return { esFraude: false, existe: true, mensaje: "" };
+
+        // 2. Ordenar datos para buscar vecinos
+        const sorted = [...datosCompletos].sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
+        
+        // 3. Buscar Anterior y Posterior
+        const anterior = sorted.filter(d => d.numero.localeCompare(numeroDoc, undefined, { numeric: true }) < 0).pop();
+        const posterior = sorted.find(d => d.numero.localeCompare(numeroDoc, undefined, { numeric: true }) > 0);
+
+        let mensajeError = "";
+        let esFraude = false;
+
+        // Regla A: Si hay anterior, mi fecha debe ser >= fecha anterior
+        if (anterior) {
+            const fechaAnt = new Date(formatoFecha(anterior.fecha).split('/').reverse().join('-'));
+            if (fechaDoc < fechaAnt) {
+                esFraude = true;
+                mensajeError += `⛔ <strong>INCONGRUENCIA CRÍTICA:</strong><br>El Nº ${numeroDoc} es posterior al Nº ${anterior.numero}, pero su fecha (${fechaDocStr}) es ANTERIOR a la registrada (${formatoFecha(anterior.fecha)}).<br><br>`;
+            }
+        }
+
+        // Regla B: Si hay posterior, mi fecha debe ser <= fecha posterior
+        if (posterior) {
+            const fechaPost = new Date(formatoFecha(posterior.fecha).split('/').reverse().join('-'));
+            if (fechaDoc > fechaPost) {
+                esFraude = true;
+                mensajeError += `⛔ <strong>INCONGRUENCIA CRÍTICA:</strong><br>El Nº ${numeroDoc} es anterior al Nº ${posterior.numero}, pero su fecha (${fechaDocStr}) es POSTERIOR a la registrada (${formatoFecha(posterior.fecha)}).`;
+            }
+        }
+
+        return { esFraude: esFraude, existe: false, mensaje: esFraude ? mensajeError : "" };
+    }
+
+    function guardarDesdeAI() {
+        if (!window.tempAiData) return;
+        
+        const { numero, fecha } = window.tempAiData;
+        
+        licenciasNuevasRef.push({ numero: numero, fecha: fecha })
+            .then(() => {
+                alert(`✅ Registro guardado: ${numero}`);
+                document.getElementById('aiResultBox').classList.add('hidden');
+                window.tempAiData = null;
+            })
+            .catch(e => alert("Error al guardar: " + e.message));
+    }
+
+    function formatoFechaIA(fechaStr) {
+        return fechaStr.replace(/\./g, '/').replace(/-/g, '/');
+    }
+
+    // --- EVENTOS DRAG & DROP SEGUROS ---
+    const dropZone = document.getElementById('mainDropZone');
+
+    // Prevenir comportamiento por defecto en todo el documento
+    window.addEventListener('dragover', (e) => e.preventDefault(), false);
+    window.addEventListener('drop', (e) => e.preventDefault(), false);
+
+    // Entrar en zona
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.classList.add('drag-active');
+    }, false);
+
+    // Mover sobre zona
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.classList.add('drag-active');
+    }, false);
+
+    // Salir de zona
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        // Solo quitar si salimos del contenedor padre
+        if (e.target === dropZone) {
+             dropZone.classList.remove('drag-active');
+        }
+    }, false);
+
+    // Soltar
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.classList.remove('drag-active');
+        
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files[0]) processImage(files[0]);
+    }, false);
+
+    // Pegar (Ctrl+V)
+    window.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let item of items) {
+            if (item.type.indexOf("image") === 0) {
+                processImage(item.getAsFile());
+                return;
+            }
+        }
+    });
+
+    // --- LÓGICA EXISTENTE ---
+    document.addEventListener('DOMContentLoaded', () => { cargarDatosDesdeFirebase(); });
+
+    function cargarDatosDesdeFirebase() {
+      licenciasNuevasRef.on('value', snapshot => {
+        datosCompletos = [];
+        snapshot.forEach(childSnapshot => {
+          const nuevoDato = childSnapshot.val();
+          const key = childSnapshot.key;
+          datosCompletos.push({ numero: nuevoDato.numero, fecha: nuevoDato.fecha, key: key });
+        });
+        datosCompletos.sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
+        renderizarTablaCpi();
+      });
+    }
+
+    const mostrarFormularioBtn = document.getElementById('mostrarFormularioBtn');
+    const formularioNuevosDatos = document.getElementById('formularioNuevosDatos');
+    const nuevoNumeroInput = document.getElementById('nuevoNumero');
+    const nuevaFechaInput = document.getElementById('nuevaFecha');
+    const mensajeGuardadoDiv = document.getElementById('mensajeGuardado');
+    const mostrarListadoBtn = document.getElementById('mostrarListadoBtn');
+    const cpiDataTable = document.getElementById('cpiDataTable');
+    const cpiListDiv = document.getElementById('cpiList');
+
+    mostrarFormularioBtn.addEventListener('click', () => {
+        formularioNuevosDatos.classList.toggle('hidden');
+        cpiDataTable.classList.add('hidden');
+        limpiarCampos();
+    });
+
+    mostrarListadoBtn.addEventListener('click', () => {
+        cpiDataTable.classList.toggle('hidden');
+        formularioNuevosDatos.classList.add('hidden');
+        limpiarCampos();
+    });
+
+    function limpiarCampos() {
+        nuevoNumeroInput.value = '';
+        nuevaFechaInput.value = '';
+        mensajeGuardadoDiv.textContent = '';
+    }
+
+    function guardarNuevoNumero() {
+        const nuevoNumero = nuevoNumeroInput.value.trim();
+        const nuevaFecha = nuevaFechaInput.value;
+
+        if (!nuevoNumero || !nuevaFecha) {
+            mensajeGuardadoDiv.textContent = 'Faltan datos.';
+            mensajeGuardadoDiv.style.color = 'orange';
+            return;
+        }
+
+        const datoExistente = datosCompletos.find(d => d.numero === nuevoNumero);
+        if (datoExistente) {
+            mensajeGuardadoDiv.innerHTML = `YA EXISTE: ${datoExistente.fecha}`;
+            mensajeGuardadoDiv.style.color = 'red';
+            return;
+        }
+
+        const [year, month, day] = nuevaFecha.split('-');
+        const fechaFormateada = `${day}/${month}/${year}`;
+        const fechaNueva = new Date(`${year}-${month}-${day}`);
+
+        const datosOrd = [...datosCompletos].sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
+        const antes = datosOrd.filter(d => d.numero.localeCompare(nuevoNumero, undefined, { numeric: true }) <= 0).pop();
+        const despues = datosOrd.find(d => d.numero.localeCompare(nuevoNumero, undefined, { numeric: true }) > 0);
+
+        if (antes && fechaNueva < new Date(antes.fecha.split('/').reverse().join('-'))) {
+            mensajeGuardadoDiv.innerHTML = `<p class='text-red-500 font-bold'>¡ERROR PROGRESIÓN! (Fecha anterior a número previo)</p>`;
+            return;
+        }
+        if (despues && fechaNueva > new Date(despues.fecha.split('/').reverse().join('-'))) {
+            mensajeGuardadoDiv.innerHTML = `<p class='text-red-500 font-bold'>¡ERROR PROGRESIÓN! (Fecha posterior a número siguiente)</p>`;
+            return;
+        }
+
+        licenciasNuevasRef.push({ numero: nuevoNumero, fecha: fechaFormateada })
+            .then(() => {
+                mensajeGuardadoDiv.textContent = 'Guardado OK';
+                mensajeGuardadoDiv.style.color = 'green';
+                setTimeout(() => { limpiarCampos(); formularioNuevosDatos.classList.add('hidden'); }, 1500);
+            })
+            .catch(error => mensajeGuardadoDiv.textContent = 'Error: ' + error.message);
+    }
+    
+    function formatoFecha(fechaStr) {
+      if (!fechaStr) return '';
+      if (fechaStr.includes('/')) return fechaStr;
+      const [year, month, day] = fechaStr.split('-');
+      if (year && month && day) return `${day}/${month}/${year}`;
+      return fechaStr;
+    }
+
+    function renderizarTablaCpi() {
+      cpiListDiv.innerHTML = '';
+      const datosOrdenados = [...datosCompletos].sort((a, b) => {
+          const fA = new Date(formatoFecha(a.fecha).split('/').reverse().join('-'));
+          const fB = new Date(formatoFecha(b.fecha).split('/').reverse().join('-'));
+          return fA.getTime() === fB.getTime() ? b.numero - a.numero : fB - fA;
+      });
+      
+      datosOrdenados.forEach(dato => {
+        const fila = document.createElement('tr');
+        fila.className = 'bg-white border-b hover:bg-gray-50';
+        fila.innerHTML = `
+            <td class="cpi-table-cell px-6 py-4 font-medium text-gray-900">${dato.numero}</td>
+            <td class="cpi-table-cell px-6 py-4">${formatoFecha(dato.fecha)}</td>
+            <td class="cpi-table-cell px-6 py-4 text-right">
+                <span onclick="confirmarEliminar('${dato.key}', '${dato.numero}')" class="text-red-500 cursor-pointer font-bold hover:scale-110 inline-block">X</span>
+            </td>
+        `;
+        cpiListDiv.appendChild(fila);
+      });
+    }
+    
+    function confirmarEliminar(key, numero) {
+      if (confirm(`¿Eliminar registro ${numero}?`)) eliminarDato(key);
+    }
+
+    function eliminarDato(key) {
+      licenciasNuevasRef.child(key).remove();
+    }
+
+    function buscarFecha() {
+      const numero = document.getElementById("numero").value.trim();
+      const output = document.getElementById("output");
+
+      if (!numero) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>Ingresa un número.</p>";
+        return;
+      }
+      
+      const exacto = datosCompletos.find(d => d.numero === numero);
+      if (exacto) {
+        output.innerHTML = `<p class='text-green-600 font-bold text-lg'>✅ EXISTE EN BASE DE DATOS<br>Fecha: ${exacto.fecha}</p>`;
+        return;
+      }
+      
+      const datosOrd = [...datosCompletos].sort((a, b) => a.numero.localeCompare(b.numero, undefined, { numeric: true }));
+      const antes = datosOrd.filter(d => d.numero.localeCompare(numero, undefined, { numeric: true }) <= 0).pop();
+      const despues = datosOrd.find(d => d.numero.localeCompare(numero, undefined, { numeric: true }) > 0);
+
+      if (!antes) {
+        output.innerHTML = "<p class='text-red-500 font-bold'>NÚMERO MUY ANTIGUO O SIN REFERENCIA PREVIA</p>";
+        return;
+      }
+      if (!despues) {
+        output.innerHTML = `<p class='text-orange-500 font-semibold'>El número ${numero} es posterior al último registro (${antes.numero} - ${antes.fecha}).<br>Debería ser posterior a esa fecha.</p>`;
+        return;
+      }
+
+      const n1 = parseInt(antes.numero.replace(/\D/g, ''));
+      const n2 = parseInt(despues.numero.replace(/\D/g, ''));
+      const nTarget = parseInt(numero.replace(/\D/g, ''));
+      const prop = (nTarget - n1) / (n2 - n1);
+
+      const f1 = new Date(antes.fecha.split("/").reverse().join("-"));
+      const f2 = new Date(despues.fecha.split("/").reverse().join("-"));
+      
+      const fEst = new Date(f1.getTime() + prop * (f2 - f1));
+      
+      output.innerHTML = `
+        <div class="bg-blue-50 p-4 rounded border border-blue-200">
+            <p class='text-blue-800 font-bold mb-2'>RESULTADO DE LA ESTIMACIÓN</p>
+            <p class="text-sm">Rango: <strong>${antes.fecha}</strong> (${antes.numero}) y <strong>${despues.fecha}</strong> (${despues.numero})</p>
+            <p class='text-green-600 font-bold text-xl mt-2'>
+              Fecha Estimada: ${fEst.toLocaleDateString("es-ES", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </p>
+        </div>
+      `;
+    }
+
+    document.getElementById("numero").addEventListener("keypress", function (event) {
+      if (event.key === "Enter") buscarFecha();
+    });
+  </script>
+</body>
+</html>
