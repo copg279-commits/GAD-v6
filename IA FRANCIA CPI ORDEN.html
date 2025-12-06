@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IA FRANCIA CPI ORDEN (FINAL)</title>
+  <title>IA FRANCIA CPI ORDEN (FINAL v2)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Estilos base */
@@ -11,19 +11,18 @@
     .delete-icon { cursor: pointer; transition: transform 0.2s; }
     .delete-icon:hover { transform: scale(1.1); color: #ef4444; }
 
-    /* --- ESTILOS DE LA ZONA DE ARRASTRE (Invisible por defecto) --- */
+    /* --- ESTILOS DE LA ZONA DE ARRASTRE --- */
     .drop-wrapper {
         transition: all 0.3s ease;
-        border: 4px solid transparent; /* Borde invisible por defecto */
+        border: 4px solid transparent;
         border-radius: 1rem;
         position: relative;
         padding: 10px;
     }
 
-    /* --- ESTILO CUANDO SE ARRASTRA (Se pone verde) --- */
     .drop-wrapper.drag-active {
         background-color: rgba(34, 197, 94, 0.1); 
-        border-color: #22c55e; /* Borde verde sólido */
+        border-color: #22c55e;
         transform: scale(1.01);
         box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
     }
@@ -113,7 +112,7 @@
           </div>
       </div>
       
-      <div id="aiMessage" class="text-sm font-bold mb-3 p-2 rounded"></div>
+      <div id="aiMessage" class="text-sm font-medium mb-3 p-3 rounded text-left leading-relaxed"></div>
 
       <div id="aiActions" class="hidden">
           <button onclick="guardarDesdeAI()" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 transition flex justify-center items-center gap-2 shadow">
@@ -237,8 +236,19 @@
         } catch (error) { alert("Error IA: " + error.message); return null; }
     }
 
-    // --- 4. PROCESAR Y VALIDAR (LÓGICA DE ALERTA ROJA) ---
+    // --- UTILIDADES ---
+    function resetUI() {
+        // Limpia cualquier resultado anterior (IA o Manual)
+        document.getElementById('aiResultBox').classList.add('hidden');
+        document.getElementById('resultado').innerHTML = "";
+        document.getElementById('aiMessage').innerHTML = "";
+        document.getElementById('aiMessage').className = "";
+        window.tempAiData = null;
+    }
+
+    // --- 4. PROCESAR Y VALIDAR (LÓGICA MEJORADA DE ALERTA) ---
     function processImage(file) {
+        resetUI(); // Limpieza inicial
         document.getElementById('loadingOverlay').classList.remove('hidden');
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -250,16 +260,14 @@
                 const numLimpio = result.numero.replace(/\D/g, '');
                 const fechaLimpia = formatoFechaIA(result.fecha);
                 
-                // Rellenar input
+                // Rellenar input para referencia
                 document.getElementById('documento').value = numLimpio;
-                calcularFecha(); // Ejecutar lógica de interpolación existente
-
+                
                 // Preparar UI
                 const box = document.getElementById('aiResultBox');
                 const title = document.getElementById('aiTitle');
                 const msg = document.getElementById('aiMessage');
                 const actions = document.getElementById('aiActions');
-                const btnSave = actions.querySelector('button');
 
                 document.getElementById('aiNumero').textContent = numLimpio;
                 document.getElementById('aiFecha').textContent = fechaLimpia;
@@ -268,7 +276,6 @@
                 const numVal = parseInt(numLimpio);
                 const fechaVal = new Date(fechaLimpia.split('/').reverse().join('-')); // YYYY-MM-DD
                 
-                // Ordenar datos locales
                 const datosOrd = datosCPI.sort((a, b) => a.numero - b.numero);
                 const anterior = datosOrd.filter(d => d.numero < numVal).pop();
                 const posterior = datosOrd.find(d => d.numero > numVal);
@@ -276,39 +283,60 @@
                 let esSospechoso = false;
                 let motivo = "";
 
+                // Lógica de validación mejorada
                 if (anterior && fechaVal < anterior.fecha) {
                     esSospechoso = true;
-                    motivo = `El número ${numVal} es MAYOR que ${anterior.numero}, pero su fecha (${fechaLimpia}) es ANTERIOR a ${anterior.fecha.toLocaleDateString('es-ES')}.`;
-                }
-                if (posterior && fechaVal > posterior.fecha) {
+                    motivo = `⛔ <b>INCONGRUENCIA TEMPORAL (Pasado):</b><br>
+                              El documento actual tiene una fecha (${fechaLimpia}) <b>ANTERIOR</b> a un número de orden menor ya registrado.<br><br>
+                              • Registro Previo: Nº ${anterior.numero} (${formatoFecha(anterior.fecha)})`;
+                } else if (posterior && fechaVal > posterior.fecha) {
                     esSospechoso = true;
-                    motivo = `El número ${numVal} es MENOR que ${posterior.numero}, pero su fecha (${fechaLimpia}) es POSTERIOR a ${posterior.fecha.toLocaleDateString('es-ES')}.`;
+                    motivo = `⛔ <b>INCONGRUENCIA TEMPORAL (Futuro):</b><br>
+                              El documento actual tiene una fecha (${fechaLimpia}) <b>POSTERIOR</b> a un número de orden mayor ya registrado.<br><br>
+                              • Registro Siguiente: Nº ${posterior.numero} (${formatoFecha(posterior.fecha)})`;
+                } else {
+                    // Es coherente, explicamos por qué (el "Sándwich")
+                    if (anterior && posterior) {
+                        motivo = `✅ <b>COHERENCIA VERIFICADA:</b><br>
+                                  El documento encaja correctamente en la secuencia temporal:<br>
+                                  • Anterior: Nº ${anterior.numero} (${formatoFecha(anterior.fecha)})<br>
+                                  • <b>Actual: Nº ${numVal} (${fechaLimpia})</b><br>
+                                  • Posterior: Nº ${posterior.numero} (${formatoFecha(posterior.fecha)})`;
+                    } else if (anterior) {
+                        motivo = `✅ <b>COHERENCIA VERIFICADA:</b><br>
+                                  Es posterior al último registro conocido:<br>
+                                  • Último: Nº ${anterior.numero} (${formatoFecha(anterior.fecha)})`;
+                    } else if (posterior) {
+                        motivo = `✅ <b>COHERENCIA VERIFICADA:</b><br>
+                                  Es anterior al primer registro conocido:<br>
+                                  • Primero: Nº ${posterior.numero} (${formatoFecha(posterior.fecha)})`;
+                    } else {
+                        motivo = "✅ Primer dato en la base de datos. No hay referencias para comparar, pero el formato es correcto.";
+                    }
                 }
 
-                // CONFIGURAR APARIENCIA SEGÚN RESULTADO
+                // CONFIGURAR APARIENCIA
                 box.className = esSospechoso 
-                    ? "mt-4 w-11/12 max-w-md mx-auto border-4 border-red-600 bg-red-50 rounded-lg p-4 text-center shadow-xl animate-pulse" // ROJO ALARMA
-                    : "mt-4 w-11/12 max-w-md mx-auto border-2 border-green-500 bg-green-50 rounded-lg p-4 text-center shadow-md"; // VERDE OK
+                    ? "mt-4 w-11/12 max-w-md mx-auto border-4 border-red-600 bg-red-50 rounded-lg p-4 text-center shadow-xl animate-pulse" 
+                    : "mt-4 w-11/12 max-w-md mx-auto border-2 border-green-500 bg-green-50 rounded-lg p-4 text-center shadow-md";
 
                 title.className = esSospechoso ? "text-red-700 font-black text-xl mb-2 uppercase" : "text-green-700 font-bold text-lg mb-2";
-                title.textContent = esSospechoso ? "⚠️ ALERTA: INCOHERENCIA DETECTADA" : "✅ Documento Coherente";
+                title.textContent = esSospechoso ? "⚠️ ALERTA: INCOHERENCIA" : "✅ Documento Coherente";
 
                 if (esSospechoso) {
-                    msg.className = "bg-red-100 text-red-800 p-2 rounded border border-red-300 text-xs font-bold text-left";
-                    msg.innerHTML = `⛔ NO GUARDAR.<br>${motivo}<br>Posible documento manipulado o falso.`;
-                    actions.classList.add('hidden'); // Ocultar botón de guardar
+                    msg.className = "bg-red-100 text-red-900 p-3 rounded border border-red-300 text-sm font-medium text-left";
+                    msg.innerHTML = `${motivo}<br><br><span class="font-bold underline">CONCLUSIÓN:</span> Posible documento manipulado o falso.`;
+                    actions.classList.add('hidden');
                 } else {
-                    // Verificar si ya existe
                     const existe = datosCPI.find(d => d.numero == numVal);
                     if(existe) {
-                        msg.className = "text-blue-600 font-bold";
-                        msg.textContent = "Este número ya está registrado en la base de datos.";
+                        msg.className = "text-blue-700 bg-blue-50 p-2 rounded border border-blue-200";
+                        msg.innerHTML = "ℹ️ Este número ya existe en la base de datos con fecha: " + formatoFecha(existe.fecha);
                         actions.classList.add('hidden');
                     } else {
-                        msg.className = "text-green-700 font-medium";
-                        msg.textContent = "La progresión numérica y temporal es correcta.";
+                        msg.className = "text-green-800 bg-green-100 p-3 rounded border border-green-300 text-sm";
+                        msg.innerHTML = motivo;
                         actions.classList.remove('hidden');
-                        // Datos para guardar
                         window.tempAiData = { numero: numVal, fecha: fechaLimpia.split('/').reverse().join('-') };
                     }
                 }
@@ -324,6 +352,7 @@
             .then(() => {
                 alert(`✅ Guardado: ${window.tempAiData.numero}`);
                 document.getElementById('aiResultBox').classList.add('hidden');
+                document.getElementById('documento').value = ''; // Limpiar input tras guardar
             });
     }
 
@@ -331,30 +360,34 @@
 
     // --- DRAG & DROP ROBUSTO ---
     const dropZone = document.getElementById('mainDropZone');
+    const inputDoc = document.getElementById("documento");
 
-    // Prevenir comportamiento por defecto (abrir imagen)
+    // Habilitar tecla ENTER en búsqueda manual
+    inputDoc.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        calcularFecha();
+      }
+    });
+
     window.addEventListener('dragover', e => e.preventDefault());
     window.addEventListener('drop', e => e.preventDefault());
 
-    // Entrar
     dropZone.addEventListener('dragenter', (e) => {
         e.preventDefault(); e.stopPropagation();
         dropZone.classList.add('drag-active');
     });
     
-    // Mover
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault(); e.stopPropagation();
         dropZone.classList.add('drag-active');
     });
 
-    // Salir (Solo si sale del contenedor padre, no de los hijos)
     dropZone.addEventListener('dragleave', (e) => {
         e.preventDefault(); e.stopPropagation();
         if (e.target === dropZone) dropZone.classList.remove('drag-active');
     });
 
-    // Soltar
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault(); e.stopPropagation();
         dropZone.classList.remove('drag-active');
@@ -362,7 +395,6 @@
         if (files && files[0]) processImage(files[0]);
     });
 
-    // Pegar
     window.addEventListener('paste', (e) => {
         const items = e.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
@@ -385,10 +417,7 @@
         mostrarResumenEstadisticas();
     });
 
-    // (Funciones auxiliares del original se mantienen: popularSelectores, mostrarResumenEstadisticas, renderizarTablaCpi, etc.)
-    // Se omiten por brevedad ya que no cambian, pero están implícitas en el bloque de abajo.
-    
-    // ... RESTO DE LÓGICA ORIGINAL DEL ARCHIVO ...
+    // ... RESTO DE LÓGICA ...
     const mostrarFormularioBtn = document.getElementById('mostrarFormularioBtn');
     const formularioCpi = document.getElementById('formularioCpi');
     const cpiDataTable = document.getElementById('cpiDataTable');
@@ -470,6 +499,7 @@
     function limpiarCampos() { document.getElementById('nuevoNumeroCpi').value=''; document.getElementById('nuevaFechaCpi').value=''; }
 
     function calcularFecha() {
+        resetUI(); // Limpieza inicial al hacer búsqueda manual
         const n = parseInt(document.getElementById("documento").value);
         const res = document.getElementById("resultado");
         if(isNaN(n)) { res.innerHTML = "Número inválido"; return; }
