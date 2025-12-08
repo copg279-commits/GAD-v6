@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAD MANAGER V16 - FIXED DRAG</title>
+    <title>GAD MANAGER V16 - SORT & DRAG</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -58,7 +58,13 @@
         /* HEADER EDITABLE */
         .editable-mode .editable-header:hover {
             background: rgba(255,255,255,0.05);
-            cursor: move; /* Cursor de movimiento para indicar que se puede arrastrar */
+            cursor: move; 
+        }
+
+        /* Drag Visuals */
+        .dragging-over {
+            border-top: 2px solid #22d3ee !important; /* Cyan line to indicate insertion */
+            opacity: 0.8;
         }
 
         /* NEON TEXT */
@@ -120,20 +126,18 @@
             const [isLoading, setIsLoading] = React.useState(true);
             const [isEditMode, setIsEditMode] = React.useState(false); 
 
-            // -- ESTADO LAYOUT --
             const [layout, setLayout] = React.useState([]);
             const [catTitles, setCatTitles] = React.useState({});
-            
-            // Edición de título en linea
             const [editingTitle, setEditingTitle] = React.useState(null); 
             const [tempTitle, setTempTitle] = React.useState("");
+            
+            // Estado visual para el Drag
+            const [dragOverCardId, setDragOverCardId] = React.useState(null);
 
-            // Modal
             const [showModal, setShowModal] = React.useState(false);
             const [editItem, setEditItem] = React.useState(null); 
             const [formData, setFormData] = React.useState({ name: '', keyword: '', file: '', category: 'gestion', icon: 'doc' });
 
-            // CONFIG DEFECTO
             const defaultCats = {
                 tributaria: "INFRACCIONES TRIBUTARIAS",
                 sala: "SALA DE CONTROL 092",
@@ -148,7 +152,6 @@
                 { id: 'col4', sections: ['gestion'] }
             ];
 
-            // --- CARGA DE DATOS ---
             React.useEffect(() => {
                 const loadData = async () => {
                     const snap = await db.ref(DB_TEMPLATES_PATH).once('value');
@@ -157,7 +160,8 @@
                     
                     if (snap.exists()) {
                         let data = Object.values(snap.val());
-                        setTemplates(data.map(t => ({ ...t, category: t.category || 'gestion' })));
+                        // Nos aseguramos que es array y si no hay orden, usamos el índice
+                        setTemplates(data.map((t, idx) => ({ ...t, category: t.category || 'gestion' })));
                     }
                     
                     if (settingsSnap.exists()) {
@@ -182,39 +186,32 @@
                 db.ref(DB_SETTINGS_PATH).set({ layout: l, titles: t });
             };
 
-            // --- DRAG & DROP LOGIC MEJORADA ---
+            // --- DRAG & DROP LOGIC ---
+
+            // 1. Arrastrar Secciones (Títulos)
             const handleSectionDragStart = (e, catKey, fromColId) => {
                 if(!isEditMode) return;
                 e.dataTransfer.setData("type", "SECTION");
                 e.dataTransfer.setData("catKey", catKey);
                 e.dataTransfer.setData("fromColId", fromColId);
-                e.stopPropagation(); // Evita conflictos
+                e.stopPropagation();
             };
 
             const handleColumnDrop = (e, targetColId) => {
                 if(!isEditMode) return;
-                // Si lo que se suelta es una SECCIÓN
                 if (e.dataTransfer.getData("type") === "SECTION") {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                     const catKey = e.dataTransfer.getData("catKey");
                     const fromColId = e.dataTransfer.getData("fromColId");
-                    
-                    // Si intentamos soltar en la misma columna, no hacemos nada (para simplificar)
                     if (fromColId === targetColId) return;
 
                     let newLayout = JSON.parse(JSON.stringify(layout));
-                    // 1. Quitar de la columna origen
                     const sourceCol = newLayout.find(c => c.id === fromColId);
                     sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
                     
-                    // 2. Añadir a la columna destino
                     const targetCol = newLayout.find(c => c.id === targetColId);
-                    if (!targetCol.sections.includes(catKey)) {
-                        targetCol.sections.push(catKey);
-                    }
+                    if (!targetCol.sections.includes(catKey)) targetCol.sections.push(catKey);
                     
-                    // Limpiar columnas vacías
                     newLayout = newLayout.filter(c => c.sections.length > 0);
                     saveSettings(newLayout);
                 }
@@ -222,7 +219,6 @@
 
             const handleNewColumnDrop = (e) => {
                 if(!isEditMode) return;
-                // Crear nueva columna si se suelta en el fondo
                 if (e.dataTransfer.getData("type") === "SECTION") {
                     e.preventDefault();
                     const catKey = e.dataTransfer.getData("catKey");
@@ -232,35 +228,98 @@
                     const sourceCol = newLayout.find(c => c.id === fromColId);
                     sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
                     
-                    // Nueva columna al final
                     newLayout.push({ id: 'col-' + Date.now(), sections: [catKey] });
                     newLayout = newLayout.filter(c => c.sections.length > 0);
                     saveSettings(newLayout);
                 }
             };
 
+            // 2. Arrastrar ITEMS (Actas)
             const handleItemDragStart = (e, id) => {
                 if(!isEditMode) return;
                 e.stopPropagation();
                 e.dataTransfer.setData("type", "ITEM");
                 e.dataTransfer.setData("id", id);
+                e.dataTransfer.effectAllowed = "move";
             };
 
-            const handleItemDrop = (e, targetCategory) => {
+            // Cuando arrastramos sobre una tarjeta (para reordenar)
+            const handleCardDragOver = (e, cardId) => {
                 if(!isEditMode) return;
-                // IMPORTANTE: Solo procesamos si es un ITEM
+                e.preventDefault(); 
+                e.stopPropagation();
+                setDragOverCardId(cardId); // Visual feedback
+            };
+
+            const handleCardDragLeave = (e) => {
+                // Opcional: limpiar estilo si sale
+            };
+
+            // Soltar SOBRE UNA TARJETA (Reordenar e insertar antes)
+            const handleCardDrop = (e, targetCardId, targetCategory) => {
+                if(!isEditMode) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOverCardId(null);
+
                 if (e.dataTransfer.getData("type") === "ITEM") {
-                    e.preventDefault();
-                    e.stopPropagation(); // Evita que el evento suba a la columna y se confunda
-                    const id = parseInt(e.dataTransfer.getData("id"));
+                    const draggedId = parseInt(e.dataTransfer.getData("id"));
+                    if(draggedId === targetCardId) return;
+
+                    // Lógica de Reordenamiento
+                    const newTemplates = [...templates];
                     
-                    const newT = templates.map(t => t.id === id ? { ...t, category: targetCategory } : t);
-                    setTemplates(newT);
-                    db.ref(DB_TEMPLATES_PATH).set(newT);
+                    // 1. Encontrar índices en el array global
+                    const draggedIndex = newTemplates.findIndex(t => t.id === draggedId);
+                    const targetIndex = newTemplates.findIndex(t => t.id === targetCardId);
+
+                    if(draggedIndex === -1 || targetIndex === -1) return;
+
+                    // 2. Sacar el item arrastrado
+                    const [draggedItem] = newTemplates.splice(draggedIndex, 1);
+                    
+                    // 3. Actualizar su categoría para que coincida con la de destino
+                    draggedItem.category = targetCategory;
+
+                    // 4. Calcular nuevo índice (necesitamos insertar donde estaba el target, ajustando si el splice movió cosas)
+                    // Si eliminamos uno antes, el índice target se desplazó. Volvemos a buscar el target actual.
+                    const newTargetIndex = newTemplates.findIndex(t => t.id === targetCardId);
+                    
+                    // 5. Insertar ANTES del target
+                    newTemplates.splice(newTargetIndex, 0, draggedItem);
+
+                    setTemplates(newTemplates);
+                    db.ref(DB_TEMPLATES_PATH).set(newTemplates);
                 }
             };
 
-            // --- EDICIÓN Y OTROS ---
+            // Soltar EN EL CONTENEDOR (Mover al final de la categoría)
+            const handleContainerDrop = (e, targetCategory) => {
+                if(!isEditMode) return;
+                if (e.dataTransfer.getData("type") === "ITEM") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragOverCardId(null);
+
+                    const id = parseInt(e.dataTransfer.getData("id"));
+                    
+                    // Movemos al final: quitamos de donde esté y ponemos push, actualizando cat
+                    let newTemplates = [...templates];
+                    const idx = newTemplates.findIndex(t => t.id === id);
+                    if(idx > -1) {
+                        const [item] = newTemplates.splice(idx, 1);
+                        item.category = targetCategory;
+                        // Lo ponemos al final del array global, o justo después del último item de esta categoría
+                        // Para simplificar, push al final (en render se verá ultimo de su cat)
+                        newTemplates.push(item);
+                        
+                        setTemplates(newTemplates);
+                        db.ref(DB_TEMPLATES_PATH).set(newTemplates);
+                    }
+                }
+            };
+
+            // --- RESTO FUNCIONES ---
             const startEditTitle = (key, currentVal) => {
                 if(!isEditMode) return;
                 setEditingTitle(key);
@@ -310,7 +369,6 @@
             return (
                 <div className={`flex flex-col h-full bg-[#0f172a] text-slate-200 overflow-hidden ${isEditMode ? 'editable-mode' : ''}`}>
                     
-                    {/* HEADER */}
                     <header className="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-lg z-20 shrink-0 h-24">
                         <div className="flex items-center gap-6">
                             <div className={`h-20 w-20 relative group ${isEditMode ? 'cursor-pointer hover:scale-105' : ''} transition-transform`}>
@@ -341,7 +399,6 @@
                     </header>
 
                     <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
-                        {/* SIDEBAR TOP 10 */}
                         <aside className="w-full md:w-64 bg-slate-900/80 border-r border-slate-800 flex flex-col shrink-0 z-10">
                             <div className="p-4 border-b border-slate-800 bg-slate-900"><h2 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><span className="text-yellow-500 text-base">★</span> Top 10 Frecuentes</h2></div>
                             <div className="p-3 space-y-2 overflow-y-auto flex-1">
@@ -357,7 +414,6 @@
                             </div>
                         </aside>
 
-                        {/* MAIN DASHBOARD */}
                         <main className="flex-1 bg-slate-900 relative overflow-hidden" 
                              onDragOver={(e) => isEditMode && e.preventDefault()} 
                              onDrop={handleNewColumnDrop}>
@@ -377,9 +433,8 @@
                                                             const items = templates.filter(t => t.category === sectionKey);
                                                             return (
                                                                 <div key={sectionKey} 
-                                                                     /* CORRECCIÓN: El evento DROP se mueve aquí, al padre */
                                                                      onDragOver={(e) => isEditMode && e.preventDefault()}
-                                                                     onDrop={(e) => handleItemDrop(e, sectionKey)}
+                                                                     onDrop={(e) => handleContainerDrop(e, sectionKey)}
                                                                      className="flex flex-col bg-slate-800/40 border border-slate-600 rounded-xl overflow-hidden shrink-0">
                                                                     
                                                                     <div 
@@ -403,8 +458,14 @@
 
                                                                     <div className={`p-2 space-y-2 min-h-[60px] ${isEditMode ? 'bg-slate-800/30' : ''}`}>
                                                                         {items.map(t => (
-                                                                            <div key={t.id} draggable={isEditMode} onDragStart={(e) => handleItemDragStart(e, t.id)}
-                                                                                 className={`${t.name.includes("IA") ? "acta-card-ia" : "acta-card"} p-3 rounded-lg relative group select-none`}>
+                                                                            <div key={t.id} 
+                                                                                 draggable={isEditMode} 
+                                                                                 onDragStart={(e) => handleItemDragStart(e, t.id)}
+                                                                                 onDragOver={(e) => handleCardDragOver(e, t.id)}
+                                                                                 onDragLeave={handleCardDragLeave}
+                                                                                 onDrop={(e) => handleCardDrop(e, t.id, sectionKey)}
+                                                                                 className={`${t.name.includes("IA") ? "acta-card-ia" : "acta-card"} p-3 rounded-lg relative group select-none ${dragOverCardId === t.id ? 'dragging-over' : ''}`}>
+                                                                                
                                                                                 {isEditMode && <button onClick={(e) => {e.stopPropagation(); openModal(t);}} className="absolute top-2 right-2 text-slate-400 hover:text-white bg-slate-900 p-1 rounded z-20">✏️</button>}
                                                                                 <div className="flex items-start gap-3" onClick={() => updateUsage(t.id, t.file)}>
                                                                                     <div className="p-2 rounded bg-slate-900 text-cyan-500 shrink-0"><SVG i={t.icon} c="w-4 h-4" /></div>
