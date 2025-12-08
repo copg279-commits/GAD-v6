@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAD MANAGER V16 - SORT & DRAG</title>
+    <title>GAD MANAGER V16.3 - RESET COUNTERS</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -63,7 +63,7 @@
 
         /* Drag Visuals */
         .dragging-over {
-            border-top: 2px solid #22d3ee !important; /* Cyan line to indicate insertion */
+            border-top: 2px solid #22d3ee !important; 
             opacity: 0.8;
         }
 
@@ -131,12 +131,11 @@
             const [editingTitle, setEditingTitle] = React.useState(null); 
             const [tempTitle, setTempTitle] = React.useState("");
             
-            // Estado visual para el Drag
             const [dragOverCardId, setDragOverCardId] = React.useState(null);
 
             const [showModal, setShowModal] = React.useState(false);
             const [editItem, setEditItem] = React.useState(null); 
-            const [formData, setFormData] = React.useState({ name: '', keyword: '', file: '', category: 'gestion', icon: 'doc' });
+            const [formData, setFormData] = React.useState({ name: '', keyword: '', file: '', category: 'gestion', icon: 'doc', usageCount: 0 });
 
             const defaultCats = {
                 tributaria: "INFRACCIONES TRIBUTARIAS",
@@ -160,7 +159,6 @@
                     
                     if (snap.exists()) {
                         let data = Object.values(snap.val());
-                        // Nos aseguramos que es array y si no hay orden, usamos el índice
                         setTemplates(data.map((t, idx) => ({ ...t, category: t.category || 'gestion' })));
                     }
                     
@@ -187,8 +185,6 @@
             };
 
             // --- DRAG & DROP LOGIC ---
-
-            // 1. Arrastrar Secciones (Títulos)
             const handleSectionDragStart = (e, catKey, fromColId) => {
                 if(!isEditMode) return;
                 e.dataTransfer.setData("type", "SECTION");
@@ -234,7 +230,6 @@
                 }
             };
 
-            // 2. Arrastrar ITEMS (Actas)
             const handleItemDragStart = (e, id) => {
                 if(!isEditMode) return;
                 e.stopPropagation();
@@ -243,19 +238,16 @@
                 e.dataTransfer.effectAllowed = "move";
             };
 
-            // Cuando arrastramos sobre una tarjeta (para reordenar)
             const handleCardDragOver = (e, cardId) => {
                 if(!isEditMode) return;
                 e.preventDefault(); 
                 e.stopPropagation();
-                setDragOverCardId(cardId); // Visual feedback
+                setDragOverCardId(cardId); 
             };
 
             const handleCardDragLeave = (e) => {
-                // Opcional: limpiar estilo si sale
             };
 
-            // Soltar SOBRE UNA TARJETA (Reordenar e insertar antes)
             const handleCardDrop = (e, targetCardId, targetCategory) => {
                 if(!isEditMode) return;
                 e.preventDefault();
@@ -266,26 +258,16 @@
                     const draggedId = parseInt(e.dataTransfer.getData("id"));
                     if(draggedId === targetCardId) return;
 
-                    // Lógica de Reordenamiento
                     const newTemplates = [...templates];
-                    
-                    // 1. Encontrar índices en el array global
                     const draggedIndex = newTemplates.findIndex(t => t.id === draggedId);
                     const targetIndex = newTemplates.findIndex(t => t.id === targetCardId);
 
                     if(draggedIndex === -1 || targetIndex === -1) return;
 
-                    // 2. Sacar el item arrastrado
                     const [draggedItem] = newTemplates.splice(draggedIndex, 1);
-                    
-                    // 3. Actualizar su categoría para que coincida con la de destino
                     draggedItem.category = targetCategory;
 
-                    // 4. Calcular nuevo índice (necesitamos insertar donde estaba el target, ajustando si el splice movió cosas)
-                    // Si eliminamos uno antes, el índice target se desplazó. Volvemos a buscar el target actual.
                     const newTargetIndex = newTemplates.findIndex(t => t.id === targetCardId);
-                    
-                    // 5. Insertar ANTES del target
                     newTemplates.splice(newTargetIndex, 0, draggedItem);
 
                     setTemplates(newTemplates);
@@ -293,7 +275,6 @@
                 }
             };
 
-            // Soltar EN EL CONTENEDOR (Mover al final de la categoría)
             const handleContainerDrop = (e, targetCategory) => {
                 if(!isEditMode) return;
                 if (e.dataTransfer.getData("type") === "ITEM") {
@@ -302,17 +283,12 @@
                     setDragOverCardId(null);
 
                     const id = parseInt(e.dataTransfer.getData("id"));
-                    
-                    // Movemos al final: quitamos de donde esté y ponemos push, actualizando cat
                     let newTemplates = [...templates];
                     const idx = newTemplates.findIndex(t => t.id === id);
                     if(idx > -1) {
                         const [item] = newTemplates.splice(idx, 1);
                         item.category = targetCategory;
-                        // Lo ponemos al final del array global, o justo después del último item de esta categoría
-                        // Para simplificar, push al final (en render se verá ultimo de su cat)
                         newTemplates.push(item);
-                        
                         setTemplates(newTemplates);
                         db.ref(DB_TEMPLATES_PATH).set(newTemplates);
                     }
@@ -339,6 +315,15 @@
                 setTemplates(newT);
                 db.ref(DB_TEMPLATES_PATH).set(newT);
                 window.open(file, '_blank');
+            };
+
+            // --- NUEVA FUNCIÓN PARA RESETEAR CONTADORES ---
+            const handleResetCounters = () => {
+                if(confirm("⚠️ ¿Estás seguro de que quieres poner TODOS los contadores a 0?\n\nLa lista Top 10 se reiniciará.")) {
+                    const newT = templates.map(t => ({ ...t, usageCount: 0 }));
+                    setTemplates(newT);
+                    db.ref(DB_TEMPLATES_PATH).set(newT);
+                }
             };
 
             const openModal = (item = null) => {
@@ -390,7 +375,19 @@
                             <button onClick={() => setIsEditMode(!isEditMode)} className={`px-4 py-2 rounded-lg font-black text-xs flex items-center gap-2 shadow-lg border transition-all ${isEditMode ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'}`}>
                                 <span>{isEditMode ? '🔓 MODO EDICIÓN' : '🔒 BLOQUEADO'}</span>
                             </button>
-                            {isEditMode && <button onClick={() => openModal()} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2"><span>+</span> NUEVA</button>}
+                            
+                            {/* BOTONES DE EDICIÓN */}
+                            {isEditMode && (
+                                <div className="flex gap-2">
+                                    <button onClick={handleResetCounters} className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2">
+                                        <span>♻️</span> RESET 0
+                                    </button>
+                                    <button onClick={() => openModal()} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2">
+                                        <span>+</span> NUEVA
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
                                 <button onClick={() => setViewMode('dashboard')} className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 ${viewMode==='dashboard'?'bg-cyan-600 text-white shadow':'text-slate-400'}`}>🗂️ CLASIFICACIÓN</button>
                                 <button onClick={() => setViewMode('list')} className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 ${viewMode==='list'?'bg-cyan-600 text-white shadow':'text-slate-400'}`}>📝 LISTADO</button>
