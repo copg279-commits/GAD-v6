@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAD MANAGER V16 - TOP 10</title>
+    <title>GAD MANAGER V16 - FIXED DRAG</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -58,7 +58,7 @@
         /* HEADER EDITABLE */
         .editable-mode .editable-header:hover {
             background: rgba(255,255,255,0.05);
-            cursor: text;
+            cursor: move; /* Cursor de movimiento para indicar que se puede arrastrar */
         }
 
         /* NEON TEXT */
@@ -92,7 +92,7 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
         const DB_TEMPLATES_PATH = 'actas'; 
-        const DB_SETTINGS_PATH = 'gad_settings_v15'; // Mantenemos compatibilidad con V15
+        const DB_SETTINGS_PATH = 'gad_settings_v15'; 
 
         // --- ICONS ---
         const Icons = {
@@ -182,28 +182,39 @@
                 db.ref(DB_SETTINGS_PATH).set({ layout: l, titles: t });
             };
 
-            // --- DRAG & DROP LOGIC ---
+            // --- DRAG & DROP LOGIC MEJORADA ---
             const handleSectionDragStart = (e, catKey, fromColId) => {
                 if(!isEditMode) return;
                 e.dataTransfer.setData("type", "SECTION");
                 e.dataTransfer.setData("catKey", catKey);
                 e.dataTransfer.setData("fromColId", fromColId);
+                e.stopPropagation(); // Evita conflictos
             };
 
             const handleColumnDrop = (e, targetColId) => {
                 if(!isEditMode) return;
+                // Si lo que se suelta es una SECCIÓN
                 if (e.dataTransfer.getData("type") === "SECTION") {
                     e.preventDefault();
                     e.stopPropagation();
                     const catKey = e.dataTransfer.getData("catKey");
                     const fromColId = e.dataTransfer.getData("fromColId");
+                    
+                    // Si intentamos soltar en la misma columna, no hacemos nada (para simplificar)
                     if (fromColId === targetColId) return;
 
                     let newLayout = JSON.parse(JSON.stringify(layout));
+                    // 1. Quitar de la columna origen
                     const sourceCol = newLayout.find(c => c.id === fromColId);
                     sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
+                    
+                    // 2. Añadir a la columna destino
                     const targetCol = newLayout.find(c => c.id === targetColId);
-                    if (!targetCol.sections.includes(catKey)) targetCol.sections.push(catKey);
+                    if (!targetCol.sections.includes(catKey)) {
+                        targetCol.sections.push(catKey);
+                    }
+                    
+                    // Limpiar columnas vacías
                     newLayout = newLayout.filter(c => c.sections.length > 0);
                     saveSettings(newLayout);
                 }
@@ -211,6 +222,7 @@
 
             const handleNewColumnDrop = (e) => {
                 if(!isEditMode) return;
+                // Crear nueva columna si se suelta en el fondo
                 if (e.dataTransfer.getData("type") === "SECTION") {
                     e.preventDefault();
                     const catKey = e.dataTransfer.getData("catKey");
@@ -219,6 +231,8 @@
                     let newLayout = JSON.parse(JSON.stringify(layout));
                     const sourceCol = newLayout.find(c => c.id === fromColId);
                     sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
+                    
+                    // Nueva columna al final
                     newLayout.push({ id: 'col-' + Date.now(), sections: [catKey] });
                     newLayout = newLayout.filter(c => c.sections.length > 0);
                     saveSettings(newLayout);
@@ -234,16 +248,19 @@
 
             const handleItemDrop = (e, targetCategory) => {
                 if(!isEditMode) return;
+                // IMPORTANTE: Solo procesamos si es un ITEM
                 if (e.dataTransfer.getData("type") === "ITEM") {
                     e.preventDefault();
-                    e.stopPropagation();
+                    e.stopPropagation(); // Evita que el evento suba a la columna y se confunda
                     const id = parseInt(e.dataTransfer.getData("id"));
+                    
                     const newT = templates.map(t => t.id === id ? { ...t, category: targetCategory } : t);
                     setTemplates(newT);
                     db.ref(DB_TEMPLATES_PATH).set(newT);
                 }
             };
 
+            // --- EDICIÓN Y OTROS ---
             const startEditTitle = (key, currentVal) => {
                 if(!isEditMode) return;
                 setEditingTitle(key);
@@ -288,12 +305,12 @@
 
             if (isLoading) return <div className="h-screen flex items-center justify-center text-cyan-500">Cargando Sistema V16...</div>;
 
-            // --- AQUÍ ESTÁ EL CAMBIO A TOP 10 ---
             const topUsed = [...templates].sort((a,b) => (b.usageCount || 0) - (a.usageCount || 0)).slice(0, 10);
 
             return (
                 <div className={`flex flex-col h-full bg-[#0f172a] text-slate-200 overflow-hidden ${isEditMode ? 'editable-mode' : ''}`}>
                     
+                    {/* HEADER */}
                     <header className="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-lg z-20 shrink-0 h-24">
                         <div className="flex items-center gap-6">
                             <div className={`h-20 w-20 relative group ${isEditMode ? 'cursor-pointer hover:scale-105' : ''} transition-transform`}>
@@ -359,7 +376,12 @@
                                                         {col.sections.map(sectionKey => {
                                                             const items = templates.filter(t => t.category === sectionKey);
                                                             return (
-                                                                <div key={sectionKey} className="flex flex-col bg-slate-800/40 border border-slate-600 rounded-xl overflow-hidden shrink-0">
+                                                                <div key={sectionKey} 
+                                                                     /* CORRECCIÓN: El evento DROP se mueve aquí, al padre */
+                                                                     onDragOver={(e) => isEditMode && e.preventDefault()}
+                                                                     onDrop={(e) => handleItemDrop(e, sectionKey)}
+                                                                     className="flex flex-col bg-slate-800/40 border border-slate-600 rounded-xl overflow-hidden shrink-0">
+                                                                    
                                                                     <div 
                                                                         draggable={isEditMode}
                                                                         onDragStart={(e) => handleSectionDragStart(e, sectionKey, col.id)}
@@ -379,9 +401,7 @@
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className={`p-2 space-y-2 min-h-[60px] ${isEditMode ? 'bg-slate-800/30' : ''}`}
-                                                                         onDragOver={(e) => isEditMode && e.preventDefault()}
-                                                                         onDrop={(e) => handleItemDrop(e, sectionKey)}>
+                                                                    <div className={`p-2 space-y-2 min-h-[60px] ${isEditMode ? 'bg-slate-800/30' : ''}`}>
                                                                         {items.map(t => (
                                                                             <div key={t.id} draggable={isEditMode} onDragStart={(e) => handleItemDragStart(e, t.id)}
                                                                                  className={`${t.name.includes("IA") ? "acta-card-ia" : "acta-card"} p-3 rounded-lg relative group select-none`}>
