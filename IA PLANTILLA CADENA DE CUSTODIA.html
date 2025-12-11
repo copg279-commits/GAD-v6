@@ -159,12 +159,15 @@
         /* NOTA FINAL */
         .cc-footer-note { 
             background-color: #f3f4f6; 
-            padding: 12px; 
+            /* AQUÍ ESTÁ EL CAMBIO: ARRIBA 2px, RESTO 12px */
+            padding: 2px 12px 12px 12px; 
             font-size: 11px; 
             line-height: 1.4;
             text-align: justify; 
             margin-top: auto; 
             border-left: 4px solid #000;
+            /* Margen inferior para evitar corte en impresora */
+            margin-bottom: 10mm; 
         }
 
         /* IMPRESIÓN */
@@ -315,9 +318,14 @@
                     let changed = false;
                     if (!newData.cc_destino) { newData.cc_destino = "G.A.D. (Grupo de Análisis Documental)"; changed = true; }
                     if (!newData.m1_lugar) { newData.m1_lugar = "Jefatura Policía Local Alicante"; changed = true; }
+                    
+                    // MODIFICADO: Actualiza siempre la hora diferida si cambia fecha/hora original
                     if (newData.fecha && newData.hora) {
                         const delayedDateTime = calculateDelayedTime(newData.fecha, newData.hora, 15);
-                        if (delayedDateTime && !newData.m1_fechahora) { newData.m1_fechahora = delayedDateTime; changed = true; }
+                        if (delayedDateTime && newData.m1_fechahora !== delayedDateTime) { 
+                            newData.m1_fechahora = delayedDateTime; 
+                            changed = true; 
+                        }
                     }
                     return changed ? newData : prev;
                 });
