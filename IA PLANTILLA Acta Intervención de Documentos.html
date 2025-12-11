@@ -404,7 +404,7 @@
                     )}
 
                     <div className="sidebar w-64 bg-gray-900 text-white p-4 flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
-                        <h2 className="text-lg font-bold text-green-400">📂 Intervención + IA</h2>
+                        <h2 className="text-lg font-bold text-green-400">📂 Intervención Documentos con IA</h2>
                         <button onClick={()=>{setFormData({});setTemplate(initialTemplate);autoFillData()}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ACTA</button>
                         <div className="mt-2 border-t border-gray-700 pt-4">
                             <button onClick={()=>setShowKeyInput(!showKeyInput)} className="text-xs text-yellow-400 hover:text-yellow-300 font-bold w-full text-left flex justify-between">⚙️ CONFIGURAR IA <span>{showKeyInput ? '▼' : '▶'}</span></button>
@@ -426,7 +426,7 @@
                     <div className="main-content bg-gray-200">
                         <div className="toolbar bg-white p-2 shadow flex justify-between items-center z-50 h-14">
                             <div className="font-bold text-gray-700 text-sm flex items-center gap-2">
-                                <span>ACTA INTERVENCIÓN DE DOCUMENTOS (IA + PRO REVERSO)</span>
+                                <span>ACTA INTERVENCIÓN DE DOCUMENTOS (IA)</span>
                                 <span className={`text-[9px] px-1.5 py-0.5 rounded border ${apiKey ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}>{geminiModelName.toUpperCase()}</span>
                             </div>
                             <div className="flex gap-2 items-center">

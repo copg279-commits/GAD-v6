@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACTA ENTREGA JUZGADO - FINAL V4</title>
+    <title>ACTA ENTREGA DE DOCUMENTOS AL JUZGADO</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -152,7 +152,7 @@
                 <div className="flex h-screen">
                     {/* MENU */}
                     <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
-                        <h2 className="text-lg font-bold text-blue-400">⚖️ Actas (V4 Final)</h2>
+                        <h2 className="text-lg font-bold text-blue-400">⚖️ ACTA ENTREGA DE DOCUMENTOS AL JUZGADO</h2>
                         <button onClick={()=>{setFormData({lugar: "ALICANTE"});}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ENTREGA</button>
                         <div className="flex-1 space-y-1 overflow-y-auto">
                             {Object.values(savedActas).map(a => (
@@ -167,7 +167,7 @@
                     {/* MAIN */}
                     <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
                         <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
-                            <div className="font-bold text-gray-700 text-sm">ACTA ENTREGA (Espacio Optimizado)</div>
+                            <div className="font-bold text-gray-700 text-sm">ACTA ENTREGA DE DOCUMENTO AL JUZGADO</div>
                             <div className="flex gap-2">
                                 <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 font-medium">Guardar</button>
                                 <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1.5 rounded text-sm hover:bg-gray-900 font-medium">🖨️ Imprimir</button>
