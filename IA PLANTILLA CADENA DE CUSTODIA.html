@@ -49,11 +49,15 @@
         /* ANVERSO (ESTILOS ORIGINALES) */
         .form-container { border: 2px solid black; width: 100%; display: flex; flex-direction: column; background: white; }
         .acta-row { display: flex; width: 100%; border-bottom: 1px solid black; }
+        
+        /* CORRECCIÓN LÍNEA: Aseguramos z-index y posición para que el borde se vea siempre */
         .section-bar { 
             background-color: #e5e7eb; border-bottom: 1px solid black; font-weight: 800; 
             text-align: left; font-size: 11px; padding: 4px 8px; width: 100%; font-style: italic;
             display: flex; align-items: center; justify-content: space-between;
+            position: relative; z-index: 10;
         }
+        
         .form-container > :last-child { border-bottom: none; }
         .field-container { position: relative; display: flex; flex-direction: column; padding: 7px 8px 4px 8px; min-width: 0; border-right: 1px solid black; overflow: hidden; justify-content: center; }
         .field-container.is-last { border-right: none; flex-grow: 1 !important; width: auto !important; }
@@ -159,22 +163,35 @@
         /* NOTA FINAL */
         .cc-footer-note { 
             background-color: #f3f4f6; 
-            /* AQUÍ ESTÁ EL CAMBIO: ARRIBA 2px, RESTO 12px */
+            /* CORRECCIÓN: Padding top casi 0 para subir el texto */
             padding: 2px 12px 12px 12px; 
             font-size: 11px; 
             line-height: 1.4;
             text-align: justify; 
             margin-top: auto; 
             border-left: 4px solid #000;
-            /* Margen inferior para evitar corte en impresora */
             margin-bottom: 10mm; 
         }
+        .cc-footer-note p, .cc-footer-note strong { margin-top: 0; }
 
         /* IMPRESIÓN */
         @media print {
             @page { size: A4 portrait; margin: 0; }
             body * { visibility: hidden; }
             .sidebar, .toolbar, .no-print { display: none !important; }
+            
+            /* CORRECCIÓN DE IMPRESIÓN: Elementos específicos ocultos */
+            .paste-btn { display: none !important; }
+            .image-placeholder-text { display: none !important; }
+            .image-dropzone { border: none !important; background: transparent !important; }
+            
+            /* CORRECCIÓN LÍNEA: Forzar borde visible al 100% */
+            .section-bar { 
+                border-bottom: 1px solid black !important; 
+                width: 100% !important; 
+                -webkit-print-color-adjust: exact;
+            }
+
             .sheets-container, .sheets-container * { visibility: visible; }
             .app-layout, .main-content, .sheets-container { display: block !important; height: auto !important; overflow: visible !important; background: white !important; margin: 0 !important; padding: 0 !important; position: static !important; }
             .page-a4 { width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; border: none !important; box-shadow: none !important; position: relative !important; page-break-after: always !important; break-after: page !important; display: block !important; }
@@ -246,6 +263,7 @@
         const AutoResizingInput = ({ value, onChange, disabled, widthDependency, isDate }) => {
             const inputRef = React.useRef(null);
             const [fontSize, setFontSize] = React.useState(15); 
+            
             React.useLayoutEffect(() => {
                 const input = inputRef.current;
                 if (!input || !value) { setFontSize(15); return; }
@@ -255,17 +273,37 @@
                 if (textWidth <= input.clientWidth) setFontSize(15);
                 else { const ratio = input.clientWidth / textWidth; setFontSize(Math.max(10, Math.floor(15 * ratio))); }
             }, [value, widthDependency]);
+
+            // CORRECCIÓN FECHA: onChange ya NO formatea, solo guarda el valor crudo
             const handleChange = (e) => {
-                let newVal = e.target.value;
-                if (isDate) {
-                    const digits = newVal.replace(/\D/g, '').slice(0, 8);
-                    if (digits.length >= 5) newVal = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-                    else if (digits.length >= 3) newVal = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-                    else newVal = digits;
-                }
-                onChange({ target: { value: newVal } });
+                onChange(e);
             };
-            return <input ref={inputRef} className="input-data" value={value || ''} onChange={handleChange} disabled={disabled} autoComplete="off" style={{ fontSize: `${fontSize}px` }} />;
+
+            // CORRECCIÓN FECHA: El formato (/) se aplica SOLO al salir de la casilla
+            const handleBlur = (e) => {
+                if (isDate) {
+                    let val = e.target.value;
+                    const digits = val.replace(/\D/g, '').slice(0, 8);
+                    let formatted = val;
+                    if (digits.length === 8) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                    else if (digits.length >= 6) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                    
+                    if (formatted !== val) {
+                        onChange({ target: { value: formatted } });
+                    }
+                }
+            };
+
+            return <input 
+                ref={inputRef} 
+                className="input-data" 
+                value={value || ''} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                disabled={disabled} 
+                autoComplete="off" 
+                style={{ fontSize: `${fontSize}px` }} 
+            />;
         };
 
         const App = () => {
@@ -319,7 +357,6 @@
                     if (!newData.cc_destino) { newData.cc_destino = "G.A.D. (Grupo de Análisis Documental)"; changed = true; }
                     if (!newData.m1_lugar) { newData.m1_lugar = "Jefatura Policía Local Alicante"; changed = true; }
                     
-                    // MODIFICADO: Actualiza siempre la hora diferida si cambia fecha/hora original
                     if (newData.fecha && newData.hora) {
                         const delayedDateTime = calculateDelayedTime(newData.fecha, newData.hora, 15);
                         if (delayedDateTime && newData.m1_fechahora !== delayedDateTime) { 
@@ -399,7 +436,8 @@
             const SectionHeaderWithPaste = ({ title, zone }) => (
                 <div className="section-bar relative group" contentEditable={isEditMode} suppressContentEditableWarning>
                     <span>{title}</span>
-                    <button onClick={(e) => { e.stopPropagation(); pasteFromClipboard(zone); }} className="paste-btn absolute right-2 top-0.5 bg-gray-600 hover:bg-gray-800 text-white text-[9px] px-2 py-0.5 rounded shadow flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="Pegar imagen">📋 PEGAR IA</button>
+                    {/* CORRECCIÓN: Clase no-print añadida explícitamente */}
+                    <button onClick={(e) => { e.stopPropagation(); pasteFromClipboard(zone); }} className="paste-btn no-print absolute right-2 top-0.5 bg-gray-600 hover:bg-gray-800 text-white text-[9px] px-2 py-0.5 rounded shadow flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="Pegar imagen">📋 PEGAR IA</button>
                 </div>
             );
 
@@ -486,7 +524,8 @@
                                                     </div>
                                                     <div className="split-right" onContextMenu={(e)=>openContextMenu(e, 'doc_image')} tabIndex="0">
                                                         <div className="image-dropzone" onDrop={(e)=>handleDrop(e, 'doc_image')} onDragOver={(e)=>handleDragOver(e, 'doc_image')} onClick={() => document.getElementById('imageInput').click()}>
-                                                            {formData.doc_image ? <img src={formData.doc_image} className="attached-image" /> : <div className="image-placeholder-text">IMAGEN DEL DOCUMENTO<br/>(Arrastrar o Pegar aquí)</div>}
+                                                            {/* CORRECCIÓN: placeholder tiene clase no-print */}
+                                                            {formData.doc_image ? <img src={formData.doc_image} className="attached-image" /> : <div className="image-placeholder-text no-print">IMAGEN DEL DOCUMENTO<br/>(Arrastrar o Pegar aquí)</div>}
                                                             <input type="file" id="imageInput" style={{display:'none'}} accept="image/*" onChange={(e)=>processDocImage(e.target.files[0])}/>
                                                         </div>
                                                         {formData.doc_image && !isEditMode && <button onClick={(e)=>{e.stopPropagation(); setFormData(prev => ({...prev, doc_image: null}))}} className="no-print absolute top-1 right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full hover:bg-red-700 z-10">X</button>}
