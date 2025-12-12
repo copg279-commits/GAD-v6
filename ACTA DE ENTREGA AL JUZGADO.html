@@ -20,7 +20,7 @@
             box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
         }
 
-        /* INPUT DE PUNTOS */
+        /* INPUT DE PUNTOS (AJUSTADO: BASELINE) */
         .input-dotted {
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
@@ -33,9 +33,10 @@
             padding: 0 2px;
             color: #000;
             display: inline-block;
-            vertical-align: bottom;
+            /* CAMBIO AQUÍ: 'baseline' alinea el texto escrito con el texto fijo */
+            vertical-align: baseline; 
             margin: 0 1px;
-            line-height: 1.2;
+            line-height: normal; /* Asegura que no herede alturas extrañas */
         }
         .input-dotted:focus { background-color: #f0f9ff; }
 
@@ -43,7 +44,6 @@
         .textarea-dotted {
             width: 100%;
             border: none;
-            /* Patrón de líneas ajustado a 30px */
             background: repeating-linear-gradient(to bottom, transparent 0px, transparent 29px, #000 30px);
             line-height: 30px; 
             font-family: 'Courier New', Courier, monospace;
@@ -52,7 +52,7 @@
             resize: none;
             outline: none;
             padding: 0 5px;
-            overflow: hidden; /* Evita scroll */
+            overflow: hidden; 
         }
 
         /* CHECKBOXES */
@@ -264,16 +264,14 @@
                                     </div>
                                 </div>
 
-                                {/* FIRMAS SIN CUADROS NI LEYENDA SELLO */}
+                                {/* FIRMAS */}
                                 <div className="mt-8 flex justify-between gap-12 h-64"> 
                                     
                                     {/* BLOQUE POLICÍA */}
                                     <div className="w-1/2 relative flex flex-col justify-between">
-                                        {/* Título simple sin caja */}
                                         <div className="text-center text-xs font-bold p-1 uppercase underline underline-offset-4 decoration-1">
                                             Por la Policía Local (Entrega)
                                         </div>
-                                        
                                         <div className="w-full text-center text-xs px-2 pb-2">
                                             Fdo: Agente TIP <span className="font-mono font-bold">{formData.agente}</span>
                                         </div>
@@ -281,13 +279,9 @@
 
                                     {/* BLOQUE JUZGADO */}
                                     <div className="w-1/2 relative flex flex-col justify-between">
-                                        {/* Título simple sin caja */}
                                         <div className="text-center text-xs font-bold p-1 uppercase underline underline-offset-4 decoration-1">
                                             Por el Juzgado (Recibí)
                                         </div>
-                                        
-                                        {/* ESPACIO EN BLANCO TOTAL (SIN "SELLO") */}
-                                        
                                         <div className="w-full text-center text-xs pb-2">
                                             Firma Funcionario/a
                                         </div>
