@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACTA LIE - RELLENABLE POR ZONAS CON INTELIGENCIA ARTIFICIAL (Arrastra o pega datos a las areas "CONDUCTOR" o " TITULAR-VEHÍCULO"</title>
+    <title>ACTA LIE - RELLENABLE POR ZONAS CON INTELIGENCIA ARTIFICIAL</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -31,7 +31,10 @@
         .input-data { width: 100%; font-family: 'Courier New', monospace; font-weight: bold; outline: none; background: transparent; border: none; padding: 0; color: #000; }
         
         .section-bar { background-color: #d1d5db; border-top: 1px solid black; border-bottom: 1px solid black; font-weight: bold; text-align: center; font-size: 11px; padding: 3px; text-transform: uppercase; width: 100%; margin-top: -1px; z-index: 2; position: relative; display: flex; justify-content: center; align-items: center; }
-        .legal-text { font-size: 9px; text-align: justify; line-height: 1.15; color: #000; margin-top: 10px; }
+        
+        /* CAMBIO: Tamaño de fuente aumentado a 9px y ajuste de márgenes */
+        .legal-text { font-size: 10px; text-align: justify; line-height: 1.15; color: #000; margin-top: 8px; }
+        .legal-text p { margin-bottom: 3px; }
         
         .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.96); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { width: 50px; height: 50px; border: 5px solid #e5e7eb; border-top: 5px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -80,12 +83,18 @@
 
     <script type="text/babel">
         
+        // --- TEXTOS LEGALES ACTUALIZADOS ---
         const LEGAL_TEXTS = [
-            "Se le INFORMA que la circulación o utilización por territorio español de un vehículo de matrícula extranjera por parte de un residente en dicho territorio determina la obligación de matricular el medio de transporte en España...",
-            "Habiéndose constatado un posible incumplimiento de la Ley 38/1992, de 28 de diciembre, de Impuestos Especiales...",
-            "Puede realizar todas la gestiones relativas a los modelos 576, 05 y 06...",
+            "Se le INFORMA que la circulación o utilización por territorio español de un vehículo de matrícula extranjera por parte de un residente en dicho territorio determina la obligación de matricular el medio de transporte en España, todo ello con independencia de si el conductor es o no titular del vehículo y resultando indiferente el número de días que el vehículo ha circulado por territorio español.",
+            "Habiéndose constatado un posible incumplimiento de la Ley 38/1992, de 28 de diciembre, de Impuestos Especiales, que regula el Impuesto Especial sobre Determinados Medios de Transporte (IEDMT), en caso de que Vd. sea residente en España se le concede un plazo de CINCO DÍAS hábiles para autoliquidar y pagar el IEDMT (modelo 576), presentar la solicitud de exención o no sujeción a dicho Impuesto (modelos 05 y 06), o bien presentar aval solidario de entidad de crédito o sociedad de garantía recíproca o certificado de seguro de caución que garantice el pago del IEDMT.",
+            "Puede realizar todas la gestiones relativas a los modelos 576, 05 y 06, así como encontrar información adicional, en la Sede Electrónica de la AEAT (https://sede.agenciatributaria.gob.es) en la siguiente ruta: Vehículos y embarcaciones / Primera matriculación de medios de transporte / Gestiones destacadas",
+            "En caso de precisarlo, en dicha Sede Electrónica podrá solicitar cita, telefónica (\"Le Llamamos\") o presencial en oficinas de la AEAT, para que un funcionario de la Agencia Tributaria le informe y asista en la presentación de los modelos indicados. Para que la asistencia telefónica sea personalizada deberá contar con un medio de autenticación digital con el que acreditar su identidad (cl@ve o certificado electrónico), en otro caso podrá solicitar cita presencial en oficinas.",
+            "Si el vehículo se encuentra matriculado fuera de la Unión Europea, en el enlace anterior encontrará toda la información y trámites necesarios para regularizar su situación aduanera.",
+            "Una vez presentada y pagada la autoliquidación podrá poner este hecho en conocimiento de la Agencia Tributaria mediante la remisión de un escrito a través de la misma ruta mencionada de la Sede Electrónica de la AEAT, en el modelo 576 o modelo 06, según corresponda, dentro del apartado \"Aportación de documentación complementaria\".",
+            "Se le ADVIERTE que, transcurrido ese plazo sin acreditar la regularización de la situación administrativa y tributaria del vehículo, se podrá acordar la inmovilización del medio de transporte, sin perjuicio de las posibles sanciones en que pudiera incurrir por el incumplimiento de la normativa tributaria.",
             "Y para que así conste se firma la presente"
         ];
+        
         const FOOTER_NOTE = "*La residencia debe quedar suficientemente acreditada. En caso de regentar establecimiento añadir datos del mismo en oficio adjunto. Adjuntar fotografía o fotocopia de la ficha técnica del vehículo y toda aquella documentación que sea justificante de la residencia del usuario del vehículo.";
 
         const initialTemplate = [
@@ -139,7 +148,6 @@
             const [actas, setActas] = React.useState({});
             const [isEditMode, setIsEditMode] = React.useState(false);
             
-            // --- CORRECCIÓN AQUÍ: INICIALIZAR CON TUS NOMBRES DE ARCHIVO ---
             const [logos, setLogos] = React.useState({ 
                 left: 'AYUNTAMIENTO.png', 
                 right: 'POLICIA.png' 
@@ -151,7 +159,7 @@
             const [contextMenu, setContextMenu] = React.useState(null);
 
             // CONFIG IA - SOLO GEMINI
-            const [aiProvider, setAiProvider] = React.useState('gemini'); // FIJO EN GEMINI
+            const [aiProvider, setAiProvider] = React.useState('gemini'); 
             const [apiKey, setApiKey] = React.useState(localStorage.getItem('ai_api_key') || '');
             const [geminiModelName, setGeminiModelName] = React.useState(localStorage.getItem('gemini_model_name') || 'gemini-1.5-pro');
             const [showKeyInput, setShowKeyInput] = React.useState(false);
@@ -159,11 +167,9 @@
             React.useEffect(() => {
                 const stored = JSON.parse(localStorage.getItem('mis_actas_manual') || "{}");
                 setActas(stored);
-                // Si ya había logos guardados en memoria (base64), los usamos. Si no, se queda con los nombres por defecto.
                 const l = JSON.parse(localStorage.getItem('mis_logos_manual'));
                 if(l) setLogos(l);
                 
-                // Asegurarse de que el proveedor y el modelo se guarden si aún no lo están (p. ej., si viene de la versión anterior)
                 if (!localStorage.getItem('ai_provider')) localStorage.setItem('ai_provider', 'gemini');
                 if (!localStorage.getItem('gemini_model_name')) localStorage.setItem('gemini_model_name', geminiModelName);
 
@@ -185,10 +191,8 @@
                 });
             };
 
-            // MODIFICACIÓN: solo maneja Gemini
             const saveSettings = (key, geminiModel) => {
                 setApiKey(key); setGeminiModelName(geminiModel);
-                // aiProvider se mantiene fijo en 'gemini'
                 localStorage.setItem('ai_api_key', key);
                 localStorage.setItem('gemini_model_name', geminiModel);
             };
@@ -201,7 +205,6 @@
                 }
             };
 
-            // MODIFICACIÓN: solo llama a la API de Gemini
             const callAI = async (base64Image, zone) => {
                 const PROMPT = getPromptForZone(zone);
                 try {
@@ -214,12 +217,10 @@
                     const rawText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
                     const extractedData = JSON.parse(rawText);
 
-                    // Fusión inteligente
                     setFormData(prev => {
                         const newData = { ...prev };
                         Object.keys(extractedData).forEach(key => {
                             const val = extractedData[key];
-                            // Usar 'gemini' como provider en el mensaje de error si ocurre.
                             if (val && String(val).trim().length > 0) {
                                 newData[key] = val;
                             }
@@ -337,9 +338,7 @@
                             </button>
                             {showKeyInput && (
                                 <div className="mt-2 bg-gray-800 p-2 rounded border border-gray-600 space-y-2">
-                                    {/* MODIFICACIÓN: SELECT ELIMINADO */}
                                     <div className="text-xs text-gray-400">Proveedor: Google Gemini (Fijo)</div> 
-                                    {/* MODIFICACIÓN: solo guarda apiKey y geminiModelName */}
                                     <input type="password" value={apiKey} onChange={(e)=>saveSettings(e.target.value, geminiModelName)} className="w-full bg-gray-900 text-white text-xs p-1 rounded border border-gray-700" placeholder="API Key..." />
                                     <input type="text" value={geminiModelName} onChange={(e)=>saveSettings(apiKey, e.target.value)} className="w-full bg-gray-900 text-white text-xs p-1 rounded border border-gray-700" placeholder="gemini-1.5-pro" />
                                 </div>
@@ -359,7 +358,7 @@
                     <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
                         <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 h-14">
                             <div className="font-bold text-gray-700 text-sm flex items-center gap-2">
-                                <span>ACTA LIE - RELLENABLE POR ZONAS CON INTELIGENCIA ARTIFICIAL (Arrastra o pega datos a las areas "CONDUCTOR" o " TITULAR-VEHÍCULO"</span>
+                                <span>ACTA LIE - RELLENABLE POR ZONAS CON INTELIGENCIA ARTIFICIAL</span>
                                 <span className={`text-[9px] px-1.5 py-0.5 rounded border ${apiKey ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}>
                                     {geminiModelName.toUpperCase()}
                                 </span>
@@ -431,10 +430,11 @@
                                     </div>
                                 </div>
 
-                                {/* FOOTER */}
+                                {/* FOOTER - TEXTO LEGAL ACTUALIZADO */}
                                 <div className="legal-text">
                                     {LEGAL_TEXTS.map((t,i)=><p key={i} contentEditable={isEditMode} suppressContentEditableWarning>{t}</p>)}
                                 </div>
+                                
                                 <div className="mt-4 flex justify-between text-xs font-bold pt-2 select-none">
                                     <div className="w-1/3 text-center"><div className="mb-6" contentEditable={isEditMode} suppressContentEditableWarning>Fdo.- El conductor</div></div>
                                     <div className="w-1/3 text-center"><div className="mb-6">Fdo. El Agente {formData.agente1}</div></div>
