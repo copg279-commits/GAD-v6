@@ -180,9 +180,10 @@
             box-sizing: border-box;
         }
         
-        /* Estilos específicos para el modal de ordenar */
+        /* CORRECCIÓN SCROLL MODAL */
         #sort-by-state-modal .modal-content {
             display: block;
+            overflow-x: hidden; /* Elimina scroll horizontal */
         }
         #sort-by-state-modal .modal-content button {
             display: block;
@@ -191,6 +192,7 @@
             text-align: left;
             padding: 12px 15px;
             justify-content: flex-start;
+            box-sizing: border-box; /* Asegura que el padding no desborde */
         }
         #sort-by-state-modal .modal-content button i {
             width: 20px;
@@ -227,11 +229,11 @@
         }
         .search-controls {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1.5fr 1fr; /* Ajustado para dar espacio a los botones */
             gap: 15px;
             align-items: end;
             flex-grow: 1;
-            max-width: 500px;
+            max-width: 600px;
         }
         .search-controls label {
             font-size: 0.85em;
@@ -240,6 +242,13 @@
             margin-bottom: 5px;
             display: block;
         }
+        
+        /* Nuevo contenedor para los botones de búsqueda y deshacer */
+        .search-buttons-group {
+            display: flex;
+            gap: 8px;
+        }
+
         .filter-controls {
             display: flex;
             flex-wrap: wrap;
@@ -261,7 +270,7 @@
             padding: 10px 12px;
             border-bottom: 1px solid #f0f0f0;
             min-width: 600px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, opacity 0.5s ease; /* Transición para desvanecer */
         }
         .results-header {
             font-weight: bold;
@@ -337,7 +346,6 @@
         .estado-select:focus { border-color: #3498db; outline: none; }
         
         /* Colores para las opciones seleccionadas */
-        /* MODIFICACIÓN: Eurocop con letra NEGRA y NEGRIITA para mejor visibilidad */
         .estado-select[value="eurocop"] { background-color: #ffeb3b; color: #000000; font-weight: 700; } 
         .estado-select[value="alerta"] { background-color: #f44336; color: white; } /* Rojo */
         .estado-select[value="notificado"] { background-color: #4CAF50; color: white; } /* Verde */
@@ -516,8 +524,11 @@
                             <label for="search-matricula">MATRÍCULA A BUSCAR (Exacta):</label>
                             <input type="text" id="search-matricula" placeholder="Introduce la matrícula...">
                         </div>
-                        <div class="align-bottom">
+                        <div class="align-bottom search-buttons-group">
                             <button id="search-btn" class="btn-success" style="width: 100%;"><i class="fas fa-search"></i> Buscar</button>
+                            <button id="undo-btn" class="btn-delete" style="background: linear-gradient(135deg, #607d8b, #455a64); white-space: nowrap;">
+                                <i class="fas fa-undo"></i> Deshacer Última
+                            </button>
                         </div>
                     </div>
                     
@@ -621,6 +632,7 @@
 
 
     <script>
+        // --- CONFIGURACIÓN FIREBASE GAD-ALICANTE-V1 ---
         const firebaseConfig = {
             apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
             authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -658,6 +670,8 @@
         const CANONICAL_KEYS_LIST = Object.keys(HEADER_DISPLAY_NAMES);
         
         let allDenuncias = []; 
+        let lastBackupData = null; // Variable para almacenar el backup para Deshacer
+        let currentFilterMode = 'all'; // Variable para saber qué estamos viendo (para el auto-borrado)
 
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
@@ -665,6 +679,7 @@
         
         const searchInput = document.getElementById('search-matricula');
         const searchBtn = document.getElementById('search-btn');
+        const undoBtn = document.getElementById('undo-btn'); // Referencia al botón Deshacer
         
         const sortMatriculaBtn = document.getElementById('sort-matricula-btn');
         const sortFechaBtn = document.getElementById('sort-fecha-btn'); 
@@ -827,7 +842,14 @@
                     });
                     
                     const intermediateData = sanitizedJsonData.filter(row => Object.keys(row).length > 0);
-                    const spanishPlateRegex = /^\d{4}[A-Z]{3}$/i;
+                    
+                    // --- FILTRADO AVANZADO DE MATRÍCULAS ---
+                    // Regla 1: 4 números + 3 letras (1234BBC)
+                    const modernSpanishRegex = /^\d{4}[A-Z]{3}$/i; 
+                    // Regla 2: Provincia (1-2 letras) + 4 números + Letras Finales (1-2 letras) (M1234TZ, B5678V)
+                    // Las que SOLO tienen números al final (M1234) NO coinciden con esta regex, por lo tanto se quedan.
+                    const provincialSuffixRegex = /^[A-Z]{1,2}\d{4}[A-Z]{1,2}$/i;
+
                     let spanishPlatesCount = 0;
                     const matriculaKey = 'matricula'; 
 
@@ -835,20 +857,55 @@
                         const plateValue = row[matriculaKey]; 
                         if (plateValue) {
                             const plate = String(plateValue).trim().replace(/\s/g, '');
-                            if (spanishPlateRegex.test(plate)) {
+                            
+                            // Verificar Formato 1: Modernas
+                            if (modernSpanishRegex.test(plate)) {
                                 spanishPlatesCount++; 
-                                return false; 
+                                return false; // Eliminar
+                            }
+                            // Verificar Formato 2: Provinciales CON letra final
+                            if (provincialSuffixRegex.test(plate)) {
+                                spanishPlatesCount++;
+                                return false; // Eliminar
                             }
                         }
-                        return true; 
+                        return true; // Mantener (incluye extranjeras y provinciales sin letra final)
                     });
 
                     if (spanishPlatesCount > 0) {
-                        alert(`Se han detectado y eliminado ${spanishPlatesCount} matrículas con formato español (1234ABC).`);
+                        alert(`Se han detectado y eliminado ${spanishPlatesCount} matrículas españolas en formato actual o provincial.`);
                     }
                     
                     if (finalData.length === 0) {
                         throw new Error("El archivo no contiene datos válidos tras el filtrado.");
+                    }
+
+                    // --- DETECCIÓN DUPLICADOS ---
+                    const existingSignatures = new Set(allDenuncias.map(item => 
+                        `${String(item.matricula).trim()}_${item.fecha_de_creacion}`
+                    ));
+
+                    let exactDuplicatesCount = 0;
+                    finalData.forEach(item => {
+                        const signature = `${String(item.matricula).trim()}_${item.fecha_de_creacion}`;
+                        if (existingSignatures.has(signature)) {
+                            exactDuplicatesCount++;
+                        }
+                    });
+
+                    const duplicateRatio = finalData.length > 0 ? (exactDuplicatesCount / finalData.length) : 0;
+                    
+                    if (duplicateRatio > 0.8) {
+                        const confirmMessage = `⚠️ ¡ADVERTENCIA DE DUPLICADO! ⚠️\n\n` +
+                                             `El sistema ha detectado que el ${Math.round(duplicateRatio * 100)}% de los registros de este archivo YA EXISTEN en la base de datos (mismas matrículas en las mismas fechas).\n\n` +
+                                             `Es muy probable que estés subiendo el mismo archivo por error.\n\n` +
+                                             `¿Deseas continuar de todas formas y duplicar los datos?`;
+                        
+                        if (!window.confirm(confirmMessage)) {
+                            showStatus("Carga cancelada por el usuario.", 'info');
+                            document.getElementById('file-input').value = ""; 
+                            return; 
+                        }
                     }
                     
                     addAndSaveToFirebase(finalData);
@@ -866,6 +923,10 @@
                 showStatus("Error: Firebase no está inicializado.", 'error');
                 return;
             }
+
+            // --- BACKUP PARA DESHACER ---
+            // Guardamos el estado ANTES de añadir nada
+            lastBackupData = JSON.parse(JSON.stringify(allDenuncias));
             
             showStatus("Cargando datos existentes para comparar...", 'loading');
             
@@ -935,6 +996,45 @@
             }
         }
 
+        async function undoLastUpload() {
+            if (!lastBackupData) {
+                alert("No hay ninguna acción reciente para deshacer (o se ha recargado la página).");
+                return;
+            }
+
+            if (!confirm("⚠️ ¿Estás seguro de que quieres DESHACER la última subida?\n\nEsta acción eliminará los datos añadidos en la última carga de Excel y volverá al estado anterior.")) {
+                return;
+            }
+
+            showStatus("Restaurando estado anterior...", 'loading');
+
+            try {
+                await database.ref(DENUNCIAS_ORA_REF).set(lastBackupData);
+                
+                allDenuncias = JSON.parse(JSON.stringify(lastBackupData));
+                
+                lastBackupData = null; // Limpiamos el backup para no deshacer dos veces lo mismo
+                
+                showStatus("¡Deshacer completado! Se han restaurado los datos anteriores.", 'success');
+                
+                const searchVal = document.getElementById('search-matricula').value;
+                if (searchVal) {
+                     performSearch();
+                } else {
+                     displayResults(allDenuncias);
+                }
+
+            } catch (error) {
+                console.error("Error al deshacer:", error);
+                showStatus(`Error al deshacer: ${error.message}`, 'error');
+            }
+        }
+        
+        // Vincular el botón deshacer (siempre visible) a la función
+        if(undoBtn) {
+            undoBtn.onclick = undoLastUpload;
+        }
+
         async function loadAndDisplayData() {
             if (!database) return;
             showStatus("Cargando datos desde Firebase...", 'loading');
@@ -950,7 +1050,6 @@
                     showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
                 }
                 
-                // Mostrar datos ordenados por defecto (fecha descendente)
                 const fechaKey = 'fecha_de_creacion';
                 const sortedByDefault = [...allDenuncias].sort((a, b) => {
                     const dateA = parseDate(a[fechaKey]) || new Date(0);
@@ -960,6 +1059,7 @@
                 allDenuncias = sortedByDefault;
                 currentFechaSortOrder = 'desc';
                 sortFechaBtn.innerHTML = '<i class="fas fa-calendar-alt"></i> Fecha (Reciente)';
+                currentFilterMode = 'all'; // Default
                 displayResults(allDenuncias);
 
             } catch (error) {
@@ -990,18 +1090,15 @@
             return value;
         }
 
-        // Función para actualizar el color del select en la fila
         function updateSelectColor(select) {
             const selectedValue = select.value;
-            
-            // Revertir a valores por defecto
             select.style.backgroundColor = 'white';
             select.style.color = '#333';
-            select.style.fontWeight = 'bold'; // Mantener negrita por defecto
+            select.style.fontWeight = 'bold';
             
             if (selectedValue === 'eurocop') {
                 select.style.backgroundColor = '#ffeb3b'; 
-                select.style.color = '#000000'; // Letra negra
+                select.style.color = '#000000';
                 select.style.fontWeight = '700';
             } else if (selectedValue === 'alerta') {
                 select.style.backgroundColor = '#f44336'; 
@@ -1012,7 +1109,6 @@
                 select.style.color = 'white'; 
                 select.style.fontWeight = '700';
             }
-            
             select.setAttribute('value', selectedValue);
         }
 
@@ -1028,7 +1124,6 @@
             }
 
             const headers = CANONICAL_KEYS_LIST; 
-            // Grid: Matricula | Fecha | Marca | Modelo | Revisado | Estado | Borrar
             const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 2fr 0.5fr';
 
             resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
@@ -1049,7 +1144,6 @@
                 const originalIndex = allDenuncias.indexOf(item);
                 row.dataset.originalIndex = originalIndex;
 
-                // Color Reincidentes
                 let matriculaColorClass = '';
                 const matricula = String(item[matriculaKey] || '').trim().toUpperCase(); 
 
@@ -1112,7 +1206,6 @@
                                 matriculaText = `${displayValue} (${matriculaCounter})`; 
                             }
                             
-                            // Botón de copiar al principio (alineado a la izquierda)
                             matriculaContent += `<button class="btn-copy-matricula" title="Copiar" data-matricula="${matricula}"><i class="fas fa-copy"></i></button>`;
                             matriculaContent += `<span class="matricula-text">${matriculaText}</span>`;
                             
@@ -1126,7 +1219,6 @@
                 row.style.gridTemplateColumns = gridLayout;
                 searchResultsDiv.appendChild(row);
 
-                // Después de añadir la fila, actualizar el color del select
                 const selectElement = row.querySelector('.estado-select');
                 if (selectElement) {
                     updateSelectColor(selectElement);
@@ -1139,8 +1231,8 @@
         function performSearch() {
             const searchQuery = searchInput.value.trim().toUpperCase();
             if (!searchQuery) {
-                // Si no hay búsqueda, mostramos todos con el orden de fecha actual
                 performSortFecha(true);
+                currentFilterMode = 'all'; // Reseteamos filtro
                 return;
             }
             const matriculaKey = 'matricula';
@@ -1149,6 +1241,7 @@
                        String(item[matriculaKey]).toUpperCase().includes(searchQuery);
             });
             displayResults(results); 
+            currentFilterMode = 'search';
         }
         searchBtn.addEventListener('click', performSearch);
         searchInput.addEventListener('input', performSearch);
@@ -1156,7 +1249,8 @@
         
         showAllBtn.addEventListener('click', () => {
             searchInput.value = '';
-            performSortFecha(true); // Mostrar todos con el orden de fecha actual (sin cambiar el orden)
+            performSortFecha(true);
+            currentFilterMode = 'all';
         });
 
         sortMatriculaBtn.addEventListener('click', () => {
@@ -1167,6 +1261,7 @@
                 return matA.localeCompare(matB);
             });
             displayResults(sorted);
+            currentFilterMode = 'all'; 
         });
         
         function parseDate(dateStr) {
@@ -1189,11 +1284,8 @@
             return null;
         }
 
-        // Función unificada para ordenar por fecha
         function performSortFecha(keepOrder = false) {
             const fechaKey = 'fecha_de_creacion'; 
-            
-            // Determinar el orden actual para la clasificación
             const currentOrder = keepOrder ? currentFechaSortOrder : (currentFechaSortOrder === 'desc' ? 'asc' : 'desc');
             
             const sorted = [...allDenuncias].sort((a, b) => {
@@ -1202,12 +1294,10 @@
                 return currentOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
             
-            // Si no mantenemos el orden, lo alternamos para la próxima vez
             if (!keepOrder) {
                 currentFechaSortOrder = currentOrder;
             }
 
-            // Actualizar el texto del botón
             const text = currentFechaSortOrder === 'desc' ? 'Reciente' : 'Antigua';
             sortFechaBtn.innerHTML = `<i class="fas fa-calendar-alt"></i> Fecha (${text})`;
 
@@ -1216,30 +1306,27 @@
 
         sortFechaBtn.addEventListener('click', () => performSortFecha(false));
 
-        // Función para mostrar por estado
         function performSortByState(stateValue) {
-            // El mapeo de prioridad ya no se usa aquí, solo se filtra por estado.
+            // Guardamos el estado actual del filtro
+            if (stateValue === '') currentFilterMode = 'pending'; // Pendiente Revisión
+            else currentFilterMode = 'other_filter';
 
             const filteredAndSorted = [...allDenuncias]
                 .filter(item => {
                     if (stateValue === 'revisado') {
-                        // Filtra solo los revisados que NO tienen un estado específico (eurocop, alerta, notificado)
                         return !!item.revisado && !item.eurocop && !item.alerta && !item.notificado;
                     }
                     if (stateValue === '') {
-                        // Filtra los pendientes (sin revisado Y sin estado)
                         return !item.revisado && !item.eurocop && !item.alerta && !item.notificado;
                     }
                     return item[stateValue] === true;
                 })
                 .sort((a, b) => {
-                    // Ordenar por fecha de creación (Reciente primero) dentro del mismo estado
                     const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
                     const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
                     return dateB - dateA;
                 });
 
-            // Si se busca 'Pendiente Revisión' o 'Solo Revisado (Sin estado)', se muestra el conteo correcto
             const countName = 
                 stateValue === 'notificado' ? 'Notificado a Sanciones' :
                 stateValue === 'alerta' ? 'Alerta Eurocop' :
@@ -1250,7 +1337,6 @@
             showStatus(`Mostrando ${filteredAndSorted.length} registros en estado: ${countName}`, "info");
             displayResults(filteredAndSorted, false);
             
-            // Cerrar el modal
             document.getElementById('sort-by-state-modal').style.display = 'none';
             document.getElementById('notification-modal-overlay').style.display = 'none';
         }
@@ -1260,14 +1346,12 @@
              document.getElementById('notification-modal-overlay').style.display = 'block';
         });
 
-        // Event listener para las opciones dentro del modal de ordenar por estado
         document.querySelectorAll('.sort-by-state-option').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 performSortByState(e.currentTarget.dataset.stateValue);
             });
         });
         
-        // Listener para cerrar el modal de ordenar
         document.getElementById('modal-sort-cancel-btn').addEventListener('click', () => {
             document.getElementById('sort-by-state-modal').style.display = 'none';
             document.getElementById('notification-modal-overlay').style.display = 'none';
@@ -1302,17 +1386,14 @@
             } catch (e) { return ''; }
         }
 
-        // Precedencia de colores de fila
         function updateRowColor(row) {
             if (!row) return;
             const dataIndex = parseInt(row.dataset.originalIndex, 10);
             const item = allDenuncias[dataIndex];
             if (!item) return;
 
-            // Limpiar clases
             row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-red');
 
-            // Establecer color por prioridad (Verde > Rojo > Amarillo > Azul)
             if (item.notificado) {
                 row.classList.add('highlight-green');
             } else if (item.alerta) {
@@ -1320,7 +1401,7 @@
             } else if (item.eurocop) {
                 row.classList.add('highlight-yellow');
             } else if (item.revisado) { 
-                row.classList.add('highlight-blue'); // Solo revisado, sin estado específico
+                row.classList.add('highlight-blue'); 
             }
         }
 
@@ -1369,13 +1450,11 @@
                 .catch(err => alert('Error al copiar el texto: ' + err));
         }
 
-        // --- FUNCIÓN SINCRONIZAR DUPLICADOS ---
         function syncDuplicatesState(matriculaRaw, sourceDataObject) {
             if (!matriculaRaw) return;
             
             const matTarget = String(matriculaRaw).trim().toUpperCase();
             
-            // 1. Actualizar Data Model global
             allDenuncias.forEach(item => {
                 const m = String(item.matricula || '').trim().toUpperCase();
                 if (m === matTarget) {
@@ -1386,12 +1465,10 @@
                     if (sourceDataObject.notificado !== undefined) item.notificado = sourceDataObject.notificado;
                     if (sourceDataObject.eurocop !== undefined) item.eurocop = sourceDataObject.eurocop; 
 
-                    // 2. Automatismo: Si se acaba de REVISAR y NO tiene estado (alerta o notificado), se pone en 'eurocop'
                     if (item.revisado && !item.alerta && !item.notificado && !item.eurocop) {
                         item.eurocop = true; 
                     } 
                     
-                    // Si se desactiva revisado, se quitan todos los flags de estado
                     if (!item.revisado) {
                         item.eurocop = false;
                         item.alerta = false;
@@ -1400,7 +1477,6 @@
                 }
             });
 
-            // 3. Actualizar DOM visible
             const allRows = searchResultsDiv.querySelectorAll('.doc-row');
             allRows.forEach(row => {
                 const idx = row.dataset.originalIndex;
@@ -1408,13 +1484,11 @@
                     const data = allDenuncias[parseInt(idx, 10)];
                     if (data && String(data.matricula||'').trim().toUpperCase() === matTarget) {
                         
-                        // Determinar valor del select en base a los flags actualizados
                         let selectedValue = "";
                         if (data.notificado) selectedValue = "notificado";
                         else if (data.alerta) selectedValue = "alerta";
                         else if (data.eurocop) selectedValue = "eurocop";
 
-                        // Sincronizar Select
                         const select = row.querySelector('.estado-select');
                         if (select) {
                             select.value = selectedValue;
@@ -1422,7 +1496,6 @@
                             updateSelectColor(select); 
                         }
 
-                        // Sincronizar Celda Revisado
                         const revisadoCell = row.querySelector('.revisado-cell');
                         if (revisadoCell) {
                             const fDate = formatRevisadoDate(data.revisado);
@@ -1437,13 +1510,11 @@
                             }
                         }
                         
-                        // Sincronizar Color de Fila
                         updateRowColor(row);
                     }
                 }
             });
             
-            // 4. Guardar en Firebase
             database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
         }
 
@@ -1462,6 +1533,28 @@
             else showAllBtn.click();
         }
 
+        // --- FUNCIÓN HELPER PARA AUTO-BORRAR EN MODO PENDIENTE ---
+        function checkAndAutoHideRow(row) {
+            if (currentFilterMode === 'pending' && row) {
+                // Esperar 3 segundos
+                setTimeout(() => {
+                    // Verificar si el elemento sigue existiendo en el DOM
+                    if (document.body.contains(row)) {
+                         row.style.opacity = '0'; // Desvanecer
+                         setTimeout(() => {
+                            if (document.body.contains(row)) {
+                                row.style.display = 'none'; // Ocultar layout
+                                // Ajustar contador si es necesario (opcional)
+                                const countSpan = document.getElementById('results-count');
+                                let count = parseInt(countSpan.textContent.replace(/\D/g,''));
+                                if(count > 0) countSpan.textContent = `(${count - 1})`;
+                            }
+                         }, 500); // Esperar a que termine la transición de opacidad
+                    }
+                }, 3000);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadAndDisplayData();
             
@@ -1469,7 +1562,6 @@
             findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
             crearAlertaBtn.addEventListener('click', crearAlertaEurocop);
             
-            // Listener para el botón de copiar matrícula
             searchResultsDiv.addEventListener('click', (e) => {
                 const copyBtn = e.target.closest('.btn-copy-matricula');
                 if (copyBtn) {
@@ -1502,24 +1594,23 @@
                     const newValue = e.target.value;
                     e.target.setAttribute('value', newValue); 
 
-                    // 1. Resetear flags de estado
                     dataObject.eurocop = false;
                     dataObject.alerta = false;
                     dataObject.notificado = false;
 
-                    // 2. Aplicar nuevo valor
                     if (newValue !== "") {
-                        // Al cambiar el estado manualmente, garantizamos que quede revisado
                         const today = new Date();
                         dataObject.revisado = dataObject.revisado || today.toISOString(); 
                         
                         if (newValue === 'eurocop') { 
                             dataObject.eurocop = true;
                             syncDuplicatesState(dataObject.matricula, dataObject);
+                            checkAndAutoHideRow(row); // <--- TRIGGER AUTO HIDE
 
                         } else if (newValue === 'alerta') {
                             dataObject.alerta = true;
                             syncDuplicatesState(dataObject.matricula, dataObject);
+                            checkAndAutoHideRow(row); // <--- TRIGGER AUTO HIDE
 
                         } else if (newValue === 'notificado') {
                             // Abrir Modal
@@ -1537,7 +1628,6 @@
                             document.getElementById('modal-nombre').focus(); 
                         }
                     } else {
-                        // Estado Pendiente (newValue === "") -> Quitar revisado y flags
                         dataObject.revisado = null;
                         syncDuplicatesState(dataObject.matricula, dataObject);
                     }
@@ -1549,7 +1639,6 @@
             searchResultsDiv.addEventListener('click', (e) => {
                 const target = e.target;
 
-                // Botón Papelera
                 const deleteBtn = target.closest('.btn-icon-delete');
                 if (deleteBtn) {
                     const row = deleteBtn.closest('.doc-row');
@@ -1566,15 +1655,14 @@
                 const dataIndex = parseInt(row.dataset.originalIndex, 10);
                 const dataObject = allDenuncias[dataIndex];
                 
-                // Clic checkbox/celda revisado
                 if (target.classList.contains('check-revisado') || (target.classList.contains('revisado-cell') && target.dataset.state === 'check')) {
                     const today = new Date();
                     dataObject.revisado = today.toISOString();
                     
-                    // 2. Automatismo: Si no tiene estado, se pone en 'eurocop' (lo gestiona syncDuplicatesState)
                     syncDuplicatesState(dataObject.matricula, dataObject);
+                    checkAndAutoHideRow(row); // <--- TRIGGER AUTO HIDE
+
                 }
-                // Clic fecha puesta (para quitar o actualizar)
                 else if (target.classList.contains('revisado-cell') && target.classList.contains('date-set')) {
                     const confirmation = window.confirm("Aceptar: Actualizar fecha revisión.\nCancelar: Desactivar revisión.");
                     if (confirmation) {
@@ -1587,7 +1675,6 @@
                 }
             });
             
-            // Lógica Modal
             const notificationModal = document.getElementById('notification-modal');
             const notificationOverlay = document.getElementById('notification-modal-overlay');
             const modalAcceptBtn = document.getElementById('modal-accept-btn');
@@ -1597,7 +1684,6 @@
                 notificationModal.style.display = 'none';
                 notificationOverlay.style.display = 'none';
                 if (cancelled && currentNotificadoSelect) {
-                    // Si cancela, revertimos el select al valor que tenía antes de abrir el modal
                     currentNotificadoSelect.value = previousSelectValue;
                     currentNotificadoSelect.setAttribute('value', previousSelectValue);
                     updateSelectColor(currentNotificadoSelect);
@@ -1605,7 +1691,6 @@
                     const row = currentNotificadoSelect.closest('.doc-row');
                     if (row) updateRowColor(row);
 
-                    // Revertir el revisado solo si se puso a propósito para abrir el modal Y el valor anterior era ""
                     if (previousSelectValue === "") {
                         currentNotificadoDataObject.revisado = null;
                     }
@@ -1627,7 +1712,6 @@
                 const fechaNac = document.getElementById('modal-fecha-nacimiento').value;
                 const telefono = document.getElementById('modal-telefono').value;
 
-                // --- PLANTILLA DE TEXTO COMPLETA ---
                 const textToCopy = `
 Grupo de Análisis Documental (GAD) Policía Local de Alicante
 Le informamos de que disponemos de los siguientes datos en relación a este vehículo
@@ -1647,15 +1731,12 @@ DATOS PERSONALES:
 - Teléfono: ${telefono || 'N/A'}
                 `.trim().replace(/^\s+/gm, ''); 
 
-                // Usamos la función robusta copyToClipboard
                 copyToClipboard(textToCopy)
                     .then(() => {
-                        // Establecer el estado 'notificado'
                         currentNotificadoDataObject.notificado = true;
                         currentNotificadoDataObject.eurocop = false;
                         currentNotificadoDataObject.alerta = false;
                         
-                        // Asegurar que revisado esté marcado
                         if (!currentNotificadoDataObject.revisado) {
                              const today = new Date();
                              currentNotificadoDataObject.revisado = today.toISOString();
@@ -1663,12 +1744,16 @@ DATOS PERSONALES:
                         
                         syncDuplicatesState(currentNotificadoDataObject.matricula, currentNotificadoDataObject);
                         
+                        // AUTO HIDE LOGIC PARA EL MODAL
+                        const row = currentNotificadoSelect.closest('.doc-row');
+                        checkAndAutoHideRow(row);
+
                         closeModal(false);
                         alert('¡Notificación copiada! Estado actualizado para todos los duplicados.');
                     })
                     .catch(err => {
                         alert('Error al copiar: ' + err);
-                        closeModal(true); // Cancelar la acción del select si falla la copia
+                        closeModal(true); 
                     });
             });
         });
