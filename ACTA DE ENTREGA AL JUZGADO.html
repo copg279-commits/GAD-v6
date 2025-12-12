@@ -114,7 +114,7 @@
                 const l = JSON.parse(localStorage.getItem('logos_entrega_v4'));
                 if(l) setLogos(l);
 
-                // INICIALIZACIÓN: ALICANTE PREDETERMINADO
+                // INICIALIZACIÓN
                 setFormData(prev => {
                     if (!prev.lugar) return { ...prev, lugar: "ALICANTE" };
                     return prev;
@@ -214,7 +214,7 @@
                                     </div>
                                 </div>
 
-                                {/* CUERPO (FECHA OPTIMIZADA EN UNA LÍNEA) */}
+                                {/* CUERPO */}
                                 <div className="text-justify leading-loose text-sm flex-1">
                                     <p className="mb-4 whitespace-nowrap overflow-hidden">
                                         En <DottedInput width="90px" value={formData.lugar} onChange={(e)=>handleChange('lugar',e.target.value)} />, 
@@ -233,7 +233,6 @@
                                         <strong>EXPONE:</strong> Que mediante la presente acta hace <strong>ENTREGA EFECTIVA</strong> a la Autoridad Judicial, del documento original reseñado a continuación, el cual ha permanecido bajo custodia del Grupo de Análisis Documental (GAD):
                                     </p>
 
-                                    {/* TEXTAREA REDUCIDO A 2 LÍNEAS (60px) */}
                                     <div className="mb-4 mt-2">
                                         <textarea 
                                             className="textarea-dotted h-[60px]" 
@@ -265,28 +264,35 @@
                                     </div>
                                 </div>
 
-                                {/* FIRMAS AMPLIADAS (OCUPAN EL ESPACIO GANADO) */}
-                                <div className="mt-4 flex justify-between gap-8 h-64"> 
-                                    <div className="w-1/2 border border-black relative flex flex-col justify-between">
-                                        <div className="bg-gray-200 border-b border-black text-center text-xs font-bold p-1 uppercase">
+                                {/* FIRMAS SIN CUADROS NI LEYENDA SELLO */}
+                                <div className="mt-8 flex justify-between gap-12 h-64"> 
+                                    
+                                    {/* BLOQUE POLICÍA */}
+                                    <div className="w-1/2 relative flex flex-col justify-between">
+                                        {/* Título simple sin caja */}
+                                        <div className="text-center text-xs font-bold p-1 uppercase underline underline-offset-4 decoration-1">
                                             Por la Policía Local (Entrega)
                                         </div>
+                                        
                                         <div className="w-full text-center text-xs px-2 pb-2">
                                             Fdo: Agente TIP <span className="font-mono font-bold">{formData.agente}</span>
                                         </div>
                                     </div>
 
-                                    <div className="w-1/2 border border-black relative flex flex-col justify-between">
-                                        <div className="bg-gray-200 border-b border-black text-center text-xs font-bold p-1 uppercase">
+                                    {/* BLOQUE JUZGADO */}
+                                    <div className="w-1/2 relative flex flex-col justify-between">
+                                        {/* Título simple sin caja */}
+                                        <div className="text-center text-xs font-bold p-1 uppercase underline underline-offset-4 decoration-1">
                                             Por el Juzgado (Recibí)
                                         </div>
-                                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-200 text-3xl font-bold select-none pointer-events-none">
-                                            SELLO
-                                        </div>
+                                        
+                                        {/* ESPACIO EN BLANCO TOTAL (SIN "SELLO") */}
+                                        
                                         <div className="w-full text-center text-xs pb-2">
                                             Firma Funcionario/a
                                         </div>
                                     </div>
+
                                 </div>
 
                             </div>
