@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Menú Principal de Archivos HTML - GAD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* --- ESTILOS GENERALES --- */
@@ -50,7 +53,7 @@
         .counters-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; width: 100%; }
         .counter-card { background-color: #4b5563; color: white; border-radius: 8px; padding: 10px 5px; width: 110px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.2); position: relative; }
         .counter-card.total { background-color: #2563eb; width: 120px; }
-        .counter-header { font-size: 0.85rem; font-weight: 700; text-align: center; margin-bottom: 5px; line-height: 1.1; }
+        .counter-header { font-size: 0.85rem; font-weight: 700; text-align: center; margin-bottom: 5px; line-height: 1.1; word-break: break-word; }
         .counter-number { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
         .counter-date { font-size: 0.65rem; color: #d1d5db; margin-bottom: 8px; text-align: center; }
         .counter-btn { background-color: #6366f1; color: white; font-size: 0.7rem; font-weight: 600; padding: 4px 0; width: 90%; border-radius: 4px; border: none; cursor: pointer; transition: background 0.2s; }
@@ -91,11 +94,11 @@
             height: 110px; 
             width: 110px; 
             margin: 0 auto 20px; 
-            background: transparent; /* Fondo transparente clave */
+            background: transparent; 
             display: flex; 
             justify-content: center; 
             align-items: center;
-            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3)); /* Sombra elegante al logo */
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3)); 
         }
         .modal-header-logo img { 
             width: 100%; 
@@ -125,36 +128,46 @@
             background-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
-        /* Opción oscura para el select en móviles */
-        .modal select option { background-color: #1e293b; color: white; }
 
-        /* BOTÓN LOGIN MODERNO */
-        .modal button { 
+        /* BOTÓN LOGIN GOOGLE */
+        .google-btn { 
             padding: 14px; 
             border-radius: 10px; 
             border: none; 
-            background: linear-gradient(135deg, #4f46e5, #7c3aed); 
-            color: white; 
+            background: white; 
+            color: #374151; 
             width: 100%; 
             cursor: pointer; 
             font-weight: 700; 
             font-size: 1.1rem;
             letter-spacing: 0.5px;
             transition: transform 0.2s, opacity 0.2s;
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        .modal button:active { transform: scale(0.98); }
+        .google-btn:active { transform: scale(0.98); }
+        .google-btn:hover { background-color: #f3f4f6; }
         
+        /* Botones estándar modal */
+        .modal button.standard-btn {
+             padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; width: 100%; font-weight: 700; cursor: pointer;
+        }
+
         .modal-close { position: absolute; top: 15px; right: 15px; font-size: 1.5em; cursor: pointer; color: #64748b; transition: color 0.3s; }
         .modal-close:hover { color: #fff; }
 
         /* Estilos específicos para modales de gestión (Tablas y listas) */
         .modal-body hr { border-color: #334155; margin: 15px 0; }
         #user-list-container { margin-top: 15px; max-height: 200px; overflow-y: auto; width: 100%; }
-        #user-list-to-delete li { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #334155; color: #e2e8f0; }
+        #user-list-to-delete li { display: flex; flex-direction: column; padding: 12px; border-bottom: 1px solid #334155; color: #e2e8f0; gap: 5px; }
         #user-list-to-delete li:last-child { border-bottom: none; }
-        #user-list-to-delete .btn-group { display: flex; gap: 8px; }
-        #user-list-to-delete button { width: auto; padding: 6px 12px; font-size: 0.8rem; margin-top: 0; background: #ef4444; box-shadow: none; }
+        .user-row-header { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 0.9rem;}
+        .user-row-actions { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
+        
+        #user-list-to-delete button { width: auto; padding: 4px 10px; font-size: 0.75rem; background: #ef4444; box-shadow: none; border-radius: 4px; color: white; border: none; cursor: pointer; }
         #user-list-to-delete .reset-btn { background: #3b82f6; }
 
         /* Tabla Logs */
@@ -186,6 +199,8 @@
         
         .editable-title { position: relative; display: inline-flex; align-items: center; }
         .editable-title-icon { margin-left: 10px; cursor: pointer; color: #4b5563; font-size: 1.2rem; }
+        
+        #user-info-display { font-size: 0.85rem; color: #4b5563; margin-bottom: 10px; text-align: center; font-weight: 600; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -207,6 +222,8 @@
             </h1>
         </div>
         
+        <div id="user-info-display"></div>
+
         <div id="drag-drop-zone-main-menu" class="p-1 rounded-lg transition-colors">
             <div id="main-menu-grid"></div>
         </div>
@@ -247,8 +264,7 @@
     </div>
 </footer>
 
-<div id="pin-modal-login" class="modal-overlay"></div>
-<div id="pin-modal-change" class="modal-overlay" style="display: none;"></div>
+<div id="google-login-modal-overlay" class="modal-overlay"></div>
 <div id="manage-users-modal" class="modal-overlay" style="display: none;"></div>
 <div id="full-log-modal" class="modal-overlay" style="display: none;"></div>
 
@@ -282,7 +298,7 @@
                 <div class="color-circle" style="background:#667eea;" data-color="#667eea"></div>
             </div>
         </div>
-        <button id="save-button-changes">Guardar Cambios</button>
+        <button id="save-button-changes" class="standard-btn">Guardar Cambios</button>
     </div>
 </div>
 
@@ -304,7 +320,7 @@
                 <textarea id="new-button-html-code" rows="5" class="drop-area" placeholder="Pega HTML o arrastra archivo"></textarea>
             </div>
         </div>
-        <button id="save-new-button">Crear</button>
+        <button id="save-new-button" class="standard-btn">Crear</button>
     </div>
 </div>
 
@@ -313,19 +329,32 @@
         <span class="modal-close" id="close-edit-title-modal">&times;</span>
         <h2>Editar Título</h2>
         <input type="text" id="edit-title-input" />
-        <button id="save-title-changes">Guardar</button>
+        <button id="save-title-changes" class="standard-btn">Guardar</button>
     </div>
 </div>
 
 <script>
-    const firebaseConfig = { databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app/" };
+   const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
     
     const BUTTONS_NODE = 'menuButtons';
     const TITLE_NODE = 'pageTitle';
-    const ADMIN_USER_KEY = '-O_moQVi8kLzEDjrvb-M';
     
+    // --- CONSTANTE ADMIN SUPREMO ---
+    const ADMIN_EMAIL = 'gadalicante@gmail.com';
+    // Nota: Usamos una colección nueva para evitar conflictos con usuarios antiguos
+    const USERS_NODE = 'usuarios_google'; 
+
     // UI Refs
     const mainMenuGrid = document.getElementById('main-menu-grid');
     const secondaryMenuContainer = document.getElementById('secondary-menu-container');
@@ -336,22 +365,27 @@
     const countersRow = document.getElementById('counters-row');
 
     // Modales
-    const modalLogin = document.getElementById('pin-modal-login');
+    const modalLogin = document.getElementById('google-login-modal-overlay');
     const modalEditBtn = document.getElementById('edit-button-modal');
     const modalAddBtn = document.getElementById('add-button-modal');
     const modalManageUsers = document.getElementById('manage-users-modal');
     const modalFullLog = document.getElementById('full-log-modal');
     
-    let currentUser = null;
     let isEditMode = false;
     let menuButtonsData = {};
     let draggedItem = null;
     let currentMenuPath = [];
+    let currentUserEmail = null;
 
     // --- UTILS ---
     async function getClientIP() {
         try { const r = await fetch('https://api64.ipify.org?format=json'); const d = await r.json(); return d.ip || 'N/A'; } 
         catch { return 'N/A'; }
+    }
+    
+    // Helper para convertir email a key de firebase (puntos no permitidos)
+    function sanitizeEmail(email) {
+        return email.replace(/\./g, ',');
     }
 
     // --- DRAG & DROP HTML ---
@@ -403,31 +437,24 @@
         a.onclick = () => {
             if (isEditMode) return;
             if (data.type === 'parent') { currentMenuPath.push(key); renderMenuButtons(); }
-            // --- INICIO DE LA CORRECCIÓN AUTOMÁTICA ---
             else if (data.htmlCode) {
                 const w = window.open('', '_blank');
                 if (w) {
                     let content = data.htmlCode;
-                    // Forzamos el viewport correcto para móviles
                     const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-
-                    // Lógica para reemplazar o insertar el viewport
                     if (content.includes('<meta name="viewport"')) {
                         content = content.replace(/<meta name="viewport"[^>]*>/i, viewportTag);
                     } else if (content.includes('<head>')) {
                         content = content.replace('<head>', '<head>' + viewportTag);
                     } else {
-                        // Si no hay head, lo ponemos al principio
                         content = viewportTag + content;
                     }
-
                     w.document.write(content);
                     w.document.close();
                 } else {
                     alert("Popup bloqueado. Por favor, permite ventanas emergentes.");
                 }
             }
-            // --- FIN DE LA CORRECCIÓN AUTOMÁTICA ---
             else if (data.href) window.open(data.href, '_blank');
         };
         div.appendChild(a);
@@ -490,30 +517,106 @@
     dragZone.ondrop = e => { e.preventDefault(); dragZone.classList.remove('drag-over-container'); if(draggedItem) { mainMenuGrid.appendChild(draggedItem); updateOrder(); } };
     function updateOrder() { const u={}; document.querySelectorAll('#main-menu-grid .menu-button-container').forEach((b,i) => u[`/${BUTTONS_NODE}/${b.dataset.id}/order`]=i+1); db.ref().update(u); }
 
-    // --- LOGIN & CONTADORES ---
-    async function loginSuccess(uid, user) {
-        currentUser = uid;
-        sessionStorage.setItem('loggedInUser', uid);
+    // --- LOGIN CON GOOGLE & GESTIÓN DE ACCESO ---
+    function initAppLogic() {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // Usuario logueado en Firebase
+                const emailKey = sanitizeEmail(user.email);
+                
+                // 1. Es el Admin Supremo?
+                if (user.email === ADMIN_EMAIL) {
+                    grantAccess(user, true);
+                    return;
+                }
+                
+                // 2. Verificar si está en la lista blanca
+                const snap = await db.ref(USERS_NODE + '/' + emailKey).once('value');
+                if (snap.exists()) {
+                     grantAccess(user, false);
+                } else {
+                    // No autorizado
+                    alert('ACCESO DENEGADO: Tu cuenta de Google (' + user.email + ') no está autorizada por el administrador.');
+                    auth.signOut();
+                    modalLogin.style.display = 'flex';
+                }
+
+            } else {
+                // No logueado
+                modalLogin.style.display = 'flex';
+                adminPanel.style.display = 'none';
+                userControls.style.display = 'none';
+                document.getElementById('user-info-display').innerHTML = '';
+            }
+        });
+    }
+
+    async function grantAccess(user, isAdmin) {
         modalLogin.style.display = 'none';
-        const isAdmin = uid === ADMIN_USER_KEY;
-        if (isAdmin) { adminPanel.style.display = 'flex'; document.getElementById('edit-title-icon').style.display = isEditMode ? 'inline-block' : 'none'; } 
-        else { userControls.style.display = 'block'; }
-        db.ref('usuarios/' + uid).update({ accesos: (user.accesos || 0) + 1, ultimoAcceso: Date.now() });
-        db.ref('visitLog').push().set({ userId: uid, userName: user.nombre, timestamp: Date.now(), ip: await getClientIP() });
+        currentUserEmail = user.email;
+        
+        // Registrar visita
+        const emailKey = sanitizeEmail(user.email);
+        const now = Date.now();
+        const ip = await getClientIP();
+        
+        // Actualizar contador usuario (si no es admin o si queremos trackear admin tambien, aqui trackeamos todos)
+        db.ref(USERS_NODE + '/' + emailKey).transaction(currentData => {
+            if (currentData) {
+                return { 
+                    ...currentData, 
+                    email: user.email, 
+                    accesos: (currentData.accesos || 0) + 1, 
+                    ultimoAcceso: now 
+                };
+            } else if (isAdmin) {
+                // Si es admin y no existe registro, crearlo
+                return { email: user.email, accesos: 1, ultimoAcceso: now, nombre: 'Administrador' };
+            }
+            return currentData; // Si no existe y no es admin, no debería llegar aqui por la logica previa
+        });
+
+        // Log global
+        db.ref('visitLog').push().set({ 
+            userId: emailKey, 
+            userName: user.displayName || user.email, 
+            email: user.email,
+            timestamp: now, 
+            ip: ip 
+        });
+
+        // UI
+        document.getElementById('user-info-display').innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
+        
+        if (isAdmin) {
+            adminPanel.style.display = 'flex';
+            document.getElementById('edit-title-icon').style.display = isEditMode ? 'inline-block' : 'none';
+        } else {
+            userControls.style.display = 'block';
+        }
     }
 
-    function checkLoginStatus() {
-        const uid = sessionStorage.getItem('loggedInUser');
-        if (uid) db.ref('usuarios/' + uid).once('value').then(s => s.val() ? loginSuccess(uid, s.val()) : (sessionStorage.removeItem('loggedInUser'), location.reload()));
-        else modalLogin.style.display = 'flex';
-    }
+    // Funciones Login / Logout
+    const loginWithGoogle = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(error => {
+            console.error(error);
+            alert("Error al iniciar sesión: " + error.message);
+        });
+    };
 
-    const logout = () => { if(isEditMode) toggleEditModeUI(); sessionStorage.removeItem('loggedInUser'); location.reload(); };
+    const logout = () => { 
+        if(isEditMode) toggleEditModeUI(); 
+        auth.signOut().then(() => location.reload()); 
+    };
+    
     document.getElementById('btn-logout').onclick = logout;
     document.getElementById('btn-logout-user').onclick = logout;
 
+    // --- ADMIN: CONTADORES & GESTIÓN ---
     function renderAdminCounters(users) {
-        let sorted = Object.entries(users).map(([k, v]) => ({ key: k, ...v })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+        if(!users) return;
+        let sorted = Object.entries(users).map(([k, v]) => ({ key: k, ...v })).sort((a, b) => (a.nombre || a.email).localeCompare(b.nombre || b.email));
         let total = 0;
         let html = '';
         sorted.forEach(u => {
@@ -523,7 +626,11 @@
                 const d = new Date(u.ultimoAcceso);
                 dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
             }
-            html += `<div class="counter-card"><div class="counter-header">${u.nombre}</div><div class="counter-number">${visits}</div><div class="counter-date">${dateStr}</div><button class="counter-btn" onclick="openUserVisitHistory('${u.key}', '${u.nombre}')">Ver Historial</button></div>`;
+            // Nombre a mostrar (Email o Nombre asignado)
+            let displayName = u.nombre || u.email;
+            if(displayName.length > 15) displayName = displayName.substring(0,12) + '...';
+
+            html += `<div class="counter-card"><div class="counter-header" title="${u.email}">${displayName}</div><div class="counter-number">${visits}</div><div class="counter-date">${dateStr}</div><button class="counter-btn" onclick="openUserVisitHistory('${u.key}', '${u.email}')">Ver Historial</button></div>`;
         });
         document.getElementById('counters-row').innerHTML = `<div class="counters-container"><div class="counter-card total"><div class="counter-header">TOTAL VISITAS</div><div class="counter-number" style="font-size:1.8rem;margin-top:10px;">${total}</div><div class="counter-footer-text">${sorted.length} usuarios</div></div>${html}</div>`;
     }
@@ -539,62 +646,124 @@
     }
     document.getElementById('show-edit-menu-modal').onclick = toggleEditModeUI;
     
-    // --- INIT & MODALES RESTAURADOS ---
+    // --- INIT & MODALES ---
     window.addEventListener('DOMContentLoaded', () => {
-        // 1. Login Moderno (Logo Grande, Sin Borde)
-        modalLogin.innerHTML = `<div class="modal"><div class="modal-header-logo"><img src="logogad.png"></div><h2>Acceso GAD</h2><p>Selecciona tu usuario e introduce tu PIN</p><div class="modal-body"><select id="user-selector"></select><input type="password" id="pin-input-login" placeholder="PIN (4 dígitos)" maxlength="4" inputmode="numeric"/></div><button id="pin-submit-login">Entrar</button><p id="pin-error-login" class="error-message" style="display:none;color:#ef4444;margin-top:10px;font-weight:bold;"></p></div>`;
         
-        // 2. Modal Usuarios RESTAURADO (Con lista, eliminar y resetear)
-        document.getElementById('manage-users-modal').innerHTML = `<div class="modal"><span class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</span><h2>Gestionar Usuarios</h2><div class="modal-body"><h3>Añadir Nuevo Usuario</h3><input type="text" id="new-user-name" placeholder="Nombre"/><input type="password" id="new-user-pin" placeholder="PIN (4 dígitos)" maxlength="4"/><button id="add-user-button">Añadir</button><p id="add-user-message" style="margin-top:15px;"></p><hr><h3 style="margin-bottom:10px;">Lista de Usuarios</h3><div id="user-list-container"><ul id="user-list-to-delete"></ul></div></div></div>`;
+        // 1. Render Modal Login GOOGLE
+        modalLogin.innerHTML = `
+            <div class="modal">
+                <div class="modal-header-logo"><img src="logogad.png"></div>
+                <h2>Acceso GAD</h2>
+                <p>Identifícate con tu cuenta de Google</p>
+                <div class="modal-body">
+                    <button id="google-login-btn" class="google-btn">
+                       <i class="fab fa-google" style="color:#DB4437;"></i> Iniciar sesión con Google
+                    </button>
+                </div>
+            </div>`;
+        document.getElementById('google-login-btn').onclick = loginWithGoogle;
         
-        // 3. Modal Logs RESTAURADO (Con botones de gestión)
-        document.getElementById('full-log-modal').innerHTML = `<div class="modal" style="max-width:800px;height:90vh;"><span class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</span><h2 style="margin-bottom:5px;">Registro Global</h2><div id="full-log-controls" style="padding:15px;border-bottom:1px solid #444;margin-bottom:15px;background:#1a1a2e;border-radius:5px;"><h3 style="color:#667eea;margin-bottom:10px;">Gestión (Solo Admin)</h3><div style="display:flex;flex-direction:column;gap:10px;"><button id="reset-all-user-visits" class="btn-admin-modal"><i class="fas fa-undo-alt"></i> Resetear TODOS Contadores</button><button id="clear-global-log" class="btn-admin-modal" style="background:#f59e0b;"><i class="fas fa-trash-alt"></i> Borrar Log Global</button><hr style="border-color:#4b5563;margin:10px 0;"><div style="display:flex;align-items:center;gap:10px;"><select id="user-selector-reset" style="flex-grow:1;padding:10px;border-radius:5px;background:#282844;color:#fff;border:1px solid #555;"></select><button id="reset-user-visits-button" class="btn-admin-modal" style="background:#1a73e8;width:150px;margin-bottom:0;">Reset Usuario</button></div></div></div><div id="full-log-container" style="max-height:calc(100% - 220px);overflow-y:auto;"></div></div>`;
+        // 2. Render Modal Usuarios (Gestión por Email)
+        document.getElementById('manage-users-modal').innerHTML = `
+            <div class="modal">
+                <span class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</span>
+                <h2>Gestionar Acceso</h2>
+                <div class="modal-body">
+                    <h3>Autorizar Nuevo Email</h3>
+                    <input type="email" id="new-user-email" placeholder="ejemplo@gmail.com"/>
+                    <input type="text" id="new-user-alias" placeholder="Nombre (Opcional)"/>
+                    <button id="add-user-button" class="standard-btn">Autorizar</button>
+                    <p id="add-user-message" style="margin-top:15px; color:#4ade80; display:none;"></p>
+                    <hr>
+                    <h3 style="margin-bottom:10px;">Usuarios Autorizados</h3>
+                    <div id="user-list-container">
+                        <ul id="user-list-to-delete"></ul>
+                    </div>
+                </div>
+            </div>`;
+        
+        // 3. Render Modal Logs
+        document.getElementById('full-log-modal').innerHTML = `
+            <div class="modal" style="max-width:800px;height:90vh;">
+                <span class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</span>
+                <h2 style="margin-bottom:5px;">Registro Global</h2>
+                <div id="full-log-controls" style="padding:15px;border-bottom:1px solid #444;margin-bottom:15px;background:#1a1a2e;border-radius:5px;">
+                    <h3 style="color:#667eea;margin-bottom:10px;">Gestión (Solo Admin)</h3>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <button id="reset-all-user-visits" class="btn-admin-modal"><i class="fas fa-undo-alt"></i> Resetear TODOS Contadores</button>
+                        <button id="clear-global-log" class="btn-admin-modal" style="background:#f59e0b;"><i class="fas fa-trash-alt"></i> Borrar Log Global</button>
+                    </div>
+                </div>
+                <div id="full-log-container" style="max-height:calc(100% - 220px);overflow-y:auto;"></div>
+            </div>`;
 
+        // Listeners Modales
         document.getElementById('show-manage-users-modal').onclick = () => modalManageUsers.style.display = 'flex';
         document.getElementById('show-full-log-modal').onclick = () => { renderFullGlobalLog(); modalFullLog.style.display = 'flex'; };
 
-        const userSel = document.getElementById('user-selector');
-        const pinIn = document.getElementById('pin-input-login');
-        const btnLog = document.getElementById('pin-submit-login');
-        userSel.onchange = () => pinIn.focus();
-        pinIn.oninput = () => { if(pinIn.value.length === 4) btnLog.click(); };
-        btnLog.onclick = () => {
-            const uid = userSel.value; const pin = pinIn.value; if(!uid) return;
-            db.ref('usuarios/'+uid).once('value').then(s => {
-                const u = s.val();
-                if(u && u.pin === pin) loginSuccess(uid, u);
-                else { document.getElementById('pin-error-login').innerText="PIN Incorrecto"; document.getElementById('pin-error-login').style.display="block"; }
-            });
-        };
-
-        db.ref('usuarios').on('value', s => {
+        // Listener Base de Datos (Usuarios)
+        db.ref(USERS_NODE).on('value', s => {
             const u = s.val();
             if(u) {
-                userSel.innerHTML = '<option value="">Usuario...</option>';
                 const ul = document.getElementById('user-list-to-delete');
-                const selReset = document.getElementById('user-selector-reset');
                 if(ul) ul.innerHTML = '';
-                if(selReset) selReset.innerHTML = '<option value="">-- Selecciona Usuario --</option>';
-                Object.entries(u).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre)).forEach(([k,v]) => {
-                    userSel.innerHTML += `<option value="${k}">${v.nombre}</option>`;
-                    if(selReset) selReset.innerHTML += `<option value="${k}">${v.nombre}</option>`;
-                    if(ul) ul.innerHTML += `<li><span>${v.nombre}</span><div class="btn-group"><span style="font-size:0.8em;margin-right:10px;">Visitas: ${v.accesos||0}</span><button class="reset-btn" onclick="resetUserVisits('${k}')">Reset</button><button onclick="delUser('${k}')">Eliminar</button></div></li>`;
+                
+                Object.entries(u).sort((a,b)=>(a[1].email || "").localeCompare(b[1].email || "")).forEach(([k,v]) => {
+                    // Evitar que el admin se borre a sí mismo si está en la lista, aunque la lógica lo protege por hardcode
+                    const isHardAdmin = v.email === ADMIN_EMAIL;
+                    
+                    if(ul) {
+                        ul.innerHTML += `
+                        <li>
+                            <div class="user-row-header">
+                                <span>${v.email}</span>
+                                <span style="font-weight:400; font-size:0.8em; color:#94a3b8;">${v.nombre || ''}</span>
+                            </div>
+                            <div class="user-row-actions">
+                                <span style="font-size:0.7em; align-self:center; margin-right:5px; color:#60a5fa;">Visitas: ${v.accesos||0}</span>
+                                <button class="reset-btn" onclick="resetUserVisits('${k}')">Reset</button>
+                                ${!isHardAdmin ? `<button onclick="delUser('${k}')">Revocar</button>` : ''}
+                            </div>
+                        </li>`;
+                    }
                 });
-                if(currentUser === ADMIN_USER_KEY) renderAdminCounters(u);
+                // Si el usuario actual es admin, actualizar contadores
+                if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) renderAdminCounters(u);
             }
         });
 
-        // Listeners de Gestión Restaurados
+        // Listeners Gestión Usuarios
         document.getElementById('add-user-button').onclick = () => {
-            const n=document.getElementById('new-user-name').value.trim(); const p=document.getElementById('new-user-pin').value.trim();
-            if(n && p.length===4) db.ref('usuarios').push({nombre:n,pin:p,accesos:0}).then(()=>{ document.getElementById('add-user-message').innerText="Añadido"; document.getElementById('new-user-name').value=''; document.getElementById('new-user-pin').value='';});
+            const emailRaw = document.getElementById('new-user-email').value.trim().toLowerCase();
+            const alias = document.getElementById('new-user-alias').value.trim();
+            
+            if(emailRaw && emailRaw.includes('@')) {
+                const emailKey = sanitizeEmail(emailRaw);
+                db.ref(USERS_NODE + '/' + emailKey).update({
+                    email: emailRaw,
+                    nombre: alias || 'Usuario',
+                    accesos: 0
+                }).then(() => {
+                    const msg = document.getElementById('add-user-message');
+                    msg.innerText = "Usuario autorizado correctamente.";
+                    msg.style.display = 'block';
+                    setTimeout(() => msg.style.display='none', 3000);
+                    document.getElementById('new-user-email').value='';
+                    document.getElementById('new-user-alias').value='';
+                });
+            } else {
+                alert("Introduce un correo válido.");
+            }
         };
-        document.getElementById('reset-all-user-visits').onclick = async () => { if(confirm("¿Resetear TODOS a 0?")) { const s=await db.ref('usuarios').once('value'); const u={}; s.forEach(c=>u[c.key+'/accesos']=0); await db.ref('usuarios').update(u); alert("Reseteados"); }};
-        document.getElementById('clear-global-log').onclick = async () => { if(confirm("¿Borrar Log?")) { await db.ref('visitLog').remove(); alert("Borrado"); renderFullGlobalLog(); }};
-        document.getElementById('reset-user-visits-button').onclick = () => { const uid=document.getElementById('user-selector-reset').value; if(uid) resetUserVisits(uid); };
 
-        // Resto de inits
-        checkLoginStatus();
+        // Listeners Globales Admin
+        document.getElementById('reset-all-user-visits').onclick = async () => { if(confirm("¿Resetear TODOS los contadores a 0?")) { const s=await db.ref(USERS_NODE).once('value'); const u={}; s.forEach(c=>u[c.key+'/accesos']=0); await db.ref(USERS_NODE).update(u); alert("Reseteados"); }};
+        document.getElementById('clear-global-log').onclick = async () => { if(confirm("¿Borrar HISTORIAL DE LOGS completo?")) { await db.ref('visitLog').remove(); alert("Borrado"); renderFullGlobalLog(); }};
+
+        // Start App
+        initAppLogic();
+
+        // Botones creación/edición botones
         document.getElementById('add-new-button').onclick = () => { document.getElementById('new-button-text').value=''; modalAddBtn.style.display='flex'; };
         document.getElementById('save-new-button').onclick = async () => {
             const t = document.getElementById('new-button-text').value; if(!t) return;
@@ -621,12 +790,14 @@
         document.querySelectorAll('.modal-close').forEach(c => c.onclick = () => c.closest('.modal-overlay').style.display = 'none');
     });
 
-    // Helper functions
-    window.resetUserVisits = async (uid) => { if(confirm("¿Resetear visitas?")) await db.ref('usuarios/'+uid).update({accesos:0}); };
-    window.delUser = async (uid) => { if(confirm("¿Eliminar usuario?")) await db.ref('usuarios/'+uid).remove(); };
-    window.openUserVisitHistory = async (uid, name) => {
-        const s = await db.ref('visitLog').orderByChild('userId').equalTo(uid).once('value');
-        let h = `<h2>${name}</h2><table>`;
+    // Helper functions globales
+    window.resetUserVisits = async (key) => { if(confirm("¿Resetear visitas?")) await db.ref(USERS_NODE+'/'+key).update({accesos:0}); };
+    window.delUser = async (key) => { if(confirm("¿Revocar acceso a este usuario?")) await db.ref(USERS_NODE+'/'+key).remove(); };
+    window.openUserVisitHistory = async (key, email) => {
+        // Buscar por email en logs antiguos y nuevos (o solo nuevos)
+        // Usamos el userId guardado en el log que ahora es la key del email
+        const s = await db.ref('visitLog').orderByChild('userId').equalTo(key).once('value');
+        let h = `<h2>Historial: ${email}</h2><table>`;
         if(s.val()) Object.values(s.val()).sort((a,b)=>b.timestamp-a.timestamp).forEach(e => h+=`<tr><td>${new Date(e.timestamp).toLocaleString()}</td><td>${e.ip||'N/A'}</td></tr>`);
         else h+='<tr><td>Sin datos</td></tr>';
         h+='</table>';
@@ -634,10 +805,15 @@
     };
     async function renderFullGlobalLog() {
         const c = document.getElementById('full-log-container'); c.innerHTML = 'Cargando...';
-        const s = await db.ref('visitLog').once('value');
+        const s = await db.ref('visitLog').limitToLast(100).once('value'); // Limitado a 100 ultimos para rendimiento
         if(!s.val()) return c.innerHTML = 'Vacío';
         let h = '<table><thead><tr><th>User</th><th>Date</th><th>IP</th></tr></thead><tbody>';
-        Object.values(s.val()).sort((a,b)=>b.timestamp-a.timestamp).forEach(e => h+=`<tr><td>${e.userName}</td><td>${new Date(e.timestamp).toLocaleString()}</td><td>${e.ip||'-'}</td></tr>`);
+        // Convertir a array y reverso
+        const entries = Object.values(s.val()).sort((a,b)=>b.timestamp-a.timestamp);
+        entries.forEach(e => {
+            const nameDisplay = e.email ? e.email : (e.userName || 'Anónimo');
+            h+=`<tr><td>${nameDisplay}</td><td>${new Date(e.timestamp).toLocaleString()}</td><td>${e.ip||'-'}</td></tr>`;
+        });
         c.innerHTML = h+'</tbody></table>';
     };
 </script>
