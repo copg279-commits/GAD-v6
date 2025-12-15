@@ -521,25 +521,42 @@ const firebaseConfig = {
         renderMenuButtons();
     }
 
-    // ACCIÓN "ATRÁS" UNIFICADA
-    function goBack() {
-        window.history.back(); // Delegamos todo al historial del navegador
+ // --- ACCION NAVEGAR ATRÁS (MODIFICADA PARA SOPORTAR NAVEGADOR) ---
+function goBack() {
+    // Si estamos en modo visualización (Iframe), forzamos la salida al menú, sin depender de window.history.back()
+    if (isViewingContent) {
+        showMenuArea();
+        const currentMenuId = currentMenuPath.length > 0 ? currentMenuPath[currentMenuPath.length - 1] : '';
+        history.replaceState(null, '', currentMenuId ? '#folder=' + currentMenuId : '#');
+        return;
     }
+    
+    // Si estamos en un submenú, sí usamos history.back()
+    if (currentMenuPath.length > 0) {
+        window.history.back();
+        return;
+    }
+}
 
-    // GESTIÓN DEL HISTORIAL (Navegador y botones)
-    window.onpopstate = function(event) {
-        if (isViewingContent) {
-            // Si estábamos viendo contenido y pulsamos atrás, volvemos al menú
-            showMenuArea();
-        } else if (currentMenuPath.length > 0) {
-            // Si estábamos en una subcarpeta, subimos nivel
-            currentMenuPath.pop();
-            renderMenuButtons();
-        }
-        // Si estábamos en la raíz, comportamiento normal
-    };
+// GESTIÓN DEL HISTORIAL (Mantenemos onpopstate para el botón ATRÁS del NAVEGADOR)
+window.onpopstate = function(event) {
+    if (isViewingContent) {
+        // Si el NAVEGADOR pulsa ATRÁS, salimos del visor
+        showMenuArea();
+    } else if (currentMenuPath.length > 0) {
+        // Si estábamos en una subcarpeta, subimos nivel (la acción de popstate lo hace automáticamente)
+        currentMenuPath.pop();
+        renderMenuButtons();
+    }
+};
 
-    sidebarBackBtn.onclick = () => { goBack(); closeSidebar(); };
+sidebarBackBtn.onclick = () => { goBack(); closeSidebar(); };
+// Botón "ATRÁS" de la barra principal (Top Bar)
+document.querySelector('.top-bar-strip').addEventListener('click', (e) => {
+    if (e.target.classList.contains('top-back-btn')) {
+        goBack();
+    }
+});
 
     // --- UTILS ---
     async function getClientIP() {
