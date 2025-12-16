@@ -455,20 +455,27 @@
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+    
+    // ⚠️ CONFIGURACIÓN DE FIREBASE ACTUAL
+    // Esta es la configuración que estaba en su último archivo adjunto (gad-alicante-v1).
+    // Si esta es la base de datos que contiene los nodos que quiere renombrar, úsela.
     const firebaseConfig = {
-      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
-      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
-      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "gad-alicante-v3", // Nuevo ID
-      storageBucket: "gad-alicante-v3.firebasestorage.app",
-      messagingSenderId: "906986258369",
-      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
-    };
+        apiKey: "AIzaSyBu5ALRVJ5aDzuU9YIAQD_9KMgR6ZwttpU", 
+        authDomain: "gad-alicante-v1.firebaseapp.com",
+        databaseURL: "https://gad-alicante-v1-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gad-alicante-v1",
+        storageBucket: "gad-alicante-v1.appspot.com",
+        messagingSenderId: "545835357966",
+        appId: "1:545835357966:web:6351ec6c0d3c8e69eb695f"
+    }
 
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const documentsRef = db.ref('judicializados');
       const savedPaisesRef = db.ref('paises');
+
+      // Eliminamos la bandera de Local Storage para forzar la migración
+      // localStorage.removeItem('migration_atestado_key_complete'); 
 
       const documentModal = document.getElementById('documentModal');
       const closeModalBtn = document.getElementById('closeModalBtn');
@@ -486,6 +493,7 @@
 
       let savedPaises = [];
       
+      // Llenar opciones de Juzgado
       const juzgadoOptions = ["Se desconoce"];
       for (let i = 1; i <= 15; i++) {
         juzgadoOptions.push(`Instrucción ${i}`);
@@ -495,10 +503,54 @@
       }
       juzgadoOptions.forEach(opt => juzgadoSelect.innerHTML += `<option value="${opt}">${opt}</option>`);
 
+      // Cargar lista de países guardados
       savedPaisesRef.on('value', (snapshot) => {
           savedPaises = snapshot.val() || [];
           paisesList.innerHTML = savedPaises.map(pais => `<option value="${pais}"></option>`).join('');
       });
+
+
+      // ** FUNCIÓN DE MIGRACIÓN DE CLAVES (LA BASE DEL PROBLEMA) **
+      const runMigration = async () => {
+          console.log("Iniciando migración de claves: Renombrando automáticas a Atestado.");
+          const snapshot = await documentsRef.once('value');
+          const updates = {};
+          let migrationNeeded = false;
+
+          const sanitizeKey = (atestado) => {
+              // Sanitiza el atestadoNumero: reemplaza '/', '.' y espacios con '-' para Firebase
+              return atestado.trim().replace(/[\/.\s]/g, '-').toUpperCase();
+          };
+
+          snapshot.forEach(childSnapshot => {
+              const oldKey = childSnapshot.key;
+              
+              // Criterio: Si la clave empieza con '-', es una clave automática que debe migrarse
+              if (oldKey.startsWith('-')) {
+                  const item = childSnapshot.val();
+                  const atestadoNumero = item.atestadoNumero;
+
+                  if (atestadoNumero) {
+                      const newKey = sanitizeKey(atestadoNumero);
+                      
+                      updates[newKey] = item; // Crea el nuevo nodo con la clave limpia
+                      updates[oldKey] = null; // Marca el nodo antiguo para ser eliminado
+                      
+                      migrationNeeded = true;
+                      console.log(`MIGRANDO: ${oldKey} -> ${newKey}`);
+                  }
+              }
+          });
+
+          if (migrationNeeded) {
+              await documentsRef.update(updates);
+              console.log("Migración completada. Claves limpias aplicadas.");
+          } else {
+              console.log("No se encontraron claves automáticas pendientes de migrar.");
+          }
+      };
+      // ** FIN FUNCIÓN DE MIGRACIÓN **
+
 
       const renderTable = (snapshot) => {
         resultsTableBody.innerHTML = '';
@@ -511,7 +563,20 @@
 
         if (data.length > 0) {
             resultsContainer.classList.remove('hidden');
-            data.sort((a, b) => new Date(b.fechaSuceso) - new Date(a.fechaSuceso));
+            
+            // ORDENACIÓN ROBUSTA (Solución al problema original de Invalid Date)
+            data.sort((a, b) => {
+                // Obtiene el tiempo en milisegundos. Invalid Date dará NaN.
+                const dateA = new Date(a.fechaSuceso).getTime(); 
+                const dateB = new Date(b.fechaSuceso).getTime();
+
+                // Si alguna fecha es inválida, se mueve al final de la ordenación
+                if (isNaN(dateB)) return -1;
+                if (isNaN(dateA)) return 1;
+
+                // Ordenación descendente (más reciente primero)
+                return dateB - dateA; 
+            });
 
             data.forEach((item) => {
                 const row = document.createElement('tr');
@@ -533,11 +598,14 @@
                 
                 if (item.documentoUrl) {
                     if (item.documentoUrl.includes('1drv.ms/i/')) {
+                        // Enlace directo para OneDrive
                         const directUrl = `${item.documentoUrl.split('?')[0]}?width=150&height=100`;
                         imageHtml = `<a href="${item.documentoUrl}" target="_blank"><img src="${directUrl}" alt="Doc" class="thumbnail"></a>`;
                     } else if (isImage) {
+                        // Si es un enlace a imagen simple
                         imageHtml = `<a href="${item.documentoUrl}" target="_blank"><img src="${item.documentoUrl}" alt="Doc" class="thumbnail"></a>`;
                     } else {
+                        // Enlace a documento (PDF, etc.)
                         imageHtml = `<a href="${item.documentoUrl}" target="_blank" class="doc-link"><i class="fas fa-eye mr-2"></i>Ver Documento</a>`;
                     }
                 }
@@ -593,7 +661,14 @@
         }
       };
 
-      documentsRef.on('value', renderTable);
+      // ** LÓGICA DE SUSCRIPCIÓN Y MIGRACIÓN **
+      // Forzamos la migración antes de suscribirnos a los cambios
+      runMigration().then(() => {
+          documentsRef.on('value', renderTable);
+      }).catch(error => {
+          console.error("Error al iniciar la aplicación después de la migración:", error);
+      });
+      
 
       addNewRowBtn.addEventListener('click', () => {
         documentForm.reset();
@@ -602,18 +677,26 @@
         documentModal.classList.add('open');
       });
 
+      // ** LÓGICA DE GUARDADO (MODIFICADA PARA USAR ATESTADO COMO CLAVE) **
       documentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const saveBtn = documentForm.querySelector('button[type="submit"]');
         saveBtn.disabled = true;
 
         try {
-            const key = recordKeyInput.value;
+            const atestadoNumero = document.getElementById('atestadoNumero').value.trim();
+            
+            // Creamos la CLAVE limpia para Firebase
+            const sanitizeKey = (atestado) => atestado.trim().replace(/[\/.\s]/g, '-').toUpperCase();
+            const safeKey = sanitizeKey(atestadoNumero); 
+            
+            const key = recordKeyInput.value; // Clave para operaciones de actualización
+
             const data = {
               fechaSuceso: document.getElementById('fechaSuceso').value,
               pais: document.getElementById('pais').value,
               tipoDocumento: document.getElementById('tipoDocumento').value,
-              atestadoNumero: document.getElementById('atestadoNumero').value,
+              atestadoNumero: atestadoNumero, // Se guarda el formato original aquí
               juicioRapido: document.getElementById('juicioRapido').value,
               juzgado: document.getElementById('juzgado').value,
               resultado: document.getElementById('resultado').value,
@@ -622,12 +705,24 @@
             };
 
             if (key) {
+                // Actualización: Usamos la clave que estaba en la fila
                 const currentItem = (await documentsRef.child(key).once('value')).val();
                 data.archived = currentItem.archived || false;
-                await documentsRef.child(key).update(data);
+                
+                // Si la clave del Atestado ha cambiado, debemos borrar el antiguo y crear el nuevo
+                if (key !== safeKey) {
+                     // Si el usuario edita el número de atestado o si todavía es una clave antigua no migrada
+                     await documentsRef.child(key).remove(); 
+                     await documentsRef.child(safeKey).set(data); 
+                } else {
+                    // Si la clave es la misma, solo actualizamos
+                    await documentsRef.child(key).update(data);
+                }
+
             } else {
+                // Nuevo registro: Usamos el atestado limpio como clave
                 data.archived = false;
-                await documentsRef.push(data);
+                await documentsRef.child(safeKey).set(data);
             }
 
             const pais = data.pais.trim();
@@ -646,11 +741,12 @@
         }
       });
 
+      // ** LÓGICA DE ACCIONES DE TABLA (EDITAR/ELIMINAR/ARCHIVAR) **
       resultsTableBody.addEventListener('click', async (e) => {
         const target = e.target;
         const row = target.closest('tr');
         if (!row) return;
-        const key = row.dataset.key;
+        const key = row.dataset.key; // Key ahora será el atestado
 
         if (target.closest('.edit-btn')) {
           const itemToEdit = (await documentsRef.child(key).once('value')).val();
@@ -663,7 +759,7 @@
           document.getElementById('resultado').value = itemToEdit.resultado;
           document.getElementById('documentoUrl').value = itemToEdit.documentoUrl || '';
           document.getElementById('sentenciaUrl').value = itemToEdit.sentenciaUrl || '';
-          recordKeyInput.value = key;
+          recordKeyInput.value = key; // Guardamos la clave limpia (atestado)
           modalTitle.textContent = 'Editar Documento';
           documentModal.classList.add('open');
         } else if (target.closest('.delete-btn')) {
@@ -680,6 +776,7 @@
       const closeOrCancelModal = () => {
         documentModal.classList.remove('open');
         documentForm.reset();
+        recordKeyInput.value = ''; // Importante limpiar la clave guardada
       };
       
       modalContent.addEventListener('click', (e) => {
