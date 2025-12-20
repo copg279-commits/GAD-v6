@@ -29,9 +29,19 @@
         .header-logo-container img { width: 100%; height: 100%; object-fit: contain; }
 
         main { flex: 1; padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; }
-        .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        
+        /* PANEL PRINCIPAL */
+        .panel { 
+            background: white; padding: 20px; border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; margin-bottom: 20px; 
+            min-height: 500px; 
+        }
 
-        /* ZONA DE CARGA */
+        /* --- ZONA 1: CONTROLES DE LA APP (Se ocultarán al abrir ayuda) --- */
+        #app-controls-wrapper {
+            transition: opacity 0.3s ease;
+        }
+
         .upload-controls { display: grid; grid-template-columns: 1fr 280px; gap: 15px; margin-bottom: 20px; }
         #drop-zone {
             border: 3px dashed #3498db; border-radius: 12px; padding: 40px; text-align: center; 
@@ -47,36 +57,81 @@
         .btn-undo { background: #607d8b; }
         .btn-delete-all { background: #e74c3c; }
 
-        /* BARRA DE HERRAMIENTAS */
         .search-container { 
             background: #e9f2f7; padding: 15px; border-radius: 8px; border: 1px solid #3498db; 
             margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
         }
         #search-input { width: 250px; padding: 12px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; height: 45px;}
         
-        /* BOTONES TOOLBAR UNIFORMES */
-        .btn-tool { 
-            flex: 1; 
-            min-width: 140px; 
-            max-width: 180px; 
-            height: 45px; 
-            font-size: 0.95em;
-        }
+        .btn-tool { flex: 1; min-width: 140px; max-width: 180px; height: 45px; font-size: 0.95em; }
         .btn-show-all { background: #f39c12; }
         .btn-sort { background: #3498db; }
-        .btn-help { background: #9b59b6; } /* Color morado para Ayuda */
+        .btn-help { background: #9b59b6; }
 
         .counter-box { margin-left: auto; background: #1e293b; color: white; padding: 10px 15px; border-radius: 5px; font-weight: 900; font-size: 1.1em; height: 45px; display: flex; align-items: center; }
 
-        .matricula-radar-text { color: #e74c3c !important; font-weight: 900 !important; font-size: 1.1em; display: flex; align-items: center; }
-        .icon-radar-50 {
-            display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; 
-            border: 3px solid #e74c3c; border-radius: 50%; background: white; color: black; font-weight: 900; font-size: 10px; margin-right: 10px;
+        /* --- ZONA 2: PANEL DE AYUDA (Reemplaza a la Zona 1) --- */
+        #help-panel-container {
+            display: none; /* Oculto por defecto */
+            background: #fff;
+            padding: 0 0 20px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .help-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 15px; padding: 10px; background: #f3e5f5; border-radius: 8px; border-left: 5px solid #9b59b6;
+        }
+        .help-header h2 { margin: 0; color: #9b59b6; font-size: 1.4em; }
+        .close-help-btn { 
+            background: #e74c3c; color: white; border: none; padding: 8px 15px; 
+            border-radius: 5px; cursor: pointer; font-weight: bold; 
         }
 
+        #help-steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        /* Ajuste para pantallas medianas */
+        @media (max-width: 1100px) { #help-steps-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .help-step { 
+            display: flex; flex-direction: column; gap: 8px; background: #fafafa; 
+            padding: 12px; border-radius: 8px; border: 1px solid #eee; 
+            height: 100%; align-items: center; text-align: center;
+        }
+        
+        .help-icon { 
+            background: #fff; color: #9b59b6; width: 40px; height: 40px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.1em; border: 2px solid #f3e5f5; flex-shrink: 0;
+        }
+        
+        .help-text h4 { margin: 5px 0; color: #2c3e50; font-size: 1em; }
+        .help-text p { margin: 0; font-size: 0.85em; color: #555; line-height: 1.3; }
+
+        /* Edición de Ayuda */
+        .editable-element { outline: none; border: 1px dashed transparent; padding: 2px; }
+        .editing-mode .editable-element { border-color: #3b82f6; background-color: #fffde7; cursor: text; }
+        
+        #help-controls-default { margin-top: 15px; text-align: center; }
+        #help-controls-edit { margin-top: 15px; text-align: center; display: none; }
+        
+        .btn-enable-edit { background: #607d8b; padding: 8px 20px; font-size: 0.9em; }
+        .btn-save-help { background: #2ecc71; padding: 8px 20px; margin-right: 10px; font-size: 0.9em;}
+        .btn-cancel-help { background: #e74c3c; padding: 8px 20px; font-size: 0.9em; }
+
+        /* --- ZONA 3: TABLA DE DATOS (Siempre visible) --- */
         .results-container { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 8px; }
         .row-radar { display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1.5fr 0.6fr; padding: 12px; border-bottom: 1px solid #f0f0f0; align-items: center; background: white; font-size: 0.9em; }
         .header-row { background: #e9f2f7; font-weight: bold; color: #2c3e50; font-size: 0.85em; }
+        
+        .matricula-radar-text { color: #e74c3c !important; font-weight: 900 !important; font-size: 1.1em; display: flex; align-items: center; }
+        .icon-radar-50 { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 3px solid #e74c3c; border-radius: 50%; background: white; color: black; font-weight: 900; font-size: 10px; margin-right: 10px; }
         
         .estado-select { width: 100%; padding: 8px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; cursor: pointer; }
         .estado-select[value="radar"] { background-color: #000; color: #fff; }
@@ -90,14 +145,11 @@
         .modal-content input { width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
         .modal-separator { border-top: 2px solid #f0f0f0; margin: 15px 0; padding-top: 10px; }
         .modal-label { font-size: 0.85em; color: #555; font-weight: bold; display: block; margin-bottom: 4px; }
-        
-        /* Estilos Ayuda */
-        .help-step { display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-start; }
-        .help-icon { background: #e3f2fd; color: #3b82f6; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
-        .help-text h4 { margin: 0 0 5px 0; color: #2c3e50; }
-        .help-text p { margin: 0; font-size: 0.9em; color: #555; line-height: 1.4; }
 
-        footer { background-color: #e0e0e0; text-align: center; padding: 20px; margin-top: auto; font-weight: bold; }
+        footer { background-color: #e0e0e0; text-align: center; padding: 20px; margin-top: auto; color: #333; font-size: 0.9em; border-top: 1px solid #ccc; }
+        footer p { margin: 5px 0; font-weight: bold; line-height: 1.2; }
+        footer p:last-child { font-size: 0.8em; font-weight: normal; margin-top: 10px; color: #666; }
+
         #status-message { padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; font-weight: bold; }
         .loading { background: #e3f2fd; color: #1565c0; }
         .success { background: #e8f5e9; color: #2e7d32; }
@@ -116,35 +168,97 @@
 
     <main>
         <div class="panel">
-            <div class="upload-controls">
-                <div id="drop-zone">
-                    <i class="fas fa-cloud-upload-alt fa-2x"></i>
-                    <p>Arrastra <b>Excel, PDF, Imagen o JSON</b> aquí</p>
+            
+            <div id="help-panel-container">
+                <div class="help-header">
+                    <h2><i class="fas fa-info-circle"></i> Cómo funciona</h2>
+                    <button class="close-help-btn" onclick="toggleHelp()">Cerrar Ayuda y Volver</button>
                 </div>
-                <div class="side-buttons">
-                    <button class="btn-action btn-paste" id="btn-p"><i class="fas fa-paste"></i> Pegar Texto / JSON</button>
-                    <button class="btn-action btn-undo" id="btn-u"><i class="fas fa-undo"></i> Deshacer Última</button>
-                    <button class="btn-action btn-delete-all" id="btn-clear"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
+                
+                <div id="help-steps-grid">
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-file-import"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-0">1. Carga de Datos</h4>
+                            <p class="editable-element" id="h-desc-0">Arrastra al recuadro azul el archivo (Excel, PDF, Imagen o JSON) que contenga los datos.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-filter"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-1">2. Procesamiento</h4>
+                            <p class="editable-element" id="h-desc-1">El sistema lista las matrículas y <b>descarta duplicados</b> y errores automáticamente.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-envelope-open-text"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-2">3. Notificar</h4>
+                            <p class="editable-element" id="h-desc-2">Cambia el estado en el desplegable a <b>"Notificado a sanciones"</b> para iniciar el trámite.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-clipboard-check"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-3">4. Copiar Datos</h4>
+                            <p class="editable-element" id="h-desc-3">Rellena los datos en el formulario y pulsa "Copiar" para llevarlos al correo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="help-controls-default">
+                    <button class="btn-action btn-enable-edit" onclick="enableHelpEdit()">
+                        <i class="fas fa-pencil-alt"></i> Editar Ayuda
+                    </button>
+                </div>
+
+                <div id="help-controls-edit">
+                    <p style="color:#e67e22; font-weight:bold; margin-bottom:10px; font-size:0.9em;">
+                        <i class="fas fa-exclamation-triangle"></i> Modo Edición Activo
+                    </p>
+                    <button class="btn-action btn-save-help" onclick="saveHelpToFirebase()">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <button class="btn-action btn-cancel-help" onclick="cancelHelpEdit()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
                 </div>
             </div>
 
-            <div class="search-container">
-                <i class="fas fa-search" style="color: #3498db;"></i>
-                <input type="text" id="search-input" placeholder="Filtrar matrículas...">
-                
-                <button class="btn-action btn-tool btn-show-all" id="btn-reset">
-                    <i class="fas fa-list"></i> Mostrar Todas
-                </button>
-                
-                <button class="btn-action btn-tool btn-sort" id="btn-sort-toggle">
-                    <i class="fas fa-sort-alpha-down"></i> <span id="sort-text">Orden A-Z</span>
-                </button>
-                
-                <button class="btn-action btn-tool btn-help" onclick="openHelp()">
-                    <i class="fas fa-question-circle"></i> Ayuda
-                </button>
-                
-                <div class="counter-box">TOTAL: <span id="total-count">0</span></div>
+            <div id="app-controls-wrapper">
+                <div class="upload-controls">
+                    <div id="drop-zone">
+                        <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                        <p>Arrastra <b>Excel, PDF, Imagen o JSON</b> aquí</p>
+                    </div>
+                    <div class="side-buttons">
+                        <button class="btn-action btn-paste" id="btn-p"><i class="fas fa-paste"></i> Pegar Texto / JSON</button>
+                        <button class="btn-action btn-undo" id="btn-u"><i class="fas fa-undo"></i> Deshacer Última</button>
+                        <button class="btn-action btn-delete-all" id="btn-clear"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
+                    </div>
+                </div>
+
+                <div class="search-container">
+                    <i class="fas fa-search" style="color: #3498db;"></i>
+                    <input type="text" id="search-input" placeholder="Filtrar matrículas...">
+                    
+                    <button class="btn-action btn-tool btn-show-all" id="btn-reset">
+                        <i class="fas fa-list"></i> Mostrar Todas
+                    </button>
+                    
+                    <button class="btn-action btn-tool btn-sort" id="btn-sort-toggle">
+                        <i class="fas fa-sort-alpha-down"></i> <span id="sort-text">Orden A-Z</span>
+                    </button>
+                    
+                    <button class="btn-action btn-tool btn-help" onclick="toggleHelp()">
+                        <i class="fas fa-question-circle"></i> Ayuda
+                    </button>
+                    
+                    <div class="counter-box">TOTAL: <span id="total-count">0</span></div>
+                </div>
             </div>
             
             <input type="file" id="file-input" style="display: none;">
@@ -158,48 +272,6 @@
             </div>
         </div>
     </main>
-
-    <div class="modal-overlay" id="modal-help">
-        <div class="modal-box">
-            <h2 style="margin-top:0; color:#3b82f6; text-align:center;">Cómo funciona la aplicación</h2>
-            <div class="modal-content">
-                
-                <div class="help-step">
-                    <div class="help-icon"><i class="fas fa-file-import"></i></div>
-                    <div class="help-text">
-                        <h4>1. Carga de Datos</h4>
-                        <p>Arrastra al recuadro azul el archivo (Excel, PDF, Imagen o JSON) que contenga los datos que hayas obtenido previamente a través de la guía.</p>
-                    </div>
-                </div>
-
-                <div class="help-step">
-                    <div class="help-icon"><i class="fas fa-filter"></i></div>
-                    <div class="help-text">
-                        <h4>2. Procesamiento Automático</h4>
-                        <p>Las matrículas se listarán automáticamente. El sistema <b>descarta duplicados</b> y matrículas erróneas (formato español) por seguridad.</p>
-                    </div>
-                </div>
-
-                <div class="help-step">
-                    <div class="help-icon"><i class="fas fa-envelope-open-text"></i></div>
-                    <div class="help-text">
-                        <h4>3. Notificar a Sanciones</h4>
-                        <p>Cuando tengas los datos, cambia el estado en el desplegable a <b>"Notificado a sanciones"</b>.</p>
-                    </div>
-                </div>
-
-                <div class="help-step">
-                    <div class="help-icon"><i class="fas fa-clipboard-check"></i></div>
-                    <div class="help-text">
-                        <h4>4. Formulario y Correo</h4>
-                        <p>Se abrirá un formulario. <b>Marca y Modelo</b> aparecerán aquí para que los edites. Introduce los datos personales y pulsa "Copiar". Se generará el texto predeterminado en el portapapeles listo para pegar en el correo.</p>
-                    </div>
-                </div>
-
-            </div>
-            <button class="btn-action" onclick="closeHelp()" style="background:#3b82f6; width:100%;">Entendido</button>
-        </div>
-    </div>
 
     <div class="modal-overlay" id="modal-edit">
         <div class="modal-box">
@@ -260,29 +332,27 @@
         </div>
     </div>
 
-    <footer class="mt-auto text-center py-6 bg-gray-200">
-    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
-    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
-    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
-    <p>&copy; GAD - Todos los derechos reservados</p>
-  </footer>
+    <footer>
+        <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p>POLICÍA LOCAL DE ALICANTE</p>
+        <p>© GAD - Todos los derechos reservados</p>
+    </footer>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-     const firebaseConfig = {
-        apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
-        authDomain: "gad-alicante-v3.firebaseapp.com",
-        databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "gad-alicante-v3",
-        storageBucket: "gad-alicante-v3.appspot.com",
-        messagingSenderId: "906986258369",
-        appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+   const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const REF_RADAR = 'denuncias_radar';
+        const REF_HELP = 'config_ayuda';
         
         const REGEX_PLATE = /([A-Z]{1,2}\d{4}[A-Z]{1,2})|(\d{4}[A-Z]{3})|([A-Z]{2}\d{3}[A-Z]{3})|([A-Z]{2}\d{6})/g;
         const CODIGOS_PROVINCIALES = new Set([
@@ -305,7 +375,6 @@
         const si = document.getElementById('search-input');
         const totalDisp = document.getElementById('total-count');
 
-        // --- CARGA Y ARRASTRE ---
         window.addEventListener('dragover', e => e.preventDefault());
         window.addEventListener('drop', e => e.preventDefault());
         dz.onclick = () => fi.click();
@@ -400,22 +469,14 @@
 
             nuevos.forEach(n => {
                 const plateClean = cleanMatricula(n.matricula);
-
                 const isModernSpain = /^\d{4}[A-Z]{3}$/.test(plateClean);
                 let isOldSpain = false;
                 const matchOld = plateClean.match(/^([A-Z]{1,2})\d{4}[A-Z]{1,2}$/);
-                
                 if (matchOld) {
                     const prefix = matchOld[1]; 
-                    if (CODIGOS_PROVINCIALES.has(prefix)) {
-                        isOldSpain = true; 
-                    }
+                    if (CODIGOS_PROVINCIALES.has(prefix)) isOldSpain = true; 
                 }
-
-                if (isModernSpain || isOldSpain) {
-                    spanishCount++;
-                    return; 
-                }
+                if (isModernSpain || isOldSpain) { spanishCount++; return; }
 
                 if(existingPlates.has(plateClean) || incomingUniquePlates.has(plateClean)) {
                     dupCount++;
@@ -425,10 +486,7 @@
                         id: Date.now() + Math.random(),
                         matricula: plateClean, 
                         fecha: n.fecha || new Date().toISOString(),
-                        marca: n.marca || "", 
-                        modelo: n.modelo || "", 
-                        origen: src, 
-                        estado: 'radar'
+                        marca: n.marca || "", modelo: n.modelo || "", origen: src, estado: 'radar'
                     });
                     addedCount++;
                 }
@@ -462,7 +520,6 @@
             const btn = document.getElementById('btn-sort-toggle');
             const txt = document.getElementById('sort-text');
             const icon = btn.querySelector('i');
-            
             if(isAscending) {
                 txt.textContent = "Orden A-Z";
                 icon.className = "fas fa-sort-alpha-down";
@@ -472,9 +529,75 @@
             }
         }
 
-        // --- FUNCIONES AYUDA ---
-        function openHelp() { document.getElementById('modal-help').style.display = 'flex'; }
-        function closeHelp() { document.getElementById('modal-help').style.display = 'none'; }
+        // --- FUNCIONES AYUDA (INTERCAMBIO DE VISTAS) ---
+        function toggleHelp() {
+            const helpPanel = document.getElementById('help-panel-container');
+            const appControls = document.getElementById('app-controls-wrapper');
+            
+            if (helpPanel.style.display === 'block') {
+                // CERRAR AYUDA
+                helpPanel.style.display = 'none';
+                appControls.style.display = 'block';
+                // Si estábamos editando, cancelar
+                if(document.getElementById('help-controls-edit').style.display === 'block') cancelHelpEdit();
+            } else {
+                // ABRIR AYUDA
+                helpPanel.style.display = 'block';
+                appControls.style.display = 'none';
+            }
+        }
+
+        function enableHelpEdit() {
+            document.getElementById('help-controls-default').style.display = 'none';
+            document.getElementById('help-controls-edit').style.display = 'block';
+            document.getElementById('help-panel-container').classList.add('editing-mode');
+            
+            const elements = document.querySelectorAll('.editable-element');
+            elements.forEach(el => el.contentEditable = "true");
+        }
+
+        function cancelHelpEdit() {
+            loadHelpFromFirebase();
+            document.getElementById('help-controls-default').style.display = 'block';
+            document.getElementById('help-controls-edit').style.display = 'none';
+            document.getElementById('help-panel-container').classList.remove('editing-mode');
+            const elements = document.querySelectorAll('.editable-element');
+            elements.forEach(el => el.contentEditable = "false");
+        }
+
+        function loadHelpFromFirebase() {
+            db.ref(REF_HELP).once('value', snap => {
+                const data = snap.val();
+                if(data && Array.isArray(data)) {
+                    data.forEach((step, index) => {
+                        const titleEl = document.getElementById(`h-title-${index}`);
+                        const descEl = document.getElementById(`h-desc-${index}`);
+                        if(titleEl && step.title) titleEl.innerText = step.title;
+                        if(descEl && step.desc) descEl.innerText = step.desc;
+                    });
+                }
+            });
+        }
+
+        function saveHelpToFirebase() {
+            const helpData = [];
+            for(let i=0; i<4; i++) {
+                const title = document.getElementById(`h-title-${i}`).innerText;
+                const desc = document.getElementById(`h-desc-${i}`).innerText;
+                helpData.push({ title, desc });
+            }
+            
+            db.ref(REF_HELP).set(helpData)
+              .then(() => {
+                  msg("Ayuda personalizada guardada", "success");
+                  document.getElementById('help-controls-default').style.display = 'block';
+                  document.getElementById('help-controls-edit').style.display = 'none';
+                  document.getElementById('help-panel-container').classList.remove('editing-mode');
+                  const elements = document.querySelectorAll('.editable-element');
+                  elements.forEach(el => el.contentEditable = "false");
+              })
+              .catch(err => alert("Error al guardar ayuda: " + err));
+        }
 
         // --- RESTO FUNCIONES ---
         function openEdit(id) {
@@ -490,24 +613,17 @@
         async function saveEdit() {
             const newMat = cleanMatricula(document.getElementById('edit-matricula').value);
             const exists = currentData.find(d => cleanMatricula(d.matricula) === newMat && d.id != activeEditId);
-
-            if(exists) {
-                alert(`ERROR: La matrícula ${newMat} ya existe.`);
-                return;
-            }
+            if(exists) { alert(`ERROR: La matrícula ${newMat} ya existe.`); return; }
 
             const snap = await db.ref(REF_RADAR).once('value');
             const data = Object.values(snap.val() || []);
             data.forEach(d => {
                 if(d.id == activeEditId) {
-                    d.matricula = newMat;
-                    d.marca = document.getElementById('edit-marca').value;
-                    d.modelo = document.getElementById('edit-modelo').value;
+                    d.matricula = newMat; d.marca = document.getElementById('edit-marca').value; d.modelo = document.getElementById('edit-modelo').value;
                 }
             });
             await db.ref(REF_RADAR).set(data);
-            closeEdit();
-            msg("Cambios guardados", "success");
+            closeEdit(); msg("Cambios guardados", "success");
         }
 
         function cargar() {
@@ -516,18 +632,17 @@
                 totalDisp.textContent = currentData.length;
                 renderTabla(currentData); 
             });
+            loadHelpFromFirebase();
         }
 
         function renderTabla(data) {
             const tabla = document.getElementById('tabla-radar');
             tabla.innerHTML = "";
-            
             data.sort((a,b) => {
                 const matA = cleanMatricula(a.matricula);
                 const matB = cleanMatricula(b.matricula);
                 return isAscending ? matA.localeCompare(matB) : matB.localeCompare(matA);
             });
-            
             data.forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'row-radar';
@@ -565,22 +680,14 @@
             if(val === 'notificado') { 
                 activeNotifId = id; 
                 const item = currentData.find(d => d.id == id);
-                
                 document.getElementById('display-matricula-notif').textContent = item.matricula;
                 document.getElementById('n-marca-veh').value = item.marca || "";
                 document.getElementById('n-modelo-veh').value = item.modelo || "";
-                
-                document.getElementById('n-nombre').value = "";
-                document.getElementById('n-doi').value = "";
-                document.getElementById('n-dir').value = "";
-                document.getElementById('n-loc').value = "";
-                document.getElementById('n-nac').value = "";
-                document.getElementById('n-tel').value = "";
-
+                document.getElementById('n-nombre').value = ""; document.getElementById('n-doi').value = "";
+                document.getElementById('n-dir').value = ""; document.getElementById('n-loc').value = "";
+                document.getElementById('n-nac').value = ""; document.getElementById('n-tel').value = "";
                 document.getElementById('modal-notif').style.display='flex'; 
-            } else { 
-                guardarEstado(id, val); 
-            }
+            } else { guardarEstado(id, val); }
         }
 
         async function guardarEstado(id, val) {
@@ -592,10 +699,8 @@
 
         function aceptarNotif() {
             const item = currentData.find(d => d.id == activeNotifId);
-            
             const marca = document.getElementById('n-marca-veh').value.toUpperCase();
             const modelo = document.getElementById('n-modelo-veh').value.toUpperCase();
-            
             const nombre = document.getElementById('n-nombre').value.toUpperCase();
             const doi = document.getElementById('n-doi').value.toUpperCase();
             const dir = document.getElementById('n-dir').value.toUpperCase();
@@ -604,22 +709,13 @@
             const tel = document.getElementById('n-tel').value;
 
             const encabezado = "Grupo de Análisis Documental (GAD) Policía Local de Alicante\nLe informamos de que disponemos de los siguientes datos en relación a este vehículo:\n";
-            
             let cuerpo = `DENUNCIA RADAR: ${item.matricula}\nMARCA Y MODELO: ${marca} ${modelo}\n\nTITULAR/CONDUCTOR: ${nombre}\nDNI/NIE: ${doi}\nDIRECCIÓN: ${dir}\nLOCALIDAD: ${loc}`;
-
             if(nac) cuerpo += `\nFECHA NACIMIENTO: ${nac}`;
             if(tel) cuerpo += `\nTELÉFONO: ${tel}`;
 
-            const textoFinal = encabezado + "\n" + cuerpo;
-
-            if(marca || modelo) {
-               updateVehData(activeNotifId, marca, modelo);
-            }
-
-            navigator.clipboard.writeText(textoFinal).then(() => { 
-                guardarEstado(activeNotifId, 'notificado'); 
-                closeNotif(); 
-                msg("Copiado al portapapeles y Estado actualizado", "success");
+            if(marca || modelo) updateVehData(activeNotifId, marca, modelo);
+            navigator.clipboard.writeText(encabezado + "\n" + cuerpo).then(() => { 
+                guardarEstado(activeNotifId, 'notificado'); closeNotif(); msg("Copiado al portapapeles y Estado actualizado", "success");
             });
         }
 
@@ -627,13 +723,7 @@
             const snap = await db.ref(REF_RADAR).once('value');
             const data = Object.values(snap.val() || []);
             let changed = false;
-            data.forEach(d => { 
-                if(d.id == id) { 
-                    if(ma) d.marca = ma; 
-                    if(mo) d.modelo = mo;
-                    changed = true;
-                } 
-            });
+            data.forEach(d => { if(d.id == id) { if(ma) d.marca = ma; if(mo) d.modelo = mo; changed = true; } });
             if(changed) await db.ref(REF_RADAR).set(data);
         }
 
@@ -648,8 +738,7 @@
 
         document.getElementById('btn-u').onclick = async () => {
             if(!lastBackup) return alert("Nada que deshacer");
-            await db.ref(REF_RADAR).set(lastBackup);
-            lastBackup = null; msg("Deshecho", "success");
+            await db.ref(REF_RADAR).set(lastBackup); lastBackup = null; msg("Deshecho", "success");
         };
 
         document.getElementById('btn-clear').onclick = async () => {

@@ -145,7 +145,17 @@
         .btn-danger:hover { box-shadow: 0 4px 10px rgba(220, 20, 60, 0.4); }
         .btn-secondary { background: linear-gradient(135deg, #6c757d, #5a6268); }
         .btn-secondary:hover { box-shadow: 0 4px 10px rgba(92, 98, 104, 0.4); }
-
+/* --- AQUÍ PEGAS EL CÓDIGO NUEVO --- */
+        .btn-help-custom { 
+            background: linear-gradient(135deg, #8E24AA, #D81B60); /* Violeta y Rosa fuerte */
+            color: white;
+            box-shadow: 0 4px 10px rgba(216, 27, 96, 0.4);
+            justify-content: center;
+        }
+        .btn-help-custom:hover { 
+            background: linear-gradient(135deg, #AB47BC, #EC407A);
+            transform: scale(1.02);
+        }
         /* Icono papelera roja sin borde */
         .btn-icon-delete {
             background-color: transparent;
@@ -316,16 +326,41 @@
             background-color: #f0f4f7; border: 1px solid #dcdcdc; color: #555; font-size: 0.9em; 
         }
          
-        /* --- AYUDA DESPLEGABLE --- */
+/* --- AYUDA FLOTANTE EDITABLE --- */
         #help-toggle-container { margin-top: 20px; }
+        
+        /* Panel Fijo Superior (Overlay) */
         #legend-panel {
-            background-color: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px;
-            margin-top: 10px; font-size: 0.95em; color: #444; line-height: 1.5; display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            max-height: 50vh; /* Ocupa mitad de pantalla */
+            overflow-y: auto;
+            background-color: #ffffff;
+            border-bottom: 5px solid #3b82f6;
+            padding: 20px;
+            z-index: 9999; /* Encima de todo */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; /* Oculto por defecto */
         }
-        #legend-panel.visible { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #legend-panel.visible { display: block; animation: slideDown 0.3s; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 
-        #legend-panel h4 { margin-top: 0; margin-bottom: 10px; color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        /* Barra de botones del panel */
+        .help-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+        }
+        
+        /* Área editable */
+        #legend-content-area { padding: 10px; line-height: 1.6; }
+        #legend-content-area[contenteditable="true"] {
+            border: 2px dashed #3498db; background-color: #f0f8ff; outline: none; cursor: text;
+        }
+
+        /* Colores */
         .legend-blue { color: #0d47a1; font-weight: bold; }
         .legend-yellow { color: #f57f17; font-weight: bold; }
         .legend-green { color: #1b5e20; font-weight: bold; }
@@ -435,7 +470,7 @@
                         <div class="align-bottom search-buttons-group">
                             <button id="search-btn" class="btn-success" style="width: 100%;" title="Busca la matrícula introducida en la base de datos actual"><i class="fas fa-search"></i> Buscar</button>
                             <button id="undo-btn" class="btn-delete" style="background: linear-gradient(135deg, #607d8b, #455a64); white-space: nowrap;" title="Elimina los datos del último archivo Excel cargado (Solo PC)">
-                                <i class="fas fa-undo"></i> Deshacer Última
+                                <i class="fas fa-undo"></i> Deshacer Última subida
                             </button>
                         </div>
                     </div>
@@ -444,7 +479,7 @@
                         <button id="show-all-btn" class="btn-warning" title="Muestra todas las denuncias registradas"><i class="fas fa-list"></i> Mostrar Todos</button>
                         <button id="sort-matricula-btn" class="btn-primary" title="Ordena la lista alfabéticamente por matrícula"><i class="fas fa-sort-alpha-down"></i> Matrícula</button>
                         <button id="sort-fecha-btn" class="btn-info" title="Ordena por fecha de denuncia (Más reciente primero)"><i class="fas fa-calendar-alt"></i> Fecha</button>
-                        <button id="sort-estado-btn" class="btn-secondary" title="Filtra las denuncias por su estado (Notificado, Alerta, etc.)"><i class="fas fa-filter"></i> Por Estado</button>
+                        <button id="sort-estado-btn" class="btn-secondary" title="Filtra las denuncias por su estado (Notificado, Alerta, etc.)"><i class="fas fa-filter"></i> Filtrar por Estado</button>
                         <button id="find-duplicates-btn" class="btn-danger" title="Muestra solo las matrículas que aparecen más de una vez"><i class="fas fa-copy"></i> Reincidentes</button>
                         <button id="crear-alerta-btn" class="btn-info" title="Copia al portapapeles el texto para pegar en Eurocop"><i class="fas fa-exclamation-triangle"></i> Crear Alerta</button>
                         <button id="delete-all-btn" class="btn-delete" title="¡PELIGRO! Borra toda la base de datos (Solo PC)"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
@@ -461,35 +496,91 @@
                     <div id="status-message"></div>
                 </div>
 
-                <div id="help-toggle-container">
-                    <button id="toggle-help-btn" class="btn-secondary" style="width: 100%; background: #e0e0e0; color: #333; justify-content: space-between;" title="Muestra u oculta la guía de uso">
-                        <span><i class="fas fa-question-circle"></i> Ver Ayuda / Leyenda</span>
-                        <i class="fas fa-chevron-down" id="help-icon"></i>
-                    </button>
-                    
-                    <div id="legend-panel">
-                      <h4><i class="fas fa-info-circle"></i> Guía de Uso</h4>
-                      <p>Este sistema está diseñado para revisar matrículas una a una:</p>
-                      <ul>
-                        <li><strong>1. Revisado:</strong> Haz clic en la columna "REVISADO". 
-                            <ul>
-                                <li>Se activará la fecha en <span class="legend-blue">AZUL</span>.</li>
-                                <li>El expediente pasará automáticamente a <span class="legend-yellow">Sin datos en Eurocop</span>.</li>
-                            </ul>
-                        </li>
-                        <li><strong>2. Asigna un Estado (Desplegable):</strong>
-                            <ul>
-                                <li><span class="legend-yellow">Sin datos en Eurocop</span>: Vehículo no consta.</li>
-                                <li><span class="legend-red">Alerta grabada en Eurocop</span>: Ya tiene una alerta previa.</li>
-                                <li><span class="legend-green">Notificar a sanciones</span>: Copia datos y se pone VERDE (<span class="legend-green">Notificado</span>).</li>
-                            </ul>
-                        </li>
-                        <li><strong>3. Auto-Ocultar:</strong> Al finalizar (asignar estado), la fila desaparece de la lista de pendientes.</li>
-                        <li><strong>4. Botón "Crear Alerta":</strong> Copia al portapapeles el texto predeterminado para Eurocop.</li>
-                      </ul>
-                      <p><em>Nota: En versión móvil solo se permite consultar datos, no editar ni cargar.</em></p>
+<button id="toggle-help-btn" class="btn-help-custom" style="width: 100%; margin-top: 20px;" title="Guía de Procedimiento">
+                <i class="fas fa-question-circle"></i> &nbsp; Ver Ayuda
+            </button>
+            
+            <div id="legend-panel">
+                <div class="help-toolbar">
+                    <h4 style="margin:0; color:#8E24AA;"><i class="fas fa-book-open"></i> Guía de Procedimiento</h4>
+                    <div style="display:flex; gap:10px;">
+                        <button id="edit-help-btn" class="btn-warning" style="height:35px; width:auto; font-size:0.9em;"><i class="fas fa-edit"></i> Editar</button>
+                        <button id="save-help-btn" class="btn-success" style="height:35px; width:auto; font-size:0.9em; display:none;"><i class="fas fa-save"></i> Guardar</button>
+                        <button id="close-help-btn" class="btn-delete" style="height:35px; width:auto; font-size:0.9em;"><i class="fas fa-times"></i> Cerrar</button>
                     </div>
                 </div>
+
+                <div id="legend-content-area">
+                    <h5 style="margin-top:0; color:#8E24AA; font-size:1.1em; border-bottom: 2px solid #eee; padding-bottom:10px;">
+                        👋 Protocolo de Primera Vez
+                    </h5>
+
+                    <p style="margin-bottom: 15px;"><strong>1. IMPORTACIÓN Y FILTRADO</strong><br>
+                    Arrastra tu archivo Excel a la zona de carga. El sistema leerá los datos y <strong>eliminará automáticamente</strong> las matrículas con formato español (modernas y provinciales), dejando solo las extranjeras o atípicas para su revisión.</p>
+
+                    <p style="margin-bottom: 5px;"><strong>2. REVISIÓN DE REINCIDENTES (Prioritario)</strong><br>
+                    Antes de revisar una a una, pulsa el botón rojo <strong><i class="fas fa-copy"></i> Reincidentes</strong>.</p>
+                    <ul style="margin-top: 5px; margin-bottom: 15px;">
+                        <li>Si un vehículo aparece <strong>3 o más veces</strong>, selecciona en el desplegable: <span class="legend-red">Alerta grabada en Eurocop</span>.</li>
+                        <li>Pulsa el botón azul <strong><i class="fas fa-exclamation-triangle"></i> Crear Alerta</strong> para copiar el texto oficial y pégalo al dar de alta el vehículo de interés en Eurocop.</li>
+                    </ul>
+
+                    <p style="margin-bottom: 5px;"><strong>3. REVISIÓN INDIVIDUAL</strong><br>
+                    Pulsa el botón <strong>"Por Estado"</strong> y filtra por <strong>"Pendiente Revisión"</strong> para limpiar la pantalla.</p>
+                    <ul style="margin-top: 5px;">
+                        <li style="margin-bottom:8px;"><strong>Verificar:</strong> Usa el botón verde <i class="fas fa-copy" style="color:green;"></i> junto a la matrícula para copiarla y buscarla en Eurocop.</li>
+                        
+                        <li style="margin-bottom:8px;"><strong>CASO A: No constan datos</strong><br>
+                        Haz clic en la casilla o fecha de la columna <strong>"REVISADO"</strong>. 
+                        <br>➞ Se pondrá la fecha en <span class="legend-blue">AZUL</span> y el estado cambiará solo a <span class="legend-yellow">Sin datos en Eurocop</span>.</li>
+                        
+                        <li><strong>CASO B: Existen datos (Notificar)</strong><br>
+                        En el desplegable de estado, selecciona manualmente <span class="legend-green">Notificar a sanciones</span>.
+                        <br>➞ Se abrirá un formulario. Rellénalo con los datos del titular y pulsa "Aceptar".
+                        <br>➞ Esto copiará al portapapeles los datos + la plantilla de texto lista para pegar en el correo a Sanciones.</li>
+                    </ul>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+                    
+                    <p style="font-size: 0.9em;"><strong>🛠️ Herramientas útiles:</strong> Usa los botones superiores para <em>"Mostrar Todos"</em>, ordenar por <em>Fecha/Matrícula</em> o <em>"Deshacer"</em> si te equivocas al cargar un Excel. <br><em>(Nota: La versión móvil es de "Solo Lectura").</em></p>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const panel = document.getElementById('legend-panel');
+                    const contentArea = document.getElementById('legend-content-area');
+                    
+                    // HE CAMBIADO ESTO: 'vFinal_Definitiva' obligará a ignorar el texto viejo
+                    const savedText = localStorage.getItem('gadHelpText_vFinal_Definitiva');
+                    if(savedText) { contentArea.innerHTML = savedText; }
+
+                    const toggleBtn = document.getElementById('toggle-help-btn');
+                    const closeBtn = document.getElementById('close-help-btn');
+                    const editBtn = document.getElementById('edit-help-btn');
+                    const saveBtn = document.getElementById('save-help-btn');
+
+                    toggleBtn.addEventListener('click', () => { panel.classList.add('visible'); });
+                    closeBtn.addEventListener('click', () => { panel.classList.remove('visible'); });
+
+                    editBtn.addEventListener('click', () => {
+                        contentArea.contentEditable = "true";
+                        contentArea.focus();
+                        editBtn.style.display = 'none';
+                        saveBtn.style.display = 'inline-flex';
+                        panel.style.borderBottom = "5px solid #f39c12";
+                    });
+
+                    saveBtn.addEventListener('click', () => {
+                        contentArea.contentEditable = "false";
+                        localStorage.setItem('gadHelpText_vFinal_Definitiva', contentArea.innerHTML);
+                        alert("Texto de ayuda actualizado y guardado.");
+                        editBtn.style.display = 'inline-flex';
+                        saveBtn.style.display = 'none';
+                        panel.style.borderBottom = "5px solid #3b82f6";
+                    });
+                });
+            </script>
 
                 <h3 style="margin-top: 20px;">Resultados <span id="results-count">(0)</span></h3>
                 
@@ -572,14 +663,15 @@
     <script>
         // --- CONFIGURACIÓN FIREBASE GAD-ALICANTE-V1 ---
     const firebaseConfig = {
-        apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
-        authDomain: "gad-alicante-v3.firebaseapp.com",
-        databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "gad-alicante-v3",
-        storageBucket: "gad-alicante-v3.appspot.com",
-        messagingSenderId: "906986258369",
-        appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
-    }
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
         let app = null;
         let database = null;
 
@@ -636,22 +728,7 @@
         let previousSelectValue = ""; 
         let currentFechaSortOrder = 'desc'; 
         
-        // --- LOGICA TOGGLE AYUDA ---
-        document.getElementById('toggle-help-btn').addEventListener('click', () => {
-            const panel = document.getElementById('legend-panel');
-            const icon = document.getElementById('help-icon');
-            if (panel.classList.contains('visible')) {
-                panel.classList.remove('visible');
-                // Timeout para la animación si la hubiera
-                setTimeout(() => { panel.style.display = 'none'; }, 300);
-                icon.className = 'fas fa-chevron-down';
-            } else {
-                panel.style.display = 'block';
-                // Pequeño timeout para permitir que el navegador renderice el display: block antes de añadir la clase visible (para transiciones CSS)
-                setTimeout(() => { panel.classList.add('visible'); }, 10);
-                icon.className = 'fas fa-chevron-up';
-            }
-        });
+        
 
         function showStatus(message, type = 'loading') {
             statusMessage.textContent = message;
