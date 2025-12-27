@@ -685,18 +685,29 @@
 
         // --- COMUNES ---
         function copyM(t) { navigator.clipboard.writeText(t); }
-        function toggleS(m, type) {
-            pushHistory();
-            const targets = allData.filter(d => d.matricula === m);
-            const val = !targets.some(d => d[type]);
-            targets.forEach(d => { 
-                d[type] = val; 
-                if(type==='alerta' && val) { d.eurocop=false; copyM('INMOVILIZAR A DISPOSICIÓN DEL GAD POR REINCIDENCIA EN INFRACCIONES Art 87.5 LSV (CAUCIÓN).  Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación.'); alert("🚨 Texto ALERTA copiado."); }
-                if(type==='eurocop' && val) { d.alerta=false; d.notificado=false; }
-                if(type==='notificado' && val) { d.alerta=false; d.eurocop=false; }
-            });
-            database.ref(DB_REF).set(allData);
+function toggleS(m, type) {
+    pushHistory();
+    const targets = allData.filter(d => d.matricula === m);
+    const val = !targets.some(d => d[type]);
+    
+    // 1. Primero actualizamos los datos de todos los registros
+    targets.forEach(d => { 
+        d[type] = val; 
+        if(type === 'alerta' && val) { 
+            d.eurocop = false; 
         }
+        if(type === 'eurocop' && val) { d.alerta = false; d.notificado = false; }
+        if(type === 'notificado' && val) { d.alerta = false; d.eurocop = false; }
+    });
+
+    // 2. DESPUÉS del bucle, si es una alerta, avisamos UNA SOLA VEZ
+    if(type === 'alerta' && val) {
+        copyM('INMOVILIZAR A DISPOSICIÓN DEL GAD POR REINCIDENCIA EN INFRACCIONES Art 87.5 LSV (CAUCIÓN). Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación.');
+        alert("🚨 Texto ALERTA copiado.");
+    }
+
+    database.ref(DB_REF).set(allData);
+}
 
         let target = null;
         function openModal(m) {
@@ -722,18 +733,34 @@
             allData.forEach(d => { if(d.matricula === target) { d.notificado = true; d.datos_titular = dt; d.eurocop=false; d.alerta=false; } });
             database.ref(DB_REF).set(allData);
 
-            const items = allData.filter(d => d.matricula === target);
-            const ora = items.find(d => d.tipo === 'ORA');
-            const rad = items.find(d => d.tipo === 'RADAR');
-            let body = "", main = ora || rad || items[0];
+const items = allData.filter(d => d.matricula === target);
+const ora = items.find(d => d.tipo === 'ORA');
+const rad = items.find(d => d.tipo === 'RADAR');
 
-            if(ora && rad) body = `Este vehículo tiene denuncias de ORA o de RADAR\n- Última ORA: ${formatDate(ora.fecha)}\n- Última RADAR: ${formatDate(rad.fecha)}\n- Marca: ${main.marca}\n- Modelo: ${main.modelo}`;
-            else if(rad) body = `--- DENUNCIA RADAR ---\n- Matrícula: ${target}\n- Fecha: ${formatDate(rad.fecha)}\n- Marca: ${rad.marca}\n- Modelo: ${rad.modelo}`;
-            else body = `--- DENUNCIA ORA ---\n- Matrícula: ${target}\n- Fecha: ${formatDate(main.fecha)}\n- Marca: ${main.marca}\n- Modelo: ${main.modelo}`;
+// 1. Inicializamos con el texto que has solicitado
+let body = "Le informamos de que disponemos de los siguientes datos en relación a este vehículo:\n\n";
+let main = ora || rad || items[0];
 
-            const mailLink = `https://outlook.office.com/mail/policia.gad@alicante.es/deeplink/compose?to=${CORREO_SANCIONES}&subject=DATOS GAD - ${target}&body=${encodeURIComponent(body + "\n\n--- DATOS PERSONALES ---\nNombre: " + dt.nombre + "\nDOI: " + dt.doi + "\nDirección: " + dt.direccion)}`;
-            window.open(mailLink, '_blank');
-            closeModal('notif-modal');
+// 2. Usamos += para añadir información a la frase anterior sin sobrescribirla
+if(ora && rad) body += `Este vehículo tiene denuncias de ORA o de RADAR\n- Última ORA: ${formatDate(ora.fecha)}\n- Última RADAR: ${formatDate(rad.fecha)}\n- Marca: ${main.marca}\n- Modelo: ${main.modelo}`;
+else if(rad) body += `--- DENUNCIA RADAR ---\n- Matrícula: ${target}\n- Fecha: ${formatDate(rad.fecha)}\n- Marca: ${rad.marca}\n- Modelo: ${rad.modelo}`;
+else body += `--- DENUNCIA ORA ---\n- Matrícula: ${target}\n- Fecha: ${formatDate(main.fecha)}\n- Marca: ${main.marca}\n- Modelo: ${main.modelo}`;
+
+// ... (mantenemos la lógica del body con += que pusimos antes)
+
+const mailLink = `https://outlook.office.com/mail/policia.gad@alicante.es/deeplink/compose?to=${CORREO_SANCIONES}&subject=DATOS GAD - ${target}&body=${encodeURIComponent(
+    body + 
+    "\n\n--- DATOS PERSONALES ---" +
+    "\nNombre: " + dt.nombre + 
+    "\nDOI: " + dt.doi + 
+    "\nDirección: " + dt.direccion + 
+    "\nLocalidad: " + dt.localidad + 
+    "\nFecha Nacimiento: " + dt.fechaNac + 
+    "\nTeléfono: " + dt.telefono
+)}`;
+
+window.open(mailLink, '_blank');
+closeModal('notif-modal');
         }
 
         function delV(m) { if(confirm("¿Borrar historial de "+m+"?")) { pushHistory(); allData = allData.filter(d => d.matricula !== m); database.ref(DB_REF).set(allData); } }
