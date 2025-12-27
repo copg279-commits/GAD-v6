@@ -376,16 +376,12 @@
             </div>
         `;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
-  authDomain: "gad-alicante-v3.firebaseapp.com",
-  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "gad-alicante-v3",
-  storageBucket: "gad-alicante-v3.firebasestorage.app",
-  messagingSenderId: "906986258369",
-  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
-  measurementId: "G-Q0E3H1996K"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu5ALRVJ5aDzuU9YIAQD_9KMgR6ZwttpU", 
+            authDomain: "gad-alicante-v1.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v1"
+        };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -598,14 +594,29 @@ const firebaseConfig = {
                             return newRow;
                         });
 
-                        const final = sanitized.filter(row => {
-                            if (!row.matricula) return false;
+                        const validRows = [];
+                        const discardedPlates = [];
+
+                        sanitized.forEach(row => {
+                            if (!row.matricula) return;
                             const p = String(row.matricula).trim().replace(/\s/g, '').toUpperCase();
                             row.matricula = p;
-                            // FILTRO MATRICULAS ESPAÑOLAS (Del Backup)
-                            return !/^\d{4}[A-Z]{3}$/i.test(p) && !/^[A-Z]{1,2}\d{4}[A-Z]{1,2}$/i.test(p);
+
+                            // FILTRO MATRICULAS ESPAÑOLAS
+                            // Modernas: 0000XXX
+                            const isModern = /^\d{4}[A-Z]{3}$/i.test(p);
+                            // Antiguas: X0000X o XX0000XX
+                            const isOld = /^[A-Z]{1,2}\d{4}[A-Z]{1,2}$/i.test(p);
+
+                            // El sistema original guardaba lo que NO fuera español (!isModern && !isOld)
+                            if (!isModern && !isOld) {
+                                validRows.push(row);
+                            } else {
+                                discardedPlates.push(p);
+                            }
                         });
-                        resolve(final);
+
+                        resolve({ validRows, discardedPlates });
                     } catch (err) { reject(err); }
                 };
                 reader.readAsArrayBuffer(file);
@@ -615,11 +626,12 @@ const firebaseConfig = {
         async function handleImport(file) {
             pushHistory();
             try {
-                const newRows = await extraerDatosExcel(file);
+                const { validRows, discardedPlates } = await extraerDatosExcel(file);
+                
                 let addedCount = 0;
                 let duplicateCount = 0;
 
-                newRows.forEach(n => {
+                validRows.forEach(n => {
                     const fechaISO = n.fecha instanceof Date ? n.fecha.toISOString() : new Date().toISOString();
                     
                     // DETECCIÓN DUPLICADOS (Del Backup)
@@ -654,7 +666,14 @@ const firebaseConfig = {
                 });
 
                 if(addedCount > 0) database.ref(DB_REF).set(allData);
-                alert(`Importación (${mode}):\n✅ ${addedCount} añadidos.\n⚠️ ${duplicateCount} duplicados omitidos.`);
+                
+                let msg = `Importación (${mode}):\n✅ ${addedCount} añadidos.\n⚠️ ${duplicateCount} duplicados omitidos.`;
+                
+                if (discardedPlates.length > 0) {
+                    msg += `\n⛔ ${discardedPlates.length} matrículas españolas descartadas.`;
+                }
+
+                alert(msg);
 
             } catch (error) {
                 console.error(error);
