@@ -45,7 +45,8 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
       position: sticky; 
       top: 0; 
-      z-index: 50; 
+      /* CORRECCIÓN: Z-index muy alto para tapar el contenido al hacer scroll */
+      z-index: 1000; 
     }
     header.mode-interv { background-color: var(--color-interv); }
     header.mode-judic { background-color: var(--color-judic); }
@@ -72,7 +73,8 @@
     .sticky-menu-bar {
         position: sticky;
         top: 155px; 
-        z-index: 40;
+        /* CORRECCIÓN: Z-index alto pero menor que el header */
+        z-index: 900;
         margin-bottom: 20px;
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(5px);
@@ -105,7 +107,8 @@
         border: 1px solid #ddd;
     }
     .thumbnail-img:hover { 
-        transform: scale(3.5); z-index: 100; position: relative; 
+        /* CORRECCIÓN: Z-index máximo para que la foto ampliada tape el header si es necesario */
+        transform: scale(3.5); z-index: 2000; position: relative; 
         box-shadow: 0 15px 30px rgba(0,0,0,0.3); background: white;     
     }
 
@@ -113,7 +116,9 @@
     .thumb-container { position: relative; display: inline-block; }
     .red-cross-overlay {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        pointer-events: none; z-index: 50;
+        pointer-events: none; 
+        /* CORRECCIÓN: Z-index bajo. Se queda pegado a la foto y el header (1000) lo tapará */
+        z-index: 10;
         color: rgba(220, 38, 38, 0.85); font-size: 4rem; text-shadow: 0 0 5px white;
     }
 
@@ -156,7 +161,10 @@
     /* MODALES */
     .modal-overlay { 
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
-        display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; z-index: 100; transition: opacity 0.3s; 
+        display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; 
+        /* CORRECCIÓN: Z-index muy superior a todo */
+        z-index: 3000; 
+        transition: opacity 0.3s; 
     }
     .modal-overlay.open { visibility: visible; opacity: 1; }
     
@@ -457,7 +465,7 @@
       messagingSenderId: "906986258369",
       appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
     };
-
+    
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const mainRef = db.ref('documentos_intervenidos');
