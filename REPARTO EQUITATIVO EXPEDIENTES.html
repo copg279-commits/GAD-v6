@@ -10,7 +10,10 @@
         :root { --blue-main: #1a73e8; --blue-dark: #0d47a1; --success: #28a745; --danger: #d93025; --bg: #f4f7f9; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; color: #333; margin: 0; }
         .container { max-width: 1200px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; }
+        
+        /* ESTILO BOTÓN AYUDA RECUPERADO */
         .help-btn { position: absolute; top: 20px; right: 20px; background: #5f6368; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: bold; z-index: 100; }
+        
         .db-panel { background: #e8f0fe; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #c2d7fa; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .db-panel input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; min-width: 200px; }
         .btn-db { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
@@ -32,12 +35,17 @@
         .folder-item.done { text-decoration: line-through; opacity: 0.4; background: #e8f5e9; }
         .status-area { background: #f1f3f4; border-top: 1px solid #eee; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
         .status-line { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.85em; cursor: pointer; }
-        .card.done-all { opacity: 0.6; filter: grayscale(1); }
+        
+        /* ESTILO MODAL RECUPERADO */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 25px; border-radius: 12px; width: 80%; max-width: 500px; position: relative; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <button class="help-btn" onclick="document.getElementById('helpModal').style.display='block'">?</button>
+    
     <h1>GAD Alicante - Reparto de Expedientes</h1>
 
     <div class="db-panel">
@@ -60,6 +68,16 @@
 
     <button id="process-btn" onclick="procesar(true)">Dividir Tareas y Generar Reparto</button>
     <div id="results" class="results"></div>
+</div>
+
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span style="float:right; cursor:pointer; font-size:24px;" onclick="document.getElementById('helpModal').style.display='none'">&times;</span>
+        <h2>Ayuda PowerShell</h2>
+        <p>1. Entra en la carpeta de los expedientes.</p>
+        <p>2. Ejecuta el comando:</p>
+        <code style="background:#eee; padding:5px; display:block;">Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName | clip</code>
+    </div>
 </div>
 
 <script>
@@ -176,11 +194,10 @@
         });
     }
 
-    // ESTA FUNCIÓN AHORA FILTRA LOS DUPLICADOS ANTES DE PINTAR
     function renderBloque(lista, agIdx, tipo, titulo) {
         if(!lista || !lista.length) return "";
 
-        // FILTRO DE SEGURIDAD PARA LA VISTA
+        // FILTRO PARA NO MOSTRAR REPETIDOS
         const unicosParaMostrar = [];
         const yaVistos = new Set();
         lista.forEach(item => {
