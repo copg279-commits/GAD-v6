@@ -10,10 +10,7 @@
         :root { --blue-main: #1a73e8; --blue-dark: #0d47a1; --success: #28a745; --danger: #d93025; --bg: #f4f7f9; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; color: #333; margin: 0; }
         .container { max-width: 1200px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; }
-        
         .help-btn { position: absolute; top: 20px; right: 20px; background: #5f6368; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: bold; }
-        
-        /* Panel Firebase Mejorado */
         .db-panel { background: #e8f0fe; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #c2d7fa; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .db-panel input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; min-width: 200px; }
         .btn-db { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
@@ -22,26 +19,20 @@
         .btn-edit { background: #f9ab00; color: white; }
         .btn-delete { background: var(--danger); color: white; }
         .btn-db:hover { opacity: 0.8; }
-
         .setup-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; margin-bottom: 20px; }
         .ag-list input { width: 95%; padding: 8px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 5px; display: block; }
         textarea { width: 100%; height: 120px; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 11px; }
-
         button#process-btn { width: 100%; padding: 15px; background: var(--blue-main); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
-
         .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
         .card { background: white; border-radius: 12px; border: 1px solid #d1d9e0; overflow: hidden; transition: 0.3s; display: flex; flex-direction: column; }
         .card-header { background: var(--blue-main); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .card-body { padding: 15px; flex-grow: 1; }
-        
         .task-segment { padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9em; border-left: 5px solid #ccc; }
         .seg-others { background: #f0f4ff; border-left-color: var(--blue-main); }
         .seg-france { background: #fff9e6; border-left-color: #ffb300; }
-
         .status-bar { padding: 10px; background: #f1f3f4; border-top: 1px solid #eee; display: flex; align-items: center; gap: 8px; font-weight: bold; cursor: pointer; }
         .card.done { opacity: 0.6; filter: grayscale(1); }
         .card.done .card-header { background: #5f6368; }
-
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
         .modal-content { background: white; margin: 10% auto; padding: 25px; border-radius: 12px; width: 80%; max-width: 500px; }
     </style>
@@ -53,14 +44,12 @@
     <h1>GAD Alicante - Reparto de Tareas Expedientes</h1>
 
     <div class="db-panel">
-        <strong>📁 Historial:</strong>
-        <input type="text" id="saveName" placeholder="Nombre (Ej: Semestre 1 2021)">
+        <strong>📁 Nodo: Ayuda Países</strong>
+        <input type="text" id="saveName" placeholder="Nombre (Ej: 2026 semestre 1)">
         <button class="btn-db btn-save" onclick="guardarReparto()">Guardar</button>
-        
         <div style="border-left: 1px solid #c2d7fa; height: 30px; margin: 0 10px;"></div>
-        
         <select id="historyList" style="padding: 8px; border-radius: 5px; max-width: 200px;">
-            <option value="">Consultar anteriores...</option>
+            <option value="">Conectando con Firebase...</option>
         </select>
         <button class="btn-db btn-load" onclick="cargarReparto()">Cargar</button>
         <button class="btn-db btn-edit" onclick="editarNombre()">Renombrar</button>
@@ -80,7 +69,7 @@
         </div>
     </div>
 
-    <button id="process-btn" onclick="procesar(true)">Dividir Tareas y Procesar</button>
+    <button id="process-btn" onclick="procesar(true)">Dividir Tareas y Procesar Nuevo</button>
     <div id="results" class="results"></div>
 </div>
 
@@ -95,7 +84,6 @@
 </div>
 
 <script>
-    // Configuración Firebase (Mantenida de tu archivo original)
     const firebaseConfig = {
         apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
         authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -109,43 +97,39 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let currentData = null;
+    let inicializado = false;
 
-    // Variable para controlar que la carga automática solo ocurra al abrir la página
-    let primerInicio = true;
-
-    // Escuchar cambios en la base de datos para actualizar el selector
+    // Escuchar el nodo "repartos" (dentro de Ayuda Países)
     db.ref('repartos').on('value', (snapshot) => {
+        console.log("Datos recibidos de Firebase...");
         const select = document.getElementById('historyList');
-        const currentValue = select.value;
         select.innerHTML = '<option value="">Consultar anteriores...</option>';
         
-        let ultimaLlave = "";
-
+        let claves = [];
         snapshot.forEach((child) => {
+            claves.push(child.key);
             let option = document.createElement('option');
             option.value = child.key; 
             option.text = child.key;
             select.appendChild(option);
-            
-            // Al final del bucle, esta variable tendrá el nombre del último registro
-            ultimaLlave = child.key;
         });
 
-        // Lógica de carga automática al iniciar
-        if (primerInicio && ultimaLlave) {
-            select.value = ultimaLlave; // Selecciona el último en el dropdown
-            cargarReparto();           // Ejecuta la carga de datos
-            primerInicio = false;      // Desactiva para que no se recargue solo si añades nuevos registros
-        } else {
-            select.value = currentValue;
+        // Lógica de carga automática del más reciente
+        if (!inicializado && claves.length > 0) {
+            const elMasReciente = claves[claves.length - 1];
+            console.log("Cargando automáticamente el más reciente: " + elMasReciente);
+            select.value = elMasReciente;
+            cargarReparto(); 
+            inicializado = true;
         }
+    }, (error) => {
+        console.error("Error de Firebase:", error);
+        document.getElementById('historyList').innerHTML = '<option value="">Error de conexión</option>';
     });
 
-    // Funciones de Lógica de Reparto
-    function corregir(t) {
-        return t.replace(/ESPA\?A/gi, "ESPAÑA").replace(/cauci\?n/gi, "caución").replace(/gesti\?n/gi, "gestión").replace(/expedici\?n/gi, "expedición");
-    }
-
+    // Funciones lógicas (Mantenidas del original)
+    function corregir(t) { return t.replace(/ESPA\?A/gi, "ESPAÑA").replace(/cauci\?n/gi, "caución").replace(/gesti\?n/gi, "gestión").replace(/expedici\?n/gi, "expedición"); }
+    
     function extraerInfo(ruta) {
         const limpia = corregir(ruta);
         const partes = limpia.split('\\');
@@ -194,14 +178,13 @@
     function renderizar() {
         const resDiv = document.getElementById('results');
         resDiv.innerHTML = "";
+        if(!currentData) return;
         currentData.agentes.forEach((name, i) => {
             const mOt = currentData.bloqueOtros[i] || [];
             const mFr = currentData.bloqueFrancia[i] || [];
-            if(mOt.length + mFr.length === 0) return;
             const cardId = `card-${i}`;
             const card = document.createElement('div');
             card.className = 'card'; card.id = cardId;
-            
             card.innerHTML = `
                 <div class="card-header"><span>${name}</span><span>${mOt.length + mFr.length} arch.</span></div>
                 <div class="card-body">
@@ -214,17 +197,9 @@
         });
     }
 
-    // --- FUNCIONES DE FIREBASE ---
-
-    function guardarReparto() {
-        const nombre = document.getElementById('saveName').value.trim();
-        if(!nombre || !currentData) return alert("Escribe un nombre para el registro y procesa los datos.");
-        db.ref('repartos/' + nombre).set(currentData).then(() => alert("Guardado con éxito."));
-    }
-
     function cargarReparto() {
         const nombre = document.getElementById('historyList').value;
-        if(!nombre) return; 
+        if(!nombre) return;
         db.ref('repartos/' + nombre).once('value').then((snap) => {
             if(snap.exists()) {
                 procesar(false, snap.val());
@@ -233,34 +208,29 @@
         });
     }
 
+    function guardarReparto() {
+        const nombre = document.getElementById('saveName').value.trim();
+        if(!nombre || !currentData) return alert("Escribe un nombre y procesa datos primero.");
+        db.ref('repartos/' + nombre).set(currentData).then(() => alert("Guardado en Ayuda Países."));
+    }
+
     function eliminarReparto() {
         const nombre = document.getElementById('historyList').value;
-        if(!nombre) return alert("Selecciona el registro que deseas eliminar.");
-        
-        if(confirm(`¿Estás seguro de que quieres eliminar permanentemente "${nombre}"?`)) {
-            db.ref('repartos/' + nombre).remove().then(() => {
-                alert("Registro eliminado.");
-                document.getElementById('results').innerHTML = "";
-                document.getElementById('saveName').value = "";
-            });
-        }
+        if(!nombre || !confirm(`¿Eliminar "${nombre}"?`)) return;
+        db.ref('repartos/' + nombre).remove().then(() => {
+            document.getElementById('results').innerHTML = "";
+            document.getElementById('saveName').value = "";
+        });
     }
 
     function editarNombre() {
         const nombreAntiguo = document.getElementById('historyList').value;
-        if(!nombreAntiguo) return alert("Selecciona el registro que quieres renombrar.");
-
-        const nuevoNombre = prompt("Escribe el nuevo nombre para este registro:", nombreAntiguo);
-        
-        if(nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreAntiguo) {
+        if(!nombreAntiguo) return;
+        const nuevoNombre = prompt("Nuevo nombre:", nombreAntiguo);
+        if(nuevoNombre && nuevoNombre !== nombreAntiguo) {
             db.ref('repartos/' + nombreAntiguo).once('value').then((snap) => {
-                const data = snap.val();
-                db.ref('repartos/' + nuevoNombre.trim()).set(data).then(() => {
-                    db.ref('repartos/' + nombreAntiguo).remove().then(() => {
-                        alert("Nombre actualizado correctamente.");
-                        document.getElementById('historyList').value = nuevoNombre.trim();
-                        document.getElementById('saveName').value = nuevoNombre.trim();
-                    });
+                db.ref('repartos/' + nuevoNombre.trim()).set(snap.val()).then(() => {
+                    db.ref('repartos/' + nombreAntiguo).remove();
                 });
             });
         }
