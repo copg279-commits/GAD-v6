@@ -84,13 +84,13 @@
             gap: 25px;
         }
 
-        /* NUEVO BOTÓN AYUDA ESTÉTICO */
+        /* BOTÓN AYUDA PREMIUM */
         .btn-help-premium {
             background: rgba(255, 255, 255, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.5);
             color: white;
             padding: 8px 18px;
-            border-radius: 30px; /* Forma de cápsula */
+            border-radius: 30px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
@@ -140,18 +140,18 @@
             margin-bottom: 20px;
         }
 
-        /* NUEVO WRAPPER FLEXIBLE PARA BUSCADOR + BOTÓN */
+        /* WRAPPER FLEXIBLE */
         .search-wrapper {
             max-width: 1200px;
             margin: 0 auto;
             position: relative;
-            display: flex; /* Flexbox para alinear input y botón */
-            gap: 10px; /* Espacio entre ellos */
+            display: flex;
+            gap: 10px;
         }
 
         .search-input-container {
             position: relative;
-            flex: 1; /* Ocupa todo el espacio posible */
+            flex: 1;
         }
 
         .search-input {
@@ -159,7 +159,7 @@
             padding: 15px 20px 15px 50px;
             font-size: 16px;
             border: 2px solid #ddd;
-            border-radius: 50px; /* Redondeado completo */
+            border-radius: 50px;
             outline: none;
             transition: border-color 0.3s;
             box-sizing: border-box;
@@ -196,7 +196,7 @@
         }
 
         .btn-clear:hover {
-            background-color: #c82333; /* Rojo más oscuro */
+            background-color: #c82333;
         }
 
         /* Chips Filtros */
@@ -384,7 +384,6 @@
         }
         .help-icon { color: var(--primary-color); margin-right: 8px; width: 20px; text-align: center; }
         
-        /* Caja de aviso importante */
         .warning-box {
             background-color: #fff3cd;
             border: 1px solid #ffeeba;
@@ -404,16 +403,13 @@
         <div class="header-left">
             <h1 class="header-title">INVENTARIO DE DOCUMENTOS GAD</h1>
         </div>
-
         <div class="header-center">
             <img src="logogad.png" alt="GAD Logo" class="logo">
         </div>
-
         <div class="header-right">
             <button class="btn-help-premium" onclick="toggleModal(true)">
                 <i class="fa-regular fa-circle-question"></i> AYUDA
             </button>
-
             <div class="stats-group">
                 <span id="stats-number" class="stats-counter">--</span>
                 <span class="stats-label">Documentos</span>
@@ -422,12 +418,11 @@
     </header>
 
     <div class="controls-container">
-        
         <div class="search-wrapper">
             <div class="search-input-container">
                 <i class="fa-solid fa-search search-icon"></i>
                 <input type="text" id="buscador" class="search-input" 
-                       placeholder="Ej: España DNI 2025 (Busca palabras exactas)"
+                       placeholder="Ej: España DNI 2025 (Busca sin acentos: Rumania = Rumanía)"
                        onkeyup="aplicarFiltrosInteligentes()">
             </div>
             <button class="btn-clear" onclick="limpiarBusqueda()">
@@ -439,9 +434,7 @@
             <button class="chip active" onclick="setFiltro('cat', 'TODOS', this)">Todo</button>
             <button class="chip" onclick="setFiltro('cat', 'PERSONAS', this)"><i class="fa-solid fa-user"></i> Personas</button>
             <button class="chip" onclick="setFiltro('cat', 'VEHICULOS', this)"><i class="fa-solid fa-car"></i> Vehículos</button>
-            
             <div class="divider"></div>
-            
             <button class="chip active" onclick="setFiltro('cal', 'TODOS', this)">Todas DPI</button>
             <button class="chip" onclick="setFiltro('cal', '600', this)">600 DPI</button>
             <button class="chip" onclick="setFiltro('cal', '2400', this)">2400 DPI</button>
@@ -462,13 +455,13 @@
             
             <div class="help-item">
                 <strong><i class="fa-solid fa-magnifying-glass help-icon"></i> Búsqueda Inteligente:</strong><br>
-                Escribe palabras clave separadas por espacios. El sistema buscará documentos que contengan <b>todas</b> esas palabras exactas.<br>
-                <em style="color:#666; font-size: 13px;">Ej: "España DNI 2025"</em>
+                Escribe palabras clave. El sistema ignora <b>tildes</b> y <b>mayúsculas</b>. Buscar "Rumanía" es igual a "rumania".<br>
+                <em style="color:#666; font-size: 13px;">Ej: "españa dni" encontrará "ESPAÑA D.N.I."</em>
             </div>
 
             <div class="help-item">
                 <strong><i class="fa-solid fa-eye help-icon" style="color:var(--eye-color)"></i> Ver Documento:</strong><br>
-                Una vez localizado el archivo, pulsa el icono del <b>Ojo Verde</b> a la derecha de la tarjeta para abrir el documento original.
+                Una vez localizado, pulsa el <b>Ojo Verde</b> para abrir el documento original.
             </div>
 
             <div class="warning-box">
@@ -477,7 +470,7 @@
                 <ol style="margin-left: 15px; margin-top: 5px;">
                     <li>Accede a Google Drive y usa la opción <b>"Cambiar nombre"</b> para corregirlo.</li>
                     <li>Esta modificación <b>NO</b> se verá en el programa inmediatamente.</li>
-                    <li>Será efectiva tras la próxima <b>actualización automática</b> (todos los domingos a las 23:00) o si realizas una actualización manual.</li>
+                    <li>Será efectiva tras la próxima <b>actualización automática</b> (domingos 23:00) o si realizas una actualización manual.</li>
                 </ol>
             </div>
             
@@ -512,6 +505,17 @@
         let filtros = { cat: 'TODOS', cal: 'TODOS' };
 
         // ===============================================
+        // 🛠️ FUNCIÓN NORMALIZAR TEXTO (ELIMINA ACENTOS)
+        // ===============================================
+        function normalizarTexto(texto) {
+            if (!texto) return "";
+            return texto.toString()
+                .toLowerCase() // Minusculas
+                .normalize("NFD") // Descompone tildes (á -> a + ´)
+                .replace(/[\u0300-\u036f]/g, ""); // Elimina los simbolos de tilde
+        }
+
+        // ===============================================
         // CARGA DE DATOS
         // ===============================================
         async function cargarInventario() {
@@ -530,19 +534,21 @@
 
                     Object.values(data).forEach(grupo => {
                         Object.values(grupo).forEach(doc => {
-                            const textoLimpio = `${doc.NombreDocumento} ${doc.Pais} ${doc.TipoDocumento} ${doc.SubtipoDocumento || ''} ${doc.EstadoProvincia || ''}`
-                                                .replace(/_/g, ' ')
-                                                .replace(/-/g, ' ')
-                                                .replace(/\./g, ' ')
-                                                .toLowerCase();
-                            
-                            const palabrasClave = textoLimpio.split(/\s+/).filter(w => w.length > 0);
+                            // Concatenamos todo
+                            const rawText = `${doc.NombreDocumento} ${doc.Pais} ${doc.TipoDocumento} ${doc.SubtipoDocumento || ''} ${doc.EstadoProvincia || ''}`;
+                            // Limpiamos caracteres raros y normalizamos
+                            const textoNormalizado = normalizarTexto(rawText)
+                                                    .replace(/_/g, ' ')
+                                                    .replace(/-/g, ' ')
+                                                    .replace(/\./g, ' ');
+
+                            const palabrasClave = textoNormalizado.split(/\s+/).filter(w => w.length > 0);
 
                             lista.push({
                                 ...doc,
                                 _cat: nodo.cat,
                                 _cal: nodo.cal,
-                                _palabras: palabrasClave
+                                _palabras: palabrasClave // Ahora guardamos palabras "limpias"
                             });
                         });
                     });
@@ -560,7 +566,10 @@
         // BÚSQUEDA
         // ===============================================
         function aplicarFiltrosInteligentes() {
-            const input = document.getElementById('buscador').value.trim().toLowerCase();
+            // Obtenemos lo que escribe el usuario Y LO NORMALIZAMOS
+            const inputRaw = document.getElementById('buscador').value;
+            const input = normalizarTexto(inputRaw).trim();
+            
             const terminosBusqueda = input.split(/\s+/).filter(t => t.length > 0);
             const grid = document.getElementById('grid-resultados');
             const statsNum = document.getElementById('stats-number');
@@ -572,6 +581,7 @@
                 if (filtros.cal !== 'TODOS' && doc._cal !== filtros.cal) return false;
 
                 if (terminosBusqueda.length > 0) {
+                    // Comparamos termino normalizado con palabras normalizadas del doc
                     const cumpleTodosLosTerminos = terminosBusqueda.every(termino => {
                         return doc._palabras.some(palabraDoc => palabraDoc.startsWith(termino));
                     });
@@ -580,14 +590,13 @@
                 return true;
             });
 
-            // Actualizar número en la cabecera
             if (resultados.length > 0) {
                 statsNum.innerText = resultados.length.toLocaleString();
             } else {
                 statsNum.innerText = "0";
                 grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
                     <i class="fa-regular fa-folder-open" style="font-size:40px; margin-bottom:10px;"></i><br>
-                    No hay resultados para esa búsqueda exacta.
+                    No hay resultados.
                 </div>`;
                 return;
             }
@@ -626,11 +635,10 @@
             aplicarFiltrosInteligentes();
         }
 
-        // FUNCIÓN LIMPIAR BÚSQUEDA
         function limpiarBusqueda() {
             document.getElementById('buscador').value = '';
             document.getElementById('buscador').focus();
-            aplicarFiltrosInteligentes(); // Restablece todos los resultados
+            aplicarFiltrosInteligentes();
         }
 
         function toggleModal(mostrar) {
