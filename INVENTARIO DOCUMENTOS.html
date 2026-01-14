@@ -3,1376 +3,642 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario de Documentos - GAD</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Inventario Documentos GAD</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        /* ESTILOS DE LA CABECERA SIMULADA (Ahora Panel de Título) */
-        .title-panel-blue {
-            background-color: #3b82f6; /* Azul solicitado */
-            display: flex;
-            justify-content: space-between; /* Para separar el título y el logo */
-            align-items: center;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            margin-bottom: 20px;
-        }
-        .title-panel-blue h1 {
-            color: white;
-            margin: 0;
-            padding: 0;
-            font-size: 1.8em;
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Espacio entre icono y texto */
-        }
-        .title-panel-blue .header-logo-container {
-            width: 80px; /* Tamaño del logo ajustado */
-            height: 80px;
-            flex-shrink: 0; /* Evita que el logo se encoja */
-        }
-        .title-panel-blue .header-logo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        :root {
+            --primary-color: #0457C9; /* Azul Original GAD */
+            --bg-color: #f4f6f9;
+            --text-color: #333;
+            --card-bg: #fff;
+            --eye-color: #28a745; /* Verde Ojo */
+            --danger-color: #dc3545; /* Rojo Limpiar */
         }
 
-        /* ESTILOS DEL PIE DE PÁGINA */
-        footer {
-            background-color: #e0e0e0;
-            text-align: center;
-            padding: 20px;
-            width: 100%;
-            margin-top: auto; /* Empuja el footer hacia abajo */
-            box-sizing: border-box; /* Incluye padding en el ancho */
-        }
-        footer p {
-            margin: 5px 0;
-            font-size: 1em;
-            color: #333;
-            font-weight: bold;
-        }
-
-        /* [ ESTILOS BASE Y PANELES - DISEÑO INTEGRADO ] */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
+            background-color: var(--bg-color);
             margin: 0;
-            color: #333;
-            line-height: 1.6;
+            padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        main {
-            flex: 1;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            box-sizing: border-box; /* Incluye padding en el ancho */
-        }
-
-        .app-container {
-            max-width: 1300px;
-            width: 100%;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        .panel {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e0e0e0;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-weight: 700;
-        }
-        /* El H1 ahora está en el panel azul */
-        h2 { font-size: 1.5em; }
-        h3 { font-size: 1.2em; }
-
-        /* Controles y Botones (Mantenidos) */
-        button {
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: all 0.2s ease-in-out;
-            margin-right: 8px; /* Mantener margen derecho por defecto */
-            margin-bottom: 5px; /* Añadir margen inferior para apilamiento */
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: white;
-            font-size: 0.9em; /* Ligeramente más pequeño para móvil */
-        }
-        button i { font-size: 1em; }
-        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .btn-primary:hover { box-shadow: 0 4px 10px rgba(41, 128, 185, 0.4); }
-        .btn-delete { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .btn-delete:hover { box-shadow: 0 4px 10px rgba(192, 57, 43, 0.4); }
-        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        .btn-success:hover { box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4); }
-        .btn-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
-        .btn-warning:hover { box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); }
-
-        /* Estilos de Botones de Modo de Inventario */
-        .mode-selection-container {
-            display: flex;
-            align-items: center;
-            /* margin-bottom: 15px; */ /* Eliminado para controlar mejor con flex-wrap */
-            /* padding-bottom: 10px; */ /* Eliminado */
-            /* border-bottom: 2px solid #3498db; */ /* Movido a search-header */
-            gap: 10px; /* Reducido gap */
-            flex-wrap: wrap; /* Permitir que los botones pasen a la siguiente línea */
-        }
-         .mode-selection-container h4 { margin: 0 10px 0 0; } /* Ajustar margen del título "Modo:" */
-
-        #mode-personas-btn { background: #3498db; }
-        #mode-vehiculos-btn { background: #e67e22; }
-
-        #mode-personas-btn, #mode-vehiculos-btn {
-             opacity: 0.6; 
-             transition: opacity 0.3s ease;
-             width: auto; /* Ancho automático para adaptarse */
-             min-width: 120px; /* Ancho mínimo */
-        }
-        #mode-personas-btn.active, #mode-vehiculos-btn.active {
-            background: #27ae60;
-            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4);
-            border: 2px solid white;
-            opacity: 1; 
-        }
-
-
-        /* Estilos generales de inputs y selects (Mantenidos) */
-        input[type="text"], input[type="number"], input[type="url"], select {
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            padding: 8px 12px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,.075);
-            font-size: 0.95em;
-            width: 100%;
-            box-sizing: border-box; /* Asegura que padding no aumente el tamaño */
-        }
-
-        /* BÚSQUEDA Y CONTROLES - Estructura mejorada */
-        .search-header {
+        /* === 1. CABECERA === */
+        header {
+            background-color: var(--primary-color);
+            height: 120px;
+            padding: 0 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap; /* Permitir que los elementos pasen a la siguiente línea */
-            gap: 15px;
-             border-bottom: 2px solid #3498db; /* Borde movido aquí */
-             padding-bottom: 15px; /* Espacio bajo el borde */
-        }
-         /* Título h2 */
-         .search-header h2 { margin-bottom: 0; } /* Quitar margen inferior si está en la misma línea */
-
-
-        /* Estilos de botones de categoría */
-        .filter-buttons {
-             display: flex;
-             flex-wrap: wrap; /* Permitir que los botones pasen a la siguiente línea */
-             gap: 8px; /* Espacio entre botones */
-             margin-left: auto; /* Empujar a la derecha en desktop */
-        }
-        .filter-buttons button {
-            margin-left: 0; /* Quitar margen izquierdo individual */
-            margin-right: 0; /* Quitar margen derecho individual */
-        }
-        .btn-cat-2400 { background: #e0f2f7; color: #0288d1; border: 1px solid #b3e5fc; }
-        .btn-cat-600 { background: #e8f5e9; color: #388e3c; border: 1px solid #c8e6c9; }
-        .btn-cat-fisico { background: #fff8e1; color: #fbc02d; border: 1px solid #ffe082; }
-        .btn-cat-todos { background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; }
-
-        .btn-cat-2400.active { background: #03a9f4; color: white; box-shadow: 0 4px 10px rgba(3, 169, 244, 0.4); }
-        .btn-cat-600.active { background: #4caf50; color: white; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4); }
-        .btn-cat-fisico.active { background: #ffc107; color: white; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4); }
-        .btn-cat-todos.active { background: #f44336; color: white; box-shadow: 0 4px 10px rgba(244, 67, 54, 0.4); }
-
-        /* Estilos para el campo obligatorio (Mantenidos) */
-        .required-label {
-            color: #e74c3c;
-            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        /* Layout del grid de búsqueda */
-        .search-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Móvil primero */
-            gap: 15px;
-            padding: 15px 0;
-            align-items: end; /* Alinea los elementos al final (abajo) */
-            /* border-top: 1px solid #e0e0e0; */ /* Borde superior eliminado */
-            padding-top: 5px; /* Reducido padding superior */
+        /* TÍTULO */
+        .header-left {
+            flex: 1;
+            text-align: left;
+            white-space: nowrap;
         }
 
-        .search-controls label {
-            font-size: 0.85em;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
+        .header-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        /* LOGO */
+        .header-center {
+            flex: 0 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .logo {
+            height: 100px;
+            width: auto;
+            object-fit: contain;
+            background: transparent;
+        }
+
+        /* DERECHA */
+        .header-right {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 25px;
+        }
+
+        /* NUEVO BOTÓN AYUDA ESTÉTICO */
+        .btn-help-premium {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 30px; /* Forma de cápsula */
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-transform: uppercase;
+            text-decoration: none;
+        }
+
+        .btn-help-premium:hover {
+            background: white;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Contador */
+        .stats-group {
+            text-align: right;
+            border-left: 1px solid rgba(255,255,255,0.3);
+            padding-left: 20px;
+        }
+
+        .stats-counter {
+            color: white;
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
+            display: block;
+        }
+        
+        .stats-label {
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.8);
             display: block;
         }
 
-        .search-controls .align-bottom {
-            align-self: end; /* Mantiene el botón alineado con la base de los inputs */
-        }
-        
-        /* Media query para el layout en DESKTOP */
-        @media (min-width: 1200px) {
-            .search-controls {
-                grid-template-columns: 1.2fr 1.2fr 1fr 0.7fr 0.7fr 150px; 
-            }
-             /* Ocultar label de Estado/Provincia si está en la segunda fila en desktop */
-             #state-region-container {
-                 grid-column: 1 / 3; /* Ocupa las dos primeras columnas si se muestra */
-             }
-        }
-         /* Media query para el layout en TABLET (ajuste intermedio) */
-         @media (min-width: 768px) and (max-width: 1199px) {
-             .search-controls {
-                 /* 3 columnas + botón en la segunda fila */
-                 grid-template-columns: repeat(3, 1fr); 
-             }
-             .search-controls .align-bottom {
-                 grid-column: 1 / -1; /* Botón ocupa toda la fila inferior */
-                 margin-top: 10px;
-             }
-             #state-region-container {
-                 grid-column: 1 / -1; /* Ocupa toda la fila si se muestra */
-             }
-         }
-
-         /* ⬇️⬇️⬇️ NUEVO: Media query para MÓVILES (< 768px) ⬇️⬇️⬇️ */
-         @media (max-width: 767px) {
-             .search-controls {
-                 grid-template-columns: 1fr; /* Una sola columna */
-                 gap: 10px; /* Menos espacio vertical */
-             }
-             .search-controls div {
-                 width: 100%; /* Asegurar ancho completo */
-             }
-             #state-region-container {
-                 grid-column: 1 / -1; /* Asegurar que ocupe toda la fila */
-             }
-             .search-controls .align-bottom {
-                 margin-top: 5px; /* Menos espacio sobre el botón Limpiar */
-             }
-             .title-panel-blue h1 {
-                 font-size: 1.4em; /* Título más pequeño en móvil */
-             }
-             .title-panel-blue .header-logo-container {
-                 width: 60px; /* Logo más pequeño */
-                 height: 60px;
-             }
-              /* Ajustes para los botones de modo y categoría en pantallas estrechas */
-             .search-header {
-                 flex-direction: column; /* Apilar elementos verticalmente */
-                 align-items: stretch; /* Estirar elementos al ancho completo */
-             }
-             .mode-selection-container {
-                 justify-content: center; /* Centrar botones de modo */
-                 width: 100%;
-             }
-             .filter-buttons {
-                 justify-content: center; /* Centrar botones de categoría */
-                 margin-left: 0; /* Resetear margen */
-                 width: 100%;
-             }
-             .results-header, .doc-row {
-                padding: 8px 10px; /* Menos padding en filas de tabla */
-                gap: 8px; /* Menos gap en filas de tabla */
-                font-size: 0.9em; /* Fuente más pequeña en tabla */
-             }
-             .doc-actions button {
-                 padding: 6px 10px; /* Botones de acción más pequeños */
-             }
-              .doc-actions button i {
-                 font-size: 0.9em; /* Iconos más pequeños */
-             }
-         }
-         /* Ajustes adicionales para pantallas MUY estrechas */
-         @media (max-width: 480px) {
-             .title-panel-blue {
-                 padding: 15px;
-             }
-             .title-panel-blue h1 {
-                 font-size: 1.2em;
-             }
-             .title-panel-blue .header-logo-container {
-                 width: 50px;
-                 height: 50px;
-             }
-             .panel { padding: 15px; }
-             button { font-size: 0.85em; padding: 8px 12px; }
-             h2 { font-size: 1.3em; }
-             h3 { font-size: 1.1em; }
-             .results-header, .doc-row {
-                font-size: 0.85em; 
-                grid-template-columns: 1.5fr 1fr 0.8fr 1fr 1fr 0.5fr 100px; /* Ajustar columnas para móvil */
-                min-width: 700px; /* Reducir min-width para menos scroll */
-             }
-              .doc-row div:nth-child(2) { /* Columna País */
-                  line-height: 1.3;
-              }
-             .doc-row div:nth-child(2) span { /* Texto (País) debajo del estado */
-                  font-size: 0.9em; 
-              }
-             .link-icon { font-size: 1.1em; }
-         }
-
-
-        /* LISTADO HORIZONTAL (TABLA) */
-        .results-container {
-            overflow-x: auto; /* Mantiene el scroll horizontal */
-            padding-bottom: 10px;
-            max-width: 100%;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #fdfdfd;
-            /* -webkit-overflow-scrolling: touch; */ /* Scroll más suave en iOS */
-        }
-        .results-header, .doc-row {
-            grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 120px; /* Desktop */
-            display: grid;
-            gap: 15px;
-            padding: 10px 12px;
-            border-bottom: 1px solid #f0f0f0;
-            min-width: 1000px; /* Ancho mínimo para forzar scroll si es necesario */
-        }
-        .results-header {
-            font-weight: bold;
-            background: #e9f2f7;
-            border-bottom: 2px solid #3498db;
-            border-radius: 8px 8px 0 0;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            color: #2c3e50;
-        }
-        .doc-row:nth-child(even) {
-            background: #f9f9f9;
-        }
-        .doc-row:hover {
-            background: #eef4f9;
-        }
-        .doc-row div {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            align-self: center; /* Centrar verticalmente */
-        }
-        /* Permitir salto de línea en la columna País (nth-child(2)) */
-        .doc-row div:nth-child(2) {
-             white-space: normal; 
-             word-break: break-word; 
-             line-height: 1.4; 
-        }
-        /* Estilo para el país entre paréntesis */
-         .doc-row div:nth-child(2) span {
-            color: #555; 
-            font-size: 0.9em;
-            display: block; /* Asegura que esté en línea separada si hay mucho texto */
-            margin-top: 2px;
-         }
-
-        .doc-actions {
-            display: flex;
-            gap: 5px;
-            justify-content: flex-end; /* Alinea botones a la derecha */
-            align-items: center; /* Centra botones verticalmente */
-            min-width: 100px; 
+        /* === 2. BUSCADOR Y FILTROS === */
+        .controls-container {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
 
-        /* Estilo específico para el icono de enlace (Mantenidos) */
-        .link-icon-container {
-            text-align: center;
-        }
-        .link-icon {
-            color: #2ecc71;
-            font-size: 1.2em;
-            cursor: pointer;
-            text-decoration: none;
-            transition: color 0.2s;
-            padding: 5px;
-            display: inline-block;
-        }
-        .link-icon:hover {
-            color: #27ae60;
-        }
-        .link-icon-disabled {
-            color: #b0b0b0;
-            cursor: default;
-        }
-
-        /* [ ESTILOS DEL MODAL MEJORADO - Mantenidos ] */
-        .modal {
-            position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center;
-            backdrop-filter: blur(3px);
-            padding: 10px; /* Añadir padding para evitar que el modal toque los bordes en móvil */
-            box-sizing: border-box;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            padding: 30px; /* Reducir padding ligeramente */
-            border-radius: 12px;
-            width: 100%; /* Ocupar ancho disponible en móvil */
-            max-width: 600px; /* Mantener ancho máximo para desktop */
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
-            animation: fadeInScale 0.3s ease-out;
+        /* NUEVO WRAPPER FLEXIBLE PARA BUSCADOR + BOTÓN */
+        .search-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
             position: relative;
+            display: flex; /* Flexbox para alinear input y botón */
+            gap: 10px; /* Espacio entre ellos */
+        }
+
+        .search-input-container {
+            position: relative;
+            flex: 1; /* Ocupa todo el espacio posible */
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 50px; /* Redondeado completo */
+            outline: none;
+            transition: border-color 0.3s;
             box-sizing: border-box;
         }
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .modern-alert {
-            text-align: center;
-            padding: 15px; /* Reducir padding */
-            margin: 15px 0; /* Reducir margen */
-            border-radius: 8px;
-            background-color: #f0f4f7;
-            border: 1px solid #dcdcdc;
-            color: #555;
-            font-size: 0.9em; /* Fuente más pequeña */
-        }
-         .modern-alert h4 { font-size: 1.1em; margin-top: 5px; margin-bottom: 5px; }
-         .modern-alert p { margin-bottom: 0; }
-        .modern-alert-error {
-            background-color: #fef2f2;
-            border-color: #f44336;
-        }
-        .link-preview {
-            background-color: #f0f4f7;
-            padding: 8px;
-            border-radius: 5px;
-            margin-top: 5px;
-            font-size: 0.9em;
-            color: #7f8c8d;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            pointer-events: none;
-        }
-        label {
-             display: block;
-             margin-top: 15px;
-             margin-bottom: 5px;
-             font-weight: bold;
-             color: #2c3e50;
-        }
-        .category-fixed-input {
-            background-color: #f5f5f5;
-            color: #7f8c8d;
-            cursor: not-allowed;
-            font-weight: bold;
-        }
-        /* Ajustes modal botones */
-         .modal-content div[style*="text-align: right"] {
-             margin-top: 20px; /* Menos espacio sobre botones */
-             display: flex; /* Usar flex para mejor control */
-             justify-content: flex-end; /* Alinear a la derecha */
-             flex-wrap: wrap; /* Permitir que pasen a la siguiente línea */
-             gap: 10px;
-         }
-          .modal-content div[style*="text-align: right"] button {
-              margin-right: 0; /* Quitar margen derecho individual */
-          }
 
+        .search-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 18px;
+        }
+
+        /* BOTÓN LIMPIAR ROJO */
+        .btn-clear {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-clear:hover {
+            background-color: #c82333; /* Rojo más oscuro */
+        }
+
+        /* Chips Filtros */
+        .filters-chips {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 8px 16px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+        .chip:hover { background: #dee2e6; }
+        
+        .chip.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 4px rgba(4, 87, 201, 0.3);
+        }
+
+        .divider {
+            width: 1px;
+            background: #ccc;
+            margin: 0 10px;
+            height: 30px;
+        }
+
+        /* === 3. GRID DE RESULTADOS === */
+        .results-container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 20px 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .card-content {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 10px;
+        }
+
+        .card-badges {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-loc { background: #e3f2fd; color: #1565c0; }
+        .badge-dpi { background: #f5f5f5; color: #616161; }
+        .badge-veh { background: #e8f5e9; color: #2e7d32; }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-view {
+            color: var(--eye-color);
+            font-size: 22px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-view:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+            transform: scale(1.1);
+        }
+
+        /* === 4. PIE DE PÁGINA === */
+        .pie-pagina {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            margin-top: auto;
+            font-size: 14px;
+            width: 100%;
+            line-height: 1.6;
+        }
+
+        .loader-box {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        /* === 5. MODAL AYUDA === */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 550px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .help-item {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            color: #444;
+        }
+        .help-icon { color: var(--primary-color); margin-right: 8px; width: 20px; text-align: center; }
+        
+        /* Caja de aviso importante */
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .warning-box strong { display: block; margin-bottom: 8px; }
 
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
-
 <body>
-    <main>
-        <div class="app-container">
 
-            <div class="title-panel-blue">
-                <h1><i class="fas fa-archive"></i> Inventario de Documentos - GAD</h1>
-                <div class="header-logo-container">
-                    <img src="logogad.png" alt="Logo GAD">
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="search-header">
-                    <h2>🔍 Búsqueda de Documentos (Unificada)</h2>
-
-                    <div class="mode-selection-container">
-                        <h4><i class="fas fa-database"></i> Modo:</h4>
-                        <button id="mode-personas-btn" class="btn-primary active" onclick="setInventoryMode('documentos 600 dpi')"><i class="fas fa-user"></i> PERSONAS</button>
-                        <button id="mode-vehiculos-btn" class="btn-warning" onclick="setInventoryMode('vehiculos 600 dpi')"><i class="fas fa-car"></i> VEHÍCULOS</button>
-                    </div>
-                    <div class="filter-buttons">
-                        <button id="filter-2400-btn" class="btn-cat-2400" onclick="setCategoryFilter('ESCANER 2400')">ESCANER 2400</button>
-                        <button id="filter-600-btn" class="btn-cat-600" onclick="setCategoryFilter('ESCANER 600')">ESCANER 600</button>
-                        <button id="filter-fisico-btn" class="btn-cat-fisico" onclick="setCategoryFilter('FÍSICO')">FÍSICO</button>
-                        <button id="filter-todos-btn" class="btn-cat-todos active" onclick="setCategoryFilter('')">TODOS</button>
-                    </div>
-                </div>
-
-                <div class="search-controls">
-                    
-                    <div>
-                        <label>PAÍS (<span class="required-label">OBLIGATORIO</span>):</label>
-                        <input list="datalist-countries" type="text" id="search-country" placeholder="Selecciona o añade un país"
-                                onchange="handleCountryChange(this.value); this.value = this.value.toUpperCase()" 
-                                onfocus="this.value=''" required>
-                        <datalist id="datalist-countries"></datalist>
-                    </div>
-
-                    <div>
-                        <label>BUSCAR POR NOMBRE:</label>
-                        <input type="text" id="search-name-partial" placeholder="Nombre completo o parte">
-                    </div>
-
-                    <div>
-                        <label>BUSCAR POR TIPO:</label>
-                        <input list="datalist-types" type="text" id="search-type" placeholder="Ej: PNC, PSP" 
-                               onchange="this.value = this.value.toUpperCase(); filterDocuments();" 
-                               onfocus="this.value=''">
-                        <datalist id="datalist-types"></datalist>
-                    </div>
-
-                    <div>
-                        <label>AÑO:</label>
-                        <input type="number" id="search-year" placeholder="Año (AAAA)" min="1900" max="3000">
-                    </div>
-
-                    <div>
-                        <label>MES:</label>
-                        <select id="search-month">
-                            <option value="">TODOS</option>
-                        </select>
-                    </div>
-
-                    <div class="align-bottom">
-                        <button id="clear-search-btn" class="btn-delete" style="width: 100%;"><i class="fas fa-eraser"></i> Limpiar Filtros</button>
-                    </div>
-                    
-                    <div id="state-region-container" style="display: none;">
-                        <label id="state-region-label">ESTADO/PROVINCIA/CIUDAD:</label>
-                        <input list="datalist-states" type="text" id="search-state-region" placeholder="Ej: ..." 
-                               onchange="this.value = this.value.toUpperCase(); filterDocuments();" 
-                               onfocus="this.value=''">
-                        <datalist id="datalist-states"></datalist>
-                    </div>
-
-                </div>
-                
-                <h3 style="margin-top: 30px;">Resultados <span id="document-count" style="font-size: 0.9em; font-weight: normal; color: #3498db;">(Cargando conteo...)</span></h3>
-
-                <div class="results-container">
-                    <div id="results-header" class="results-header" style="display: none;">
-                        <div>NOMBRE</div>
-                        <div>PAÍS</div>
-                        <div>TIPO</div>
-                        <div>FECHA (AAAA-MM-DD)</div>
-                        <div>CATEGORÍA</div>
-                        <div style="text-align: center;">ENLACE</div>
-                        <div style="text-align: right;">ACCIONES</div>
-                    </div>
-                    <div id="search-results">
-                        <div class="modern-alert">
-                            <i class="fas fa-filter fa-2x"></i>
-                            <h4 style="color: #3498db; margin-top: 10px;">Búsqueda Restringida</h4>
-                            <p>Por favor, introduce el **PAÍS** (<span class="required-label">OBLIGATORIO</span>) para iniciar la búsqueda en el inventario unificado.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">INVENTARIO DE DOCUMENTOS GAD</h1>
         </div>
-    </main>
 
-    <footer>
-        <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
-        <p>POLICÍA LOCAL DE ALICANTE</p>
-        <p>© GAD - Todos los derechos reservados</p>
-    </footer>
+        <div class="header-center">
+            <img src="logogad.png" alt="GAD Logo" class="logo">
+        </div>
 
-    <div id="edit-modal" class="modal">
+        <div class="header-right">
+            <button class="btn-help-premium" onclick="toggleModal(true)">
+                <i class="fa-regular fa-circle-question"></i> AYUDA
+            </button>
+
+            <div class="stats-group">
+                <span id="stats-number" class="stats-counter">--</span>
+                <span class="stats-label">Documentos</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls-container">
+        
+        <div class="search-wrapper">
+            <div class="search-input-container">
+                <i class="fa-solid fa-search search-icon"></i>
+                <input type="text" id="buscador" class="search-input" 
+                       placeholder="Ej: España DNI 2025 (Busca palabras exactas)"
+                       onkeyup="aplicarFiltrosInteligentes()">
+            </div>
+            <button class="btn-clear" onclick="limpiarBusqueda()">
+                <i class="fa-solid fa-eraser"></i> Limpiar
+            </button>
+        </div>
+
+        <div class="filters-chips">
+            <button class="chip active" onclick="setFiltro('cat', 'TODOS', this)">Todo</button>
+            <button class="chip" onclick="setFiltro('cat', 'PERSONAS', this)"><i class="fa-solid fa-user"></i> Personas</button>
+            <button class="chip" onclick="setFiltro('cat', 'VEHICULOS', this)"><i class="fa-solid fa-car"></i> Vehículos</button>
+            
+            <div class="divider"></div>
+            
+            <button class="chip active" onclick="setFiltro('cal', 'TODOS', this)">Todas DPI</button>
+            <button class="chip" onclick="setFiltro('cal', '600', this)">600 DPI</button>
+            <button class="chip" onclick="setFiltro('cal', '2400', this)">2400 DPI</button>
+        </div>
+    </div>
+
+    <div class="results-container">
+        <div id="loader" class="loader-box">
+            <i class="fa-solid fa-sync fa-spin"></i> Sincronizando con GAD V3...
+        </div>
+        <div id="grid-resultados" class="grid"></div>
+    </div>
+
+    <div id="modalAyuda" class="modal-overlay" onclick="if(event.target === this) toggleModal(false)">
         <div class="modal-content">
-            <h2><i class="fas fa-edit"></i> Editar Documento</h2>
-            <form id="edit-document-form">
-                <input type="hidden" id="edit-doc-key">
+            <span class="modal-close" onclick="toggleModal(false)">&times;</span>
+            <h2 class="modal-title"><i class="fa-solid fa-info-circle"></i> Ayuda y Soporte</h2>
+            
+            <div class="help-item">
+                <strong><i class="fa-solid fa-magnifying-glass help-icon"></i> Búsqueda Inteligente:</strong><br>
+                Escribe palabras clave separadas por espacios. El sistema buscará documentos que contengan <b>todas</b> esas palabras exactas.<br>
+                <em style="color:#666; font-size: 13px;">Ej: "España DNI 2025"</em>
+            </div>
 
-                <label for="edit-doc-country"><i class="fas fa-globe"></i> País:</label>
-                <input list="datalist-countries" type="text" id="edit-doc-country" placeholder="Ej: ESPAÑA" required
-                       onchange="this.value = this.value.toUpperCase(); updateModalCountrySpecificFields(this.value)">
+            <div class="help-item">
+                <strong><i class="fa-solid fa-eye help-icon" style="color:var(--eye-color)"></i> Ver Documento:</strong><br>
+                Una vez localizado el archivo, pulsa el icono del <b>Ojo Verde</b> a la derecha de la tarjeta para abrir el documento original.
+            </div>
 
-                <div id="edit-state-region-container" style="display: none; margin-top: 10px;">
-                    <label id="edit-state-region-label" for="edit-doc-subtipo"><i class="fas fa-map-marker-alt"></i> Estado/Provincia/Ciudad:</label>
-                    <input list="datalist-states" type="text" id="edit-doc-subtipo" placeholder="Ej: ALASKA" onchange="this.value = this.value.toUpperCase()">
-                </div>
-
-                <label for="edit-doc-type"><i class="fas fa-tag"></i> Tipo de Documento:</label>
-                <input list="datalist-types" type="text" id="edit-doc-type" placeholder="Ej: PSP" required onchange="this.value = this.value.toUpperCase()">
-
-                <label for="edit-doc-name"><i class="fas fa-signature"></i> Nombre Documento:</label>
-                <input type="text" id="edit-doc-name" placeholder="Título o referencia del documento" required oninput="extractDateFromName('edit-doc-name', 'edit-doc-date-display')">
-                <p id="edit-doc-date-display" style="font-size: 0.9em; color: #5dade2; margin-top: 5px;">Fecha extraída: Pendiente...</p>
-                <input type="hidden" id="edit-doc-fecha-hidden">
-
-                <label for="edit-doc-category"><i class="fas fa-archive"></i> Categoría (Fija):</label>
-                <select id="edit-doc-category" required disabled class="category-fixed-input" title="La categoría está fija a ESCANER 600 para estos nodos.">
-                    <option value="ESCANER 600" selected>ESCANER 600</option>
-                    <option value="FÍSICO">FÍSICO</option>
-                    <option value="ESCANER 2400">ESCANER 2400</option>
-                </select>
-
-                <label for="edit-doc-link"><i class="fas fa-link"></i> Enlace (URL):</label>
-                <input type="url" id="edit-doc-link" placeholder="https://..." oninput="updateLinkPreview('edit-doc-link', 'edit-link-preview')">
-                <div id="edit-link-preview" class="link-preview">Enlace URL introducido (sin miniatura).</div>
-            </form>
-
-            <div style="margin-top: 30px; text-align: right;">
-                <button class="btn-primary" onclick="updateDocument()"><i class="fas fa-save"></i> Guardar Cambios</button>
-                <button class="btn-delete" onclick="document.getElementById('edit-modal').style.display='none'"><i class="fas fa-times"></i> Cancelar</button>
+            <div class="warning-box">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> IMPORTANTE: CORRECCIÓN DE ERRORES</strong>
+                <p>Si detectas un error ortográfico o un archivo mal nombrado:</p>
+                <ol style="margin-left: 15px; margin-top: 5px;">
+                    <li>Accede a Google Drive y usa la opción <b>"Cambiar nombre"</b> para corregirlo.</li>
+                    <li>Esta modificación <b>NO</b> se verá en el programa inmediatamente.</li>
+                    <li>Será efectiva tras la próxima <b>actualización automática</b> (todos los domingos a las 23:00) o si realizas una actualización manual.</li>
+                </ol>
+            </div>
+            
+            <div style="text-align:center; margin-top:20px;">
+                <button class="chip active" onclick="toggleModal(false)">Entendido</button>
             </div>
         </div>
     </div>
 
+    <footer class="pie-pagina">
+        GAD ALICANTE © 2026 - Grupo de Análisis Documental - Todos los derechos reservados
+    </footer>
 
     <script>
-        // **********************************************
-        //      ✅ [ CONFIGURACIÓN DE FIREBASE ]
-        // **********************************************
+        // ===============================================
+        // CONEXIÓN FIREBASE V3
+        // ===============================================
         const firebaseConfig = {
-            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+            apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag", 
             authDomain: "gad-alicante-v3.firebaseapp.com",
             databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "gad-alicante-v3",
-            storageBucket: "gad-alicante-v3.firebasestorage.app",
-            messagingSenderId: "906986258369",
-            appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+            storageBucket: "gad-alicante-v3.appspot.com",
+            messagingSenderId: "TU_ID",
+            appId: "TU_APP"
         };
 
-        let app = null;
-        let database = null;
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            console.log("✅ Firebase inicializado correctamente.");
-        } catch (error) {
-            console.error("❌ ERROR CRÍTICO DE FIREBASE:", error.message);
-            alert("❌ Error al inicializar Firebase. Revisa tus credenciales.");
-        }
+        let BD_GLOBAL = [];
+        let filtros = { cat: 'TODOS', cal: 'TODOS' };
 
-        const DOCS_REF = 'documentos 600 dpi/'; 
-        const VEHICLES_REF = 'vehiculos 600 dpi/'; 
+        // ===============================================
+        // CARGA DE DATOS
+        // ===============================================
+        async function cargarInventario() {
+            const nodos = [
+                { id: 'documentos 600 dpi', cat: 'PERSONAS', cal: '600' },
+                { id: 'vehiculos 600 dpi', cat: 'VEHICULOS', cal: '600' }
+            ];
 
-        const searchCountryInput = document.getElementById('search-country');
-        const searchTypeInput = document.getElementById('search-type');
-        const searchYearInput = document.getElementById('search-year');
-        const searchMonthSelect = document.getElementById('search-month');
-        const searchNamePartialInput = document.getElementById('search-name-partial');
-        const searchStateRegionInput = document.getElementById('search-state-region'); 
-        const stateRegionContainer = document.getElementById('state-region-container'); 
+            let lista = [];
 
-        const searchResultsDiv = document.getElementById('search-results');
-        const resultsHeader = document.getElementById('results-header');
-        const documentCountSpan = document.getElementById('document-count');
+            for (let nodo of nodos) {
+                try {
+                    const snap = await db.ref(nodo.id).once('value');
+                    const data = snap.val();
+                    if (!data) continue;
 
-        let currentCategoryFilter = '';
-        let currentInventoryMode = DOCS_REF;
-        const FIXED_CATEGORY = 'ESCANER 600';
-
-        const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-        const FALLBACK_COUNTRIES = ["ESPAÑA", "FRANCIA", "ALEMANIA", "USA", "CANADA", "ARGENTINA", "MEXICO"];
-        
-        // ✅ [MODIFICADO] LISTA 1: Palabras que NUNCA deben ser un Estado/Provincia.
-        // Incluye tipos reales + palabras genéricas/no deseadas como subtipo.
-        const SUBTIPO_EXCLUSION_LIST = [
-            "PSP", "CI", "PNC", "PIC", "VEHICULOS", "GENERAL", "CERTIFICADOS", 
-            "DNI", "NIE", "PASAPORTE", "DEFENSA", "REV", "LICENCIA", "TIE", 
-            "PCIR", "SOA", "ITV", "SIP", "TIP", "ASILO", "CAP", "CERCU", 
-            "FAKE", "FAKES", "NIE (HOJA BLANCA)", "PDF", "TARJETA SANITARIA", 
-            "TMR", "TRANSPORTES", "VARIOS", "EXTRANJERO", "EXTRANJEROS"
-        ].sort();
-
-        // ✅ [MODIFICADO] LISTA 2: Palabras que SÍ son Tipos de Documento *reales* y filtrables.
-        // Se usa para clasificar y para rellenar el desplegable "BUSCAR POR TIPO".
-        const KNOWN_DOC_TYPES = [
-            "PSP", "CI", "PNC", "PIC", "VEHICULOS", "CERTIFICADOS", 
-            "DNI", "NIE", "PASAPORTE", "DEFENSA", "REV", "LICENCIA",
-            "TIE", "PCIR", "SOA", "ITV", "SIP", "TIP", "TMR",
-            "ASILO", "CAP", "CERCU", "NIE (HOJA BLANCA)", "TARJETA SANITARIA" 
-            // Se quitaron: "GENERAL", "TRANSPORTES", "VARIOS", "FAKE", "FAKES", "PDF", "EXTRANJERO", "EXTRANJEROS"
-        ].sort();
-
-
-        let FULL_DOCUMENT_LIST = [];
-        let ALL_DOCUMENTS = [];
-        
-        // **********************************************
-        //           [ LÓGICA DE DATALISTS Y SUBTIPOS ]
-        // **********************************************
-
-        function populateDatalist(id, items) {
-            const datalist = document.getElementById(id);
-            if (!datalist) return;
-
-            datalist.innerHTML = '';
-            const validItems = items.filter(item => typeof item === 'string' && item); 
-            const uniqueItems = Array.from(new Set(validItems.map(item => item.toUpperCase()))).sort();
-
-            uniqueItems.forEach(item => {
-                if (item) {
-                    const option = document.createElement('option');
-                    option.value = item;
-                    datalist.appendChild(option);
-                }
-            });
-        }
-
-
-        /**
-         * Carga TODOS los datalists (País, Tipo, Estado) basado en una lista
-         * de documentos específica (ej. solo Personas o solo Vehículos).
-         */
-        function loadAllDynamicDatalists(docList) {
-            // 1. Países
-            const existingCountries = new Set(docList.map(doc => doc.data.Pais).filter(p => p && p !== 'N/A' && p !== 'EEUU USA'));
-            populateDatalist('datalist-countries', Array.from(existingCountries));
-
-            // 2. Tipos (filtrables)
-             const existingTypes = new Set(docList.map(doc => doc.data.TipoDocumento)
-                .filter(t => t && KNOWN_DOC_TYPES.includes(t)) // Solo añadir si está en la lista de tipos *reales*
-             );
-             populateDatalist('datalist-types', Array.from(existingTypes));
-
-            // 3. Estados (Subtipos)
-             const states = new Set();
-             docList.forEach(doc => {
-                 if (doc.data.SubtipoDocumento && doc.data.SubtipoDocumento !== 'N/A' && !SUBTIPO_EXCLUSION_LIST.includes(doc.data.SubtipoDocumento)) {
-                     states.add(doc.data.SubtipoDocumento);
-                 }
-             });
-            populateDatalist('datalist-states', Array.from(states)); 
-        }
-
-        /**
-         * Carga solo el datalist de TIPO basado en una lista filtrada por país.
-         */
-        function updateScopedDatalists(docList) { 
-            // ✅ [SIMPLIFICADO] Ya no se excluyen tipos aquí, se hace en loadAllDynamicDatalists
-            const existingTypes = new Set(docList.map(doc => doc.data.TipoDocumento)
-                .filter(t => t && KNOWN_DOC_TYPES.includes(t)) // Solo añadir tipos *reales*
-            ); 
-             populateDatalist('datalist-types', Array.from(existingTypes));
-        }
-
-
-        /**
-         * ✅ [MODIFICADO] Función clave para gestionar el cambio de país.
-         */
-        window.handleCountryChange = function(countryValue) {
-            const country = countryValue.trim().toUpperCase();
-            let normalizedCountry = country;
-            if (normalizedCountry === 'ESTADOS UNIDOS') normalizedCountry = 'USA';
-            if (normalizedCountry === 'CANADÁ') normalizedCountry = 'CANADA';
-
-            const label = document.getElementById('state-region-label');
-            const modeDocs = FULL_DOCUMENT_LIST.filter(doc => doc.key && doc.key.startsWith(currentInventoryMode));
-            let countryDocs = modeDocs;
-            if (normalizedCountry) {
-                countryDocs = modeDocs.filter(doc => doc.data && doc.data.Pais === normalizedCountry);
-            } else {
-                countryDocs = []; 
-            }
-            
-            updateScopedDatalists(countryDocs); // Rellena Tipos
-            searchStateRegionInput.value = ''; // Limpia campo Estado
-            
-            // Lógica para mostrar/ocultar campo Estado/Provincia
-            const states = new Set();
-            countryDocs.forEach(doc => {
-                if (doc.data.SubtipoDocumento && doc.data.SubtipoDocumento !== 'N/A' && !SUBTIPO_EXCLUSION_LIST.includes(doc.data.SubtipoDocumento)) {
-                    states.add(doc.data.SubtipoDocumento);
-                }
-            });
-            const uniqueStates = Array.from(states).sort();
-
-            if (uniqueStates.length > 0) {
-                console.log(`País ${normalizedCountry} SÍ tiene subtipos dinámicos (${uniqueStates.length}), mostrando campo.`);
-                label.textContent = 'ESTADO/PROVINCIA/CIUDAD:';
-                const placeholderExamples = uniqueStates.slice(0, 3).join(', '); 
-                searchStateRegionInput.placeholder = `Ej: ${placeholderExamples}`;
-                stateRegionContainer.style.display = 'block';
-                populateDatalist('datalist-states', uniqueStates); 
-            } else {
-                console.log(`País ${normalizedCountry} NO tiene subtipos dinámicos, ocultando campo.`);
-                stateRegionContainer.style.display = 'none';
-                searchStateRegionInput.placeholder = 'Ej: ...'; 
-                populateDatalist('datalist-states', []); 
-            }
-
-            filterDocuments(); 
-        }
-
-        // **********************************************
-        //               [ GESTIÓN DE MODOS ]
-        // **********************************************
-
-        window.setInventoryMode = function(mode) {
-            const btnPersonas = document.getElementById('mode-personas-btn');
-            const btnVehiculos = document.getElementById('mode-vehiculos-btn');
-            btnPersonas.classList.remove('active');
-            btnVehiculos.classList.remove('active');
-
-            const modeBase = mode.endsWith('/') ? mode.slice(0, -1) : mode;
-            currentInventoryMode = modeBase + '/'; 
-
-            if (modeBase === VEHICLES_REF.slice(0, -1)) {
-                btnVehiculos.classList.add('active');
-            } else {
-                btnPersonas.classList.add('active');
-            }
-
-            const modeDocs = FULL_DOCUMENT_LIST.filter(doc => doc.key && doc.key.startsWith(currentInventoryMode));
-            loadAllDynamicDatalists(modeDocs); // Recarga TODOS los datalists
-            handleCountryChange(searchCountryInput.value); // Reevalúa país y estado
-        }
-
-
-        // *****************************************************************
-        // 🚨 FUNCIÓN CLAVE DE LECTURA UNIFICADA Y LÓGICA DE INFERENCIA 🚨
-        // *****************************************************************
-
-        function loadAllDocuments() {
-            if (!database) { /* ... manejo de error ... */ return; }
-
-            documentCountSpan.textContent = `(Cargando todo el inventario...)`;
-            FULL_DOCUMENT_LIST = [];
-
-             const fetchAndProcessNode = (refPath) => {
-                return database.ref(refPath).once('value').then(snapshot => {
-                    const nestedData = snapshot.val();
-                    const documents = [];
-                    if (!nestedData) return documents;
-
-                    // ✅ Whitelist de países con nombres compuestos (normalizados con '_')
-                    const COMPOUND_COUNTRY_KEYS = [
-                        "ARABIA_SAUDI", "BOSNIA_HERZEGOVINA", "COSTA_DE_MARFIL", 
-                        "EMIRATOS_ARABES_UNIDOS", "REINO_UNIDO", "COSTA_RICA", 
-                        "REPUBLICA_DOMINICANA", "NUEVA_ZELANDA", "SUDAFRICA", 
-                        "ESTADOS_UNIDOS", "ESWATINI_SUAZILANDIA"
-                        // Añadir "EMIRATOS_ARABES" si existe como carpeta separada
-                    ];
-
-                    for (const combinedKey in nestedData) {
-                        if (nestedData.hasOwnProperty(combinedKey)) {
-                            const countryTypeData = nestedData[combinedKey];
-                            let inferredCountryFromKey = 'N/A';
-                            let inferredPartAfterUnderscore = 'GENERAL';
+                    Object.values(data).forEach(grupo => {
+                        Object.values(grupo).forEach(doc => {
+                            const textoLimpio = `${doc.NombreDocumento} ${doc.Pais} ${doc.TipoDocumento} ${doc.SubtipoDocumento || ''} ${doc.EstadoProvincia || ''}`
+                                                .replace(/_/g, ' ')
+                                                .replace(/-/g, ' ')
+                                                .replace(/\./g, ' ')
+                                                .toLowerCase();
                             
-                            // ✅ Lógica de división CORREGIDA
-                            const normKey = combinedKey.toUpperCase().replace(/[ /]/g, '_');
-                            let foundCompound = false;
+                            const palabrasClave = textoLimpio.split(/\s+/).filter(w => w.length > 0);
 
-                            // 1. Buscar coincidencia EXACTA con país compuesto
-                             if (COMPOUND_COUNTRY_KEYS.includes(normKey)) {
-                                inferredCountryFromKey = normKey;
-                                inferredPartAfterUnderscore = "GENERAL"; // Asumir GENERAL si solo está el país
-                                foundCompound = true;
-                            } else {
-                                // 2. Buscar si EMPIEZA por país compuesto + '_'
-                                for (const compound of COMPOUND_COUNTRY_KEYS) {
-                                    if (normKey.startsWith(compound + '_')) { 
-                                        inferredCountryFromKey = compound; 
-                                        inferredPartAfterUnderscore = normKey.substring(compound.length + 1); 
-                                        foundCompound = true;
-                                        break; 
-                                    }
-                                }
-                            }
-
-                            // 3. Si no es compuesto, lógica simple
-                            if (!foundCompound) {
-                                const firstUnderscoreIndex = normKey.indexOf('_');
-                                if (firstUnderscoreIndex === -1) { 
-                                    inferredCountryFromKey = normKey; 
-                                    inferredPartAfterUnderscore = "GENERAL";
-                                } else {
-                                    inferredCountryFromKey = normKey.substring(0, firstUnderscoreIndex); 
-                                    inferredPartAfterUnderscore = normKey.substring(firstUnderscoreIndex + 1);
-                                }
-                            }
-                            
-                            if (inferredCountryFromKey === 'ESTADOS_UNIDOS') inferredCountryFromKey = 'USA';
-                            if (inferredCountryFromKey === 'CANADÁ') inferredCountryFromKey = 'CANADA'; // Aunque esté normalizado, por si acaso
-
-                            // ... (resto del bucle for(const key in countryTypeData)... sin cambios)
-                             for(const key in countryTypeData){
-                                if (countryTypeData.hasOwnProperty(key)) {
-                                    const value = countryTypeData[key]; 
-                                     if (typeof value === 'object' && value !== null && key.toUpperCase() !== 'GENERAL' && !value.hasOwnProperty('Timestamp') && !value.hasOwnProperty('NombreDocumento') && !value.hasOwnProperty('Enlace')) {
-                                        const documentsInSubnode = value;
-                                        const currentSubnode = key.toUpperCase();
-                                        for (const docKey in documentsInSubnode) {
-                                            if (documentsInSubnode.hasOwnProperty(docKey)) {
-                                                const data = documentsInSubnode[docKey];
-                                                if(typeof data === 'object' && data !== null){
-                                                   const doc = processDocument(refPath, combinedKey, currentSubnode, docKey, data, inferredCountryFromKey, inferredPartAfterUnderscore); 
-                                                   if (doc) documents.push(doc);
-                                                }
-                                            }
-                                        }
-                                    } else if (typeof value === 'object' && value !== null && (value.hasOwnProperty('Timestamp') || value.hasOwnProperty('NombreDocumento') || value.hasOwnProperty('Enlace'))) {
-                                        const data = value;
-                                        const docKey = key;
-                                        const doc = processDocument(refPath, combinedKey, null, docKey, data, inferredCountryFromKey, inferredPartAfterUnderscore); 
-                                         if (doc) documents.push(doc);
-                                    } else if (key.toUpperCase() === 'GENERAL' && typeof value === 'object' && value !== null) {
-                                        const documentsInGeneral = value;
-                                         for (const docKey in documentsInGeneral) {
-                                            if (documentsInGeneral.hasOwnProperty(docKey)) {
-                                                const data = documentsInGeneral[docKey];
-                                                 if(typeof data === 'object' && data !== null){
-                                                    const doc = processDocument(refPath, combinedKey, null, docKey, data, inferredCountryFromKey, inferredPartAfterUnderscore); 
-                                                     if (doc) documents.push(doc);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return documents;
-                });
-            };
-
-
-            /**
-             * 🚨 [MODIFICADO] processDocument - Usa las dos listas nuevas.
-             */
-            function processDocument(refPath, combinedKey, subnode, docKey, data, inferredCountry, potentialTypeOrSubtype) {
-                 if (typeof data !== 'object' || data === null) { /* ... error handling ... */ return null; }
-
-                const doc = { key: refPath + combinedKey + (subnode ? `/${subnode}/` : '/') + docKey, data: data };
-                let baseName = data.NombreArchivo || data.NombreDocumento || docKey;
-                doc.data.NombreDocumento = baseName.replace(/\.(JPG|JPEG|PNG|PDF|DOCX|XLSX)$/i, '').replace(/_/g, ' ').trim();
-
-                // País
-                let finalCountry = (data.Pais && data.Pais !== 'N/A' && data.Pais !== 'EEUU USA') ? data.Pais.toUpperCase() : inferredCountry;
-                if (finalCountry === 'ESTADOS UNIDOS') finalCountry = 'USA';
-                if (finalCountry === 'CANADÁ') finalCountry = 'CANADA';
-                doc.data.Pais = finalCountry.replace(/[_\/]/g, ' '); 
-
-                // Tipo vs Subtipo
-                let finalType = 'GENERAL'; // Default type
-                let finalSubtipo = 'N/A'; // Default subtype
-
-                if (subnode) { // Prioridad 1: Hay subcarpeta (USA_PNC/ALASKA)
-                    finalSubtipo = subnode; 
-                    if (KNOWN_DOC_TYPES.includes(potentialTypeOrSubtype)) { // Es un tipo real?
-                        finalType = potentialTypeOrSubtype;
-                    } else if (SUBTIPO_EXCLUSION_LIST.includes(potentialTypeOrSubtype)) { // Es palabra excluida pero no tipo?
-                         finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); // Extraer del nombre
-                    } else { // No es conocido ni excluido
-                         finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); // Extraer del nombre
-                    }
-                } else { // Prioridad 2: No hay subcarpeta (USA_PNC, CANADA_BRITISH_COLUMBIA, COSTA_DE_MARFIL)
-                    if (data.EstadoProvincia && data.EstadoProvincia !== 'N/A') { // Info en JSON?
-                        finalSubtipo = data.EstadoProvincia.toUpperCase();
-                    } 
-                    // Es la parte después del '_' un subtipo VÁLIDO (no en lista de exclusión)?
-                    else if (!SUBTIPO_EXCLUSION_LIST.includes(potentialTypeOrSubtype) && potentialTypeOrSubtype !== 'GENERAL') {
-                         finalSubtipo = potentialTypeOrSubtype; // "BRITISH_COLUMBIA"
-                    } // Si está en la lista de exclusión o es GENERAL, se queda como N/A
-
-                    // Determinar Tipo
-                    if (KNOWN_DOC_TYPES.includes(potentialTypeOrSubtype)) { // Es un tipo real?
-                        finalType = potentialTypeOrSubtype; // "PNC"
-                    } else { // No es tipo real (puede ser subtipo o palabra excluida)
-                        finalType = extractTypeFromName(doc.data.NombreDocumento, doc.data.Pais, finalSubtipo); // Extraer del nombre
-                    }
-                    
-                    // Sobrescribir si JSON tiene tipo válido
-                    if (data.TipoDocumento && data.TipoDocumento !== 'N/A' && data.TipoDocumento !== 'General' && KNOWN_DOC_TYPES.includes(data.TipoDocumento.toUpperCase())) {
-                        finalType = data.TipoDocumento.toUpperCase();
-                    }
-                }
-
-                doc.data.TipoDocumento = finalType.toUpperCase();
-                doc.data.SubtipoDocumento = finalSubtipo.toUpperCase().replace(/_/g, ' '); 
-                
-                doc.data.Fecha = extractDateFromName('dummy-input', 'dummy-display', doc.data.NombreDocumento) || 'N/A';
-                doc.data.Categoria = FIXED_CATEGORY;
-                doc.data.Enlace = data.Enlace || 'N/A';
-
-                return doc;
-            }
-
-            Promise.all([fetchAndProcessNode(DOCS_REF), fetchAndProcessNode(VEHICLES_REF)])
-                .then(([docList, vehicleList]) => {
-                    FULL_DOCUMENT_LIST = [...docList, ...vehicleList].filter(doc => doc !== null);
-                    console.log(`✅ Documentos cargados. Total: ${FULL_DOCUMENT_LIST.length}`);
-                    setCategoryFilter(''); 
-                    setInventoryMode(DOCS_REF.slice(0, -1)); 
-                })
-                .catch(errorObject => { /* ... manejo de error ... */ });
-        }
-
-
-        // **********************************************
-        //               [ FUNCIONES DE LÓGICA Y CRUD ]
-        // **********************************************
-
-        window.extractDateFromName = function(nameInputId, dateDisplayId, nameString = null) {
-            // ... (sin cambios)
-             const name = (nameString !== null ? nameString : document.getElementById(nameInputId).value.trim()).toUpperCase();
-            const display = document.getElementById(dateDisplayId);
-            const dateMatch = name.match(/(\d{4}[-/]\d{2}[-/]\d{2})|(\d{4}\d{2}\d{2})|(\d{4}(?:\s|-|\.|$))/);
-            let normalizedDate = null;
-            let displayValue = 'Pendiente...';
-
-            if (dateMatch) {
-                let dateStr = dateMatch[0];
-                if (dateMatch[1]) { 
-                    normalizedDate = dateMatch[1].replace(/(\d{4})\D(\d{2})\D(\d{2})/, '$1-$2-$3');
-                    displayValue = `Fecha extraída: ${normalizedDate}`;
-                } else if (dateMatch[2]) { 
-                    normalizedDate = dateMatch[2].substring(0, 4) + '-' + dateMatch[2].substring(4, 6) + '-' + dateMatch[2].substring(6, 8);
-                    displayValue = `Fecha extraída: ${normalizedDate}`;
-                } else if (dateMatch[3]) { 
-                    normalizedDate = dateMatch[3].substring(0, 4) + '-01-01';
-                    displayValue = `Fecha extraída (Año): ${normalizedDate.substring(0,4)}`;
+                            lista.push({
+                                ...doc,
+                                _cat: nodo.cat,
+                                _cal: nodo.cal,
+                                _palabras: palabrasClave
+                            });
+                        });
+                    });
+                } catch (e) {
+                    console.error("Error cargando " + nodo.id, e);
                 }
             }
 
-            if (display && nameString === null) {
-                display.textContent = displayValue;
-                display.style.color = normalizedDate ? '#27ae60' : '#e74c3c';
-            }
-            if (nameInputId.includes('edit-doc') && nameString === null) {
-                document.getElementById('edit-doc-fecha-hidden').value = normalizedDate || '';
-            }
-            return normalizedDate;
+            BD_GLOBAL = lista.sort((a, b) => b.Timestamp - a.Timestamp);
+            document.getElementById('loader').style.display = 'none';
+            aplicarFiltrosInteligentes();
         }
 
-        /**
-         * Extrae el TIPO del nombre, limpiando país y subtipo ANTES.
-         */
-        window.extractTypeFromName = function(name, country, subtipo) {
-            // ... (sin cambios, usa KNOWN_DOC_TYPES)
-             if (!name) return 'GENERAL';
-            let cleanName = name.toUpperCase().trim();
-            cleanName = cleanName.replace(/\.(JPG|JPEG|PNG|PDF|DOCX|XLSX)$/i, '').replace(/_/g, ' ').trim();
-
-            const dateMatch = cleanName.match(/(\d{4}[-/]\d{2}[-/]\d{2})|(\d{4}\d{2}\d{2})|(\d{4}(?:\s|-|\.|$))/);
-            let typePart = cleanName;
-
-            // Si hay fecha, coger el texto de antes
-            if (dateMatch && dateMatch.index > 0) {
-                typePart = cleanName.substring(0, dateMatch.index).trim();
-            }
-
-            if (country) {
-                 const regex = new RegExp(`\\b${country.replace('_', ' ')}\\b`, 'gi'); 
-                 typePart = typePart.replace(regex, '').trim();
-            }
-            if (subtipo && subtipo !== 'N/A') {
-                 const regex = new RegExp(`\\b${subtipo.replace('_', ' ')}\\b`, 'gi');
-                 typePart = typePart.replace(regex, '').trim();
-            }
+        // ===============================================
+        // BÚSQUEDA
+        // ===============================================
+        function aplicarFiltrosInteligentes() {
+            const input = document.getElementById('buscador').value.trim().toLowerCase();
+            const terminosBusqueda = input.split(/\s+/).filter(t => t.length > 0);
+            const grid = document.getElementById('grid-resultados');
+            const statsNum = document.getElementById('stats-number');
             
-             typePart = typePart.replace(/\s+/g, ' ').trim(); // Limpiar espacios múltiples
+            grid.innerHTML = '';
 
-            // ✅ Usar la lista de tipos *reales*
-            const words = typePart.split(/[\s_-]+/);
-            for (const word of words) {
-                if (KNOWN_DOC_TYPES.includes(word)) { 
-                    return word; 
+            const resultados = BD_GLOBAL.filter(doc => {
+                if (filtros.cat !== 'TODOS' && doc._cat !== filtros.cat) return false;
+                if (filtros.cal !== 'TODOS' && doc._cal !== filtros.cal) return false;
+
+                if (terminosBusqueda.length > 0) {
+                    const cumpleTodosLosTerminos = terminosBusqueda.every(termino => {
+                        return doc._palabras.some(palabraDoc => palabraDoc.startsWith(termino));
+                    });
+                    if (!cumpleTodosLosTerminos) return false;
                 }
-            }
-            
-            if (words.length > 0 && words[0] !== '') {
-                if(words[0] !== country && words[0] !== subtipo) { 
-                    // Devuelve la primera palabra solo si NO está en la lista de exclusión (para evitar devolver "TRANSPORTES" como tipo)
-                    if (!SUBTIPO_EXCLUSION_LIST.includes(words[0])) {
-                       return words[0]; 
-                    }
-                }
-            }
-            
-            return 'GENERAL'; // Fallback final
-        }
-        
-
-        function updateDocumentCount(currentResults) { /* ... (sin cambios) ... */ 
-             const totalDocs = FULL_DOCUMENT_LIST.length;
-            let countText = '';
-            const totalCategoryDocs = currentCategoryFilter
-                ? FULL_DOCUMENT_LIST.filter(doc => doc.data && (doc.data.Categoria || FIXED_CATEGORY) === currentCategoryFilter).length
-                : totalDocs;
-
-            if (currentResults.length > 0) {
-                const categoryInfo = currentCategoryFilter ? `(Cat: ${totalCategoryDocs})` : '';
-                countText = `(${currentResults.length} de ${totalCategoryDocs} encontrados)`;
-            } else if (totalDocs === 0) {
-                 countText = `(0 documentos en el inventario)`;
-            } else if (searchCountryInput.value.trim()) {
-                countText = `(0 resultados. Total en Categoría: ${totalCategoryDocs})`;
-            } else {
-                if (currentCategoryFilter) {
-                    countText = `(Total Inventario: ${totalDocs} | Categoría ${currentCategoryFilter}: ${totalCategoryDocs})`;
-                } else {
-                    countText = `(${totalDocs} documentos totales en el inventario unificado)`;
-                }
-            }
-            documentCountSpan.textContent = countText;
-        }
-
-        window.setCategoryFilter = function(category) { /* ... (sin cambios) ... */ 
-             currentCategoryFilter = category;
-            document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('active'));
-
-            if (category === 'ESCANER 2400') { document.getElementById('filter-2400-btn').classList.add('active'); } 
-            else if (category === 'ESCANER 600') { document.getElementById('filter-600-btn').classList.add('active'); } 
-            else if (category === 'FÍSICO') { document.getElementById('filter-fisico-btn').classList.add('active'); } 
-            else { document.getElementById('filter-todos-btn').classList.add('active'); }
-
-            ALL_DOCUMENTS = FULL_DOCUMENT_LIST.filter(doc => {
-                const docCategory = doc.data ? (doc.data.Categoria || FIXED_CATEGORY) : FIXED_CATEGORY;
-                return !category || docCategory === category;
-            });
-
-            filterDocuments();
-        }
-
-       /** Renderiza la fila */
-       function renderDocRow(key, data) { /* ... (sin cambios) ... */ 
-             if (!data) { console.error("Intentando renderizar fila sin datos válidos para la clave:", key); return document.createElement('div'); }
-            const row = document.createElement('div'); row.classList.add('doc-row');
-            const linkUrl = data.Enlace && data.Enlace !== 'N/A' ? data.Enlace : '#';
-            const linkTarget = data.Enlace && data.Enlace !== 'N/A' ? '_blank' : '';
-            const linkIsAvailable = data.Enlace && data.Enlace !== 'N/A';
-            const displayDate = data.Fecha && data.Fecha.length >= 7 ? data.Fecha : 'N/A';
-            const displayCategory = data.Categoria || FIXED_CATEGORY;
-            const linkIconHtml = linkIsAvailable ? `<a href="${linkUrl}" target="${linkTarget}" class="link-icon" title="Ver archivo"><i class="fas fa-eye"></i></a>` : `<i class="fas fa-eye link-icon-disabled" title="Enlace no disponible"></i>`;
-            
-            let displayCountryHtml = data.Pais || 'N/A';
-            if (data.SubtipoDocumento && data.SubtipoDocumento !== 'N/A') { 
-                displayCountryHtml = `${data.SubtipoDocumento}<br><span>(${data.Pais})</span>`; 
-            }
-            
-            row.innerHTML = `<div>${data.NombreDocumento || 'S/N'}</div><div>${displayCountryHtml}</div><div>${data.TipoDocumento || 'N/A'}</div><div>${displayDate}</div><div>${displayCategory}</div><div class="link-icon-container">${linkIconHtml}</div><div class="doc-actions"><button class="btn-warning" onclick="openEditModal('${key}')"><i class="fas fa-edit"></i></button><button class="btn-delete" onclick="deleteDocument('${key}', '${data.NombreDocumento || 'este documento'}')"><i class="fas fa-trash"></i></button></div>`;
-            return row;
-       }
-
-        /** Filtra los documentos */
-        function filterDocuments() { /* ... (sin cambios) ... */ 
-             const countryQ = searchCountryInput.value.trim().toUpperCase();
-            const typeQ = searchTypeInput.value.trim().toUpperCase();
-            const yearQ = searchYearInput.value.trim();
-            const monthQ = searchMonthSelect.value;
-            const namePartialQ = searchNamePartialInput.value.trim().toUpperCase();
-            const stateRegionQ = searchStateRegionInput.value.trim().toUpperCase();
-
-            searchResultsDiv.innerHTML = '';
-            resultsHeader.style.display = 'none';
-
-            if (!countryQ) {
-                searchResultsDiv.innerHTML = `<div class="modern-alert"><i class="fas fa-filter fa-2x"></i><h4 style="color: #3498db; margin-top: 10px;">Búsqueda Restringida</h4><p>Por favor, introduce el **PAÍS** (<span class="required-label">OBLIGATORIO</span>) para iniciar la búsqueda.</p></div>`;
-                updateDocumentCount([]); return;
-            }
-
-            let matchFound = false;
-            const filtered = ALL_DOCUMENTS.filter(doc => {
-                 if (!doc || !doc.data) return false;
-                const data = doc.data;
-                const docFecha = data.Fecha || ''; const docYear = docFecha.substring(0, 4); const docMonth = docFecha.substring(5, 7);
-                const docName = data.NombreDocumento ? data.NombreDocumento.toUpperCase() : '';
-                const docType = data.TipoDocumento ? data.TipoDocumento.toUpperCase() : 'GENERAL';
-                const docPais = data.Pais ? data.Pais.toUpperCase() : 'N/A';
-                const docSubtipo = data.SubtipoDocumento ? data.SubtipoDocumento.toUpperCase() : 'N/A';
-                const isVehiculo = doc.key && doc.key.startsWith(VEHICLES_REF);
-                if (currentInventoryMode === VEHICLES_REF && !isVehiculo) return false;
-                if (currentInventoryMode === DOCS_REF && isVehiculo) return false;
-                let normalizedCountryQ = countryQ;
-                if (normalizedCountryQ === 'ESTADOS UNIDOS') normalizedCountryQ = 'USA'; if (normalizedCountryQ === 'CANADÁ') normalizedCountryQ = 'CANADA';
-                 if (docPais !== normalizedCountryQ) return false;
-                
-                if (stateRegionQ && (docSubtipo === 'N/A' || docSubtipo.indexOf(stateRegionQ) === -1)) return false; 
-                if (typeQ && !docName.startsWith(typeQ)) return false; 
-                if (yearQ && docYear.indexOf(yearQ) === -1) return false;
-                if (monthQ && docMonth !== monthQ) return false;
-                if (namePartialQ && docName.indexOf(namePartialQ) === -1) return false;
                 return true;
             });
 
-            if (filtered.length > 0) {
-                resultsHeader.style.display = 'grid';
-                filtered.sort((a, b) => { const nameA = a.data?.NombreDocumento || ''; const nameB = b.data?.NombreDocumento || ''; return nameA.localeCompare(nameB); });
-                filtered.forEach(doc => { searchResultsDiv.appendChild(renderDocRow(doc.key, doc.data)); });
-                matchFound = true;
-            }
-
-            if (!matchFound) { searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><i class="fas fa-exclamation-triangle fa-2x"></i><h4 style="color: #e67e22; margin-top: 10px;">Sin Resultados</h4><p>No se encontraron documentos que coincidan con los filtros.</p></div>`; }
-            updateDocumentCount(filtered);
-        }
-
-        function clearSearch() { /* ... (sin cambios) ... */ 
-            searchCountryInput.value = ''; searchTypeInput.value = ''; searchYearInput.value = ''; searchMonthSelect.value = ''; searchNamePartialInput.value = ''; searchStateRegionInput.value = '';
-            handleCountryChange(''); // Limpia datalists y oculta campo estado
-            currentCategoryFilter = ''; document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('active')); document.getElementById('filter-todos-btn').classList.add('active');
-            setCategoryFilter(currentCategoryFilter); // Llama a filterDocuments
-        }
-
-        /** Actualiza campos específicos del país en el modal */
-        window.updateModalCountrySpecificFields = function(countryValue) { /* ... (usa SUBTIPO_EXCLUSION_LIST) ... */ 
-             const country = countryValue.trim().toUpperCase();
-            const editStateContainer = document.getElementById('edit-state-region-container');
-            const editStateLabel = document.getElementById('edit-state-region-label');
-            const editSubtipoInput = document.getElementById('edit-doc-subtipo');
-            let normalizedCountry = country;
-            if (normalizedCountry === 'ESTADOS UNIDOS') normalizedCountry = 'USA'; if (normalizedCountry === 'CANADÁ') normalizedCountry = 'CANADA';
-
-            const countryDocs = FULL_DOCUMENT_LIST.filter(doc => doc.data?.Pais === normalizedCountry);
-            
-            const states = new Set();
-            countryDocs.forEach(doc => {
-                // ✅ Usar la lista de exclusión grande
-                if (doc.data.SubtipoDocumento && doc.data.SubtipoDocumento !== 'N/A' && !SUBTIPO_EXCLUSION_LIST.includes(doc.data.SubtipoDocumento)) {
-                    states.add(doc.data.SubtipoDocumento);
-                }
-            });
-            const uniqueStates = Array.from(states).sort();
-
-            if (uniqueStates.length > 0) {
-                editStateLabel.innerHTML = '<i class="fas fa-map-marker-alt"></i> Estado/Provincia/Ciudad:'; 
-                const placeholderExamples = uniqueStates.slice(0, 3).join(', ');
-                editSubtipoInput.placeholder = `Ej: ${placeholderExamples}`;
-                editStateContainer.style.display = 'block';
-                populateDatalist('datalist-states', uniqueStates); 
+            // Actualizar número en la cabecera
+            if (resultados.length > 0) {
+                statsNum.innerText = resultados.length.toLocaleString();
             } else {
-                editStateContainer.style.display = 'none';
-                editSubtipoInput.value = '';
-                editSubtipoInput.placeholder = 'Ej: ...';
-                populateDatalist('datalist-states', []); 
+                statsNum.innerText = "0";
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">
+                    <i class="fa-regular fa-folder-open" style="font-size:40px; margin-bottom:10px;"></i><br>
+                    No hay resultados para esa búsqueda exacta.
+                </div>`;
+                return;
             }
-            
-             // Rellenar datalist de tipos (solo tipos reales)
-             const countryDocsForTypes = FULL_DOCUMENT_LIST.filter(doc => !normalizedCountry || doc.data?.Pais === normalizedCountry);
-             const types = new Set(countryDocsForTypes.map(doc => doc.data.TipoDocumento)
-                 .filter(t => t && KNOWN_DOC_TYPES.includes(t)) // Solo tipos reales
-             );
-             populateDatalist('datalist-types', Array.from(types));
-        }
 
-        window.openEditModal = function(fullKey) { /* ... (sin cambios) ... */ 
-             if (!database) return alert("❌ No hay conexión a Firebase. No se puede editar.");
-            const doc = FULL_DOCUMENT_LIST.find(d => d.key === fullKey);
-            if (!doc || !doc.data) { console.error("Error: Documento no encontrado o sin datos para la clave:", fullKey); return alert("Error: Documento no encontrado o datos inválidos."); }
-            const data = doc.data; const editModal = document.getElementById('edit-modal');
-            document.getElementById('edit-doc-key').value = fullKey;
-            document.getElementById('edit-doc-country').value = data.Pais || '';
-            document.getElementById('edit-doc-type').value = data.TipoDocumento || '';
-            document.getElementById('edit-doc-name').value = data.NombreDocumento || '';
-            document.getElementById('edit-doc-category').value = FIXED_CATEGORY;
-            document.getElementById('edit-doc-link').value = data.Enlace === 'N/A' ? '' : (data.Enlace || '');
-            extractDateFromName('edit-doc-name', 'edit-doc-date-display', data.NombreDocumento);
-            //updateLinkPreview('edit-doc-link', 'edit-link-preview'); // Asegúrate que esta función existe o coméntala
-            updateModalCountrySpecificFields(data.Pais || ''); 
-            document.getElementById('edit-doc-subtipo').value = (data.SubtipoDocumento === 'N/A' || !data.SubtipoDocumento) ? '' : data.SubtipoDocumento;
-            editModal.style.display = 'flex';
-        }
+            resultados.slice(0, 100).forEach(doc => {
+                const esVehiculo = doc._cat === 'VEHICULOS';
+                let ubicacion = doc.EstadoProvincia && doc.EstadoProvincia !== 'N/A' ? doc.EstadoProvincia : doc.Pais;
+                const iconCat = esVehiculo ? '<i class="fa-solid fa-car"></i>' : '<i class="fa-solid fa-user"></i>';
+                const badgeClass = esVehiculo ? 'badge-veh' : 'badge-loc';
 
-        window.updateDocument = async function() { /* ... (usa KNOWN_DOC_TYPES) ... */ 
-            if (!database) { alert("❌ No hay conexión a Firebase. No se puede actualizar."); return; }
-            const fullKey = document.getElementById('edit-doc-key').value;
-            let pais = document.getElementById('edit-doc-country').value.trim().toUpperCase();
-            const tipo = document.getElementById('edit-doc-type').value.trim().toUpperCase();
-            const nombre = document.getElementById('edit-doc-name').value.trim();
-            let subtipo = document.getElementById('edit-doc-subtipo').value.trim().toUpperCase() || 'N/A';
-            const categoria = FIXED_CATEGORY; const enlace = document.getElementById('edit-doc-link').value.trim();
-            const fechaCompleta = extractDateFromName('edit-doc-name', 'edit-doc-date-display');
-            if (!pais || !tipo || !nombre) { alert("⚠️ Por favor, rellena País, Tipo y Nombre."); return; }
-            if (!fechaCompleta) { alert("⚠️ No se pudo extraer la fecha del nombre."); return; }
-            if (pais === 'ESTADOS UNIDOS') pais = 'USA'; if (pais === 'CANADÁ') pais = 'CANADA';
-
-            const countryDocs = FULL_DOCUMENT_LIST.filter(doc => doc.data?.Pais === pais);
-            const states = new Set(countryDocs.map(doc => doc.data.SubtipoDocumento).filter(s => s && s !== 'N/A'));
-            
-            if (states.size === 0 && subtipo === '') { subtipo = 'N/A'; }
-            if (subtipo === '') { subtipo = 'N/A'; }
-            
-            // ✅ Usar la lista de tipos *reales* para la advertencia
-            if (!KNOWN_DOC_TYPES.includes(tipo) && (states.size > 0 || subtipo !== 'N/A')) { console.warn(`Aviso: "${tipo}" no es un TIPO estándar.`); }
-            
-            const updatedData = { Pais: pais, TipoDocumento: tipo, NombreDocumento: nombre, SubtipoDocumento: subtipo, Fecha: fechaCompleta, Categoria: categoria, Enlace: enlace || 'N/A', Timestamp: firebase.database.ServerValue.TIMESTAMP };
-            try { await database.ref(fullKey).update(updatedData); alert("✅ Documento actualizado!"); document.getElementById('edit-modal').style.display = 'none'; loadAllDocuments(); } 
-            catch (error) { alert("❌ Error al actualizar: " + error.message); }
-        }
-
-        window.deleteDocument = async function(fullKey, name) { /* ... (sin cambios) ... */ 
-            if (!database) { alert("❌ No hay conexión a Firebase."); return; }
-            if (confirm(`¿Eliminar DEFINITIVAMENTE "${name}"?`)) {
-                try { await database.ref(fullKey).remove(); loadAllDocuments(); alert(`✅ Documento "${name}" eliminado.`); } 
-                catch (error) { alert("❌ Error al eliminar: " + error.message); }
-            }
-        }
-
-        // **********************************************
-        //               [ INICIALIZACIÓN ]
-        // **********************************************
-        
-        // Función auxiliar que faltaba (si no la tienes ya)
-        function updateLinkPreview(inputId, previewId) {
-             const input = document.getElementById(inputId);
-             const preview = document.getElementById(previewId);
-             if (input && preview) {
-                 preview.textContent = input.value || 'Enlace URL introducido (sin miniatura).';
-             }
-         }
-
-
-        function populateSelectors() { /* ... (sin cambios) ... */ 
-             const monthSelectors = [document.getElementById('search-month')];
-            MONTHS.forEach((month, index) => {
-                const value = (index + 1).toString().padStart(2, '0');
-                monthSelectors.forEach((selector) => { const option = document.createElement('option'); option.value = value; option.textContent = month; selector.appendChild(option); });
+                const html = `
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="card-badges">
+                                <span class="badge ${badgeClass}">${iconCat} ${ubicacion}</span>
+                                <span class="badge badge-dpi">${doc._cal} DPI</span>
+                            </div>
+                            <div class="card-title" title="${doc.NombreDocumento}">
+                                ${doc.NombreDocumento}
+                            </div>
+                        </div>
+                        <a href="${doc.Enlace}" target="_blank" class="btn-view" title="Ver Documento">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                    </div>
+                `;
+                grid.innerHTML += html;
             });
         }
 
-        document.addEventListener("DOMContentLoaded", () => { /* ... (sin cambios) ... */ 
-            populateSelectors();
-            // populateDatalist('datalist-types', KNOWN_DOC_TYPES); // Ahora se llena dinámicamente en loadAllDocuments
-            loadAllDocuments(); 
-            
-            document.getElementById('edit-modal').addEventListener('click', (event) => { if (event.target === document.getElementById('edit-modal')) { document.getElementById('edit-modal').style.display = "none"; } });
-            
-            searchTypeInput.addEventListener('input', filterDocuments); 
-            searchYearInput.addEventListener('input', filterDocuments); 
-            searchMonthSelect.addEventListener('change', filterDocuments); 
-            searchNamePartialInput.addEventListener('input', filterDocuments); 
-            searchStateRegionInput.addEventListener('input', filterDocuments);
-            document.getElementById('clear-search-btn').addEventListener('click', clearSearch);
-        });
+        function setFiltro(tipo, valor, btn) {
+            filtros[tipo] = valor;
+            const padre = btn.parentElement;
+            padre.querySelectorAll(`button[onclick*="'${tipo}'"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            aplicarFiltrosInteligentes();
+        }
+
+        // FUNCIÓN LIMPIAR BÚSQUEDA
+        function limpiarBusqueda() {
+            document.getElementById('buscador').value = '';
+            document.getElementById('buscador').focus();
+            aplicarFiltrosInteligentes(); // Restablece todos los resultados
+        }
+
+        function toggleModal(mostrar) {
+            const modal = document.getElementById('modalAyuda');
+            modal.style.display = mostrar ? 'flex' : 'none';
+        }
+
+        cargarInventario();
     </script>
 </body>
 </html>
