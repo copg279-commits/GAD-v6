@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .infraction-item {
@@ -71,6 +73,7 @@
       display: flex;
       gap: 8px;
       margin-top: 12px;
+      align-items: center; /* Alineación vertical */
     }
     .btn-edit {
       background-color: #3b82f6;
@@ -98,6 +101,14 @@
     .btn-delete:hover {
       background-color: #dc2626;
     }
+    
+    /* Estilos añadidos para compartir (WA/TG) */
+    .icon-btn { cursor: pointer; transition: transform 0.2s; font-size: 1.3rem; border: none; background: none; padding: 0 5px; }
+    .icon-btn:hover { transform: scale(1.2); }
+    .wa-icon { color: #25D366; }
+    .tg-icon { color: #0088cc; }
+    .separator-v { width: 1px; height: 20px; background-color: #ccc; margin: 0 5px; }
+
     .suggestions-container {
       position: absolute;
       background: white;
@@ -151,6 +162,7 @@
         src="logogad.png"
         alt="Logo GAD"
         class="w-full h-full object-cover block"
+        onerror="this.src='https://via.placeholder.com/150/0000FF/FFFFFF?text=GAD'"
       >
     </div>
   </header>
@@ -376,6 +388,7 @@
   </footer>
   <script>
     // Configuración de Firebase
+    
     const firebaseConfig = {
       apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
       authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
@@ -385,6 +398,7 @@
       messagingSenderId: "906986258369",
       appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
     };
+
 
     // Inicializa Firebase
     firebase.initializeApp(firebaseConfig);
@@ -412,6 +426,56 @@
     const updateInfraction = document.getElementById('updateInfraction');
     const editInfractionForm = document.getElementById('editInfractionForm');
     const suggestionsBox = document.getElementById('suggestionsBox');
+
+    // --- FUNCIONALIDAD DE COMPARTIR (WHATSAPP / TELEGRAM) ---
+
+    // Constructor del texto de compartir con Unicode
+    function buildShareText(item) {
+        // Usamos \uXXXX para asegurar que los emojis se ven en cualquier codificación
+        const police = "\uD83D\uDC6E";      // 👮‍♂️
+        const car = "\uD83D\uDE94";         // 🚔
+        const flagES = "\uD83C\uDDEA\uD83C\uDDF8"; // 🇪🇸
+        const scroll = "\uD83D\uDCDC";      // 📜
+        const bookmark = "\uD83D\uDD16";    // 🔖
+        const memo = "\uD83D\uDCDD";        // 📝
+        const money = "\uD83D\uDCB6";       // 💶
+        const card = "\uD83D\uDCB3";        // 💳
+        const person = "\uD83D\uDC64";      // 👤
+
+        // Adaptamos los nombres de las propiedades a los que usa este archivo
+        // item.regulation, item.article, item.section, etc.
+        return `${police}${car} *GRUPO DE ANÁLISIS DOCUMENTAL* ${car}${police}\n` +
+               `${flagES} *GAD ALICANTE* ${flagES}\n` +
+               `─────────────────────\n` +
+               `${scroll} *NORMA:* ${item.regulation}\n` +
+               `${bookmark} *ART:* ${item.article}  *AP:* ${item.section || ''}  *OP:* ${item.option || ''}\n\n` +
+               `${memo} *HECHO DENUNCIADO:*\n` +
+               `${item.description}\n\n` +
+               `${money} *MULTA:* ${item.totalAmount}€  (Reducida: ${item.reducedAmount || 0}€)\n` +
+               `${card} *PUNTOS:* ${item.puntos || 0}\n` +
+               `${person} *RESPONSABLE:* Conductor\n` + // Por defecto Conductor ya que no se almacena específico
+               `─────────────────────`;
+    }
+
+    // Manejador WhatsApp
+    function handleWhatsappClick(itemStr) {
+        const item = JSON.parse(decodeURIComponent(itemStr));
+        const text = buildShareText(item);
+        // Usamos api.whatsapp.com que es más compatible
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // Manejador Telegram
+    function handleTelegramClick(itemStr) {
+        const item = JSON.parse(decodeURIComponent(itemStr));
+        const text = buildShareText(item);
+        navigator.clipboard.writeText(text).then(() => { 
+            Toastify({ text: "Copiado. Abre Telegram.", duration: 2000, style: { background: "#0088cc" } }).showToast(); 
+            window.open(`tg://msg?text=${encodeURIComponent(text)}`); 
+        }); 
+    }
+
+    // --- FIN FUNCIONALIDAD COMPARTIR ---
 
     // Mapeo de normativas para normalizar los nombres
     const normalizeRegulationName = (name) => {
@@ -822,6 +886,10 @@
         const highlightedDescription = highlightText(sentenceCaseDescription, searchTerm);
         const highlightedRegulation = highlightText(infraction.regulation, searchTerm);
         const highlightedKeywords = highlightKeywords(infraction.keywords, searchTerm);
+
+        // Preparamos el objeto para pasar por los eventos onclick de los botones de compartir
+        // Usamos encodeURIComponent para evitar problemas con comillas dentro del JSON
+        const itemStr = encodeURIComponent(JSON.stringify(infraction));
         
         infractionElement.innerHTML = `
           <div class="flex justify-between items-start">
@@ -837,6 +905,11 @@
                 ${infraction.puntos ? `<span class="text-sm px-2 py-1 bg-red-100 text-red-800 rounded-full">Puntos: ${infraction.puntos}</span>` : ''}
               </div>
               <div class="action-buttons">
+                <button onclick="handleWhatsappClick('${itemStr}')" class="icon-btn wa-icon" title="Enviar por WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                <button onclick="handleTelegramClick('${itemStr}')" class="icon-btn tg-icon" title="Enviar por Telegram"><i class="fab fa-telegram-plane"></i></button>
+                
+                <div class="separator-v"></div>
+
                 <button class="btn-edit" data-key="${infraction.key}">
                   <i class="fas fa-edit"></i> Editar
                 </button>
