@@ -212,7 +212,7 @@
             <p class="text-xs text-gray-400 mt-2 font-medium text-center pb-2">Verifica la ubicación del Número de Soporte y Wilaya</p>
         </div>
 
-        <div id="mainDropZone" class="drop-zone p-8 text-center relative cursor-pointer group bg-white shadow-sm hover:shadow-md">
+        <div id="mainDropZone" class="drop-zone p-4 md:p-8 text-center relative cursor-pointer group bg-white shadow-sm hover:shadow-md">
             <div class="pointer-events-none mb-6">
                 <div class="inline-block p-4 rounded-full bg-blue-50 text-blue-500 mb-4 group-hover:scale-110 transition-transform duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,10 +225,10 @@
 
             <div class="w-full border-t border-gray-100 pt-6 pointer-events-auto">
                 <p class="text-xs text-gray-400 font-bold uppercase mb-2 tracking-wide text-left pl-1">Búsqueda Rápida</p>
-                <div class="flex shadow-sm rounded-lg ring-1 ring-gray-200 overflow-hidden">
+                <div class="flex shadow-sm rounded-lg ring-1 ring-gray-200 overflow-hidden w-full">
                     <input type="text" id="numero" placeholder="Ej: A12345 o L98765" 
-                           class="flex-1 p-3 border-none outline-none uppercase font-mono text-lg text-center bg-gray-50 focus:bg-white transition-colors">
-                    <button onclick="buscarFechaManual()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 transition flex items-center gap-2">
+                           class="flex-1 min-w-0 p-3 border-none outline-none uppercase font-mono text-lg text-center bg-gray-50 focus:bg-white transition-colors">
+                    <button onclick="buscarFechaManual()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 md:px-6 transition flex items-center gap-2">
                         🔍 <span class="hidden sm:inline">BUSCAR</span>
                     </button>
                 </div>
