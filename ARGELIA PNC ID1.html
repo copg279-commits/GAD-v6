@@ -154,17 +154,20 @@
   </footer>
 
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   <script>
-       const firebaseConfig = {
-      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
-      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
-      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "gad-alicante-v3", // Nuevo ID
-      storageBucket: "gad-alicante-v3.firebasestorage.app",
-      messagingSenderId: "906986258369",
-      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
-    };
+       
+    const firebaseConfig = {
+        apiKey: "AIzaSyBu5ALRVJ5aDzuU9YIAQD_9KMgR6ZwttpU", 
+        authDomain: "gad-alicante-v1.firebaseapp.com",
+        databaseURL: "https://gad-alicante-v1-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gad-alicante-v1",
+        storageBucket: "gad-alicante-v1.appspot.com",
+        messagingSenderId: "545835357966",
+        appId: "1:545835357966:web:6351ec6c0d3c8e69eb695f"
+    }
+
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
