@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Jubilación Policía Local</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="gradient-header text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <!-- Sección Izquierda: Imagen + Título + Autor -->
+                <div class="flex items-center gap-4">
+                    <!-- IMAGEN PREDISEÑADA CALCULADORA (Icono estándar) -->
+                    <i class="fa-solid fa-calculator text-4xl text-yellow-400 bg-white rounded-full p-2 border-2 border-blue-300 shadow-md"></i>
+                    
+                    <div>
+                        <h1 class="text-2xl font-bold leading-tight">Calculadora Jubilación <br class="md:hidden">Policía Local</h1>
+                        <!-- TEXTO DEL AUTOR -->
+                        <p class="text-yellow-300 text-sm font-bold mt-1 tracking-wide">
+                            Creado por Agente G-279 de la Policía Local de Alicante
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Contador (Visible, esperando datos) -->
+                <div id="headerCountdown" class="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-3 flex flex-col items-center justify-center min-w-[180px] shadow-inner transition-all duration-500">
+                    <span class="text-xs text-blue-100 uppercase tracking-wider font-semibold text-center" id="countdownLabel">Días restantes:</span>
+                    <div class="text-4xl font-bold text-yellow-400 leading-none my-1 drop-shadow-sm" id="daysRemainingDisplay">---</div>
+                    <span class="text-xs text-blue-100 text-center" id="countdownMeta">Esperando datos...</span>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <!-- Form Section -->
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 h-fit">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-blue-600"></i> Datos del Funcionario
+                </h2>
+
+                <form id="calcForm" class="space-y-5">
+                    
+                    <!-- Fecha Nacimiento -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
+                        <input type="date" id="dob" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+
+                    <!-- Fecha Ingreso -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Ingreso en Policía Local</label>
+                        <input type="date" id="entryDate" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <p class="text-xs text-gray-500 mt-1">Fecha de toma de posesión o inicio de cotización como PL.</p>
+                    </div>
+
+                    <!-- Cotización Previa -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3 border-b pb-2">Cotización Previa (Otros regímenes)</h3>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Días Totales Cotizados</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="prevTotalDays" value="" min="0" placeholder="Ej: 589"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-lg font-mono">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Introduce el total de días (Ej: vida laboral, paro, etc). El sistema calculará los años.</p>
+                            
+                            <!-- Mini Calculadora de Días -->
+                            <div class="mt-3 pt-2 border-t border-gray-200">
+                                <button type="button" onclick="document.getElementById('dateCalcHelper').classList.toggle('hidden')" 
+                                    class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 focus:outline-none">
+                                    <i class="fa-solid fa-calculator"></i> ¿Necesitas sumar días entre dos fechas?
+                                </button>
+                                
+                                <div id="dateCalcHelper" class="hidden mt-2 bg-blue-50 p-3 rounded-md text-sm border border-blue-100">
+                                    <div class="grid grid-cols-2 gap-2 mb-2">
+                                        <input type="date" id="calcStart" class="w-full p-1 border rounded text-xs">
+                                        <input type="date" id="calcEnd" class="w-full p-1 border rounded text-xs">
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <button type="button" id="btnCalcDays" class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700">Calcular Días</button>
+                                        <span id="calcResultDisplay" class="font-bold text-gray-800">0 días</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500 mt-1">*Incluye ambos días (inclusivo).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Mili - TEXTO CORREGIDO POR G-279 -->
+                    <div class="flex items-start gap-3 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <input type="checkbox" id="mili" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-1">
+                        <label for="mili" class="text-sm text-gray-700 select-none cursor-pointer leading-snug">
+                            <span class="font-bold text-blue-900">Sumar 1 año de Servicio Militar</span><br>
+                            Actívalo solo si te faltan años para llegar a los 37 años cotizados.
+                        </label>
+                    </div>
+
+                    <button type="submit" id="submitBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Calcular Jubilación
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultCard" class="hidden bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden relative">
+                <div class="bg-gray-800 text-white p-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check"></i> Resultado de la Estimación
+                    </h2>
+                </div>
+                
+                <div class="p-6 space-y-6">
+                    
+                    <!-- Main Result -->
+                    <div class="text-center bg-blue-50 p-6 rounded-xl border border-blue-200">
+                        <p class="text-sm text-blue-600 font-semibold uppercase tracking-wide mb-1">Fecha Estimada de Jubilación</p>
+                        <p id="resDate" class="text-4xl font-bold text-gray-900">--/--/----</p>
+                        <p id="resAge" class="text-lg text-gray-600 mt-2 font-medium">-- años y -- meses</p>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="block text-gray-500 text-xs">Tiempo Real Trabajado (Para la Edad)</span>
+                            <span id="resRealTime" class="font-bold text-gray-800 text-lg">--</span>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="block text-gray-500 text-xs">Bonificación (Solo para % dinero)</span>
+                            <span id="resBonification" class="font-bold text-green-600 text-lg">--</span>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border-2 border-yellow-100">
+                            <span class="block text-gray-500 text-xs">Edad Ordinaria Base</span>
+                            <span id="resOrdinaryAge" class="font-bold text-gray-800 text-lg">--</span>
+                            <p class="text-[10px] text-gray-400 mt-1">Determinada solo por tiempo real.</p>
+                        </div>
+                         <div class="p-3 bg-gray-50 rounded-lg">
+                            <span class="block text-gray-500 text-xs">Total Efectos Económicos</span>
+                            <span id="resTotalQuoted" class="font-bold text-gray-800 text-lg">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Logic Explanation -->
+                    <div class="border-t pt-4">
+                        <h4 class="text-sm font-bold text-gray-700 mb-2">Detalle del Cálculo:</h4>
+                        <ul class="text-xs text-gray-600 space-y-1 list-disc pl-4">
+                            <li><strong>Edad Ordinaria:</strong> El sistema calcula si alcanzas los 38,5 años reales para mantener la edad base en 65.</li>
+                            <li><strong>Bonificación:</strong> Se resta de esa Edad Ordinaria para dar tu fecha final.</li>
+                            <li>Anticipo máximo aplicado: <span id="resMaxAnticipation" class="font-bold">--</span>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Welcome/Placeholder State -->
+            <div id="placeholderState" class="flex flex-col items-center justify-center text-center p-10 h-full text-gray-400">
+                <i class="fa-solid fa-file-invoice-dollar text-6xl mb-4 text-gray-200"></i>
+                <h3 class="text-lg font-medium text-gray-500">Introduce tus datos</h3>
+                <p class="text-sm max-w-xs mx-auto mt-2">Para comenzar, introduce tu fecha de nacimiento, fecha de ingreso en PL y los días cotizados previos.</p>
+            </div>
+
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-12 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h3 class="font-bold text-gray-800 mb-4">Explicación de la Normativa (Resumen)</h3>
+            <div class="grid md:grid-cols-2 gap-6 text-sm text-gray-600">
+                <div>
+                    <h4 class="font-bold text-blue-700 mb-2">1. La Edad Legal Móvil</h4>
+                    <p class="mb-2">La edad base ya no son 65 años fijos. En 2027 será de <strong>67 años</strong> a menos que acredites 38 años y 6 meses de trabajo <strong>efectivo/real</strong>.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-blue-700 mb-2">2. El Anticipo (Coeficiente 0.20)</h4>
+                    <p class="mb-2">Por cada año completo de policía, "ganas" 0.20 años de adelanto. Este tiempo cuenta para el porcentaje (cobrar el 100%), pero no para cambiar la edad legal de 67 a 65.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-6 text-center text-xs">
+        <p>Herramienta informativa no vinculante. Basada en normativa vigente y coeficiente 0.20.</p>
+    </footer>
+
+    <script>
+        // --- HELPER FOR DAYS CALC ---
+        document.getElementById('btnCalcDays').addEventListener('click', function() {
+            const start = document.getElementById('calcStart').value;
+            const end = document.getElementById('calcEnd').value;
+            
+            if(!start || !end) return;
+
+            const d1 = new Date(start);
+            const d2 = new Date(end);
+            
+            // Calculate diff in milliseconds
+            const diffTime = Math.abs(d2 - d1);
+            // Convert to days + 1 (inclusive)
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+
+            document.getElementById('calcResultDisplay').innerText = diffDays + " días";
+        });
+
+        // --- LOGIC AND CONSTANTS ---
+
+        // Helper: Add months to a date
+        function addMonths(date, months) {
+            const d = new Date(date);
+            d.setMonth(d.getMonth() + months);
+            return d;
+        }
+
+        // Helper: Calculate difference in years (float)
+        function diffYears(dt1, dt2) {
+            let diff = (dt2.getTime() - dt1.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+            return diff;
+        }
+
+        // Table Page 2: Ordinary Retirement Age requirements
+        function getOrdinaryRetirementParams(year) {
+            if (year <= 2017) return { requiredYears: 36.5, maxAgeYears: 65, maxAgeMonths: 5 }; // Historic/Approx
+            if (year === 2018) return { requiredYears: 36.5, maxAgeYears: 65, maxAgeMonths: 6 };
+            if (year === 2019) return { requiredYears: 36.75, maxAgeYears: 65, maxAgeMonths: 8 };
+            if (year === 2020) return { requiredYears: 37.0, maxAgeYears: 65, maxAgeMonths: 10 };
+            if (year === 2021) return { requiredYears: 37.25, maxAgeYears: 66, maxAgeMonths: 0 };
+            if (year === 2022) return { requiredYears: 37.5, maxAgeYears: 66, maxAgeMonths: 2 };
+            if (year === 2023) return { requiredYears: 37.75, maxAgeYears: 66, maxAgeMonths: 4 };
+            if (year === 2024) return { requiredYears: 38.0, maxAgeYears: 66, maxAgeMonths: 6 };
+            if (year === 2025) return { requiredYears: 38.25, maxAgeYears: 66, maxAgeMonths: 8 };
+            if (year === 2026) return { requiredYears: 38.25, maxAgeYears: 66, maxAgeMonths: 10 };
+            // 2027 onwards
+            return { requiredYears: 38.5, maxAgeYears: 67, maxAgeMonths: 0 };
+        }
+
+        // Requirements to anticipate 6 years (Page 3)
+        function getRequiredYearsFor6YearAnticipation(year) {
+            if (year <= 2019) return 35.5;
+            if (year <= 2022) return 36.0;
+            if (year <= 2026) return 36.5;
+            return 37.0;
+        }
+
+        document.getElementById('calcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 1. Get Inputs
+            const dobInput = document.getElementById('dob').value;
+            const entryInput = document.getElementById('entryDate').value;
+            
+            if(!dobInput || !entryInput) {
+                alert("Por favor introduce las fechas.");
+                return;
+            }
+
+            const dob = new Date(dobInput);
+            const entryDate = new Date(entryInput);
+            
+            const prevTotalDays = parseInt(document.getElementById('prevTotalDays').value) || 0;
+            const mili = document.getElementById('mili').checked ? 1 : 0;
+
+            const totalPrevYears = (prevTotalDays / 365.25) + mili;
+
+            // 2. Iteration Strategy:
+            let checkDate = new Date(dob);
+            checkDate.setFullYear(checkDate.getFullYear() + 58); // Start simulating at 58
+            
+            const maxCheckDate = new Date(dob);
+            maxCheckDate.setFullYear(maxCheckDate.getFullYear() + 72); // Safety limit
+
+            let found = false;
+            let finalData = {};
+
+            while (checkDate < maxCheckDate && !found) {
+                
+                // A. Calculate Time as Police at this specific checkDate
+                let yearsAsPolice = 0;
+                if (checkDate > entryDate) {
+                    yearsAsPolice = diffYears(entryDate, checkDate);
+                }
+                
+                // B. Calculate Bonification
+                const bonificationYears = yearsAsPolice * 0.20;
+
+                // C. Calculate Real Worked Time (For Age Table)
+                const realCotizado = totalPrevYears + yearsAsPolice;
+
+                // D. Calculate Virtual Total (For Percentage / Info)
+                const totalConBonificacion = realCotizado + bonificationYears;
+
+                // E. Determine Ordinary Retirement Age 
+                const checkYear = checkDate.getFullYear();
+                const params = getOrdinaryRetirementParams(checkYear);
+
+                let ordinaryAgeYears = 65;
+                let ordinaryAgeMonths = 0;
+
+                // Does user meet the "Carrera Larga" requirement with REAL time?
+                if (realCotizado < params.requiredYears) {
+                    ordinaryAgeYears = params.maxAgeYears; // 67 (or progressive)
+                    ordinaryAgeMonths = params.maxAgeMonths;
+                } else {
+                    ordinaryAgeYears = 65;
+                }
+
+                // F. Calculate the "Target Date" (Ordinary Date)
+                const ordinaryRetirementDate = new Date(dob);
+                ordinaryRetirementDate.setFullYear(ordinaryRetirementDate.getFullYear() + ordinaryAgeYears);
+                ordinaryRetirementDate.setMonth(ordinaryRetirementDate.getMonth() + ordinaryAgeMonths);
+
+                // G. Apply Reduction Limit (5 or 6 years)
+                const reqFor6 = getRequiredYearsFor6YearAnticipation(checkYear);
+                const canAnticipate6 = (totalConBonificacion >= reqFor6);
+                
+                // H. The Calculation: Ordinary Date - Bonification
+                const bonificationAuthMS = bonificationYears * 365.25 * 24 * 60 * 60 * 1000;
+                let possibleRetirementDate = new Date(ordinaryRetirementDate.getTime() - bonificationAuthMS);
+
+                // I. Apply Floor (Max Anticipation logic: 5 or 6 years from Ordinary)
+                const minAgeDate = new Date(ordinaryRetirementDate);
+                minAgeDate.setFullYear(minAgeDate.getFullYear() - (canAnticipate6 ? 6 : 5)); 
+
+                if (possibleRetirementDate < minAgeDate) {
+                    possibleRetirementDate = minAgeDate; 
+                }
+
+                // J. THE CHECK
+                if (checkDate >= possibleRetirementDate) {
+                    found = true;
+                    finalData = {
+                        date: checkDate,
+                        ageDecimal: diffYears(dob, checkDate),
+                        policeYears: yearsAsPolice,
+                        bonification: bonificationYears,
+                        realCotizado: realCotizado,
+                        totalConBonificacion: totalConBonificacion,
+                        ordinaryParams: { y: ordinaryAgeYears, m: ordinaryAgeMonths },
+                        can6: canAnticipate6
+                    };
+                }
+
+                // Advance 1 month
+                checkDate = addMonths(checkDate, 1);
+            }
+
+            // 3. Render
+            if (found) {
+                document.getElementById('placeholderState').classList.add('hidden');
+                document.getElementById('resultCard').classList.remove('hidden');
+
+                // Date Format
+                const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                document.getElementById('resDate').innerText = finalData.date.toLocaleDateString('es-ES', options);
+
+                // Age Format
+                const years = Math.floor(finalData.ageDecimal);
+                const months = Math.floor((finalData.ageDecimal - years) * 12);
+                document.getElementById('resAge').innerText = `${years} años y ${months} meses`;
+
+                // Details
+                document.getElementById('resRealTime').innerText = finalData.realCotizado.toFixed(2) + " años";
+                document.getElementById('resBonification').innerText = finalData.bonification.toFixed(2) + " años";
+                document.getElementById('resTotalQuoted').innerText = finalData.totalConBonificacion.toFixed(2) + " años";
+                
+                document.getElementById('resOrdinaryAge').innerText = 
+                    `${finalData.ordinaryParams.y} años ${finalData.ordinaryParams.m > 0 ? 'y ' + finalData.ordinaryParams.m + ' meses' : ''}`;
+
+                document.getElementById('resMaxAnticipation').innerText = 
+                    finalData.can6 ? "6 Años" : "5 Años";
+
+                // --- HEADER COUNTDOWN UPDATE (DYNAMIC) ---
+                const today = new Date();
+                const diffTime = finalData.date - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                const dayDisplay = document.getElementById('daysRemainingDisplay');
+                const metaDisplay = document.getElementById('countdownMeta');
+                
+                if (dayDisplay) {
+                    dayDisplay.innerText = diffDays > 0 ? diffDays : "0";
+                    // Add pop animation effect
+                    dayDisplay.parentElement.classList.add('scale-105', 'bg-white/20');
+                    setTimeout(() => dayDisplay.parentElement.classList.remove('scale-105', 'bg-white/20'), 500);
+                }
+                
+                if (metaDisplay) {
+                    metaDisplay.innerText = 'Meta: ' + finalData.date.toLocaleDateString('es-ES', options);
+                    metaDisplay.classList.add('text-yellow-200');
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

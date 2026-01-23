@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestión de Documentos Judiciales</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-light: #f3f4f6;
+      --text-main: #1f2937;
+      --card-bg: #ffffff;
+      --primary-blue: #2563eb;
+      --primary-blue-dark: #1e40af;
+      --button-edit: #16a34a; /* Verde para Editar / Sentencia Adjuntada / Desarchivar / Filtro Activo */
+      --button-edit-dark: #15803d;
+      --button-delete: #dc2626; /* Rojo para Eliminar / Sentencia Ausente / Archivados Activo */
+      --button-delete-dark: #b91c1c;
+      --button-archive: #facc15; /* Amarillo para Archivar */
+      --button-archive-dark: #eab308;
+      --border-color: #e2e8f0;
+      --color-warning: #f97316; /* Naranja para Filtro de Archivo (Botón) */
+      --color-warning-dark: #c2410c;
+      --color-brown: #8B4513; /* Marrón para Entregado al Juzgado */
+      --color-purple: #800080; /* NUEVO: Morado para Solicitar */
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem;
+    }
+    header {
+      background-color: var(--primary-blue);
+      color: white;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s, visibility 0.3s;
+      z-index: 1000;
+    }
+    .modal-overlay.open {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      width: 90%;
+      max-width: 500px;
+      transform: scale(0.95);
+      transition: transform 0.3s ease-out;
+      color: var(--text-main);
+    }
+    .modal-overlay.open .modal {
+      transform: scale(1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h2 { margin: 0; }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 1rem;
+    }
+    .form-fields {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 6px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 0.85rem;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+    .btn-primary {
+      background-color: var(--primary-blue);
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .btn-primary:hover { background-color: var(--primary-blue-dark); }
+    .btn-ghost {
+      background-color: transparent;
+      color: var(--primary-blue);
+      padding: 8px 16px;
+      border: 1px solid var(--primary-blue);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .hidden { display: none; }
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 2rem;
+    }
+    .btn-add {
+      background-color: var(--primary-blue);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      font-weight: 700;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+      margin-top: 2rem;
+    }
+    .results-container {
+      margin-top: 2rem;
+      background-color: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      width: 100%;
+      box-sizing: border-box;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      word-wrap: break-word;
+      white-space: nowrap;
+    }
+    .results-table th, .results-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .results-table td {
+        color: var(--text-main);
+    }
+    .results-table th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .results-table .action-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    .results-table .action-buttons button, .results-table .action-buttons a {
+      width: auto;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .results-table .edit-btn, .results-table .delete-btn {
+        padding: 0.5rem;
+        width: 40px;
+        height: 40px;
+    }
+    .results-table .edit-btn { background-color: var(--button-edit); color: white; }
+    .results-table .edit-btn:hover { background-color: var(--button-edit-dark); }
+    .results-table .delete-btn { background-color: var(--button-delete); color: white; }
+    .results-table .delete-btn:hover { background-color: var(--button-delete-dark); }
+    
+    /* Ancho uniforme para Archivar/Desarchivar/Solicitar */
+    .results-table .archive-btn {
+        width: 150px !important; 
+        height: 40px; 
+        background-color: var(--button-archive);
+        color: var(--text-main);
+        font-weight: 600;
+        font-size: 0.875rem !important;
+        line-height: 1.25rem !important;
+        letter-spacing: normal !important;
+        white-space: nowrap !important;
+        box-sizing: border-box; 
+        text-decoration: none; 
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        margin: 0;
+    }
+    /* Estilo Desarchivar */
+    .archived-row .archive-btn {
+        width: 150px !important; 
+        height: 40px;
+        background-color: var(--button-edit);
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem !important;
+        line-height: 1.25rem !important;
+        letter-spacing: normal !important;
+        white-space: nowrap !important;
+        box-sizing: border-box; 
+        text-decoration: none !important; 
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        margin: 0;
+    }
+    /* NUEVO ESTILO: Botón Solicitar */
+    .solicitar-btn {
+        width: 150px !important; /* Mismo ancho */
+        height: 40px; 
+        background-color: var(--color-purple);
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem !important;
+        line-height: 1.25rem !important;
+        letter-spacing: normal !important;
+        white-space: nowrap !important;
+        box-sizing: border-box; 
+        text-decoration: none; 
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        margin: 0;
+        border-radius: 0.25rem;
+    }
+    .solicitar-btn:hover {
+        background-color: #6a006a; /* Darker purple on hover */
+    }
+
+    .results-table .archive-btn:hover { background-color: var(--button-archive-dark); }
+    .archived-row .archive-btn:hover { background-color: var(--button-edit-dark); }
+    
+    .results-table .doc-link {
+      background-color: var(--primary-blue);
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.25rem;
+      white-space: nowrap;
+    }
+    .results-table .doc-link:hover { background-color: var(--primary-blue-dark); }
+    
+    /* Contenedor de la Imagen para la superposición del aspa */
+    .image-container {
+      position: relative;
+      display: inline-block;
+    }
+    .thumbnail {
+      max-width: 100px;
+      height: auto;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .cross-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      color: var(--button-delete); /* Rojo */
+      opacity: 0.9;
+      pointer-events: none; 
+      text-shadow: 0 0 5px white; 
+    }
+
+    /* Estilo de fila archivada */
+    .archived-row td {
+        color: var(--text-main); 
+        font-weight: 600; 
+        text-decoration: line-through; 
+        font-style: normal;
+    }
+    .archived-row td[data-label="Imagen"], 
+    .archived-row td[data-label="Acciones"] {
+        text-decoration: none;
+        color: var(--text-main); 
+    }
+    
+    /* ESTADO NUEVO: Entregado al Juzgado */
+    .entregado-juzgado td {
+        color: var(--color-brown); /* Marrón Oscuro */
+        font-weight: 700; /* Negrita más fuerte */
+        text-decoration: line-through; /* Tachado */
+        font-style: normal;
+    }
+    .entregado-juzgado td[data-label="Imagen"], 
+    .entregado-juzgado td[data-label="Acciones"] {
+        text-decoration: none;
+        color: var(--color-brown);
+    }
+    .entregado-juzgado td[data-label="Resultado"] {
+        text-decoration: line-through;
+        color: var(--color-brown);
+    }
+    
+    /* Estilos para los colores condicionales del resultado */
+    .condena {
+        font-weight: bold;
+        color: var(--button-edit); 
+    }
+    .en-tramite {
+        font-weight: bold;
+        color: var(--button-delete); 
+    }
+    .pasa-a-ordinario {
+        font-weight: bold;
+        color: #2563eb; 
+    }
+    .absolucion {
+        font-weight: bold;
+        color: #8B008B; 
+    }
+    /* Estilos para las filas según la existencia de sentencia */
+    .sentencia-presente td {
+      color: var(--button-edit); 
+    }
+    .sentencia-ausente td {
+      color: var(--button-delete); 
+    }
+    /* Excepción para el color de la celda de resultado */
+    .sentencia-presente td[data-label="Resultado"],
+    .sentencia-ausente td[data-label="Resultado"] {
+        color: inherit; 
+    }
+    .sentencia-presente td[data-label="Acciones"],
+    .sentencia-ausente td[data-label="Acciones"] {
+        color: inherit;
+    }
+    
+    /* Estilos para los botones de filtro */
+    .filter-btn {
+        background-color: var(--primary-blue);
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .filter-btn:hover { background-color: var(--primary-blue-dark); }
+    /* Estilo activo para Todos y Activos (VERDE) */
+    .filter-btn.active {
+        background-color: var(--button-edit); 
+        color: white;
+    }
+    .filter-btn.active:hover { background-color: var(--button-edit-dark); }
+    
+    /* Estilo específico para el botón de archivados (NARANJA/ROJO) */
+    #filterArchivedBtn {
+        background-color: var(--color-warning); /* Naranja */
+    }
+    #filterArchivedBtn:hover {
+        background-color: var(--color-warning-dark);
+    }
+    #filterArchivedBtn.active {
+        background-color: var(--button-delete) !important; /* Rojo Activo */
+    }
+    #filterArchivedBtn.active:hover {
+        background-color: var(--button-delete-dark);
+    }
+    
+    /* Estilo del Panel de Ayuda */
+    .help-panel {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-top: 1.5rem;
+        max-width: 800px;
+        width: 100%;
+        font-size: 0.9rem;
+    }
+    .help-item {
+        margin-bottom: 0.5rem;
+        /* Asegura alineación horizontal */
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .color-box {
+        width: 18px; 
+        height: 18px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        flex-shrink: 0;
+    }
+    .help-item p {
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .results-table thead { display: none; }
+      .results-table, .results-table tbody, .results-table tr, .results-table td {
+        display: block;
+        width: 100%;
+      }
+      .results-table tr {
+        margin-bottom: 1rem;
+        background-color: #f9fafb;
+        border-radius: 0.375rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      }
+      .results-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: none;
+        white-space: normal;
+      }
+      .results-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: 1rem;
+        flex: 1;
+      }
+      .results-table .action-buttons {
+        flex-direction: row;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        width: 100%;
+        padding-top: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    DOCUMENTOS JUDICIALIZADOS
+  </h1>
+
+  <main class="flex-grow flex flex-col items-center py-8 px-4">
+    <button id="addNewRowBtn" class="btn-add">
+        <i class="fas fa-plus mr-2"></i>Introducir Nuevo Documento
+    </button>
+    
+    <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <button id="filterAllBtn" class="filter-btn active">
+            <i class="fas fa-list mr-2"></i>Mostrar Todos
+        </button>
+        <button id="filterActiveBtn" class="filter-btn">
+            <i class="fas fa-check-circle mr-2"></i>Mostrar Solo Activos
+        </button>
+        <button id="filterArchivedBtn" class="filter-btn">
+            <i class="fas fa-archive mr-2"></i>Mostrar Archivados
+        </button>
+        <button id="toggleHelpBtn" class="filter-btn bg-gray-500 hover:bg-gray-700">
+            <i class="fas fa-info-circle mr-2"></i>Ver Ayuda
+        </button>
+    </div>
+    
+    <div id="helpPanel" class="help-panel hidden">
+        <h3 class="font-bold text-lg mb-3">Guía de Colores y Estados</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+            <div class="help-item col-span-2 text-base font-semibold border-b pb-1">Color de la Fila (Sentencia)</div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: var(--button-edit);"></div>
+                <p>Fila en <strong>VERDE</strong>: Sentencia <strong>Adjuntada</strong>.</p>
+            </div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: var(--button-delete);"></div>
+                <p>Fila en <strong>ROJO</strong>: Sentencia <strong>Pendiente</strong>.</p>
+            </div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: var(--color-brown);"></div>
+                <p>Fila en <strong>MARRÓN</strong> (Tachado): <strong>Entregado al Juzgado</strong>.</p>
+            </div>
+            
+            <div class="help-item col-span-2 text-base font-semibold border-b pb-1 mt-3">Color del Texto de Resultado</div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: var(--button-edit);"></div>
+                <p>Resultado en <strong>VERDE</strong>: <strong>Condena</strong>.</p>
+            </div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: var(--button-delete);"></div>
+                <p>Resultado en <strong>ROJO</strong>: <strong>En Trámite</strong>.</p>
+            </div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: #2563eb;"></div>
+                <p>Resultado en <strong>AZUL</strong>: <strong>Pasa a Ordinario</strong>.</p>
+            </div>
+            <div class="help-item">
+                <div class="color-box" style="background-color: #8B008B;"></div>
+                <p>Resultado en <strong>VIOLETA</strong>: <strong>Absolución</strong>.</p>
+            </div>
+            
+            <div class="help-item col-span-2 text-base font-semibold border-b pb-1 mt-3">Estado Archivado</div>
+            <div class="help-item col-span-2">
+                <div class="color-box" style="background-color: white; border: 1px solid var(--text-main);"></div>
+                <p><strong>Texto Tachado (Negro/Negrita)</strong>: Registro <strong>Archivado</strong>.</p>
+            </div>
+            
+            <div class="help-item col-span-2 text-base font-semibold border-b pb-1 mt-3">Insertar Imagen</div>
+            <div class="help-item col-span-2">
+                <p>Navega hasta la carpeta <strong>_APP GAD HTML</strong>, dentro accede a <strong>"JUDICIALIZADOS"</strong>. Selecciona la imagen haz clic en el botón derecho pulsa <strong>"insertar"</strong>. A continuación copia el código. El código que se genere es lo que deberás pegar en el apartado <strong>"enlace al documento"</strong>.</p>
+            </div>
+        </div>
+    </div>
+    <div id="resultsContainer" class="results-container hidden">
+      <h2 class="text-lg font-bold mb-4">Datos</h2>
+      <div class="overflow-x-auto">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>País</th>
+              <th>Doc.</th>
+              <th>Atestado</th>
+              <th>J. Rápido</th>
+              <th>Juzgado</th>
+              <th>Resultado</th>
+              <th>Sentencia</th>
+              <th>Imagen</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="mt-8 flex justify-center">
+<button onclick="window.location.href='index.html'" class="max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">MENÚ PRINCIPAL</button>    </div>
+  </main>
+
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <div id="documentModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <strong id="modalTitle">Añadir Nuevo Documento</strong>
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+      <form id="documentForm">
+        <div class="modal-body">
+          <input type="hidden" id="recordKey">
+          <div class="form-fields">
+            <div class="field">
+              <label for="fechaSuceso">Fecha del Suceso</label>
+              <input id="fechaSuceso" name="fechaSuceso" type="date" required />
+            </div>
+            <div class="field">
+              <label for="pais">País</label>
+              <input id="pais" name="pais" type="text" placeholder="País" required list="paisesList" />
+              <datalist id="paisesList"></datalist>
+            </div>
+            <div class="field">
+              <label for="tipoDocumento">Tipo de Documento</label>
+              <select id="tipoDocumento" name="tipoDocumento" required>
+                <option value="PNC">PNC</option>
+                <option value="PIC">PIC</option>
+                <option value="TIE">TIE</option>
+                <option value="CI">CI</option>
+                <option value="PCIRC">PCIRC</option>
+                <option value="ITV">ITV</option>
+                <option value="SOA">SOA</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="atestadoNumero">Número de Atestado</label>
+              <input id="atestadoNumero" name="atestadoNumero" type="text" placeholder="Atestado" required />
+            </div>
+            <div class="field">
+              <label for="juicioRapido">Juicio Rápido</label>
+              <select id="juicioRapido" name="juicioRapido" required>
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="juzgado">Juzgado</label>
+              <select id="juzgado" name="juzgado" required>
+                <option value="Se desconoce">Se desconoce</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="resultado">Resultado</label>
+              <select id="resultado" name="resultado" required>
+                <option value="Se desconoce">Se desconoce</option>
+                <option value="Condena">Condena</option>
+                <option value="Absolución">Absolución</option>
+                <option value="Pasa a Ordinario">Pasa a Ordinario</option>
+                <option value="En Trámite">En Trámite</option>
+                <option value="Entregado al Juzgado">Entregado al Juzgado</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sentenciaUrl">Enlace a la Sentencia (URL)</label>
+              <input id="sentenciaUrl" name="sentenciaUrl" type="text" placeholder="Pega aquí la URL de la sentencia" />
+            </div>
+            <div class="field">
+              <label for="documentoUrl">Enlace al Documento (URL de Google Drive o OneDrive)</label>
+              <input id="documentoUrl" name="documentoUrl" type="text" placeholder="Pega aquí la URL" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary"><i class="fas fa-save mr-2"></i>Guardar</button>
+          <button type="button" id="cancelModalBtn" class="btn-ghost"><i class="fas fa-times mr-2"></i>Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    
+    // ⚠️ CONFIGURACIÓN DE FIREBASE ACTUAL
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+      try {
+          firebase.initializeApp(firebaseConfig);
+      } catch (e) {
+          // Captura si Firebase ya está inicializado (v8)
+      }
+      
+      const db = firebase.database();
+      const documentsRef = db.ref('judicializados');
+      const savedPaisesRef = db.ref('paises');
+
+      // Eliminamos la bandera de Local Storage para forzar la migración
+      // localStorage.removeItem('migration_atestado_key_complete'); 
+
+      const documentModal = document.getElementById('documentModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const cancelModalBtn = document.getElementById('cancelModalBtn');
+      const addNewRowBtn = document.getElementById('addNewRowBtn');
+      const documentForm = document.getElementById('documentForm');
+      const modalTitle = document.getElementById('modalTitle');
+      const recordKeyInput = document.getElementById('recordKey');
+      const modalContent = document.querySelector('.modal');
+
+      const resultsTableBody = document.getElementById('resultsTableBody');
+      const resultsContainer = document.getElementById('resultsContainer');
+      const paisesList = document.getElementById('paisesList');
+      const juzgadoSelect = document.getElementById('juzgado');
+      
+      // VARIABLES DE FILTRO Y AYUDA
+      const filterAllBtn = document.getElementById('filterAllBtn');
+      const filterActiveBtn = document.getElementById('filterActiveBtn');
+      const filterArchivedBtn = document.getElementById('filterArchivedBtn');
+      const toggleHelpBtn = document.getElementById('toggleHelpBtn');
+      const helpPanel = document.getElementById('helpPanel');
+      let currentFilter = 'all'; // Estado inicial: 'all'
+
+      let savedPaises = [];
+      
+      // Llenar opciones de Juzgado
+      const juzgadoOptions = ["Se desconoce"];
+      for (let i = 1; i <= 15; i++) {
+        juzgadoOptions.push(`Instrucción ${i}`);
+      }
+      for (let i = 1; i <= 15; i++) {
+        juzgadoOptions.push(`Penal ${i}`);
+      }
+      juzgadoOptions.forEach(opt => juzgadoSelect.innerHTML += `<option value="${opt}">${opt}</option>`);
+
+      // Cargar lista de países guardados
+      savedPaisesRef.on('value', (snapshot) => {
+          savedPaises = snapshot.val() || [];
+          paisesList.innerHTML = savedPaises.map(pais => `<option value="${pais}"></option>`).join('');
+      });
+
+
+      // ** FUNCIÓN DE MIGRACIÓN DE CLAVES (Asíncrona, en segundo plano) **
+      const runMigration = async () => {
+          console.log("Iniciando migración de claves: Renombrando automáticas a Atestado.");
+          try {
+              const snapshot = await documentsRef.once('value');
+              const updates = {};
+              let migrationNeeded = false;
+
+              const sanitizeKey = (atestado) => {
+                  return atestado.trim().replace(/[\/.\s]/g, '-').toUpperCase();
+              };
+
+              snapshot.forEach(childSnapshot => {
+                  const oldKey = childSnapshot.key;
+                  
+                  if (oldKey.startsWith('-')) {
+                      const item = childSnapshot.val();
+                      const atestadoNumero = item.atestadoNumero;
+
+                      if (atestadoNumero) {
+                          const newKey = sanitizeKey(atestadoNumero);
+                          
+                          updates[newKey] = item; 
+                          updates[oldKey] = null; 
+                          
+                          migrationNeeded = true;
+                          console.log(`MIGRANDO: ${oldKey} -> ${newKey}`);
+                      }
+                  }
+              });
+
+              if (migrationNeeded) {
+                  await documentsRef.update(updates);
+                  console.log("Migración completada. Claves limpias aplicadas.");
+              } else {
+                  console.log("No se encontraron claves automáticas pendientes de migrar.");
+              }
+          } catch (error) {
+              console.error("Error durante la ejecución de runMigration:", error);
+          }
+      };
+
+
+      // ** FUNCIÓN DE RENDERIZADO DE TABLA (ROBUSTA) **
+      const renderTable = (snapshot) => {
+        resultsTableBody.innerHTML = '';
+        let data = [];
+        snapshot.forEach(childSnapshot => {
+            const item = childSnapshot.val();
+            item.key = childSnapshot.key;
+            data.push(item);
+        });
+        
+        // APLICAR FILTRO
+        data = data.filter(item => {
+            if (currentFilter === 'active') {
+                return !item.archived;
+            }
+            if (currentFilter === 'archived') {
+                return item.archived;
+            }
+            return true; // 'all' (mostrar todos)
+        });
+
+        if (data.length > 0) {
+            resultsContainer.classList.remove('hidden');
+            
+            // ORDENACIÓN
+            data.sort((a, b) => {
+                const dateA = new Date(a.fechaSuceso).getTime(); 
+                const dateB = new Date(b.fechaSuceso).getTime();
+
+                if (isNaN(dateB)) return -1;
+                if (isNaN(dateA)) return 1;
+
+                return dateB - dateA; 
+            });
+
+            data.forEach((item) => {
+                try { // <--- BLOQUE TRY/CATCH CRÍTICO PARA EVITAR CRASHES
+                    const row = document.createElement('tr');
+                    row.dataset.key = item.key;
+                    
+                    // Aplicar estilos de fila (Entregado tiene la máxima prioridad visual)
+                    if (item.resultado === 'Entregado al Juzgado') {
+                        row.classList.add('entregado-juzgado');
+                    } else if (item.archived) {
+                        row.classList.add('archived-row');
+                    } else if (item.sentenciaUrl) {
+                        row.classList.add('sentencia-presente');
+                    } else {
+                        row.classList.add('sentencia-ausente');
+                    }
+
+
+                    let imageHtml = 'No hay';
+                    const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(item.documentoUrl);
+                    
+                    if (item.documentoUrl) {
+                        let imageContent = '';
+                        
+                        // 1. Determinar el contenido base (imagen o enlace)
+                        if (item.documentoUrl.includes('1drv.ms/i/')) {
+                            // Enlace directo para OneDrive
+                            const directUrl = `${item.documentoUrl.split('?')[0]}?width=150&height=100`;
+                            imageContent = `<a href="${item.documentoUrl}" target="_blank"><img src="${directUrl}" alt="Doc" class="thumbnail"></a>`;
+                        } else if (isImage) {
+                            // Si es un enlace a imagen simple
+                            imageContent = `<a href="${item.documentoUrl}" target="_blank"><img src="${item.documentoUrl}" alt="Doc" class="thumbnail"></a>`;
+                        } else {
+                            // Enlace a documento (PDF, etc.)
+                            imageContent = `<a href="${item.documentoUrl}" target="_blank" class="doc-link"><i class="fas fa-eye mr-2"></i>Ver Documento</a>`;
+                        }
+                        
+                        // 2. Aplicar lógica de "Entregado al Juzgado"
+                        if (item.resultado === 'Entregado al Juzgado') {
+                            // Si es una imagen o enlace visual, superponer el aspa
+                            if (item.documentoUrl.includes('1drv.ms/i/') || isImage) {
+                                imageHtml = `<div class="image-container">${imageContent}<i class="fas fa-times-circle cross-overlay"></i></div>`;
+                            } else {
+                                // Si es un enlace de documento (no imagen), cambiar el texto del enlace
+                                imageHtml = `<a href="${item.documentoUrl}" target="_blank" class="doc-link"><i class="fas fa-times-circle mr-2"></i>Doc. Entregado</a>`;
+                            }
+                        } else {
+                             // Si no es "Entregado al Juzgado", usar el contenido normal dentro del contenedor
+                            imageHtml = `<div class="image-container">${imageContent}</div>`;
+                        }
+                    }
+
+
+                    let sentenciaHtml = 'No';
+                    if (item.sentenciaUrl) {
+                        sentenciaHtml = `<a href="${item.sentenciaUrl}" target="_blank" class="sentencia-link">Ver</a>`;
+                    }
+
+                    let resultadoHtml;
+                    switch (item.resultado) {
+                        case 'Condena':
+                            resultadoHtml = `<span class="condena">Condena</span>`;
+                            break;
+                        case 'En Trámite':
+                            resultadoHtml = `<span class="en-tramite">En Trámite</span>`;
+                            break;
+                        case 'Pasa a Ordinario':
+                            resultadoHtml = `<span class="pasa-a-ordinario">Pasa a Ordinario</span>`;
+                            break;
+                        case 'Absolución':
+                            resultadoHtml = `<span class="absolucion">Absolución</span>`;
+                            break;
+                        case 'Entregado al Juzgado':
+                            resultadoHtml = `<span>Entregado al Juzgado</span>`;
+                            break;
+                        default:
+                            resultadoHtml = `<span>${item.resultado}</span>`;
+                            break;
+                    }
+                    
+                    // Lógica del botón de acción (Archivar vs. Solicitar)
+                    let archiveButtonHtml;
+                    if (item.resultado === 'Entregado al Juzgado') {
+                        // Botón Solicitar (Morado)
+                        archiveButtonHtml = '<a href="SOLICITUD DOCUMENTO.html" target="_blank" class="solicitar-btn">Solicitar</a>';
+                    } else if (item.archived) {
+                        // Desarchivar (Verde)
+                        archiveButtonHtml = '<button class="archive-btn">Desarchivar</button>';
+                    } else {
+                        // Archivar (Amarillo)
+                        archiveButtonHtml = '<button class="archive-btn">Archivar</button>';
+                    }
+
+
+                    row.innerHTML = `
+                        <td data-label="Fecha">${item.fechaSuceso}</td>
+                        <td data-label="País">${item.pais}</td>
+                        <td data-label="Documento">${item.tipoDocumento}</td>
+                        <td data-label="Atestado">${item.atestadoNumero}</td>
+                        <td data-label="Juicio Rápido">${item.juicioRapido}</td>
+                        <td data-label="Juzgado">${item.juzgado}</td>
+                        <td data-label="Resultado" class="resultado-cell">${resultadoHtml}</td>
+                        <td data-label="Sentencia">${sentenciaHtml}</td>
+                        <td data-label="Imagen">
+                          ${imageHtml}
+                        </td>
+                        <td data-label="Acciones">
+                          <div class="action-buttons">
+                            <button class="edit-btn"><i class="fas fa-pencil-alt"></i></button>
+                            <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                            ${archiveButtonHtml}
+                          </div>
+                        </td>
+                    `;
+                    resultsTableBody.appendChild(row);
+                } catch (e) {
+                    // Si falla una fila, lo registramos pero continuamos con las demás
+                    console.error(`Error al renderizar la fila con clave ${item.key}:`, e);
+                    const errorRow = document.createElement('tr');
+                    errorRow.innerHTML = `<td colspan="10" style="color:var(--button-delete); font-weight:bold;">ERROR AL CARGAR ESTE REGISTRO (ID: ${item.key}). Ver consola para detalles.</td>`;
+                    resultsTableBody.appendChild(errorRow);
+                }
+            });
+        } else {
+            resultsContainer.classList.add('hidden');
+        }
+      };
+      // ** FIN FUNCIÓN DE RENDERIZADO **
+
+
+      // ** INICIALIZACIÓN Y SUSCRIPCIÓN (MODIFICADA PARA CARGA INMEDIATA) **
+      const initializeApp = () => {
+          
+          // 1. Iniciar la escucha de datos inmediatamente (CRÍTICO)
+          documentsRef.on('value', renderTable, (error) => {
+               console.error("Error al obtener datos de Firebase:", error);
+               alert("Error al cargar los documentos. Revisa la consola para más detalles.");
+          });
+
+          // 2. Ejecutar la migración en segundo plano (no debe bloquear la carga inicial)
+          runMigration().catch(error => {
+              console.error("Fallo durante la migración de claves:", error);
+          });
+      };
+
+      initializeApp(); // Iniciar la aplicación
+      
+      
+      addNewRowBtn.addEventListener('click', () => {
+        documentForm.reset();
+        recordKeyInput.value = '';
+        modalTitle.textContent = 'Introducir Nuevo Documento';
+        documentModal.classList.add('open');
+      });
+
+      // ** LÓGICA DE GUARDADO (submit) **
+      documentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = documentForm.querySelector('button[type="submit"]');
+        saveBtn.disabled = true;
+
+        try {
+            const atestadoNumero = document.getElementById('atestadoNumero').value.trim();
+            
+            const sanitizeKey = (atestado) => atestado.trim().replace(/[\/.\s]/g, '-').toUpperCase();
+            const safeKey = sanitizeKey(atestadoNumero); 
+            
+            const key = recordKeyInput.value; 
+
+            const data = {
+              fechaSuceso: document.getElementById('fechaSuceso').value,
+              pais: document.getElementById('pais').value,
+              tipoDocumento: document.getElementById('tipoDocumento').value,
+              atestadoNumero: atestadoNumero, 
+              juicioRapido: document.getElementById('juicioRapido').value,
+              juzgado: document.getElementById('juzgado').value,
+              resultado: document.getElementById('resultado').value,
+              documentoUrl: document.getElementById('documentoUrl').value || null,
+              sentenciaUrl: document.getElementById('sentenciaUrl').value || null,
+            };
+
+            if (key) {
+                const currentItem = (await documentsRef.child(key).once('value')).val();
+                data.archived = currentItem.archived || false;
+                
+                if (key !== safeKey) {
+                     await documentsRef.child(key).remove(); 
+                     await documentsRef.child(safeKey).set(data); 
+                } else {
+                    await documentsRef.child(key).update(data);
+                }
+
+            } else {
+                data.archived = false;
+                await documentsRef.child(safeKey).set(data);
+            }
+
+            const pais = data.pais.trim();
+            if (pais && !savedPaises.includes(pais)) {
+              savedPaises.push(pais);
+              savedPaisesRef.set(savedPaises);
+            }
+
+            documentModal.classList.remove('open');
+            documentForm.reset();
+        } catch (error) {
+            console.error("Error al guardar los datos:", error);
+            alert("Hubo un error al guardar los datos.");
+        } finally {
+            saveBtn.disabled = false;
+        }
+      });
+
+      // ** LÓGICA DE ACCIONES DE TABLA (EDITAR/ELIMINAR/ARCHIVAR/SOLICITAR) **
+      resultsTableBody.addEventListener('click', async (e) => {
+        const target = e.target;
+        const row = target.closest('tr');
+        if (!row) return;
+        const key = row.dataset.key; 
+
+        if (target.closest('.edit-btn')) {
+          const itemToEdit = (await documentsRef.child(key).once('value')).val();
+          document.getElementById('fechaSuceso').value = itemToEdit.fechaSuceso;
+          document.getElementById('pais').value = itemToEdit.pais;
+          document.getElementById('tipoDocumento').value = itemToEdit.tipoDocumento;
+          document.getElementById('atestadoNumero').value = itemToEdit.atestadoNumero;
+          document.getElementById('juicioRapido').value = itemToEdit.juicioRapido;
+          document.getElementById('juzgado').value = itemToEdit.juzgado;
+          document.getElementById('resultado').value = itemToEdit.resultado;
+          document.getElementById('documentoUrl').value = itemToEdit.documentoUrl || '';
+          document.getElementById('sentenciaUrl').value = itemToEdit.sentenciaUrl || '';
+          recordKeyInput.value = key; 
+          modalTitle.textContent = 'Editar Documento';
+          documentModal.classList.add('open');
+        } else if (target.closest('.delete-btn')) {
+          if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+            await documentsRef.child(key).remove();
+          }
+        } else if (target.closest('.archive-btn')) {
+            const currentItem = (await documentsRef.child(key).once('value')).val();
+            const newArchivedState = !currentItem.archived;
+            await documentsRef.child(key).update({ archived: newArchivedState });
+        }
+        // El botón Solicitar es un enlace (<a>) y no necesita lógica de evento click aquí.
+      });
+
+      const closeOrCancelModal = () => {
+        documentModal.classList.remove('open');
+        documentForm.reset();
+        recordKeyInput.value = ''; 
+      };
+      
+      modalContent.addEventListener('click', (e) => {
+          e.stopPropagation();
+      });
+
+      closeModalBtn.addEventListener('click', closeOrCancelModal);
+      cancelModalBtn.addEventListener('click', closeOrCancelModal);
+      documentModal.addEventListener('click', (e) => {
+        if (e.target.id === 'documentModal') {
+          closeOrCancelModal();
+        }
+      });
+
+      // ** LÓGICA DE FILTROS Y AYUDA **
+      const handleFilterClick = (filter) => {
+          currentFilter = filter;
+          
+          // Lógica visual para el botón activo
+          document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+          if (filter === 'all') filterAllBtn.classList.add('active');
+          if (filter === 'active') filterActiveBtn.classList.add('active');
+          if (filter === 'archived') filterArchivedBtn.classList.add('active');
+          
+          // Vuelve a llamar a renderTable con la data actual de Firebase
+          documentsRef.once('value', renderTable);
+      };
+
+      const toggleHelp = () => {
+          const isHidden = helpPanel.classList.contains('hidden');
+          if (isHidden) {
+              helpPanel.classList.remove('hidden');
+              toggleHelpBtn.innerHTML = '<i class="fas fa-times mr-2"></i>Ocultar Ayuda';
+          } else {
+              helpPanel.classList.add('hidden');
+              toggleHelpBtn.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Ver Ayuda';
+          }
+      };
+
+      filterAllBtn.addEventListener('click', () => handleFilterClick('all'));
+      filterActiveBtn.addEventListener('click', () => handleFilterClick('active'));
+      filterArchivedBtn.addEventListener('click', () => handleFilterClick('archived'));
+      toggleHelpBtn.addEventListener('click', toggleHelp);
+      // ** FIN LÓGICA DE FILTROS Y AYUDA **
+    });
+  </script>
+</body>
+</html>

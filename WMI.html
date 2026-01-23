@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Datos WMI (con IA)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #modal, #aiModal, #deleteModal {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .loader {
+            border: 4px solid theme('colors.gray.600');
+            border-top: 4px solid theme('colors.blue.500');
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-3xl font-bold text-center text-blue-400">Base de Datos WMI (con IA)</h1>
+            <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <button id="viewAllBtn" class="w-full md:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                    Ver Lista Completa
+                </button>
+                <button id="openAiImportBtn" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                    Importar con IA
+                </button>
+                <button id="openModalBtn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                    Añadir Nuevo WMI
+                </button>
+            </div>
+        </header>
+
+        <!-- Sección de Búsqueda -->
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl mb-8">
+            <h2 class="text-2xl font-bold mb-4">Búsqueda Avanzada</h2>
+            <form id="searchForm" class="flex flex-col md:flex-row gap-4">
+                <div class="flex-none w-full md:w-1/4">
+                    <label for="searchField" class="block text-sm font-medium text-gray-300 mb-2">Buscar por:</label>
+                    <select id="searchField" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="wmi">WMI</option>
+                        <option value="pais">País</option>
+                        <option value="fabricante">Fabricante</option>
+                    </select>
+                </div>
+                <div class="flex-grow w-full md:w-3/4">
+                     <label for="searchInput" class="block text-sm font-medium text-gray-300 mb-2">Término de búsqueda:</label>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Introduce tu búsqueda..."
+                        class="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                    >
+                </div>
+                <button type="submit" class="w-full md:w-auto self-end bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-200 text-lg">
+                    Buscar
+                </button>
+            </form>
+        </div>
+
+        <!-- Mensajes y Carga -->
+        <div id="messageArea" class="text-center text-lg my-4"></div>
+
+        <!-- Sección de Resultados (Búsqueda única o múltiple) -->
+        <div id="resultsArea" class="hidden bg-gray-800 p-6 rounded-lg shadow-xl space-y-4">
+            <!-- Los resultados individuales o la tabla se insertarán aquí -->
+        </div>
+        
+    </div>
+
+    <!-- Modal para Añadir/Editar WMI -->
+    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex justify-center items-center p-4 hidden opacity-0 transform scale-95 z-40">
+        <div class="bg-gray-800 w-full max-w-lg p-8 rounded-lg shadow-2xl border border-gray-700">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6">Añadir Nuevo WMI</h2>
+            <form id="saveForm">
+                <div class="mb-4">
+                    <label for="wmiInput" class="block text-sm font-medium text-gray-300 mb-2">WMI (3 dígitos)</label>
+                    <input type="text" id="wmiInput" required maxlength="3" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase disabled:opacity-50">
+                </div>
+                <div class="mb-4">
+                    <label for="paisInput" class="block text-sm font-medium text-gray-300 mb-2">País</label>
+                    <input type="text" id="paisInput" required class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="fabricanteInput" class="block text-sm font-medium text-gray-300 mb-2">Fabricante</label>
+                    <input type="text" id="fabricanteInput" required class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="tipoInput" class="block text-sm font-medium text-gray-300 mb-2">Tipo</label>
+                    <input type="text" id="tipoInput" required class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" id="closeModalBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para Importar con IA -->
+    <div id="aiModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex justify-center items-center p-4 hidden opacity-0 transform scale-95 z-50">
+        <div class="bg-gray-800 w-full max-w-2xl p-8 rounded-lg shadow-2xl border border-gray-700">
+            <h2 id="aiModalTitle" class="text-2xl font-bold mb-6">Importar con IA</h2>
+            <form id="aiImportForm">
+                <div class="mb-4">
+                    <label for="aiTextInput" class="block text-sm font-medium text-gray-300 mb-2">Pegar texto</label>
+                    <textarea id="aiTextInput" placeholder="Pega aquí cualquier texto con datos WMI..." class="w-full h-32 bg-gray-700 text-white placeholder-gray-400 border-2 border-gray-600 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="text-center my-4 text-gray-400 font-bold">O</div>
+                <div class="mb-4">
+                    <label for="aiImageInput" class="block text-sm font-medium text-gray-300 mb-2">Subir imagen (captura de PDF, Excel, etc.)</label>
+                    <input type="file" id="aiImageInput" accept="image/png, image/jpeg" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                    <img id="imagePreview" src="" alt="Vista previa" class="hidden w-full max-h-48 object-contain mt-4 rounded-lg bg-gray-700 p-2"/>
+                </div>
+                <div id="aiLoadingIndicator" class="hidden flex flex-col items-center justify-center my-6">
+                    <div class="loader"></div>
+                    <p class="text-blue-400 mt-4">Procesando con IA... Esto puede tardar unos segundos.</p>
+                </div>
+                <div id="aiMessageArea" class="text-center text-lg my-4"></div>
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" id="closeAiModalBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Cancelar</button>
+                    <button type="submit" id="aiSubmitBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Procesar e Importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Confirmación de Borrado -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex justify-center items-center p-4 hidden opacity-0 transform scale-95 z-50">
+        <div class="bg-gray-800 w-full max-w-md p-8 rounded-lg shadow-2xl border border-gray-700">
+            <h2 id="deleteModalTitle" class="text-2xl font-bold mb-4 text-red-500">Confirmar Eliminación</h2>
+            <p id="deleteModalText" class="text-lg mb-8">¿Estás seguro de que quieres eliminar este WMI? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="cancelDeleteBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Cancelar
+                </button>
+                <button type="button" id="confirmDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, doc, getDoc, setDoc, collection, writeBatch, setLogLevel,
+            deleteDoc, query, where, getDocs, limit, startAfter, orderBy, endBefore, limitToLast
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 1. CONFIGURACIÓN DE FIREBASE (YA RELLENADA) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasestorage.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+            measurementId: "G-Q0E3H1996K"
+        };
+        
+        // --- 2. CLAVE DE API DE GOOGLE CLOUD (GEMINI) (YA RELLENADA) ---
+        const GEMINI_API_KEY = "AIzaSyCbrIC_qmnXN0YFTVjNGR-j_Zpq_6V_glA"; 
+        
+        
+        // --- INICIALIZACIÓN DE LA APLICACIÓN ---
+        const appId = firebaseConfig.appId || 'default-wmi-app';
+        let app, auth, db;
+        let userId = null;
+        let wmiCollectionRef = null;
+
+        // --- ESTADO DE PAGINACIÓN ---
+        const PAGE_SIZE = 15;
+        let lastVisibleDoc = null;
+        let firstVisibleDoc = null;
+        let isPaginating = false; 
+
+        if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("...")) {
+            console.error("Error: La configuración de Firebase (firebaseConfig) no está completa.");
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById("messageArea").textContent = "Error fatal: Revisa la variable 'firebaseConfig' en el script.";
+            });
+        } else if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("...")) {
+             console.error("Error: La clave de API de Gemini (GEMINI_API_KEY) no está definida.");
+             document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById("messageArea").textContent = "Error fatal: Revisa la variable 'GEMINI_API_KEY' en el script.";
+            });
+        } else {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                setLogLevel('debug');
+                console.log("Firebase inicializado con éxito.");
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                document.addEventListener('DOMContentLoaded', () => {
+                     document.getElementById("messageArea").textContent = "Error fatal al conectar con Firebase.";
+                });
+            }
+        }
+
+        // --- MANEJO DE AUTENTICACIÓN ---
+        if (auth) {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    console.log("Usuario autenticado (anónimo):", user.uid);
+                    userId = user.uid;
+                    // Guardamos en una ruta local para que no necesites reglas de seguridad complejas
+                    // Puedes cambiar "wmi_codes_local" por "wmi_codes" si prefieres
+                    wmiCollectionRef = collection(db, `wmi_codes_local_${userId}`);
+                    await checkDatabaseStatus();
+                } else {
+                    console.log("Sin usuario, intentando iniciar sesión anónima...");
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Error en el inicio de sesión anónimo:", error);
+                        document.getElementById("messageArea").textContent = `Error de autenticación: ${error.message}`;
+                    }
+                }
+            });
+        }
+
+        // --- LÓGICA DE COMPROBACIÓN DE LA BASE DE DATOS ---
+        async function checkDatabaseStatus() {
+            if (!wmiCollectionRef) return;
+            const messageArea = document.getElementById("messageArea");
+            messageArea.textContent = "Verificando base de datos...";
+            try {
+                const q = query(wmiCollectionRef, limit(1));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    console.log("La base de datos ya contiene datos.");
+                    messageArea.textContent = "Base de datos lista. Introduce un WMI para buscar.";
+                } else {
+                    console.log("La base de datos está vacía.");
+                    messageArea.textContent = "Base de datos vacía. Por favor, importa datos.";
+                }
+            } catch (error) {
+                console.error("Error al comprobar la base de datos:", error);
+                messageArea.textContent = `Error al comprobar la base de datos: ${error.message}`;
+            }
+        }
+
+        // --- REFERENCIAS AL DOM ---
+        const searchForm = document.getElementById("searchForm");
+        const searchField = document.getElementById("searchField");
+        const searchInput = document.getElementById("searchInput");
+        const messageArea = document.getElementById("messageArea");
+        const resultsArea = document.getElementById("resultsArea");
+        const viewAllBtn = document.getElementById("viewAllBtn");
+
+        // Modales
+        const modal = document.getElementById("modal");
+        const modalTitle = document.getElementById("modalTitle");
+        const openModalBtn = document.getElementById("openModalBtn");
+        const closeModalBtn = document.getElementById("closeModalBtn");
+        const saveForm = document.getElementById("saveForm");
+        const wmiInput = document.getElementById("wmiInput");
+        const paisInput = document.getElementById("paisInput");
+        const fabricanteInput = document.getElementById("fabricanteInput");
+        const tipoInput = document.getElementById("tipoInput");
+
+        const aiModal = document.getElementById("aiModal");
+        const openAiImportBtn = document.getElementById("openAiImportBtn");
+        const closeAiModalBtn = document.getElementById("closeAiModalBtn");
+        const aiImportForm = document.getElementById("aiImportForm");
+        const aiTextInput = document.getElementById("aiTextInput");
+        const aiImageInput = document.getElementById("aiImageInput");
+        const imagePreview = document.getElementById("imagePreview");
+        const aiLoadingIndicator = document.getElementById("aiLoadingIndicator");
+        const aiMessageArea = document.getElementById("aiMessageArea");
+        const aiSubmitBtn = document.getElementById("aiSubmitBtn");
+        
+        const deleteModal = document.getElementById("deleteModal");
+        const deleteModalText = document.getElementById("deleteModalText");
+        const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+        const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+
+        // --- LÓGICA DE IMPORTACIÓN UNIFICADA ---
+        async function importDataToFirebase(dataArray, messageElement) {
+            if (!wmiCollectionRef) {
+                messageElement.textContent = "La base de datos no está lista.";
+                return;
+            }
+            if (!dataArray || dataArray.length === 0) {
+                messageElement.textContent = "No se encontraron datos válidos para importar.";
+                return;
+            }
+
+            messageElement.textContent = `Procesando e importando ${dataArray.length} registros...`;
+            
+            let batch = writeBatch(db);
+            let counter = 0;
+            let importedCount = 0;
+
+            for (const item of dataArray) {
+                const wmi = item.wmi ? item.wmi.toUpperCase() : null;
+                const pais = item.pais;
+                const fabricante = item.fabricante;
+                const tipo = item.tipo;
+
+                if (!wmi || wmi.length !== 3 || !pais || !fabricante || !tipo) {
+                    console.warn("Omitiendo registro con datos inválidos:", item);
+                    continue;
+                }
+                
+                const docRef = doc(wmiCollectionRef, wmi);
+                batch.set(docRef, { pais, fabricante, tipo });
+                
+                counter++;
+                importedCount++;
+
+                if (counter % 499 === 0) {
+                    await batch.commit();
+                    batch = writeBatch(db);
+                }
+            }
+
+            try {
+                if (counter > 0) {
+                    await batch.commit();
+                }
+                
+                messageElement.textContent = `¡Éxito! ${importedCount} registros importados/actualizados.`;
+                await checkDatabaseStatus();
+                return true;
+            
+            } catch (error) {
+                console.error("Error al importar el lote:", error);
+                messageElement.textContent = `Error al importar: ${error.message}`;
+                return false;
+            }
+        }
+        
+        // --- LÓGICA DE IMPORTACIÓN CON IA ---
+        openAiImportBtn.addEventListener("click", () => {
+            aiModal.classList.remove("hidden");
+            setTimeout(() => aiModal.classList.remove("opacity-0", "scale-95"), 10);
+            aiMessageArea.textContent = "";
+            aiImportForm.reset();
+            imagePreview.classList.add("hidden");
+        });
+        
+        closeAiModalBtn.addEventListener("click", () => {
+            aiModal.classList.add("opacity-0", "scale-95");
+            setTimeout(() => aiModal.classList.add("hidden"), 300);
+        });
+
+        aiImageInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imagePreview.src = event.target.result;
+                    imagePreview.classList.remove("hidden");
+                }
+                reader.readAsDataURL(file);
+                aiTextInput.value = "";
+            }
+        });
+
+        aiTextInput.addEventListener("input", () => {
+            if (aiTextInput.value) {
+                aiImageInput.value = null;
+                imagePreview.classList.add("hidden");
+            }
+        });
+
+        aiImportForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const textInput = aiTextInput.value.trim();
+            const imageFile = aiImageInput.files[0];
+            if (!textInput && !imageFile) {
+                aiMessageArea.textContent = "Por favor, pega texto o sube una imagen.";
+                return;
+            }
+            aiLoadingIndicator.classList.remove("hidden");
+            aiMessageArea.textContent = "";
+            aiSubmitBtn.disabled = true;
+            try {
+                let base64ImageData = null;
+                let mimeType = null;
+                if (imageFile) {
+                    const reader = new FileReader();
+                    const fileReadPromise = new Promise((resolve, reject) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(imageFile);
+                    });
+                    const dataUrl = await fileReadPromise;
+                    mimeType = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                    base64ImageData = dataUrl.split(',')[1];
+                }
+                const extractedData = await callGeminiAPI(textInput, base64ImageData, mimeType);
+                if (extractedData && extractedData.length > 0) {
+                    const success = await importDataToFirebase(extractedData, aiMessageArea);
+                    if (success) {
+                        setTimeout(() => {
+                            aiModal.classList.add("opacity-0", "scale-95");
+                            setTimeout(() => aiModal.classList.add("hidden"), 2000);
+                        }, 2000);
+                    }
+                } else {
+                    aiMessageArea.textContent = "La IA no pudo extraer datos válidos. Intenta con un texto o imagen más claros.";
+                }
+            } catch (error) {
+                console.error("Error en el proceso de IA:", error);
+                aiMessageArea.textContent = `Error: ${error.message}`;
+            } finally {
+                aiLoadingIndicator.classList.add("hidden");
+                aiSubmitBtn.disabled = false;
+            }
+        });
+
+        async function callGeminiAPI(text, base64ImageData, mimeType) {
+            // Usa la clave API definida al principio del script
+            const apiKey = GEMINI_API_KEY; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const systemPrompt = `Eres un asistente de extracción de datos. Tu tarea es analizar el texto o la imagen proporcionada y extraer una lista de registros WMI.
+            Cada registro debe tener "wmi" (un código de 3 letras/números), "fabricante", "pais" y "tipo" (ej: Turismo, Multipropósito).
+            Ignora cualquier texto irrelevante. Devuelve SOLAMENTE un array JSON válido.`;
+            const responseSchema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "wmi": { "type": "STRING" },
+                        "fabricante": { "type": "STRING" },
+                        "pais": { "type": "STRING" },
+                        "tipo": { "type": "STRING" }
+                    },
+                    required: ["wmi", "fabricante", "pais", "tipo"]
+                }
+            };
+            const userParts = [];
+            if (text) {
+                userParts.push({ text: `Extrae los datos WMI de este texto: ${text}` });
+            }
+            if (base64ImageData && mimeType) {
+                userParts.push({ text: "Extrae los datos WMI de esta imagen." });
+                userParts.push({ inlineData: { mimeType: mimeType, data: base64ImageData } });
+            }
+            const payload = {
+                contents: [{ role: "user", parts: userParts }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema
+                }
+            };
+            let response;
+            let retries = 3;
+            let delay = 1000;
+            while (retries > 0) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                    
+                    if (response.status === 429 || response.status >= 500) {
+                        console.warn(`Intento fallido (status ${response.status}), reintentando en ${delay}ms...`);
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                        retries--;
+                    } else if (response.status === 403) {
+                        throw new Error(`Error 403 (Prohibido). Revisa que tu GEMINI_API_KEY sea correcta y que la API 'Generative Language' esté habilitada y con facturación.`);
+                    } else {
+                        throw new Error(`Error en la API: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    if (retries === 1) throw error;
+                    if (error.message.includes("403")) throw error; 
+                    
+                    console.warn(`Error de red, reintentando en ${delay}ms...`, error);
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                    retries--;
+                }
+            }
+            if (!response.ok) {
+                throw new Error(`Error en la API de Gemini tras reintentos: ${response.statusText}`);
+            }
+            const result = await response.json();
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+                const jsonText = result.candidates[0].content.parts[0].text;
+                return JSON.parse(jsonText);
+            } else {
+                console.error("Respuesta inesperada de la API:", result);
+                throw new Error("La IA devolvió una respuesta vacía o inválida.");
+            }
+        }
+
+        // --- LÓGICA DE BÚSQUEDA ---
+        searchForm.addEventListener("submit", handleSearch);
+
+        async function handleSearch(e) {
+            if (e) e.preventDefault();
+            if (!wmiCollectionRef) {
+                messageArea.textContent = "La base de datos no está lista.";
+                return;
+            }
+            
+            const field = searchField.value;
+            const term = searchInput.value.trim();
+
+            if (!term) {
+                messageArea.textContent = "Por favor, introduce un término de búsqueda.";
+                resultsArea.classList.add("hidden");
+                return;
+            }
+
+            messageArea.textContent = "Buscando...";
+            resultsArea.innerHTML = ""; // Limpiar resultados anteriores
+            resultsArea.classList.add("hidden");
+            isPaginating = false; 
+
+            try {
+                if (field === "wmi") {
+                    const docRef = doc(wmiCollectionRef, term.toUpperCase());
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        renderSingleResult(docSnap.id, docSnap.data());
+                        messageArea.textContent = "";
+                    } else {
+                        messageArea.textContent = "WMI no encontrado.";
+                    }
+                } else {
+                    const q = query(wmiCollectionRef, 
+                                  where(field, ">=", term), 
+                                  where(field, "<=", term + '\uf8ff'),
+                                  limit(50)); 
+                    
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (querySnapshot.empty) {
+                        messageArea.textContent = "No se encontraron resultados.";
+                    } else {
+                        renderResultsTable(querySnapshot.docs);
+                        messageArea.textContent = `${querySnapshot.size} resultados encontrados.`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error al buscar WMI:", error);
+                if (error.code === 'failed-precondition') {
+                    messageArea.innerHTML = `<strong>Error de Firebase:</strong> Esta búsqueda requiere un índice. 
+                    Abre la consola del navegador (F12), y haz clic en el enlace que aparece en el mensaje de error para crear el índice automáticamente. 
+                    Tardará unos minutos en crearse.`;
+                } else {
+                    messageArea.textContent = `Error: ${error.message}`;
+                }
+            }
+        }
+        
+        // --- LÓGICA DE VER LISTA COMPLETA (PAGINACIÓN) ---
+        viewAllBtn.addEventListener("click", () => {
+            isPaginating = true;
+            lastVisibleDoc = null; 
+            firstVisibleDoc = null;
+            loadPage("next");
+        });
+        
+        async function loadPage(direction) {
+            if (!wmiCollectionRef) {
+                messageArea.textContent = "La base de datos no está lista.";
+                return;
+            }
+            
+            messageArea.textContent = "Cargando lista...";
+            resultsArea.innerHTML = "";
+            resultsArea.classList.add("hidden");
+            
+            let q;
+            
+            if (direction === "next") {
+                if (lastVisibleDoc) {
+                    q = query(wmiCollectionRef, orderBy("wmi"), startAfter(lastVisibleDoc), limit(PAGE_SIZE));
+                } else {
+                    q = query(wmiCollectionRef, orderBy("wmi"), limit(PAGE_SIZE));
+                }
+            } else if (direction === "prev") {
+                if (firstVisibleDoc) {
+                    q = query(wmiCollectionRef, orderBy("wmi"), endBefore(firstVisibleDoc), limitToLast(PAGE_SIZE));
+                } else {
+                    return;
+                }
+            }
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    if (direction === "next" && lastVisibleDoc) {
+                         messageArea.textContent = "No hay más registros.";
+                    } else if (direction === "prev") {
+                        messageArea.textContent = "Ya estás en la primera página.";
+                    } else {
+                         messageArea.textContent = "No hay datos en la base de datos.";
+                    }
+                    if (lastVisibleDoc) isPaginating = true; 
+                    return;
+                }
+                
+                firstVisibleDoc = querySnapshot.docs[0];
+                lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+                
+                renderResultsTable(querySnapshot.docs, true); 
+                messageArea.textContent = "";
+                
+            } catch (error) {
+                console.error("Error al cargar la lista:", error);
+                messageArea.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        // --- FUNCIONES DE RENDERIZADO ---
+        
+        function renderSingleResult(wmi, data) {
+            resultsArea.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4">WMI: ${wmi}</h2>
+                <div class="space-y-3 text-lg">
+                    <p><strong>País:</strong> <span class="text-gray-300">${data.pais}</span></p>
+                    <p><strong>Fabricante:</strong> <span class="text-gray-300">${data.fabricante}</span></p>
+                    <p><strong>Tipo:</strong> <span class="text-gray-300">${data.tipo}</span></p>
+                </div>
+                <div class="flex flex-wrap gap-4 mt-6">
+                    <button data-wmi="${wmi}" class="editBtn bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                        Editar
+                    </button>
+                    <button data-wmi="${wmi}" data-fabricante="${data.fabricante}" class="deleteBtn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                        Eliminar
+                    </button>
+                </div>
+            `;
+            resultsArea.classList.remove("hidden");
+            
+            resultsArea.querySelector('.editBtn').addEventListener('click', () => showModal(wmi, data));
+            resultsArea.querySelector('.deleteBtn').addEventListener('click', () => showDeleteModal(wmi, data.fabricante));
+        }
+        
+        function renderResultsTable(docs, paginating = false) {
+            let tableHTML = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">WMI</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Fabricante</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">País</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tipo</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-gray-800 divide-y divide-gray-700">
+            `;
+            
+            docs.forEach(doc => {
+                const data = doc.data();
+                tableHTML += `
+                    <tr class="hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap text-lg font-medium text-white">${doc.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-lg text-gray-300">${data.fabricante}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-lg text-gray-300">${data.pais}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-lg text-gray-300">${data.tipo}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button data-wmi="${doc.id}" class="editBtn text-yellow-400 hover:text-yellow-300">Editar</button>
+                            <button data-wmi="${doc.id}" data-fabricante="${data.fabricante}" class="deleteBtn text-red-400 hover:text-red-300 ml-4">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `</tbody></table></div>`;
+            
+            if (paginating) {
+                tableHTML += `
+                    <div class="flex justify-between items-center mt-6">
+                        <button id="prevBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                            &larr; Anterior
+                        </button>
+                        <button id="nextBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-200">
+                            Siguiente &rarr;
+                        </button>
+                    </div>
+                `;
+            }
+            
+            resultsArea.innerHTML = tableHTML;
+            resultsArea.classList.remove("hidden");
+            
+            resultsArea.querySelectorAll('.editBtn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const wmi = e.target.dataset.wmi;
+                    const docRef = doc(wmiCollectionRef, wmi);
+                    const docSnap = await getDoc(docRef);
+                    showModal(docSnap.id, docSnap.data());
+                });
+            });
+            
+            resultsArea.querySelectorAll('.deleteBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const wmi = e.target.dataset.wmi;
+                    const fabricante = e.target.dataset.fabricante;
+                    showDeleteModal(wmi, fabricante);
+                });
+            });
+            
+            if (paginating) {
+                document.getElementById('prevBtn').addEventListener('click', () => loadPage('prev'));
+                document.getElementById('nextBtn').addEventListener('click', () => loadPage('next'));
+            }
+        }
+
+        // --- LÓGICA DEL MODAL (AÑADIR/EDITAR) ---
+        function showModal(wmi = null, data = null) {
+            if (wmi && data) {
+                modalTitle.textContent = `Editar WMI: ${wmi}`;
+                wmiInput.value = wmi;
+                wmiInput.disabled = true;
+                paisInput.value = data.pais;
+                fabricanteInput.value = data.fabricante;
+                tipoInput.value = data.tipo;
+            } else {
+                modalTitle.textContent = "Añadir Nuevo WMI";
+                saveForm.reset();
+                wmiInput.disabled = false;
+            }
+            modal.classList.remove("hidden");
+            setTimeout(() => modal.classList.remove("opacity-0", "scale-95"), 10);
+        }
+
+        function hideModal() {
+            modal.classList.add("opacity-0", "scale-95");
+            setTimeout(() => modal.classList.add("hidden"), 300);
+        }
+
+        openModalBtn.addEventListener("click", () => showModal());
+        closeModalBtn.addEventListener("click", hideModal);
+
+        saveForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!wmiCollectionRef) {
+                messageArea.textContent = "La base de datos no está lista.";
+                return;
+            }
+            const wmi = wmiInput.value.toUpperCase().trim();
+            const pais = paisInput.value.trim();
+            const fabricante = fabricanteInput.value.trim();
+            const tipo = tipoInput.value.trim();
+            if (wmi.length !== 3 || !pais || !fabricante || !tipo) {
+                messageArea.textContent = "Error: Por favor, rellena todos los campos. El WMI debe tener 3 dígitos.";
+                return;
+            }
+            messageArea.textContent = "Guardando...";
+            try {
+                const docRef = doc(wmiCollectionRef, wmi);
+                await setDoc(docRef, { pais, fabricante, tipo });
+                messageArea.textContent = `WMI ${wmi} guardado con éxito.`;
+                hideModal();
+                
+                if (isPaginating) {
+                    loadPage("next");
+                } else if (searchInput.value.trim()) {
+                     handleSearch(null); 
+                }
+            } catch (error) {
+                console.error("Error al guardar WMI:", error);
+                messageArea.textContent = `Error al guardar: ${error.message}`;
+            }
+        });
+
+        // --- LÓGICA DEL MODAL (ELIMINAR) ---
+        function showDeleteModal(wmi, fabricante) {
+            deleteModalText.textContent = `¿Estás seguro de que quieres eliminar WMI ${wmi} (${fabricante})? Esta acción no se puede deshacer.`;
+            confirmDeleteBtn.dataset.wmi = wmi; 
+            deleteModal.classList.remove("hidden");
+            setTimeout(() => deleteModal.classList.remove("opacity-0", "scale-95"), 10);
+        }
+        
+        function hideDeleteModal() {
+            deleteModal.classList.add("opacity-0", "scale-95");
+            setTimeout(() => deleteModal.classList.add("hidden"), 300);
+        }
+        
+        cancelDeleteBtn.addEventListener("click", hideDeleteModal);
+        
+        confirmDeleteBtn.addEventListener("click", async (e) => {
+            const wmi = e.target.dataset.wmi;
+            if (!wmi || !wmiCollectionRef) return;
+            
+            messageArea.textContent = `Eliminando ${wmi}...`;
+            hideDeleteModal();
+            
+            try {
+                const docRef = doc(wmiCollectionRef, wmi);
+                await deleteDoc(docRef);
+                messageArea.textContent = `WMI ${wmi} eliminado con éxito.`;
+                
+                resultsArea.innerHTML = "";
+                resultsArea.classList.add("hidden");
+                searchInput.value = "";
+                
+            } catch (error) {
+                console.error("Error al eliminar WMI:", error);
+                messageArea.textContent = `Error al eliminar: ${error.message}`;
+            }
+        });
+        
+        // --- CERRAR MODALES ---
+        [modal, aiModal, deleteModal].forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) {
+                    if (m === modal) hideModal();
+                    if (m === aiModal) {
+                        aiModal.classList.add("opacity-0", "scale-95");
+                        setTimeout(() => aiModal.classList.add("hidden"), 300);
+                    }
+                    if (m === deleteModal) hideDeleteModal();
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

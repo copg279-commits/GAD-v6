@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Días del Año</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .listado-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+   Nº orden de dia del año Teil 1
+  </h1>
+  <h2 class="text-gray-700 text-center mt-2 px-4">
+    Convierte un día/año a su fecha completa
+  </h2>
+
+  <div class="w-11/12 max-w-md mx-auto mt-4">
+    <img src="logoteil.png" alt="Imagen representativa" class="w-full">
+  </div>
+
+  <input 
+    type="text" 
+    id="inputFecha" 
+    placeholder="Ej: 365/25" 
+    class="block mx-auto mt-4 p-3 text-base w-11/12 max-w-md border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+
+  <button 
+    onclick="calcularFecha()" 
+    class="block mx-auto mt-4 w-11/12 max-w-md bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition"
+  >
+    Calcular Fecha
+  </button>
+  
+  <p class="mt-4 text-center text-red-500 font-semibold">
+    OJO!!! Si no coincide puede tratarse de un duplicado
+  </p>
+
+  <p id="leyendaBisiesto" class="mt-4 text-center text-gray-500 text-sm font-semibold">
+    El programa tiene en cuenta los años bisiestos.
+  </p>
+  
+  <div class="w-11/12 max-w-md mx-auto mt-4">
+    <img src="logoidatum.png" alt="Logo I-DATUM" class="w-full">
+  </div>
+
+  <div id="output" class="mt-6 text-gray-700 text-center w-11/12 max-w-md mx-auto"></div>
+
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+  </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    function esBisiesto(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    function calcularFecha() {
+      const input = document.getElementById("inputFecha").value;
+      const output = document.getElementById("output");
+      const partes = input.split("/");
+
+      if (partes.length !== 2) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>Formato incorrecto. Por favor, usa el formato 'dia/año' (Ej: 365/25).</p>";
+        return;
+      }
+
+      const diaAnio = parseInt(partes[0]);
+      const anio = parseInt(partes[1]);
+      
+      const anioCompleto = anio > 99 ? anio : 2000 + anio;
+
+      if (isNaN(diaAnio) || isNaN(anio) || diaAnio < 1 || diaAnio > 366) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>Por favor, ingresa valores numéricos válidos.</p>";
+        return;
+      }
+
+      if (diaAnio > 365 && !esBisiesto(anioCompleto)) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>El año no es bisiesto, el día del año debe ser 365 o menos.</p>";
+        return;
+      }
+
+      const fechaBase = new Date(anioCompleto, 0, 1);
+      fechaBase.setDate(diaAnio);
+
+      const dia = fechaBase.getDate().toString().padStart(2, '0');
+      const mes = (fechaBase.getMonth() + 1).toString().padStart(2, '0');
+      const year = fechaBase.getFullYear();
+      
+      let mensajeAdicional = "";
+      if (esBisiesto(anioCompleto)) {
+          mensajeAdicional = "<p class='text-green-600'>(Año Bisiesto)</p>";
+      }
+      
+      output.innerHTML = `
+        <p class='text-green-600 font-semibold'>
+          La fecha de I Datum es: ${dia}/${mes}/${year}
+        </p>
+        ${mensajeAdicional}
+      `;
+    }
+
+    document.getElementById("inputFecha").addEventListener("keypress", function (event) {
+      if (event.key === "Enter") {
+        calcularFecha();
+      }
+    });
+  </script>
+</body>
+</html>

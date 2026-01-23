@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Denuncias RADAR - GAD Alicante</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; margin: 0; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+
+        .title-panel-blue {
+            background-color: #3b82f6; display: flex; flex-wrap: wrap; justify-content: space-between;
+            align-items: center; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); margin: 20px;
+        }
+        .title-panel-blue h1 { color: white; margin: 0; font-size: 1.5em; flex-grow: 1; text-align: center; }
+        .header-logo-50 {
+            width: 60px; height: 60px; border: 6px solid #e74c3c; background-color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: black; font-weight: 900; font-size: 24px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .header-logo-container { width: 60px; height: 60px; }
+        .header-logo-container img { width: 100%; height: 100%; object-fit: contain; }
+
+        main { flex: 1; padding: 10px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        
+        /* PANEL PRINCIPAL */
+        .panel { 
+            background: white; padding: 20px; border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; margin-bottom: 20px; 
+            min-height: 500px; 
+        }
+
+        /* --- ZONA 1: CONTROLES DE LA APP (Se ocultarán al abrir ayuda) --- */
+        #app-controls-wrapper {
+            transition: opacity 0.3s ease;
+        }
+
+        .upload-controls { display: grid; grid-template-columns: 1fr 280px; gap: 15px; margin-bottom: 20px; }
+        #drop-zone {
+            border: 3px dashed #3498db; border-radius: 12px; padding: 40px; text-align: center; 
+            color: #555; background-color: #f0f7ff; cursor: pointer; transition: 0.3s;
+        }
+        #drop-zone.dragover { background-color: #e1f5fe; border-color: #2ecc71; }
+        
+        .side-buttons { display: flex; flex-direction: column; gap: 8px; }
+        .btn-action { border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .btn-paste { background: #2c3e50; }
+        .btn-undo { background: #607d8b; }
+        .btn-delete-all { background: #e74c3c; }
+
+        .search-container { 
+            background: #e9f2f7; padding: 15px; border-radius: 8px; border: 1px solid #3498db; 
+            margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+        }
+        #search-input { width: 250px; padding: 12px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; height: 45px;}
+        
+        .btn-tool { flex: 1; min-width: 140px; max-width: 180px; height: 45px; font-size: 0.95em; }
+        .btn-show-all { background: #f39c12; }
+        .btn-sort { background: #3498db; }
+        .btn-help { background: #9b59b6; }
+
+        .counter-box { margin-left: auto; background: #1e293b; color: white; padding: 10px 15px; border-radius: 5px; font-weight: 900; font-size: 1.1em; height: 45px; display: flex; align-items: center; }
+
+        /* --- ZONA 2: PANEL DE AYUDA (Reemplaza a la Zona 1) --- */
+        #help-panel-container {
+            display: none; /* Oculto por defecto */
+            background: #fff;
+            padding: 0 0 20px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .help-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 15px; padding: 10px; background: #f3e5f5; border-radius: 8px; border-left: 5px solid #9b59b6;
+        }
+        .help-header h2 { margin: 0; color: #9b59b6; font-size: 1.4em; }
+        .close-help-btn { 
+            background: #e74c3c; color: white; border: none; padding: 8px 15px; 
+            border-radius: 5px; cursor: pointer; font-weight: bold; 
+        }
+
+        #help-steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        /* Ajuste para pantallas medianas */
+        @media (max-width: 1100px) { #help-steps-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .help-step { 
+            display: flex; flex-direction: column; gap: 8px; background: #fafafa; 
+            padding: 12px; border-radius: 8px; border: 1px solid #eee; 
+            height: 100%; align-items: center; text-align: center;
+        }
+        
+        .help-icon { 
+            background: #fff; color: #9b59b6; width: 40px; height: 40px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.1em; border: 2px solid #f3e5f5; flex-shrink: 0;
+        }
+        
+        .help-text h4 { margin: 5px 0; color: #2c3e50; font-size: 1em; }
+        .help-text p { margin: 0; font-size: 0.85em; color: #555; line-height: 1.3; }
+
+        /* Edición de Ayuda */
+        .editable-element { outline: none; border: 1px dashed transparent; padding: 2px; }
+        .editing-mode .editable-element { border-color: #3b82f6; background-color: #fffde7; cursor: text; }
+        
+        #help-controls-default { margin-top: 15px; text-align: center; }
+        #help-controls-edit { margin-top: 15px; text-align: center; display: none; }
+        
+        .btn-enable-edit { background: #607d8b; padding: 8px 20px; font-size: 0.9em; }
+        .btn-save-help { background: #2ecc71; padding: 8px 20px; margin-right: 10px; font-size: 0.9em;}
+        .btn-cancel-help { background: #e74c3c; padding: 8px 20px; font-size: 0.9em; }
+
+        /* --- ZONA 3: TABLA DE DATOS (Siempre visible) --- */
+        .results-container { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .row-radar { display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 1fr 1.5fr 0.6fr; padding: 12px; border-bottom: 1px solid #f0f0f0; align-items: center; background: white; font-size: 0.9em; }
+        .header-row { background: #e9f2f7; font-weight: bold; color: #2c3e50; font-size: 0.85em; }
+        
+        .matricula-radar-text { color: #e74c3c !important; font-weight: 900 !important; font-size: 1.1em; display: flex; align-items: center; }
+        .icon-radar-50 { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 3px solid #e74c3c; border-radius: 50%; background: white; color: black; font-weight: 900; font-size: 10px; margin-right: 10px; }
+        
+        .estado-select { width: 100%; padding: 8px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; cursor: pointer; }
+        .estado-select[value="radar"] { background-color: #000; color: #fff; }
+        .estado-select[value="eurocop"] { background-color: #ffeb3b; color: #000; }
+        .estado-select[value="notificado"] { background-color: #4CAF50; color: #fff; }
+
+        /* MODALES */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-box { background: white; padding: 25px; border-radius: 10px; width: 95%; max-width: 500px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .modal-content { overflow-y: auto; max-height: 70vh; margin-bottom: 15px; }
+        .modal-content input { width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .modal-separator { border-top: 2px solid #f0f0f0; margin: 15px 0; padding-top: 10px; }
+        .modal-label { font-size: 0.85em; color: #555; font-weight: bold; display: block; margin-bottom: 4px; }
+
+        footer { background-color: #e0e0e0; text-align: center; padding: 20px; margin-top: auto; color: #333; font-size: 0.9em; border-top: 1px solid #ccc; }
+        footer p { margin: 5px 0; font-weight: bold; line-height: 1.2; }
+        footer p:last-child { font-size: 0.8em; font-weight: normal; margin-top: 10px; color: #666; }
+
+        #status-message { padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; font-weight: bold; }
+        .loading { background: #e3f2fd; color: #1565c0; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+
+        .btn-edit { background: none; border: none; color: #3498db; cursor: pointer; font-size: 1.2em; margin-right: 10px; }
+        .btn-delete-row { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+    <div class="title-panel-blue">
+        <div class="header-logo-50">50</div>
+        <h1><i class="fas fa-tachometer-alt"></i> GESTIÓN DE DENUNCIAS RADAR - GAD</h1>
+        <div class="header-logo-container"><img src="logogad.png" alt="Logo GAD"></div>
+    </div>
+
+    <main>
+        <div class="panel">
+            
+            <div id="help-panel-container">
+                <div class="help-header">
+                    <h2><i class="fas fa-info-circle"></i> Cómo funciona</h2>
+                    <button class="close-help-btn" onclick="toggleHelp()">Cerrar Ayuda y Volver</button>
+                </div>
+                
+                <div id="help-steps-grid">
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-file-import"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-0">1. Carga de Datos</h4>
+                            <p class="editable-element" id="h-desc-0">Arrastra al recuadro azul el archivo (Excel, PDF, Imagen o JSON) que contenga los datos.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-filter"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-1">2. Procesamiento</h4>
+                            <p class="editable-element" id="h-desc-1">El sistema lista las matrículas y <b>descarta duplicados</b> y errores automáticamente.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-envelope-open-text"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-2">3. Notificar</h4>
+                            <p class="editable-element" id="h-desc-2">Cambia el estado en el desplegable a <b>"Notificado a sanciones"</b> para iniciar el trámite.</p>
+                        </div>
+                    </div>
+
+                    <div class="help-step">
+                        <div class="help-icon"><i class="fas fa-clipboard-check"></i></div>
+                        <div class="help-text">
+                            <h4 class="editable-element" id="h-title-3">4. Copiar Datos</h4>
+                            <p class="editable-element" id="h-desc-3">Rellena los datos en el formulario y pulsa "Copiar" para llevarlos al correo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="help-controls-default">
+                    <button class="btn-action btn-enable-edit" onclick="enableHelpEdit()">
+                        <i class="fas fa-pencil-alt"></i> Editar Ayuda
+                    </button>
+                </div>
+
+                <div id="help-controls-edit">
+                    <p style="color:#e67e22; font-weight:bold; margin-bottom:10px; font-size:0.9em;">
+                        <i class="fas fa-exclamation-triangle"></i> Modo Edición Activo
+                    </p>
+                    <button class="btn-action btn-save-help" onclick="saveHelpToFirebase()">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <button class="btn-action btn-cancel-help" onclick="cancelHelpEdit()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <div id="app-controls-wrapper">
+                <div class="upload-controls">
+                    <div id="drop-zone">
+                        <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                        <p>Arrastra <b>Excel, PDF, Imagen o JSON</b> aquí</p>
+                    </div>
+                    <div class="side-buttons">
+                        <button class="btn-action btn-paste" id="btn-p"><i class="fas fa-paste"></i> Pegar Texto / JSON</button>
+                        <button class="btn-action btn-undo" id="btn-u"><i class="fas fa-undo"></i> Deshacer Última</button>
+                        <button class="btn-action btn-delete-all" id="btn-clear"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
+                    </div>
+                </div>
+
+                <div class="search-container">
+                    <i class="fas fa-search" style="color: #3498db;"></i>
+                    <input type="text" id="search-input" placeholder="Filtrar matrículas...">
+                    
+                    <button class="btn-action btn-tool btn-show-all" id="btn-reset">
+                        <i class="fas fa-list"></i> Mostrar Todas
+                    </button>
+                    
+                    <button class="btn-action btn-tool btn-sort" id="btn-sort-toggle">
+                        <i class="fas fa-sort-alpha-down"></i> <span id="sort-text">Orden A-Z</span>
+                    </button>
+                    
+                    <button class="btn-action btn-tool btn-help" onclick="toggleHelp()">
+                        <i class="fas fa-question-circle"></i> Ayuda
+                    </button>
+                    
+                    <div class="counter-box">TOTAL: <span id="total-count">0</span></div>
+                </div>
+            </div>
+            
+            <input type="file" id="file-input" style="display: none;">
+            <div id="status-message"></div>
+
+            <div class="results-container">
+                <div class="row-radar header-row">
+                    <div>MATRÍCULA</div><div>FECHA DENUNCIA</div><div>MARCA</div><div>MODELO</div><div>ESTADO EXPEDIENTE</div><div>ACCIONES</div>
+                </div>
+                <div id="tabla-radar"></div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="modal-edit">
+        <div class="modal-box">
+            <h3>Editar Registro</h3>
+            <div class="modal-content">
+                <label>Matrícula:</label>
+                <input type="text" id="edit-matricula" style="text-transform: uppercase;">
+                <label>Marca:</label>
+                <input type="text" id="edit-marca">
+                <label>Modelo:</label>
+                <input type="text" id="edit-modelo">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                <button class="btn-action" onclick="closeEdit()" style="background:#999;">Cancelar</button>
+                <button class="btn-action" onclick="saveEdit()" style="background:#2ecc71;">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-notif">
+        <div class="modal-box">
+            <h3>Notificar a Sanciones</h3>
+            <div class="modal-content">
+                <div style="background:#e3f2fd; padding:10px; border-radius:5px; margin-bottom:10px;">
+                    <span class="modal-label">MATRÍCULA A NOTIFICAR:</span>
+                    <strong id="display-matricula-notif" style="font-size:1.2em; color:#e74c3c;"></strong>
+                </div>
+
+                <span class="modal-label">MARCA Y MODELO (Editar si es necesario):</span>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="n-marca-veh" placeholder="Marca (Ej: BMW)" style="flex:1;">
+                    <input type="text" id="n-modelo-veh" placeholder="Modelo (Ej: X5)" style="flex:1;">
+                </div>
+
+                <div class="modal-separator">
+                    <span class="modal-label" style="margin-bottom:10px;">DATOS DEL PROPIETARIO / CONDUCTOR:</span>
+                    <input type="text" id="n-nombre" placeholder="Nombre completo...">
+                    <input type="text" id="n-doi" placeholder="DOI (DNI/NIE)...">
+                    <input type="text" id="n-dir" placeholder="Dirección completa...">
+                    <input type="text" id="n-loc" placeholder="Localidad y CP...">
+                    <input type="date" id="n-nac" title="Fecha de Nacimiento">
+                    <input type="text" id="n-tel" placeholder="Teléfono...">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top:10px;">
+                <button class="btn-action" onclick="closeNotif()" style="background:#999;">Cancelar</button>
+                <button class="btn-action" onclick="aceptarNotif()" style="background:#4CAF50;"><i class="fas fa-copy"></i> Copiar y Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-paste">
+        <div class="modal-box">
+            <h3>Importar Texto o JSON</h3>
+            <textarea id="paste-area" style="width:100%; height:150px; padding:10px;" placeholder='Pega texto o JSON'></textarea>
+            <button class="btn-action btn-paste" style="width:100%; margin-top:10px;" onclick="procesarPegado()">Importar Ahora</button>
+            <button class="btn-action" style="width:100%; margin-top:5px; background:#999;" onclick="closePaste()">Cerrar</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p>POLICÍA LOCAL DE ALICANTE</p>
+        <p>© GAD - Todos los derechos reservados</p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <script>
+   const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const REF_RADAR = 'denuncias_radar';
+        const REF_HELP = 'config_ayuda';
+        
+        const REGEX_PLATE = /([A-Z]{1,2}\d{4}[A-Z]{1,2})|(\d{4}[A-Z]{3})|([A-Z]{2}\d{3}[A-Z]{3})|([A-Z]{2}\d{6})/g;
+        const CODIGOS_PROVINCIALES = new Set([
+            "A", "AB", "AL", "AV", "B", "BA", "BI", "BU", "C", "CA", "CC", "CE", "CO", "CR", "CS", "CU",
+            "GC", "GE", "GI", "GR", "GU", "H", "HU", "J", "L", "LE", "LO", "LU", "M", "MA", "ML", "MU",
+            "NA", "O", "OR", "OU", "P", "PM", "PO", "S", "SA", "SE", "SG", "SO", "SS", "T", "TE", "TF", "TO",
+            "V", "VA", "VI", "Z", "ZA", "FP", "PA", "IB"
+        ]);
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let currentData = [];
+        let lastBackup = null;
+        let activeEditId = null;
+        let activeNotifId = null;
+        let isAscending = true; 
+
+        const dz = document.getElementById('drop-zone');
+        const fi = document.getElementById('file-input');
+        const si = document.getElementById('search-input');
+        const totalDisp = document.getElementById('total-count');
+
+        window.addEventListener('dragover', e => e.preventDefault());
+        window.addEventListener('drop', e => e.preventDefault());
+        dz.onclick = () => fi.click();
+        fi.onchange = e => { if(e.target.files[0]) handleFile(e.target.files[0]); };
+        dz.ondrop = e => { e.preventDefault(); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
+
+        async function handleFile(file) {
+            msg("Procesando...", "loading");
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array', cellDates: true});
+                    procesarExcel(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]));
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (name.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = e => procesarJSON(JSON.parse(e.target.result));
+                reader.readAsText(file);
+            } else if (name.endsWith('.pdf')) {
+                const reader = new FileReader();
+                reader.onload = async function() {
+                    const pdf = await pdfjsLib.getDocument({data: new Uint8Array(this.result)}).promise;
+                    let text = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        text += content.items.map(item => item.str).join(" ");
+                    }
+                    extraerSimple(text, "PDF");
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (file.type.startsWith('image/')) {
+                const { data: { text } } = await Tesseract.recognize(file, 'spa');
+                extraerSimple(text, "Imagen");
+            }
+        }
+
+        function cleanMatricula(m) {
+            if (!m) return "";
+            return m.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
+
+        function procesarExcel(data) {
+            const final = data.map(row => {
+                const item = {};
+                Object.keys(row).forEach(k => {
+                    const val = String(row[k]);
+                    const key = k.toLowerCase();
+                    if(key.includes('matricula')) item.matricula = cleanMatricula(val);
+                    if(key.includes('fecha')) item.fecha = val;
+                    if(key.includes('marca')) item.marca = val;
+                    if(key.includes('modelo')) item.modelo = val;
+                });
+                return item;
+            }).filter(i => i.matricula);
+            guardarStrict(final, "Excel");
+        }
+
+        function procesarJSON(content) {
+            let lista = content.matriculas_resaltadas || (Array.isArray(content) ? content : [content]);
+            const final = lista.map(m => {
+                if(typeof m === 'string') return { matricula: cleanMatricula(m) };
+                return { 
+                    matricula: cleanMatricula(m.matricula || m.MATRICULA || ""),
+                    fecha: m.fecha || m.FECHA, marca: m.marca || m.MARCA, modelo: m.modelo || m.MODELO
+                };
+            }).filter(i => i.matricula);
+            guardarStrict(final, "JSON");
+        }
+
+        function extraerSimple(txt, src) {
+            const cleanTxt = txt.toUpperCase().replace(/[- \s]/g,'');
+            const matches = cleanTxt.match(REGEX_PLATE) || [];
+            const data = [...new Set(matches)].map(m => ({ matricula: cleanMatricula(m) }));
+            guardarStrict(data, src);
+        }
+
+        async function guardarStrict(nuevos, src) {
+            const snap = await db.ref(REF_RADAR).once('value');
+            const firebaseData = Object.values(snap.val() || []);
+            lastBackup = snap.val();
+
+            const existingPlates = new Set(firebaseData.map(f => cleanMatricula(f.matricula)));
+            const incomingUniquePlates = new Set(); 
+
+            let dupCount = 0;
+            let spanishCount = 0;
+            let addedCount = 0;
+            const finalToAdd = [];
+
+            nuevos.forEach(n => {
+                const plateClean = cleanMatricula(n.matricula);
+                const isModernSpain = /^\d{4}[A-Z]{3}$/.test(plateClean);
+                let isOldSpain = false;
+                const matchOld = plateClean.match(/^([A-Z]{1,2})\d{4}[A-Z]{1,2}$/);
+                if (matchOld) {
+                    const prefix = matchOld[1]; 
+                    if (CODIGOS_PROVINCIALES.has(prefix)) isOldSpain = true; 
+                }
+                if (isModernSpain || isOldSpain) { spanishCount++; return; }
+
+                if(existingPlates.has(plateClean) || incomingUniquePlates.has(plateClean)) {
+                    dupCount++;
+                } else {
+                    incomingUniquePlates.add(plateClean);
+                    finalToAdd.push({
+                        id: Date.now() + Math.random(),
+                        matricula: plateClean, 
+                        fecha: n.fecha || new Date().toISOString(),
+                        marca: n.marca || "", modelo: n.modelo || "", origen: src, estado: 'radar'
+                    });
+                    addedCount++;
+                }
+            });
+
+            let message = "";
+            if (dupCount > 0) message += `🚫 Duplicados descartados: ${dupCount}\n`;
+            if (spanishCount > 0) message += `🇪🇸 Españolas descartadas: ${spanishCount}\n`;
+            if (message !== "") alert("⚠️ REPORTE DE FILTRADO:\n" + message);
+
+            if(finalToAdd.length === 0) return msg(`Proceso terminado. 0 añadidos.`, "loading");
+
+            await db.ref(REF_RADAR).set([...firebaseData, ...finalToAdd]);
+            msg(`✅ Añadidas ${addedCount} nuevas matrículas.`, "success");
+        }
+
+        si.oninput = () => {
+            const q = cleanMatricula(si.value);
+            renderTabla(currentData.filter(d => cleanMatricula(d.matricula).includes(q)));
+        };
+        
+        document.getElementById('btn-reset').onclick = () => { si.value = ""; renderTabla(currentData); };
+
+        document.getElementById('btn-sort-toggle').onclick = () => {
+            isAscending = !isAscending; 
+            updateSortButton();
+            renderTabla(currentData); 
+        };
+
+        function updateSortButton() {
+            const btn = document.getElementById('btn-sort-toggle');
+            const txt = document.getElementById('sort-text');
+            const icon = btn.querySelector('i');
+            if(isAscending) {
+                txt.textContent = "Orden A-Z";
+                icon.className = "fas fa-sort-alpha-down";
+            } else {
+                txt.textContent = "Orden Z-A";
+                icon.className = "fas fa-sort-alpha-up";
+            }
+        }
+
+        // --- FUNCIONES AYUDA (INTERCAMBIO DE VISTAS) ---
+        function toggleHelp() {
+            const helpPanel = document.getElementById('help-panel-container');
+            const appControls = document.getElementById('app-controls-wrapper');
+            
+            if (helpPanel.style.display === 'block') {
+                // CERRAR AYUDA
+                helpPanel.style.display = 'none';
+                appControls.style.display = 'block';
+                // Si estábamos editando, cancelar
+                if(document.getElementById('help-controls-edit').style.display === 'block') cancelHelpEdit();
+            } else {
+                // ABRIR AYUDA
+                helpPanel.style.display = 'block';
+                appControls.style.display = 'none';
+            }
+        }
+
+        function enableHelpEdit() {
+            document.getElementById('help-controls-default').style.display = 'none';
+            document.getElementById('help-controls-edit').style.display = 'block';
+            document.getElementById('help-panel-container').classList.add('editing-mode');
+            
+            const elements = document.querySelectorAll('.editable-element');
+            elements.forEach(el => el.contentEditable = "true");
+        }
+
+        function cancelHelpEdit() {
+            loadHelpFromFirebase();
+            document.getElementById('help-controls-default').style.display = 'block';
+            document.getElementById('help-controls-edit').style.display = 'none';
+            document.getElementById('help-panel-container').classList.remove('editing-mode');
+            const elements = document.querySelectorAll('.editable-element');
+            elements.forEach(el => el.contentEditable = "false");
+        }
+
+        function loadHelpFromFirebase() {
+            db.ref(REF_HELP).once('value', snap => {
+                const data = snap.val();
+                if(data && Array.isArray(data)) {
+                    data.forEach((step, index) => {
+                        const titleEl = document.getElementById(`h-title-${index}`);
+                        const descEl = document.getElementById(`h-desc-${index}`);
+                        if(titleEl && step.title) titleEl.innerText = step.title;
+                        if(descEl && step.desc) descEl.innerText = step.desc;
+                    });
+                }
+            });
+        }
+
+        function saveHelpToFirebase() {
+            const helpData = [];
+            for(let i=0; i<4; i++) {
+                const title = document.getElementById(`h-title-${i}`).innerText;
+                const desc = document.getElementById(`h-desc-${i}`).innerText;
+                helpData.push({ title, desc });
+            }
+            
+            db.ref(REF_HELP).set(helpData)
+              .then(() => {
+                  msg("Ayuda personalizada guardada", "success");
+                  document.getElementById('help-controls-default').style.display = 'block';
+                  document.getElementById('help-controls-edit').style.display = 'none';
+                  document.getElementById('help-panel-container').classList.remove('editing-mode');
+                  const elements = document.querySelectorAll('.editable-element');
+                  elements.forEach(el => el.contentEditable = "false");
+              })
+              .catch(err => alert("Error al guardar ayuda: " + err));
+        }
+
+        // --- RESTO FUNCIONES ---
+        function openEdit(id) {
+            const item = currentData.find(d => d.id == id);
+            activeEditId = id;
+            document.getElementById('edit-matricula').value = item.matricula;
+            document.getElementById('edit-marca').value = item.marca || "";
+            document.getElementById('edit-modelo').value = item.modelo || "";
+            document.getElementById('modal-edit').style.display = 'flex';
+        }
+        function closeEdit() { document.getElementById('modal-edit').style.display = 'none'; }
+
+        async function saveEdit() {
+            const newMat = cleanMatricula(document.getElementById('edit-matricula').value);
+            const exists = currentData.find(d => cleanMatricula(d.matricula) === newMat && d.id != activeEditId);
+            if(exists) { alert(`ERROR: La matrícula ${newMat} ya existe.`); return; }
+
+            const snap = await db.ref(REF_RADAR).once('value');
+            const data = Object.values(snap.val() || []);
+            data.forEach(d => {
+                if(d.id == activeEditId) {
+                    d.matricula = newMat; d.marca = document.getElementById('edit-marca').value; d.modelo = document.getElementById('edit-modelo').value;
+                }
+            });
+            await db.ref(REF_RADAR).set(data);
+            closeEdit(); msg("Cambios guardados", "success");
+        }
+
+        function cargar() {
+            db.ref(REF_RADAR).on('value', snap => {
+                currentData = Object.values(snap.val() || []);
+                totalDisp.textContent = currentData.length;
+                renderTabla(currentData); 
+            });
+            loadHelpFromFirebase();
+        }
+
+        function renderTabla(data) {
+            const tabla = document.getElementById('tabla-radar');
+            tabla.innerHTML = "";
+            data.sort((a,b) => {
+                const matA = cleanMatricula(a.matricula);
+                const matB = cleanMatricula(b.matricula);
+                return isAscending ? matA.localeCompare(matB) : matB.localeCompare(matA);
+            });
+            data.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'row-radar';
+                row.innerHTML = `
+                    <div class="matricula-radar-text">
+                        <i class="fas fa-copy" onclick="copy('${item.matricula}')" style="cursor:pointer; color:#2ecc71; margin-right:8px;"></i>
+                        <div class="icon-radar-50">50</div>${item.matricula}
+                    </div>
+                    <div>${item.fecha ? (item.fecha.length > 20 ? new Date(item.fecha).toLocaleString() : item.fecha) : 'N/A'}</div>
+                    <div>${item.marca || ''}</div>
+                    <div>${item.modelo || ''}</div>
+                    <div>
+                        <select class="estado-select" value="${item.estado}" onchange="updateState('${item.id}', this.value)">
+                            <option value="radar" ${item.estado==='radar'?'selected':''}>Denuncia de Radar</option>
+                            <option value="eurocop" ${item.estado==='eurocop'?'selected':''}>Sin datos en Eurocop</option>
+                            <option value="notificado" ${item.estado==='notificado'?'selected':''}>Notificado a sanciones</option>
+                        </select>
+                    </div>
+                    <div style="text-align:center">
+                        <button class="btn-edit" onclick="openEdit('${item.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete-row" onclick="eliminar('${item.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                tabla.appendChild(row);
+                row.querySelector('select').setAttribute('value', item.estado);
+            });
+        }
+
+        async function eliminar(id, asks = true) {
+            if(asks && !confirm("¿Borrar?")) return;
+            await db.ref(REF_RADAR).set(currentData.filter(d => d.id != id));
+        }
+
+        function updateState(id, val) {
+            if(val === 'notificado') { 
+                activeNotifId = id; 
+                const item = currentData.find(d => d.id == id);
+                document.getElementById('display-matricula-notif').textContent = item.matricula;
+                document.getElementById('n-marca-veh').value = item.marca || "";
+                document.getElementById('n-modelo-veh').value = item.modelo || "";
+                document.getElementById('n-nombre').value = ""; document.getElementById('n-doi').value = "";
+                document.getElementById('n-dir').value = ""; document.getElementById('n-loc').value = "";
+                document.getElementById('n-nac').value = ""; document.getElementById('n-tel').value = "";
+                document.getElementById('modal-notif').style.display='flex'; 
+            } else { guardarEstado(id, val); }
+        }
+
+        async function guardarEstado(id, val) {
+            const snap = await db.ref(REF_RADAR).once('value');
+            const data = Object.values(snap.val() || []);
+            data.forEach(d => { if(d.id == id) d.estado = val; });
+            await db.ref(REF_RADAR).set(data);
+        }
+
+        function aceptarNotif() {
+            const item = currentData.find(d => d.id == activeNotifId);
+            const marca = document.getElementById('n-marca-veh').value.toUpperCase();
+            const modelo = document.getElementById('n-modelo-veh').value.toUpperCase();
+            const nombre = document.getElementById('n-nombre').value.toUpperCase();
+            const doi = document.getElementById('n-doi').value.toUpperCase();
+            const dir = document.getElementById('n-dir').value.toUpperCase();
+            const loc = document.getElementById('n-loc').value.toUpperCase();
+            const nac = document.getElementById('n-nac').value;
+            const tel = document.getElementById('n-tel').value;
+
+            const encabezado = "Grupo de Análisis Documental (GAD) Policía Local de Alicante\nLe informamos de que disponemos de los siguientes datos en relación a este vehículo:\n";
+            let cuerpo = `DENUNCIA RADAR: ${item.matricula}\nMARCA Y MODELO: ${marca} ${modelo}\n\nTITULAR/CONDUCTOR: ${nombre}\nDNI/NIE: ${doi}\nDIRECCIÓN: ${dir}\nLOCALIDAD: ${loc}`;
+            if(nac) cuerpo += `\nFECHA NACIMIENTO: ${nac}`;
+            if(tel) cuerpo += `\nTELÉFONO: ${tel}`;
+
+            if(marca || modelo) updateVehData(activeNotifId, marca, modelo);
+            navigator.clipboard.writeText(encabezado + "\n" + cuerpo).then(() => { 
+                guardarEstado(activeNotifId, 'notificado'); closeNotif(); msg("Copiado al portapapeles y Estado actualizado", "success");
+            });
+        }
+
+        async function updateVehData(id, ma, mo) {
+            const snap = await db.ref(REF_RADAR).once('value');
+            const data = Object.values(snap.val() || []);
+            let changed = false;
+            data.forEach(d => { if(d.id == id) { if(ma) d.marca = ma; if(mo) d.modelo = mo; changed = true; } });
+            if(changed) await db.ref(REF_RADAR).set(data);
+        }
+
+        function closeNotif() { document.getElementById('modal-notif').style.display='none'; }
+        function closePaste() { document.getElementById('modal-paste').style.display='none'; }
+        document.getElementById('btn-p').onclick = () => document.getElementById('modal-paste').style.display='flex';
+        function procesarPegado() { 
+            const raw = document.getElementById('paste-area').value;
+            try { procesarJSON(JSON.parse(raw)); } catch(e) { extraerSimple(raw, "Pegado"); }
+            closePaste();
+        }
+
+        document.getElementById('btn-u').onclick = async () => {
+            if(!lastBackup) return alert("Nada que deshacer");
+            await db.ref(REF_RADAR).set(lastBackup); lastBackup = null; msg("Deshecho", "success");
+        };
+
+        document.getElementById('btn-clear').onclick = async () => {
+            if(prompt("Escribe BORRAR") === "BORRAR") await db.ref(REF_RADAR).remove();
+        };
+
+        function copy(t) { navigator.clipboard.writeText(t); }
+        function msg(m, t) { const s = document.getElementById('status-message'); s.style.display="block"; s.textContent=m; s.className=t; if(t!=='loading') setTimeout(()=>s.style.display='none', 4000); }
+
+        window.onload = cargar;
+    </script>
+</body>
+</html>

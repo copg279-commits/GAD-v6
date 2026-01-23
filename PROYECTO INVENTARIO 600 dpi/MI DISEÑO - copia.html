@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plantilla Base GAD - Cargador Dinámico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            padding: 2rem;
+            width: 100%;
+            max-width: 900px; /* Centrar el contenido principal */
+            margin: 0 auto;
+        }
+        .gad-logo-header {
+            width: 160px; 
+            height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .back-to-menu-button {
+            background-color: #f59e0b; /* Amarillo */
+        }
+        .back-to-menu-button:hover {
+            background-color: #d97706;
+        }
+        .back-button-history {
+            background-color: #4b5563; /* Gris oscuro */
+        }
+        .back-button-history:hover {
+            background-color: #374151;
+        }
+        /* Estilos específicos para el área de carga */
+        #dropZone.highlight {
+            border-color: #10b981; /* Verde esmeralda */
+            background-color: #ecfdf5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="gad-logo-header">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <main>
+        
+        <!-- =================================================================== -->
+        <!--  CARGADOR DINÁMICO DE FUNCIONALIDADES HTML                          -->
+        <!-- =================================================================== -->
+        <div id="loaderTool" class="w-full max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Cargador de Funcionalidades HTML (GAD)</h1>
+            <p class="text-center text-gray-600 mb-6">Arrastra y suelta aquí el archivo HTML de la aplicación, o pega el código en el área de texto.</p>
+
+            <!-- Área de Drop/Paste -->
+            <div id="dropZone" class="border-4 border-dashed border-blue-400 bg-blue-50 p-10 rounded-xl transition duration-300 hover:border-blue-600 mb-6 text-center">
+                <p class="text-blue-700 font-semibold mb-3"><i class="fas fa-file-upload mr-2"></i> ARRASTRA Y SUELTA EL ARCHIVO HTML AQUÍ</p>
+                <p class="text-sm text-gray-500">(o usa el cuadro de texto de abajo)</p>
+            </div>
+
+            <!-- Contenedor para pegar código -->
+            <textarea id="htmlPasteArea" placeholder="... o pega aquí el código HTML de la funcionalidad (solo contenido del body) y haz click en Cargar." rows="8" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-4"></textarea>
+
+            <button id="loadButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out disabled:opacity-50">
+                <i class="fas fa-magic mr-2"></i> Cargar y Aplicar Diseño
+            </button>
+            
+            <p id="loadStatus" class="mt-3 text-sm text-center text-gray-600"></p>
+        </div>
+
+        <hr id="loaderDivider" class="my-8 border-gray-300 w-full max-w-4xl">
+
+        <!-- Contenedor donde se inyectará el contenido cargado -->
+        <div id="applicationContainer" class="w-full max-w-4xl min-h-60">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Función Cargada (Se aplicará el diseño GAD)</h2>
+            <p class="text-gray-500">El contenido de la aplicación aparecerá aquí automáticamente después de cargarlo.</p>
+        </div>
+
+        <!-- =================================================================== -->
+        <!--  FIN DEL CARGADOR DINÁMICO                                          -->
+        <!-- =================================================================== -->
+
+        <div class="nav-buttons">
+            <a href="index.html" class="back-button back-to-menu-button">Volver a Menú Principal</a>
+            <button onclick="history.back()" class="back-button back-button-history">Atrás</button>
+        </div>
+    </main>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200 shadow-inner">
+        <div class="flex flex-col items-center">
+            <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+            <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+            <p>&copy; GAD - Todos los derechos reservados</p>
+            <!-- Placeholder para ver el estado de la conexión -->
+            <p id="auth-info" class="text-xs text-gray-500 mt-2">Estado de Autenticación: Inicializando...</p>
+        </div>
+    </footer>
+
+    <!-- Script de Inicialización de Firebase y Lógica de Carga HTML -->
+    <script type="module">
+        // Importaciones de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Establecer nivel de log para depuración de Firestore
+        setLogLevel('debug');
+
+        // Variables Globales del Entorno (No cambiar)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Variables de Firebase accesibles globalmente
+        window.db = null;
+        window.auth = null;
+        window.userId = null;
+        window.isAuthReady = false;
+
+        const authInfo = document.getElementById('auth-info');
+
+        // ===================================================================
+        //  LÓGICA DEL CARGADOR DINÁMICO
+        // ===================================================================
+
+        const dropZone = document.getElementById('dropZone');
+        const htmlPasteArea = document.getElementById('htmlPasteArea');
+        const loadButton = document.getElementById('loadButton');
+        const loadStatus = document.getElementById('loadStatus');
+        const applicationContainer = document.getElementById('applicationContainer');
+        const loaderTool = document.getElementById('loaderTool');
+        const loaderDivider = document.getElementById('loaderDivider');
+
+
+        /**
+         * Extrae el contenido relevante (generalmente el body o todo) y lo inyecta.
+         * Después, intenta ejecutar cualquier script de inicialización encontrado.
+         * @param {string} htmlString El código HTML crudo.
+         */
+        function loadContent(htmlString) {
+            loadStatus.textContent = 'Procesando contenido...';
+            applicationContainer.innerHTML = '';
+            
+            try {
+                let contentToInject = htmlString;
+
+                // Intentar extraer el contenido dentro de las etiquetas <body>
+                const bodyMatch = htmlString.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                if (bodyMatch && bodyMatch[1]) {
+                    contentToInject = bodyMatch[1];
+                }
+
+                // Inyectar el HTML limpio en el contenedor
+                applicationContainer.innerHTML = contentToInject;
+
+                // Buscar y ejecutar scripts (necesario para funciones como setupInventoryApp)
+                const scripts = applicationContainer.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    newScript.type = oldScript.type || 'text/javascript';
+
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        // Si es script inline, copiar y ejecutar
+                        newScript.textContent = oldScript.textContent;
+                    }
+                    
+                    // Reemplazar el script antiguo por el nuevo para que el navegador lo ejecute
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+                
+                // Ocultar la herramienta de carga una vez que se ha cargado la aplicación
+                loaderTool.style.display = 'none';
+                loaderDivider.style.display = 'none';
+
+                loadStatus.textContent = '¡Funcionalidad cargada y diseño aplicado con éxito!';
+                loadStatus.className = 'mt-3 text-sm text-center text-green-600';
+
+                // Si la autenticación de Firebase ya está lista (window.isAuthReady), 
+                // y la función de inicialización de la app cargada existe, la llamamos.
+                // Esto es crucial para aplicaciones como Inventario GAD.
+                if (window.isAuthReady && typeof window.setupInventoryApp === 'function') {
+                    window.setupInventoryApp();
+                }
+
+
+            } catch (error) {
+                console.error("Error al inyectar y procesar el contenido HTML:", error);
+                loadStatus.textContent = `Error al cargar: ${error.message}`;
+                loadStatus.className = 'mt-3 text-sm text-center text-red-600';
+            }
+        }
+
+        /**
+         * Manejador para el botón de cargar y el área de pegar.
+         */
+        loadButton.addEventListener('click', () => {
+            if (htmlPasteArea.value.trim()) {
+                loadContent(htmlPasteArea.value);
+            } else {
+                loadStatus.textContent = 'Por favor, pega el código HTML o arrastra un archivo primero.';
+                loadStatus.className = 'mt-3 text-sm text-center text-yellow-600';
+            }
+        });
+
+        /**
+         * Configura la funcionalidad de Drag & Drop.
+         */
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('highlight'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('highlight'), false);
+            });
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type === "text/html" || file.name.endsWith('.html')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            loadContent(event.target.result);
+                        };
+                        reader.onerror = () => {
+                            loadStatus.textContent = "Error al leer el archivo.";
+                            loadStatus.className = 'mt-3 text-sm text-center text-red-600';
+                        };
+                        reader.readAsText(file);
+                    } else {
+                        loadStatus.textContent = "Por favor, suelta solo archivos HTML.";
+                        loadStatus.className = 'mt-3 text-sm text-center text-red-600';
+                    }
+                }
+            }
+        }
+        
+        setupDragAndDrop();
+
+        // ===================================================================
+        //  FIN DE LA LÓGICA DEL CARGADOR DINÁMICO
+        // ===================================================================
+
+
+        /**
+         * Inicializa Firebase, autentica al usuario y establece las variables globales.
+         */
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                authInfo.textContent = "ERROR: Configuración de Firebase no encontrada.";
+                return;
+            }
+
+            try {
+                // 1. Inicializar la aplicación Firebase
+                window.app = initializeApp(firebaseConfig);
+                window.db = getFirestore(window.app);
+                window.auth = getAuth(window.app);
+
+                // 2. Autenticar al usuario
+                onAuthStateChanged(window.auth, async (user) => {
+                    if (user) {
+                        window.userId = user.uid;
+                        window.isAuthReady = true;
+                        authInfo.innerHTML = `<i class="fas fa-check-circle text-green-500"></i> Autenticado. User ID: ${window.userId.substring(0, 8)}...`;
+                        
+                        console.log("Firebase y autenticación listos. El userId es: " + window.userId);
+                        
+                        // NOTA: La llamada a la función de la app (ej. setupInventoryApp) 
+                        // ahora se hace DESPUÉS de inyectar el código, dentro de loadContent().
+
+                    } else {
+                        // Si no hay usuario, intentar autenticar con el token o de forma anónima
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(window.auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(window.auth);
+                            }
+                        } catch (error) {
+                            console.error("Error al iniciar sesión:", error);
+                            authInfo.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500"></i> ERROR de Autenticación: ${error.message}`;
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                authInfo.innerHTML = `<i class="fas fa-exclamation-circle text-red-500"></i> ERROR FATAL de Firebase: ${error.message}`;
+            }
+        }
+
+        // Iniciar la conexión al cargar la ventana
+        window.onload = initFirebase;
+    </script>
+</body>
+</html>

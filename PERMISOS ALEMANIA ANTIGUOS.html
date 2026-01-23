@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación de Permiso de Conducir Alemán</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Estilo para el input de fecha para que sea consistente */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        background: transparent;
+        color: transparent;
+        cursor: pointer;
+    }
+    input[type="date"]::-webkit-inner-spin-button {
+        display: none;
+    }
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 2rem; /* Separación entre los botones */
+    }
+    /* Clase para el título que se ajusta en móviles */
+    .responsive-title {
+        font-size: 1.25rem; /* text-xl */
+        line-height: 1.75rem; /* leading-7 */
+        text-align: center;
+    }
+    @media (max-width: 640px) { /* Para pantallas pequeñas (móviles) */
+        .responsive-title {
+            white-space: normal; /* Permite que el texto se divida en varias líneas */
+        }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4 responsive-title">
+    Verificación de Validez de Permiso de<br>Conducir Alemán (Antiguo)
+  </h1>
+
+  <div class="w-11/12 max-w-md mx-auto mt-8 bg-white p-6 rounded-lg shadow-md">
+    <div class="button-group mb-6">
+        <button id="btn-birth-year" class="p-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors duration-200 text-center">
+            Buscar por Año de Nacimiento<br>
+            <span class="text-base font-bold">Para permisos expedidos<br>hasta el 31/12/1998</span>
+        </button>
+        <button id="btn-issue-date" class="p-2 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 transition-colors duration-200 text-center">
+            Buscar por Fecha de Expedición<br>
+            <span class="text-base font-bold">Para permisos expedidos<br>a partir de 01/01/1999</span>
+        </button>
+    </div>
+
+    <div id="birth-year-section" class="hidden">
+      <h2 class="text-center font-semibold text-lg mb-4">Permisos según Año de Nacimiento del Titular</h2>
+      <p id="birth-year-info" class="text-center text-base font-bold text-red-600 mb-4"></p>
+      <img id="logo-antiguo" src="logopermisoalemanantiguo.png" alt="Logo Permiso Alemán Antiguo" class="w-11/12 max-w-md mx-auto mb-4 hidden">
+      <label for="birth-year-select" class="block text-gray-700 font-bold mb-2">Año de nacimiento del titular:</label>
+      <select id="birth-year-select" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
+        <option value="">Selecciona una opción</option>
+        <option value="1953">Antes de 1953</option>
+        <option value="1958">De 1953 a 1958</option>
+        <option value="1964">De 1959 a 1964</option>
+        <option value="1970">De 1965 a 1970</option>
+        <option value="1971">1971 o posterior</option>
+      </select>
+      <p id="result-birth-year" class="text-center font-bold"></p>
+    </div>
+
+    <div id="issue-date-section" class="hidden">
+      <h2 class="text-center font-semibold text-lg mb-4">Permisos según Fecha de Expedición</h2>
+      <p id="issue-date-info" class="text-center text-base font-bold text-red-600 mb-4"></p>
+      <img id="logo-nuevo" src="logopermisoalemannuevo.png" alt="Logo Permiso Alemán Nuevo" class="w-11/12 max-w-md mx-auto mb-4 hidden">
+      <label for="issue-date-select" class="block text-gray-700 font-bold mb-2">Fecha de expedición:</label>
+      <select id="issue-date-select" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
+        <option value="">Selecciona una opción</option>
+        <option value="1998">Permisos expedidos hasta el 31/12/1998</option>
+        <option value="2001">De 1999 a 2001</option>
+        <option value="2004">De 2002 a 2004</option>
+        <option value="2007">De 2005 a 2007</option>
+        <option value="2008">2008</option>
+        <option value="2009">2009</option>
+        <option value="2010">2010</option>
+        <option value="2011">2011</option>
+        <option value="2012">De 2012 al 18 de enero de 2013</option>
+      </select>
+      <p id="result-issue-date" class="text-center font-bold"></p>
+    </div>
+  </div>
+
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+  </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+  const btnBirthYear = document.getElementById('btn-birth-year');
+  const btnIssueDate = document.getElementById('btn-issue-date');
+  const birthYearSection = document.getElementById('birth-year-section');
+  const issueDateSection = document.getElementById('issue-date-section');
+  const birthYearSelect = document.getElementById('birth-year-select');
+  const issueDateSelect = document.getElementById('issue-date-select');
+  const resultBirthYear = document.getElementById('result-birth-year');
+  const resultIssueDate = document.getElementById('result-issue-date');
+  const birthYearInfo = document.getElementById('birth-year-info');
+  const issueDateInfo = document.getElementById('issue-date-info');
+  const logoAntiguo = document.getElementById('logo-antiguo');
+  const logoNuevo = document.getElementById('logo-nuevo');
+
+  const birthYearText = "(Para permisos expedidos hasta el 31/12/1998)";
+  const issueDateText = "(Para permisos expedidos a partir de 01/01/1999)";
+
+  // Show "Birth Year" section by default on load
+  document.addEventListener('DOMContentLoaded', (event) => {
+    birthYearSection.classList.remove('hidden');
+    issueDateSection.classList.add('hidden');
+    birthYearSelect.value = "";
+    issueDateSelect.value = "";
+    birthYearInfo.textContent = birthYearText;
+    logoAntiguo.classList.remove('hidden'); // Show logo for default section
+    logoNuevo.classList.add('hidden');
+  });
+
+  // Event listeners for section selection buttons
+  btnBirthYear.addEventListener('click', () => {
+    birthYearSection.classList.remove('hidden');
+    issueDateSection.classList.add('hidden');
+    resultIssueDate.textContent = '';
+    issueDateSelect.value = "";
+    birthYearInfo.textContent = birthYearText;
+    logoAntiguo.classList.remove('hidden'); // Show logo
+    logoNuevo.classList.add('hidden'); // Hide other logo
+  });
+
+  btnIssueDate.addEventListener('click', () => {
+    issueDateSection.classList.remove('hidden');
+    birthYearSection.classList.add('hidden');
+    resultBirthYear.textContent = '';
+    birthYearSelect.value = "";
+    issueDateInfo.textContent = issueDateText;
+    logoNuevo.classList.remove('hidden'); // Show logo
+    logoAntiguo.classList.add('hidden'); // Hide other logo
+  });
+  
+  // Validation logic for "Birth Year"
+  birthYearSelect.addEventListener('change', () => {
+    const birthYear = birthYearSelect.value;
+    const today = new Date();
+    let validUntilDate;
+
+    if (birthYear === '1953') {
+      validUntilDate = new Date('2033-01-19');
+    } else if (birthYear === '1958') {
+      validUntilDate = new Date('2022-07-19'); // Corrected date
+    } else if (birthYear === '1964') {
+      validUntilDate = new Date('2023-01-19');
+    } else if (birthYear === '1970') {
+      validUntilDate = new Date('2024-01-19');
+    } else if (birthYear === '1971') {
+      validUntilDate = new Date('2025-01-19');
+    }
+
+    if (validUntilDate) {
+      if (today <= validUntilDate) {
+        const formattedDate = validUntilDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        resultBirthYear.textContent = `Válido hasta el ${formattedDate}.`;
+        resultBirthYear.classList.remove('text-red-600');
+        resultBirthYear.classList.add('text-green-600');
+      } else {
+        const formattedDate = validUntilDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        resultBirthYear.textContent = `No válido. Debió ser canjeado antes del ${formattedDate}.`;
+        resultBirthYear.classList.remove('text-green-600');
+        resultBirthYear.classList.add('text-red-600');
+      }
+    } else {
+        resultBirthYear.textContent = '';
+    }
+  });
+
+  // Validation logic for "Issue Date"
+  issueDateSelect.addEventListener('change', () => {
+    const issueYearGroup = issueDateSelect.value;
+    const today = new Date();
+    let validUntilDate;
+
+    if (issueYearGroup === '1998') {
+        // Special case: Redirect to birth year section and show specific message
+        issueDateSection.classList.add('hidden');
+        birthYearSection.classList.remove('hidden');
+        resultBirthYear.innerHTML = `<span class="text-red-600 font-bold">La validez de los permisos expedidos hasta el 31/12/1998 depende del año de nacimiento del conductor.<br>Por favor, selecciona el botón verde.</span>`;
+        birthYearSelect.value = ""; // Reset dropdown
+        // Ensure correct logo is shown/hidden when redirecting
+        logoAntiguo.classList.remove('hidden'); 
+        logoNuevo.classList.add('hidden');
+        return;
+    } else if (issueYearGroup === '2001') {
+      validUntilDate = new Date('2026-01-19');
+    } else if (issueYearGroup === '2004') {
+      validUntilDate = new Date('2027-01-19');
+    } else if (issueYearGroup === '2007') {
+      validUntilDate = new Date('2028-01-19');
+    } else if (issueYearGroup === '2008') {
+      validUntilDate = new Date('2029-01-19');
+    } else if (issueYearGroup === '2009') {
+      validUntilDate = new Date('2030-01-19');
+    } else if (issueYearGroup === '2010') {
+      validUntilDate = new Date('2031-01-19');
+    } else if (issueYearGroup === '2011') {
+      validUntilDate = new Date('2032-01-19');
+    } else if (issueYearGroup === '2012') {
+      validUntilDate = new Date('2033-01-19');
+    }
+
+    if (validUntilDate) {
+      if (today <= validUntilDate) {
+        const formattedDate = validUntilDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        resultIssueDate.textContent = `Válido hasta el ${formattedDate}.`;
+        resultIssueDate.classList.remove('text-red-600');
+        resultIssueDate.classList.add('text-green-600');
+      } else {
+        const formattedDate = validUntilDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        resultIssueDate.textContent = `No válido. Debió ser canjeado antes del ${formattedDate}.`;
+        resultIssueDate.classList.remove('text-green-600');
+        resultIssueDate.classList.add('text-red-600');
+      }
+    } else {
+        resultIssueDate.textContent = '';
+    }
+  });
+</script>
+</body>
+</html>

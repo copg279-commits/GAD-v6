@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Frecuencia ITV Europa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos de banderas existentes y nuevos */
+        .flag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 25px;
+            background-size: cover;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .flag-españa {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        }
+        .flag-alemania {
+            background: linear-gradient(to top, #ffce00 0%, #ffce00 33%, #d00 33%, #d00 66%, #000 66%, #000 100%);
+        }
+        .flag-austria {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #fff 33%, #fff 66%, #c60b1e 66%, #c60b1e 100%);
+        }
+        .flag-belgica {
+            background: linear-gradient(to right, #000 0%, #000 33.3%, #ffc400 33.3%, #ffc400 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-bulgaria {
+            background: linear-gradient(to top, #c8102e 0%, #c8102e 33%, #fff 33%, #fff 66%, #00966e 66%, #00966e 100%);
+        }
+        .flag-chipre {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 300'%3E%3Cpath fill='%23fff' d='M0 0h500v300H0z'/%3E%3Cg stroke='%23d08c00'%3E%3Cpath d='M100 200c0 10-10 10-10 0'/%3E%3C/g%3E%3Cpath fill='%23d08c00' d='M200 120a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 150a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 170a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 190a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 210a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 230a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 250a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 270a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 290a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 310a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 330a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 350a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 370a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 390a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 410a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 430a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 450a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 470a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 490a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 510a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 530a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 550a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 570a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 590a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 610a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 630a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 650a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 670a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 690a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 710a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 730a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 750a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 770a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 790a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 810a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 830a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 850a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 870a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 890a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 910a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 930a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 950a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 970a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 990a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1010a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1030a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1050a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1070a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1090a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1110a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1130a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1150a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1170a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1190a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1210a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1230a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1250a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1270a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1290a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1310a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1330a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1350a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1370a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1390a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1410a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1430a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1450a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1470a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1490a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M200 1510a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M300 1530a100 100 0 10-100 0z'/%3E%3Cpath fill='%23d08c00' d='M250 1550a100 100 0 10-100 0z'/%E3%83%83%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-croacia {
+            background: linear-gradient(to top, #144983 0%, #144983 33%, #fff 33%, #fff 66%, #c8102e 66%, #c8102e 100%);
+        }
+        .flag-dinamarca {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 21'%3E%3Cpath fill='%23c8102e' d='M0 0h28v21H0z'/%3E%3Cpath stroke='%23fff' stroke-width='3.5' d='M0 10.5h28M9.333 0v21'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-eslovaquia {
+            background: linear-gradient(to top, #c8102e 0%, #c8102e 33%, #fff 33%, #fff 66%, #0033a1 66%, #0033a1 100%);
+        }
+        .flag-eslovenia {
+            background: linear-gradient(to top, #c8102e 0%, #c8102e 33%, #fff 33%, #fff 66%, #0033a1 66%, #0033a1 100%);
+        }
+        .flag-estonia {
+            background: linear-gradient(to top, #c8102e 0%, #c8102e 33%, #fff 33%, #fff 66%, #0072c4 66%, #0072c4 100%);
+        }
+        .flag-finlandia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 11'%3E%3Crect width='18' height='11' fill='%23fff'/%3E%3Cpath fill='%23002f6a' d='M0 4h18v3H0z'/%3E%3Cpath fill='%23002f6a' d='M4 0h3v11H4z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-francia {
+            background: linear-gradient(to right, #003399 0%, #003399 33%, #fff 33%, #fff 66%, #d00 66%, #d00 100%);
+        }
+        .flag-grecia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 18'%3E%3Cpath fill='%23002654' d='M0 0h27v18H0z'/%3E%3Cpath stroke='%23fff' stroke-width='2' d='M0 2h27m0 4h27m0 4h27m0 4H0'/%3E%3Cpath fill='%23fff' d='M0 0h10v10H0z'/%3E%3Cpath stroke='%23002654' stroke-width='2' d='M5 0v10M0 5h10'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-hungria {
+            background: linear-gradient(to top, #d43516 0%, #d43516 33%, #fff 33%, #fff 66%, #477050 66%, #477050 100%);
+        }
+        .flag-irlanda {
+            background: linear-gradient(to right, #009a49 0%, #009a49 33%, #fff 33%, #fff 66%, #ff7900 66%, #ff7900 100%);
+        }
+        .flag-italia {
+            background: linear-gradient(to right, #009246 0%, #009246 33.3%, #fff 33.3%, #fff 66.6%, #ce2b37 66.6%, #ce2b37 100%);
+        }
+        .flag-letonia {
+            background: linear-gradient(to top, #9e3039 0%, #9e3039 40%, #fff 40%, #fff 60%, #9e3039 60%, #9e3039 100%);
+        }
+        .flag-lituania {
+            background: linear-gradient(to top, #d64741 0%, #d64741 33%, #fff 33%, #fff 66%, #006a44 66%, #006a44 100%);
+        }
+        .flag-luxemburgo {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #fff 33%, #fff 66%, #00a1e0 66%, #00a1e0 100%);
+        }
+        .flag-malta {
+            background: linear-gradient(to right, #fff 0%, #fff 50%, #c60b1e 50%, #c60b1e 100%);
+        }
+        .flag-paisesbajos {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #fff 33%, #fff 66%, #003399 66%, #003399 100%);
+        }
+        .flag-polonia {
+            background: linear-gradient(to top, #fff 0%, #fff 50%, #c60b1e 50%, #c60b1e 100%);
+        }
+        .flag-portugal {
+            background: linear-gradient(to right, #006600 0%, #006600 40%, #c60b1e 40%, #c60b1e 100%);
+        }
+        .flag-republicacheca {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 20'%3E%3Cpath fill='%23fff' d='M0 0h30v10H0z'/%3E%3Cpath fill='%23d7141a' d='M0 10h30v10H0z'/%3E%3Cpath fill='%2311457a' d='M0 0l15 10L0 20z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-rumania {
+            background: linear-gradient(to right, #003194 0%, #003194 33.3%, #ffde00 33.3%, #ffde00 66.6%, #c8102e 66.6%, #c8102e 100%);
+        }
+        .flag-suecia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 10'%3E%3Crect width='16' height='10' fill='%23006aa7'/%3E%3Crect x='5' width='2' height='10' fill='%23fecc00'/%3E%3Crect y='4' width='16' height='2' fill='%23fecc00'/%E3%83%83%3C/svg%3E") no-repeat center center / cover;
+        }
+        /* ESTILO AÑADIDO PARA EL BOTÓN MENÚ PRINCIPAL */
+        .flag-button-spain {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+        Buscador Frecuencia ITV Europa
+    </h1>
+
+    <div class="w-11/12 max-w-md mx-auto mt-4 text-left">
+        <p class="mb-2">
+            Selecciona un país de la UE para ver la frecuencia de la ITV:
+        </p>
+        <select 
+            id="countrySelect" 
+            onchange="buscarPais()" 
+            class="w-full p-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+            <option value="">-- Selecciona un país --</option>
+        </select>
+    </div>
+
+    <div id="resultado" class="mt-6 p-4 bg-white shadow rounded-lg w-11/12 max-w-md mx-auto text-left relative">
+        <p class="text-gray-500" id="resultText">
+            La frecuencia de la ITV para el país seleccionado aparecerá aquí.
+        </p>
+    </div>
+    
+    <div id="directiva" class="mt-2 p-2 w-11/12 max-w-md mx-auto text-center font-bold" style="display: none;">
+        DIRECTIVA 2014/45/UE
+    </div>
+
+    <div class="mt-8 flex justify-center">
+        <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
+
+    <div class="mt-4 flex justify-center">
+        <button onclick="window.location.href='https://road-safety.transport.ec.europa.eu/road-safety-member-states/roadworthiness-certificate-and-proof-test_en'"
+                class="w-11/12 max-w-md p-4 bg-blue-600 text-white font-bold rounded-lg shadow-md transition hover:bg-blue-700">
+            FRECUENCIA ITV EUROPA
+        </button>
+    </div>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200">
+        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+        <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+        <p>&copy; GAD - Todos los derechos reservados</p>
+    </footer>
+
+    <script>
+        const itvFrequencies = {
+            "alemania": {
+                turismos: "Primera ITV a los 3 años, luego cada 2 años.",
+                motos: "Primera ITV a los 2 años, luego cada 2 años."
+            },
+            "austria": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            },
+            "belgica": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "bulgaria": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego cada 2 años."
+            },
+            "chipre": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 2 años, luego cada 2 años."
+            },
+            "croacia": {
+                turismos: "Primera ITV a los 2 años, luego anual.",
+                motos: "Anual, a partir del 1er año."
+            },
+            "dinamarca": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "eslovaquia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "eslovenia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "españa": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años (hasta los 10 años), luego anual.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "estonia": {
+                turismos: "Primera ITV a los 3 años, luego cada 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego cada 2 años, luego anual."
+            },
+            "finlandia": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            },
+            "francia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Normativa especial. Utiliza el calculador de abajo."
+            },
+            "grecia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "hungria": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "irlanda": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años (hasta los 10 años), luego anual.",
+                motos: "Exención de inspección obligatoria."
+            },
+            "italia": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "letonia": {
+                turismos: "Primera ITV a los 3 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego anual."
+            },
+            "lituania": {
+                turismos: "Primera ITV a los 3 años, luego cada 2 años.",
+                motos: "Primera ITV a los 3 años, luego cada 2 años."
+            },
+            "luxemburgo": {
+                turismos: "Primera ITV a los 4 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "malta": {
+                turismos: "Primera ITV a los 2 años, luego anual.",
+                motos: "Primera ITV a los 2 años, luego anual."
+            },
+            "paises bajos": {
+                turismos: "Primera ITV a los 4 años, luego anual.",
+                motos: "Exención de inspección obligatoria."
+            },
+            "polonia": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            },
+            "portugal": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años (hasta los 8 años), luego anual.",
+                motos: "Exención de inspección obligatoria."
+            },
+            "reino unido": {
+                turismos: "Primera ITV (MOT) a los 3 años, luego anual.",
+                motos: "Primera ITV (MOT) a los 3 años, luego anual."
+            },
+            "republica checa": {
+                turismos: "Primera ITV a los 4 años, luego cada 2 años.",
+                motos: "Primera ITV a los 4 años, luego cada 2 años."
+            },
+            "rumania": {
+                turismos: "Primera ITV a los 2 años, luego anual.",
+                motos: "Primera ITV a los 2 años, luego anual."
+            },
+            "suecia": {
+                turismos: "Primera ITV a los 3 años, luego 2 años, luego anual.",
+                motos: "Primera ITV a los 3 años, luego 2 años, luego anual."
+            }
+        };
+
+        const flagClassMap = {
+            "alemania": "flag-alemania",
+            "austria": "flag-austria",
+            "belgica": "flag-belgica",
+            "bulgaria": "flag-bulgaria",
+            "chipre": "flag-chipre",
+            "croacia": "flag-croacia",
+            "dinamarca": "flag-dinamarca",
+            "eslovaquia": "flag-eslovaquia",
+            "eslovenia": "flag-eslovenia",
+            "españa": "flag-españa",
+            "estonia": "flag-estonia",
+            "finlandia": "flag-finlandia",
+            "francia": "flag-francia",
+            "grecia": "flag-grecia",
+            "hungria": "flag-hungria",
+            "irlanda": "flag-irlanda",
+            "italia": "flag-italia",
+            "letonia": "flag-letonia",
+            "lituania": "flag-lituania",
+            "luxemburgo": "flag-luxemburgo",
+            "malta": "flag-malta",
+            "paises bajos": "flag-paisesbajos",
+            "polonia": "flag-polonia",
+            "portugal": "flag-portugal",
+            "reino unido": "flag-reinounido",
+            "republica checa": "flag-republicacheca",
+            "rumania": "flag-rumania",
+            "suecia": "flag-suecia"
+        };
+        
+        function mostrarResultado(html, esError = false, pais = '') {
+            const resultadoDiv = document.getElementById('resultado');
+            const resultadoText = document.getElementById('resultText');
+            const directivaDiv = document.getElementById('directiva');
+            
+            resultadoText.innerHTML = html;
+            resultadoDiv.classList.toggle('bg-red-200', esError);
+            resultadoDiv.classList.toggle('bg-white', !esError);
+            resultadoText.classList.toggle('text-center', esError);
+            resultadoText.classList.toggle('text-left', !esError);
+
+            const existingFlag = resultadoDiv.querySelector('.flag');
+            if (existingFlag) {
+                existingFlag.remove();
+            }
+
+            const existingButton = resultadoDiv.querySelector('#botonFrancia');
+            if (existingButton) {
+                existingButton.remove();
+            }
+            
+            const existingButtonAlemania = resultadoDiv.querySelector('#botonAlemania');
+            if (existingButtonAlemania) {
+                existingButtonAlemania.remove();
+            }
+
+
+            if (pais && flagClassMap[pais]) {
+                const flagDiv = document.createElement('div');
+                flagDiv.className = `flag ${flagClassMap[pais]}`;
+                resultadoDiv.appendChild(flagDiv);
+            }
+
+            if (pais) {
+                directivaDiv.style.display = 'block';
+            } else {
+                directivaDiv.style.display = 'none';
+            }
+        }
+
+        function buscarPais() {
+            const select = document.getElementById('countrySelect');
+            const input = select.value;
+            if (!input) {
+                mostrarResultado("Por favor, selecciona un país.", true);
+                return;
+            }
+
+            const paisData = itvFrequencies[input];
+            if (paisData) {
+                let html = `
+                    <div class="mb-2">
+                        <p><span class="font-bold text-lg">${input.toUpperCase()}:</span></p>
+                        <p><span class="font-bold">Turismos:</span> ${paisData.turismos}</p>
+                        <p><span class="font-bold">Motocicletas:</span> ${paisData.motos}</p>
+                    </div>
+                `;
+                
+                // Limpiar botones anteriores
+                const resultadoDiv = document.getElementById('resultado');
+                const existingButton = resultadoDiv.querySelector('#botonFrancia');
+                if (existingButton) existingButton.remove();
+                const existingButtonAlemania = resultadoDiv.querySelector('#botonAlemania');
+                if (existingButtonAlemania) existingButtonAlemania.remove();
+
+                mostrarResultado(html, false, input);
+                
+                // Agregar el botón para Francia si es el país seleccionado
+                if (input === 'francia') {
+                    const button = document.createElement('button');
+                    button.id = 'botonFrancia';
+                    button.textContent = 'CALCULADORA ITV MOTOS FRANCIA';
+                    button.onclick = () => window.location.href = 'ITV MOTOS FRANCIA.html';
+                    button.className = 'block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition';
+                    resultadoDiv.appendChild(button);
+                }
+                
+                // Agregar el botón para Alemania si es el país seleccionado
+                if (input === 'alemania') {
+                    const button = document.createElement('button');
+                    button.id = 'botonAlemania';
+                    button.textContent = 'VERIFICADOR PEGATINA TÜV';
+                    button.onclick = () => window.location.href = 'ITV ALEMANIA.html';
+                    button.className = 'block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition';
+                    resultadoDiv.appendChild(button);
+                }
+
+            } else {
+                mostrarResultado("País no encontrado o no disponible en la lista.", true);
+            }
+        }
+        
+        window.onload = function() {
+            const select = document.getElementById('countrySelect');
+            const paises = Object.keys(itvFrequencies).sort();
+            
+            paises.forEach(pais => {
+                const option = document.createElement('option');
+                option.value = pais;
+                option.textContent = pais.charAt(0).toUpperCase() + pais.slice(1);
+                select.appendChild(option);
+            });
+        };
+    </script>
+</body>
+</html>

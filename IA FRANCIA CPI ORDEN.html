@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IA FRANCIA CPI ORDEN (FINAL v2)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Estilos base */
+    .cpi-table-container { max-height: 400px; overflow-y: auto; }
+    .delete-icon { cursor: pointer; transition: transform 0.2s; }
+    .delete-icon:hover { transform: scale(1.1); color: #ef4444; }
+
+    /* --- ESTILOS DE LA ZONA DE ARRASTRE --- */
+    .drop-wrapper {
+        transition: all 0.3s ease;
+        border: 4px solid transparent;
+        border-radius: 1rem;
+        position: relative;
+        padding: 10px;
+    }
+
+    .drop-wrapper.drag-active {
+        background-color: rgba(34, 197, 94, 0.1); 
+        border-color: #22c55e;
+        transform: scale(1.01);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    
+    /* Overlay de carga */
+    .loading-overlay {
+        position: fixed; inset: 0; background: rgba(255,255,255,0.95); 
+        z-index: 100; display: flex; flex-direction: column; 
+        align-items: center; justify-content: center;
+    }
+    .spinner {
+        width: 60px; height: 60px; border: 6px solid #e5e7eb; 
+        border-top: 6px solid #2563eb; border-radius: 50%; 
+        animation: spin 1s linear infinite; margin-bottom: 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    #aiResultBox { animation: slideDown 0.5s ease-out; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16 relative">
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <h3 class="text-blue-700 font-bold text-xl animate-pulse">Analizando CPI (Nº Orden y Fecha)...</h3>
+      <p class="text-gray-500 text-sm mt-2">Consultando IA y verificando coherencia de fechas</p>
+  </div>
+
+  <div class="absolute top-2 right-2 z-40">
+      <button onclick="toggleSettings()" class="bg-gray-800 text-white text-xs px-3 py-1 rounded shadow hover:bg-gray-700 flex items-center gap-1">
+          ⚙️ Configurar IA
+      </button>
+  </div>
+  <div id="settingsPanel" class="hidden absolute top-10 right-2 w-72 bg-gray-800 border border-gray-600 shadow-xl rounded p-3 z-40 text-white">
+      <div class="text-xs text-gray-400 mb-2">Proveedor: Google Gemini (Fijo)</div>
+      <label class="block text-xs font-bold text-gray-300 mb-1">API Key:</label>
+      <input type="password" id="apiKeyInput" class="w-full bg-gray-900 text-white text-xs border border-gray-700 p-1 rounded mb-2" placeholder="Pegar API Key aquí...">
+      <label class="block text-xs font-bold text-gray-300 mb-1">Modelo:</label>
+      <input type="text" id="modelInput" class="w-full bg-gray-900 text-white text-xs border border-gray-700 p-1 rounded mb-3" placeholder="gemini-1.5-flash">
+      <button onclick="saveSettings()" class="w-full bg-blue-600 text-white text-xs py-1.5 rounded hover:bg-blue-700 font-bold">GUARDAR CONFIGURACIÓN</button>
+  </div>
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+    </div>
+  </header>
+  
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Consulta Fecha Expedición CPI
+  </h1>
+
+  <div id="mainDropZone" class="drop-wrapper w-11/12 max-w-md mx-auto mt-4">
+    <div class="w-full pointer-events-none select-none flex justify-center">
+        <img src="logocpi.png" alt="Logo CPI" class="w-full h-auto object-contain max-h-40">
+    </div>
+    
+    <p class="text-center mt-2 px-4 text-sm text-gray-600">
+        Ingresa un número de orden para estimar la fecha más aproximada.
+    </p>
+
+    <div class="w-full mt-4 mb-2">
+        <label for="documento" class="block text-sm font-bold text-gray-700 mb-1 ml-1">Número de orden</label>
+        <input type="text" id="documento" placeholder="Ej: 10402260107" class="w-full p-2 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+    </div>
+  </div>
+
+  <div class="w-11/12 max-w-md mx-auto">
+    <button onclick="calcularFecha()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-md shadow hover:bg-blue-700 transition">
+      Calcular fecha
+    </button>
+    <div id="resultado" class="mt-4 text-sm font-medium text-center"></div>
+  </div>
+
+  <div id="aiResultBox" class="hidden mt-4 w-11/12 max-w-md mx-auto border-2 rounded-lg p-4 text-center shadow-md bg-white">
+      <h3 id="aiTitle" class="font-bold text-lg mb-2"></h3>
+      
+      <div class="grid grid-cols-1 gap-2 text-sm text-gray-800 text-left mb-3 bg-gray-50 p-2 rounded border">
+          <div class="flex justify-between items-center border-b pb-1">
+              <span class="text-xs text-gray-500 font-bold">Nº LEÍDO (1)</span>
+              <span id="aiNumero" class="font-mono font-bold text-lg"></span>
+          </div>
+          <div class="flex justify-between items-center pt-1">
+              <span class="text-xs text-gray-500 font-bold">FECHA LEÍDA (2)</span>
+              <span id="aiFecha" class="font-mono font-bold text-lg"></span>
+          </div>
+      </div>
+      
+      <div id="aiMessage" class="text-sm font-medium mb-3 p-3 rounded text-left leading-relaxed"></div>
+
+      <div id="aiActions" class="hidden">
+          <button onclick="guardarDesdeAI()" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 transition flex justify-center items-center gap-2 shadow">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+              Añadir a Base de Datos
+          </button>
+      </div>
+      <button onclick="document.getElementById('aiResultBox').classList.add('hidden')" class="w-full mt-3 text-gray-500 text-xs underline">
+          Cerrar panel
+      </button>
+  </div>
+
+  <div class="bg-white shadow-md rounded-lg p-6 mt-6 text-center w-11/12 max-w-md mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Añadir nuevos datos (Manual)</h3>
+    <div class="flex flex-col space-y-2">
+      <button id="mostrarFormularioBtn" class="w-full bg-gray-600 text-white py-2 rounded-md shadow hover:bg-gray-700 text-sm">
+        Introduzca nuevo número de CPI
+      </button>
+      <button id="toggleCpiListBtn" class="w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">
+        Consultar lista completa
+      </button>
+      <button id="toggleEstadisticasBtn" class="w-full bg-purple-600 text-white py-2 rounded-md shadow hover:bg-purple-700">
+        Ver Estadísticas
+      </button>
+    </div>
+
+    <div id="formularioCpi" class="mt-4 hidden text-left">
+        <div class="mb-4">
+            <label class="block text-sm font-bold text-gray-700 mb-1">Número de orden:</label>
+            <input type="number" id="nuevoNumeroCpi" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-bold text-gray-700 mb-1">Fecha de expedición:</label>
+            <input type="date" id="nuevaFechaCpi" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="guardarNuevoCpi()" class="w-1/2 bg-blue-600 text-white py-2 rounded shadow hover:bg-blue-700">Guardar</button>
+            <button onclick="limpiarCampos()" class="w-1/2 bg-gray-400 text-white py-2 rounded shadow hover:bg-gray-500">Limpiar</button>
+        </div>
+        <div id="mensajeGuardado" class="mt-4 text-sm font-medium text-center"></div>
+    </div>
+    
+    <div id="cpiDataTable" class="mt-4 hidden">
+        <div class="cpi-table-container">
+            <table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0"><tr><th class="px-6 py-3">Número</th><th class="px-6 py-3">Fecha</th><th class="px-6 py-3"></th></tr></thead><tbody id="cpiList"></tbody></table>
+        </div>
+    </div>
+    <div id="estadisticasCpi" class="mt-4 hidden"><div id="resumenEstadisticas" class="p-4 bg-gray-100 rounded-lg"></div><div class="flex flex-col space-y-2 mt-4"><select id="mesSelector" class="w-full border p-2 rounded"></select><select id="anioSelector" class="w-full border p-2 rounded"></select></div><div id="resultadosEstadisticas" class="mt-4 text-center"></div></div>
+  </div>
+  
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'" class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">MENÚ PRINCIPAL</button>
+  </div>
+  
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+  <script>
+    // --- 1. CONFIGURACIÓN FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const cpiRef = database.ref('cpi_francia');
+    let datosCPI = [];
+
+    // --- 2. CONFIGURACIÓN IA ---
+    let geminiApiKey = localStorage.getItem('ai_api_key') || '';
+    let geminiModelName = localStorage.getItem('gemini_model_name') || 'gemini-1.5-flash';
+
+    function toggleSettings() {
+        document.getElementById('settingsPanel').classList.toggle('hidden');
+        document.getElementById('apiKeyInput').value = geminiApiKey;
+        document.getElementById('modelInput').value = geminiModelName;
+    }
+
+    function saveSettings() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        const model = document.getElementById('modelInput').value.trim();
+        if(key && model) {
+            geminiApiKey = key; geminiModelName = model;
+            localStorage.setItem('ai_api_key', key); localStorage.setItem('gemini_model_name', model);
+            alert("Configuración guardada."); toggleSettings();
+        }
+    }
+
+    // --- 3. LÓGICA GEMINI (OCR) ---
+    async function callGemini(base64Image) {
+        if (!geminiApiKey) { alert("Falta API Key."); return null; }
+
+        const PROMPT = `Analiza este "Certificat Provisoire d'Immatriculation" (CPI) de Francia.
+        Extrae DOS datos:
+        1. "numero": El "Numéro d'ordre du certificat" (suele estar arriba a la derecha, aprox 11 dígitos).
+        2. "fecha": La "Date du CPI" (Fecha de expedición, suele estar en el centro, sección I).
+        
+        Devuelve SOLO JSON: {"numero": "123...", "fecha": "DD/MM/AAAA"}`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: "image/jpeg", data: base64Image } }] }] })
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            let raw = data.candidates[0].content.parts[0].text;
+            return JSON.parse(raw.replace(/```json|```/g, '').trim());
+        } catch (error) { alert("Error IA: " + error.message); return null; }
+    }
+
+    // --- UTILIDADES ---
+    function resetUI() {
+        // Limpia cualquier resultado anterior (IA o Manual)
+        document.getElementById('aiResultBox').classList.add('hidden');
+        document.getElementById('resultado').innerHTML = "";
+        document.getElementById('aiMessage').innerHTML = "";
+        document.getElementById('aiMessage').className = "";
+        window.tempAiData = null;
+    }
+
+    // --- 4. PROCESAR Y VALIDAR (LÓGICA MEJORADA DE ALERTA) ---
+    function processImage(file) {
+        resetUI(); // Limpieza inicial
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const result = await callGemini(reader.result.replace(/^data:(.*,)?/, ''));
+            document.getElementById('loadingOverlay').classList.add('hidden');
+
+            if (result) {
+                const numLimpio = result.numero.replace(/\D/g, '');
+                const fechaLimpia = formatoFechaIA(result.fecha);
+                
+                // Rellenar input para referencia
+                document.getElementById('documento').value = numLimpio;
+                
+                // Preparar UI
+                const box = document.getElementById('aiResultBox');
+                const title = document.getElementById('aiTitle');
+                const msg = document.getElementById('aiMessage');
+                const actions = document.getElementById('aiActions');
+
+                document.getElementById('aiNumero').textContent = numLimpio;
+                document.getElementById('aiFecha').textContent = fechaLimpia;
+
+                // VALIDACIÓN DE COHERENCIA MATEMÁTICA
+                const numVal = parseInt(numLimpio);
+                const fechaVal = new Date(fechaLimpia.split('/').reverse().join('-')); // YYYY-MM-DD
+                
+                const datosOrd = datosCPI.sort((a, b) => a.numero - b.numero);
+                const anterior = datosOrd.filter(d => d.numero < numVal).pop();
+                const posterior = datosOrd.find(d => d.numero > numVal);
+
+                let esSospechoso = false;
+                let motivo = "";
+
+                // Lógica de validación mejorada
+                if (anterior && fechaVal < anterior.fecha) {
+                    esSospechoso = true;
+                    motivo = `⛔ <b>INCONGRUENCIA TEMPORAL (Pasado):</b><br>
+                              El documento actual tiene una fecha (${fechaLimpia}) <b>ANTERIOR</b> a un número de orden menor ya registrado.<br><br>
+                              • Registro Previo: Nº ${anterior.numero} (${formatoFecha(anterior.fecha)})`;
+                } else if (posterior && fechaVal > posterior.fecha) {
+                    esSospechoso = true;
+                    motivo = `⛔ <b>INCONGRUENCIA TEMPORAL (Futuro):</b><br>
+                              El documento actual tiene una fecha (${fechaLimpia}) <b>POSTERIOR</b> a un número de orden mayor ya registrado.<br><br>
+                              • Registro Siguiente: Nº ${posterior.numero} (${formatoFecha(posterior.fecha)})`;
+                } else {
+                    // Es coherente, explicamos por qué (el "Sándwich")
+                    if (anterior && posterior) {
+                        motivo = `✅ <b>COHERENCIA VERIFICADA:</b><br>
+                                  El documento encaja correctamente en la secuencia temporal:<br>
+                                  • Anterior: Nº ${anterior.numero} (${formatoFecha(anterior.fecha)})<br>
+                                  • <b>Actual: Nº ${numVal} (${fechaLimpia})</b><br>
+                                  • Posterior: Nº ${posterior.numero} (${formatoFecha(posterior.fecha)})`;
+                    } else if (anterior) {
+                        motivo = `✅ <b>COHERENCIA VERIFICADA:</b><br>
+                                  Es posterior al último registro conocido:<br>
+                                  • Último: Nº ${anterior.numero} (${formatoFecha(anterior.fecha)})`;
+                    } else if (posterior) {
+                        motivo = `✅ <b>COHERENCIA VERIFICADA:</b><br>
+                                  Es anterior al primer registro conocido:<br>
+                                  • Primero: Nº ${posterior.numero} (${formatoFecha(posterior.fecha)})`;
+                    } else {
+                        motivo = "✅ Primer dato en la base de datos. No hay referencias para comparar, pero el formato es correcto.";
+                    }
+                }
+
+                // CONFIGURAR APARIENCIA
+                box.className = esSospechoso 
+                    ? "mt-4 w-11/12 max-w-md mx-auto border-4 border-red-600 bg-red-50 rounded-lg p-4 text-center shadow-xl animate-pulse" 
+                    : "mt-4 w-11/12 max-w-md mx-auto border-2 border-green-500 bg-green-50 rounded-lg p-4 text-center shadow-md";
+
+                title.className = esSospechoso ? "text-red-700 font-black text-xl mb-2 uppercase" : "text-green-700 font-bold text-lg mb-2";
+                title.textContent = esSospechoso ? "⚠️ ALERTA: INCOHERENCIA" : "✅ Documento Coherente";
+
+                if (esSospechoso) {
+                    msg.className = "bg-red-100 text-red-900 p-3 rounded border border-red-300 text-sm font-medium text-left";
+                    msg.innerHTML = `${motivo}<br><br><span class="font-bold underline">CONCLUSIÓN:</span> Posible documento manipulado o falso.`;
+                    actions.classList.add('hidden');
+                } else {
+                    const existe = datosCPI.find(d => d.numero == numVal);
+                    if(existe) {
+                        msg.className = "text-blue-700 bg-blue-50 p-2 rounded border border-blue-200";
+                        msg.innerHTML = "ℹ️ Este número ya existe en la base de datos con fecha: " + formatoFecha(existe.fecha);
+                        actions.classList.add('hidden');
+                    } else {
+                        msg.className = "text-green-800 bg-green-100 p-3 rounded border border-green-300 text-sm";
+                        msg.innerHTML = motivo;
+                        actions.classList.remove('hidden');
+                        window.tempAiData = { numero: numVal, fecha: fechaLimpia.split('/').reverse().join('-') };
+                    }
+                }
+
+                box.classList.remove('hidden');
+            }
+        };
+    }
+
+    function guardarDesdeAI() {
+        if (!window.tempAiData) return;
+        cpiRef.child(String(window.tempAiData.numero)).set({ fecha: window.tempAiData.fecha })
+            .then(() => {
+                alert(`✅ Guardado: ${window.tempAiData.numero}`);
+                document.getElementById('aiResultBox').classList.add('hidden');
+                document.getElementById('documento').value = ''; // Limpiar input tras guardar
+            });
+    }
+
+    function formatoFechaIA(str) { return str.replace(/\./g, '/').replace(/-/g, '/'); }
+
+    // --- DRAG & DROP ROBUSTO ---
+    const dropZone = document.getElementById('mainDropZone');
+    const inputDoc = document.getElementById("documento");
+
+    // Habilitar tecla ENTER en búsqueda manual
+    inputDoc.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        calcularFecha();
+      }
+    });
+
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', e => e.preventDefault());
+
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.classList.add('drag-active');
+    });
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.classList.add('drag-active');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (e.target === dropZone) dropZone.classList.remove('drag-active');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        dropZone.classList.remove('drag-active');
+        const files = e.dataTransfer.files;
+        if (files && files[0]) processImage(files[0]);
+    });
+
+    window.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                processImage(items[i].getAsFile()); return;
+            }
+        }
+    });
+
+    // --- CARGA DATOS ---
+    cpiRef.on('value', (snapshot) => {
+        datosCPI = [];
+        snapshot.forEach((child) => {
+            const d = child.val();
+            const n = parseInt(child.key) || parseInt(d.numero);
+            if(!isNaN(n)) datosCPI.push({ key: child.key, numero: n, fecha: new Date(d.fecha) });
+        });
+        renderizarTablaCpi();
+        popularSelectores();
+        mostrarResumenEstadisticas();
+    });
+
+    // ... RESTO DE LÓGICA ...
+    const mostrarFormularioBtn = document.getElementById('mostrarFormularioBtn');
+    const formularioCpi = document.getElementById('formularioCpi');
+    const cpiDataTable = document.getElementById('cpiDataTable');
+    const toggleCpiListBtn = document.getElementById('toggleCpiListBtn');
+    const estadisticasCpiDiv = document.getElementById('estadisticasCpi');
+    const toggleEstadisticasBtn = document.getElementById('toggleEstadisticasBtn');
+    const cpiListDiv = document.getElementById('cpiList');
+    const resumenEstadisticasDiv = document.getElementById('resumenEstadisticas');
+    const resultadosEstadisticasDiv = document.getElementById('resultadosEstadisticas');
+    const mesSelector = document.getElementById('mesSelector');
+    const anioSelector = document.getElementById('anioSelector');
+    const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    mostrarFormularioBtn.addEventListener('click', () => { formularioCpi.classList.toggle('hidden'); cpiDataTable.classList.add('hidden'); estadisticasCpiDiv.classList.add('hidden'); });
+    toggleCpiListBtn.addEventListener('click', () => { cpiDataTable.classList.toggle('hidden'); formularioCpi.classList.add('hidden'); estadisticasCpiDiv.classList.add('hidden'); if(!cpiDataTable.classList.contains('hidden')) renderizarTablaCpi(); });
+    toggleEstadisticasBtn.addEventListener('click', () => { estadisticasCpiDiv.classList.toggle('hidden'); formularioCpi.classList.add('hidden'); cpiDataTable.classList.add('hidden'); if(!estadisticasCpiDiv.classList.contains('hidden')) { popularSelectores(); mostrarResumenEstadisticas(); } });
+
+    function popularSelectores() {
+      const anios = [...new Set(datosCPI.map(d => d.fecha.getFullYear()))].sort((a,b)=>b-a);
+      anioSelector.innerHTML = '<option value="">Año...</option>';
+      anios.forEach(a => anioSelector.innerHTML += `<option value="${a}">${a}</option>`);
+      
+      const meses = [...new Set(datosCPI.map(d => `${d.fecha.getMonth()}-${d.fecha.getFullYear()}`))].sort((a,b) => {
+          const [mA, aA] = a.split('-'), [mB, aB] = b.split('-');
+          return new Date(aB, mB) - new Date(aA, mA);
+      });
+      mesSelector.innerHTML = '<option value="">Mes...</option>';
+      meses.forEach(m => {
+          const [mes, anio] = m.split('-');
+          mesSelector.innerHTML += `<option value="${m}">${nombresMeses[mes]} ${anio}</option>`;
+      });
+    }
+
+    mesSelector.addEventListener('change', (e) => { if(e.target.value) { const [m, a] = e.target.value.split('-'); resultadosEstadisticasDiv.innerHTML = `<p class="font-bold">Estimación: <span class="text-blue-600 text-xl">${formatNumber(calcularCertificados(new Date(a, m, 1), new Date(a, Number(m)+1, 0)))}</span></p>`; } });
+    anioSelector.addEventListener('change', (e) => { if(e.target.value) { resultadosEstadisticasDiv.innerHTML = `<p class="font-bold">Estimación Año: <span class="text-blue-600 text-xl">${formatNumber(calcularCertificados(new Date(e.target.value, 0, 1), new Date(e.target.value, 11, 31)))}</span></p>`; } });
+
+    function mostrarResumenEstadisticas() {
+        const hoy = new Date();
+        resumenEstadisticasDiv.innerHTML = `<p>Mes actual: <b>${formatNumber(calcularCertificados(new Date(hoy.getFullYear(), hoy.getMonth(), 1), hoy))}</b></p><p>Año actual: <b>${formatNumber(calcularCertificados(new Date(hoy.getFullYear(), 0, 1), hoy))}</b></p>`;
+    }
+
+    function calcularCertificados(ini, fin) {
+        const ord = datosCPI.sort((a,b)=>a.fecha-b.fecha);
+        const nIni = getEstimatedNumero(ini, ord);
+        const nFin = getEstimatedNumero(fin, ord);
+        return (nIni && nFin) ? nFin - nIni : 0;
+    }
+
+    function getEstimatedNumero(d, data) {
+        if(data.length < 2) return null;
+        const ts = d.getTime();
+        const prev = data.filter(x => x.fecha.getTime() <= ts).pop();
+        const next = data.find(x => x.fecha.getTime() > ts);
+        if(!prev) return data[0].numero;
+        if(!next) return data[data.length-1].numero;
+        const r = (ts - prev.fecha.getTime()) / (next.fecha.getTime() - prev.fecha.getTime());
+        return prev.numero + r * (next.numero - prev.numero);
+    }
+
+    function formatNumber(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+    function pad(n) { return n<10?'0'+n:n; }
+    function formatoFecha(d) { if(!d) return ''; if(typeof d === 'string') return d; return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`; }
+
+    function renderizarTablaCpi() {
+        cpiListDiv.innerHTML = '';
+        const sorted = datosCPI.sort((a,b) => b.numero - a.numero);
+        sorted.forEach(d => {
+            cpiListDiv.innerHTML += `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-6 py-4">${d.numero}</td><td class="px-6 py-4">${formatoFecha(d.fecha)}</td><td class="px-6 py-4 text-right"><span onclick="eliminarCpi('${d.key}')" class="text-red-500 cursor-pointer font-bold">X</span></td></tr>`;
+        });
+    }
+    
+    function eliminarCpi(k) { if(confirm("¿Eliminar?")) cpiRef.child(k).remove(); }
+    
+    function guardarNuevoCpi() {
+        const n = parseInt(document.getElementById('nuevoNumeroCpi').value);
+        const f = document.getElementById('nuevaFechaCpi').value;
+        if(n && f) cpiRef.child(String(n)).set({fecha: f}).then(()=>{alert("Guardado"); limpiarCampos();});
+    }
+    function limpiarCampos() { document.getElementById('nuevoNumeroCpi').value=''; document.getElementById('nuevaFechaCpi').value=''; }
+
+    function calcularFecha() {
+        resetUI(); // Limpieza inicial al hacer búsqueda manual
+        const n = parseInt(document.getElementById("documento").value);
+        const res = document.getElementById("resultado");
+        if(isNaN(n)) { res.innerHTML = "Número inválido"; return; }
+        
+        const ord = datosCPI.sort((a,b)=>a.numero-b.numero);
+        const ex = ord.find(x=>x.numero===n);
+        if(ex) { res.innerHTML = `<span class="text-green-600 font-bold">EXISTE: ${formatoFecha(ex.fecha)}</span>`; return; }
+        
+        const ant = ord.filter(x=>x.numero<n).pop();
+        const post = ord.find(x=>x.numero>n);
+        
+        if(!ant) { res.innerHTML = "Número muy bajo"; return; }
+        if(!post) { res.innerHTML = `Sin datos recientes. Posterior a ${formatoFecha(ant.fecha)}`; return; }
+        
+        const r = (n - ant.numero) / (post.numero - ant.numero);
+        const t = ant.fecha.getTime() + r * (post.fecha.getTime() - ant.fecha.getTime());
+        res.innerHTML = `Estimada: <b>${formatoFecha(new Date(t))}</b>`;
+    }
+  </script>
+</body>
+</html>

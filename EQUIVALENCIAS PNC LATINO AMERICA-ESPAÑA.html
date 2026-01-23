@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Licencias de Conducir</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        .flag-button-spain {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+      Tabla de equivalencias<br>Latinoamérica
+  </h1>
+
+  <div class="bg-white shadow-md rounded-lg px-14 py-4 mt-4 text-center w-11/12 max-w-md mx-auto">
+    <h2 class="text-lg font-semibold mb-4">Verifique su licencia</h2>
+    <div class="mb-4">
+      <label for="pais" class="block text-center text-sm font-bold text-gray-700 mb-1">País</label>
+      <select id="pais" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="">Seleccione un país</option>
+        <option value="argentina">Argentina</option>
+        <option value="belice">Belice</option>
+        <option value="bolivia">Bolivia</option>
+        <option value="brasil">Brasil</option>
+        <option value="chile">Chile</option>
+        <option value="colombia">Colombia</option>
+        <option value="costa_rica">Costa Rica</option>
+        <option value="ecuador">Ecuador</option>
+        <option value="el_salvador">El Salvador</option>
+        <option value="guatemala">Guatemala</option>
+        <option value="honduras">Honduras</option>
+        <option value="mexico">México</option>
+        <option value="nicaragua">Nicaragua</option>
+        <option value="panama">Panamá</option>
+        <option value="paraguay">Paraguay</option>
+        <option value="peru">Perú</option>
+        <option value="republica_dominicana">República Dominicana</option>
+        <option value="uruguay">Uruguay</option>
+        <option value="venezuela">Venezuela</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <label for="tipo-permiso" class="block text-center font-bold text-gray-700">Tipo de licencia:</label>
+      <select id="tipo-permiso" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+        <option value="">Seleccione un tipo de licencia</option>
+      </select>
+    </div>
+    <div id="resultado" class="mt-4 text-gray-700 text-lg font-medium"></div>
+    <div id="enlace-dgt" class="mt-4 text-center hidden">
+        <a href="https://bit.ly/3Uuv38P" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+            ¿Dudas con las equivalencias?<br>Ver Canje de Notas DGT
+        </a>
+    </div>
+    <button id="detalle-categorias" type="button" class="hidden mt-4 w-full bg-gray-800 text-white py-2 rounded-md shadow hover:bg-gray-900">Ver todas las categorías</button>
+  </div>
+  <div id="detalle-contenedor" class="hidden mt-6 bg-white p-6 rounded shadow-md"></div>
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    const licenciaData = {
+      
+      argentina: { a1: "Ciclomotores hasta 50cc, edad mínima 16 años", a21: "Motocicletas, triciclos y cuatriciclos de hasta 150cc, edad mínima 17 años", a22: "Motocicletas, triciclos y cuatriciclos de más de 150cc hasta 300cc, edad mínima 18 años", a3: "Motocicletas, triciclos y cuatriciclos de más de 300cc, edad mínima 18 años", a4: "Ciclomotores, motocicletas, triciclos y cuatriciclos utilizados para transporte de actividad comercial e industrial, edad mínima 18 años", b1: "Automóviles y camionetas hasta 3.500kg, edad mínima 17 años", b2: "Automóviles y camionetas hasta 3.500kg con acoplado hasta 750kg, edad mínima 17 años", c: "Camiones sin acoplado ni semirremolque de más de 3.500kg, edad mínima 21 años", d1: "Automotores de servicio de transporte de pasajeros hasta 8 plazas y los de clase B.1, edad mínima 21 años", d2: "Vehículos del servicio de transporte de más de 8 pasajeros y los de clases C, D y D.1, edad mínima 21 años", e1: "Camiones articulados y/o con acoplado, edad mínima 21 años", e2: "Vehículos afectados al transporte de cargas peligrosas, edad mínima 21 años", e3: "Vehículos afectados al transporte de pasajeros peligrosos, edad mínima 21 años", f: "Vehículos que incluyan adaptaciones especiales para personas con discapacidad, edad mínima según la clase correspondiente", g1: "Tractores agrícolas, edad mínima 17 años", g2: "Maquinaria especial agrícola, edad mínima 17 años" },
+      belice: { a: "Automóviles", b: "Motocicletas", c: "Vehículos de servicio público" },
+      bolivia: { m: "Motocicletas y cuadriciclos de cualquier cilindrada, edad mínima 18 años", p: "Vehículos livianos de servicio particular hasta 10 ocupantes incluido el conductor, edad mínima 18 años", a: "Vehículos livianos de transporte público hasta 10 pasajeros incluido el conductor. Vehículos de transporte de carga hasta 2.5 toneladas. Vehículos particulares de características similares, edad mínima 21 años", b: "Vehículos de transporte público de hasta 22 pasajeros incluido el conductor. Vehículos de transporte de carga de hasta 6 toneladas. Vehículos particulares de características similares, edad mínima 23 años", c: "Vehículos de transporte público de más de 22 pasajeros. Vehículos de transporte de carga superior a 6 toneladas. Vehículos particulares de características similares, edad mínima 25 años", t: "Maquinaria motorizada pesada, edad mínima 25 años" },
+      brasil: { a: "Motocicletas de todas las categorías, edad mínima 18 años", b: "Livianos, edad mínima 18 años", c: "Vehículos de carga, edad mínima 19 años y 1 año de B", d: "Transporte de personas, edad mínima 20 años y 2 años de B", e: "Vehículos articulados, edad mínima 20 años y 2 años de B", },
+      chile: { a1: "Motocicletas hasta 125cc, edad mínima 18 años", a2: "Motocicletas de más de 125cc, edad mínima 18 años", b: "Vehículos motorizados de 3 o más ruedas para el transporte particular de personas o de carga de hasta 3500kg, edad mínima 18 años", c: "Motocicletas, motonetas, bici-motos y vehículos motorizados de 2 o 3 ruedas, edad mínima 18 años", d: "Tractores, sembradoras, grúas, palas mecánicas, etc., edad mínima 18 años", e: "Carretelas, coches, carrozas, etc., edad mínima 18 años", f: "No importa el tipo de vehículo, lo que interesa es la propiedad, pero en general hay de todo: autos, camiones, motos, buses, edad mínima 18 años", },
+      colombia: { a1: "Motocicletas de hasta 125cc, edad mínima 16 años", a2: "Motocicletas, motociclos y moto-triciclos de más de 125cc, edad mínima 16 años", b1: "Automóviles, motocarros, cuatri-motos, camperos, camionetas y microbuses, edad mínima 16 años", b2: "Camiones rígidos, busetas y buses, edad mínima 16 años", b3: "Vehículos articulados, edad mínima 16 años", c1: "Automóviles, camperos, camionetas y microbuses, edad mínima 18 años", c2: "Camiones rígidos, busetas y buses, edad mínima 18 años", c3: "Vehículos articulados, edad mínima 18 años", },
+      costa_rica: { a1: "Motobicicletas, bicimotos, triciclos y cuadriciclos de hasta 90 cc, edad mínima 13 años", a2: "Motobicicletas, bicimotos, triciclos y cuadriciclos de 91 a 125 cc, edad mínima 15 años", a3: "Motobicicletas, bicimotos, triciclos y cuadriciclos de 126 a 500 cc, edad mínima 18 años", a4: "Motobicicletas, bicimotos, triciclos y cuadriciclos más de 501 cc, edad mínima 18 años", b1: "Vehículos livianos de hasta 1.5 Tm, edad mínima 18 años", b2: "Vehículos de hasta 5 Tm, edad mínima 19 años (y 1 año de B1)", b3: "Vehículos rígidos, edad mínima 21 años (y 2 años de B2)", b4: "Vehículos articulados, edad mínima 25 años (y 3 años de B3)", c1: "Taxis, edad mínima 18 años", c2: "Autobuses, edad mínima 23 años (y 5 años de B1)", d1: "Tractores de llantas, edad mínima 17 años", d2: "Tractores oruga, edad mínima 17 años", d3: "Otra maquinaria, edad mínima 16 años", e1: "Vehículos de 2, 3, 4 o más ejes, edad mínima 26 años (y 1 año de A4 y B4)", e2: "Tractores de llanta, oruga, y vehículos de 2, 3, 4 o más ejes, edad mínima 26 años (y 1 año de A4 y B4)", },
+      ecuador: { a: "Para conducción de vehículos motorizados como: ciclomotores, motocicletas, tricimotos y cuadrones, edad mínima 18 años", b: "Para automóviles y camionetas con acoplados de hasta 1.75 toneladas de carga útil o casas rodantes, edad mínima 16 años con permiso de menor, adulto 18 años", f: "Para automotores especiales adaptados para personas con capacidades especiales, edad mínima 18 años", c1: "Para vehículos policiales, ambulancias militares, municipales y en general todo vehículo del Estado Ecuatoriano, edad mínima 18 años", c: "Para taxis convencionales, ejecutivos, camionetas livianas o mixtas hasta 3500 kg, hasta 8 pasajeros, edad mínima 18 años", d1: "Para escolares-personal y turismo, hasta 45 pasajeros, edad mínima 18 años", d: "Para servicio de pasajeros (urbano, interprovinciales, intraprovinciales y cuenta propia), edad mínima 18 años", e1: "Para ferrocarriles, auto ferros, motobombas, trolebús, para transportar mercancías o sustancias peligrosas y otros vehículos especiales, edad mínima 18 años", e: "Para camiones pesados y extra pesados con o sin remolque, de más de 3,5 toneladas, tráiler, volquetas, tanqueros, plataformas públicas, cuenta propia y estatales, otros camiones, edad mínima 18 años", g: "Para maquinaria agrícola, maquinaria pesada, equipos camineros (tractores, moto niveladoras, retroexcavadoras, montacargas, palas mecánicas y otros), edad mínima 18 años", a1: "Para conducir tricimotos de servicio comercial, y los del tipo A, edad mínima 18 años", },
+      el_salvador: { juvenil_particular: "Automóviles, pick Up Placa Particular, edad mínima 15 (Vence a los 18)", juvenil_motociclista: "Motocicletas, tricimotos y cuadrimotos, edad mínima 15 (Vence a los 18)", motociclista: "Motocicletas, tricimotos, cuadrimotos y tricimotos de carga, edad mínima 18", particular: "Vehículos Placa particular: Automóviles, Pick Up, Camiones hasta 3 Tm, Microbuses hasta 17 pasajeros, edad mínima 18", liviana: "Transporte colectivo: taxis, Pick Up, microbuses hasta 30 pasajeros. Tricimotos. Transporte de carga: Camiones hasta 5 Tm, edad mínima 18", pesada: "Transporte colectivo: Autobuses de más de 30 plazas. Transporte de carga: Camiones, remolques, cabezales, tráiler, maquinaria con ruedas de hule de más de 5 Tm, edad mínima 21", pesada_t: "Transporte de carga: Camiones, remolques, cabezales, tráiler, maquinaria con ruedas de hule de más de 5 Tm que posean 3 o más ejes, edad mínima 21", },
+      guatemala: { a: "Transporte de carga de más de 3.5 Tm, Transporte escolar y colectivo, edad mínima 23 años", b: "Automóviles de hasta 3.5 Tm, pudiendo recibir remuneración, edad mínima 21 años", c: "Automóviles, microbuses, pick-ups con o sin remolque, peso bruto máximo de hasta 3.5 Tm, sin recibir remuneración, edad mínima 16 con autorización de Padre de Familia, adulto 18 años", m: "Motobicicletas y motocicletas, edad mínima 16 con autorización de Padre de Familia, adulto 18 años", e: "Maquinaria agrícola e industrial (No autoriza a conducir cualquier otro tipo de vehículo), edad mínima 18 años", },
+      honduras: { liviana_nacional: "Vehículos livianos, camionetas, microbuses de uso particular, edad mínima 18 años", liviana_internacional: "Vehículos livianos, camionetas, microbuses de uso particular, edad mínima 18 años", especial_nacional: "Motos, trimotos, cuatrimotos, edad mínima 18 años", no_articulado_nacional: "Camiones, buses, volquetas, edad mínima 25 años (y 5 de L)", no_articulado_internacional: "Camiones, buses, volquetas, edad mínima 25 años (y 5 de L)", pesada_articulada_nacional: "Rastras, furgones, cisternas, edad mínima 25 años (y 5 de L)", pesada_articulada_internacional: "Rastras, furgones, cisternas, edad mínima 25 años (y 5 de L)", },
+      mexico: { p: "Permiso para Menores de Edad, edad mínima entre 15 y 17 años. Permite a los menores conducir vehículos particulares bajo ciertas restricciones y con la autorización de sus tutores legales.", a_Automovilista: "Licencia Tipo A, edad mínima 18 años. Autoriza la conducción de vehículos particulares para uso personal, sin fines comerciales.", a_Motociclista: "Licencia Tipo A, edad mínima 18 años. Autoriza a conducir únicamente motocicletas.",b_Chofer: "Licencia Tipo B, edad mínima 18 años. Destinada a conductores de vehículos de transporte público, como taxis y microbuses.", c_Chofer: "Licencia Tipo C, edad mínima 21 años. Para conductores de vehículos de carga, incluyendo camiones de más de dos ejes.", d: "Licencia Tipo D, edad mínima 18 años. Otorgada a conductores de transporte de pasajeros, como autobuses urbanos y turísticos.", e: "Licencia Tipo E, edad mínima 21 años. Para conductores de vehículos de carga especializada, incluyendo materiales peligrosos.", },
+      nicaragua: { uno_me: "Motocicletas y cuadriciclos de hasta 125 cc, edad mínima 16 años. Permite a los menores conducir vehículos particulares bajo ciertas restricciones y con la autorización de sus tutores legales.", dos_o: "Motocicletas y cuadriciclos de más de 125 cc, edad mínima 21 años.", tres_me: "Vehículos livianos de hasta 3.5 Tm. y de hasta 5 ocupantes incluido el conductor, edad mínima 16 años.", tres_o: "Vehículos livianos de hasta 3.5 Tm. y de hasta 9 ocupantes, incluido el conductor, edad mínima 21 años.", tres_p: "Vehículos livianos, servicio de taxi de hasta 9 ocupantes incluido el conductor, o carga hasta 3.5 Tm., edad mínima 24 años (y 3 años de lic. O).", cuatro_ab: "A: Transporte de Carga hasta 8 TM. B: Colectivo hasta 18 ocupantes, edad mínima 24 años (y 3 años de lic. O).", cinco_ab: "A: Transporte de Carga hasta 12 Tm. B: Colectivo hasta 25 ocupantes, edad mínima 24 años (y 3 años de lic. O).", seis_ab: "A: Transporte de Carga de más de 12 Tm. B: Colectivo de más de 25 ocupantes, edad mínima 24 años (y 3 años de lic. O).", siete_p: "Transporte de más de 18 Tm. Y vehículos articulados, edad mínima 24 años (y 3 años de lic. O).", ocho_e: "Vehículos agrícolas y de construcción (Velocidad< 20 Km/h), edad mínima 18 años.", },
+      panama: { b: "Motocicleta, edad mínima 18 años", c: "Automóviles y camionetas, edad mínima 18 años", d: "Camiones livianos hasta 8 Tm. Y autobuses de hasta 16 pasajeros (transporte. privado), edad mínima 18 años", e: "Transporte público de pasajeros", e1: "Transporte selectivo, 2 años de C o D", e2: "Autobuses de hasta 16 pasajeros, 2 años de C o D", e3: "Autobuses de más de 16 pasajeros, 2 años de C o D", f: "Camiones unitarios de más de 8 Tm. Y autobuses de más de 16 pasajeros, 2 años de C o D", g: "Camiones combinados, 2 años de F", h: "Vehículos de transporte de cargas peligrosas, 2 años de F", i: "Equipo pesado, 2 años de C o D", },
+      paraguay: { motociclista: "Motocicletas, edad mínima 18 años", extranjero: "Vehículos de uso personal para extranjeros de hasta 2 tTm de carga, edad mínima 18 años", PAS_profesional_a: "Vehículos de servicio de transporte público interno, edad mínima 22 años (1 año de Profesional B Superior o (y) B)", PRA_profesional_a_superior: "Vehículos de todo tipo y transporte internacional de pasajeros, edad mínima 25 años (1 año de Profesional A)", PBS_profesional_b_superior: "Vehículos de carga internacional con o sin remolque, sin limitación de tonelaje, edad mínima 22 años (1 año de Profesional B)", PRB_profesional_b: "Vehículos de carga de hasta 5 Tm, edad mínima 20 años", PRC_profesional_c: "Tractores, maquinaria agrícola y pesada, edad mínima 20 años", PAR_particular_e: "Jeep, coches, camionetas furgonetas de hasta 2 Tm de carga, edad mínima 18 años", },
+      peru: { a_i: "Vehículos autorizados: Automóviles como sedanes, coupé, hatchback, convertibles, station wagon, SUV, areneros y pickup. Edad mínima: 18 años. Excepcionalmente, se puede obtener a los 16 años si el solicitante está legalmente casado o posee un título oficial que le permita ejercer una profesión u oficio con plena capacidad de sus derechos civiles, según los artículos 42 y 46 del Código Civil.", a_iia: "Vehículos autorizados: Vehículos de la categoría A-I. Vehículos destinados al transporte de personas como taxis, ambulancias y vehículos de transporte público urbano o interurbano. Edad mínima: 21 años. Requisitos adicionales: Poseer la licencia A-I. Experiencia mínima de 2 años con la licencia A-I.", a_iib: "Vehículos autorizados: Vehículos de la categoría A-I. Microbuses de hasta 16 asientos y 4 toneladas de peso bruto vehicular. Minibuses de hasta 33 asientos y 7 toneladas de peso bruto vehicular. Edad mínima: 21 años. Requisitos adicionales: Poseer la licencia A-I con una antigüedad mínima de 3 años o la A-IIa con al menos 1 año de experiencia.", a_iiia: "Vehículos autorizados: Vehículos de las categorías A-I, A-IIa y A-IIb. Ómnibus urbanos e interurbanos de más de 6 toneladas de peso bruto vehicular. Edad mínima: 24 años. Requisitos adicionales: Poseer la licencia A-IIb con una antigüedad mínima de 2 años.", a_iiib: "Vehículos autorizados: Vehículos de las categorías A-I, A-IIa y A-IIb. Vehículos de transporte de mercancías de más de 12 toneladas de peso bruto vehicular, como camiones, remolcadores y grúas. Edad mínima: 24 años. Requisitos adicionales: Poseer la licencia A-IIb con una antigüedad mínima de 2 años.", a_iiic: "Vehículos autorizados: Todos los vehículos autorizados en las categorías anteriores. Edad mínima: 27 años. Requisitos adicionales: Poseer la licencia A-IIb con una antigüedad mínima de 4 años o la A-IIIa o A-IIIb con al menos 1 año de experiencia.", b_i: "Vehículos autorizados: Motocicletas y mototaxis. Edad mínima: 18 años.", b_iia: "Vehículos autorizados: Vehículos menores de tres ruedas destinados al transporte de mercancías. Edad mínima: 18 años.", b_iib: "Vehículos autorizados: Vehículos menores de tres ruedas destinados al transporte de pasajeros (mototaxis). Edad mínima: 18 años.", b_iic: "Vehículos autorizados: Vehículos menores de dos o tres ruedas utilizados para transporte especial o servicios específicos. Edad mínima: 18 años.", },
+      republica_dominicana: { categoria_00: "Licencia de aprendizaje para conducir vehículos de cualquier categoría bajo supervisión. Edad mínima: 16 años.", categoria_01: "Vehículos autorizados: Motocicletas y similares de cualquier cilindrada. Edad mínima: 16 años.", categoria_02: "Vehículos autorizados: Automóviles, camionetas y vehículos livianos con un remolque de hasta 750 kg. Edad mínima: 18 años.", categoria_03: "Vehículos autorizados: Vehículos destinados al transporte de pasajeros o carga, como minibuses, autobuses y camiones. Edad mínima: 21 años. Requisitos adicionales: Poseer previamente la licencia de categoría 02.", categoria_04: "Vehículos autorizados: Vehículos utilizados para el transporte público de pasajeros, como taxis y autobuses urbanos. Edad mínima: 21 años. Requisitos adicionales: Poseer previamente la licencia de categoría 02.", categoria_05: "Vehículos autorizados: Vehículos destinados al transporte de materiales peligrosos. Edad mínima: 21 años. Requisitos adicionales: Poseer previamente la licencia de categoría 03 o 04. Aprobar cursos especializados en manejo de materiales peligrosos.", categoria_06: "Vehículos autorizados: Cualquier tipo de vehículo de las categorías anteriores. Edad mínima: 21 años. Requisitos adicionales: Experiencia previa y certificaciones específicas según el tipo de vehículo.", },
+      uruguay: { a: "Vehículos de hasta 9 pasajeros, incluido el conductor, camionetas y vehículos con remolque de hasta 4000 kg. Edad mínima: 18 años.", b: "Vehículos de hasta 18 pasajeros y camiones de hasta 7000 kg, con remolque que no pase de 1.500 kg. Edad mínima: 18 años.", c: "Vehículos de hasta 18 pasajeros y camiones simples, con remolque que no pase de 1.500 kg. Edad mínima: 19 años (y un año de otra licencia, excepto la G).", d: "Vehículos de hasta 18 pasajeros y camiones sin límite de carga. Edad mínima: 21 años (y 3 años de otra licencia, excepto la G).", e: "Taxis, vehículos de hasta 9 pasajeros, incluido el conductor, camionetas y vehículos con remolque, con peso máximo total de 4000 kg. Edad mínima: 21 años (y 3 años de otra licencia, excepto la G).", f: "Micros, ómnibus y camiones simples con remolque que no pase de 1.500 kg. Edad mínima: 23 años (y 3 años de otra licencia, excepto la G).", g1: "Ciclomotores de hasta 50 c.c. sin cambios. Edad mínima: 16 años.", g2: "Motocicletas, ciclomotores y cuadriciclos desde 50 hasta 200 c.c. Edad mínima: 18 años.", g3: "Motocicletas sin límite de cilindrada y cuadriciclos. Edad mínima: 21 años (y 3 años de licencia G).", h: "Maquinaria vial, agrícola y afines. Edad mínima: 18 años (No genera antigüedad).", },
+      venezuela: { primer_grado: "Para personas mayores de 16 años, autoriza la conducción de vehículos de tracción animal.", segundo_grado: "Para mayores de 18 años, habilita la conducción de motocicletas de cualquier cilindraje.", tercer_grado: "Edad mínima: 18 años. Vehículos autorizados: Automóviles de uso particular con capacidad hasta 9 puestos, incluyendo al conductor, y vehículos de carga con peso máximo de 2.500 kg. Nota: Puede ser otorgada a menores de 18 años con autorización notariada de sus representantes legales, sujeta a restricciones especificadas en la Ley de Transporte Terrestre.", cuarto_grado: "Edad mínima: 21 años. Vehículos autorizados: Unidades de transporte público hasta 12 puestos y vehículos de carga con peso máximo de 6.000 kg.", quinto_grado: "Edad mínima: 25 años. Vehículos autorizados: Transporte público hasta 33 puestos y vehículos de carga con peso máximo de 9.000 kg. Requisitos adicionales: Aprobar un curso de manejo dictado por Escuelas de Transporte autorizadas.", titulo_superior_profesional: "Edad mínima: 30 años. Vehículos autorizados: Unidades de transporte público con más de 33 puestos, vehículos de carga que excedan los 9.000 kg y vehículos con cargas de alto riesgo. Requisitos adicionales: Certificación como Título Profesional otorgada por Escuelas de Transporte autorizadas por el INTT.", },
+    };
+
+    const paisSelect = document.getElementById('pais');
+    const permisoSelect = document.getElementById('tipo-permiso');
+    const resultadoDiv = document.getElementById('resultado');
+    const detalleBoton = document.getElementById('detalle-categorias');
+    const detalleContenedor = document.getElementById('detalle-contenedor');
+    const enlaceDGT = document.getElementById('enlace-dgt');
+
+    paisSelect.addEventListener('change', () => {
+      const pais = paisSelect.value;
+      permisoSelect.innerHTML = '<option value="">Seleccione un tipo de licencia</option>';
+
+      if (licenciaData[pais]) {
+        for (const [key, value] of Object.entries(licenciaData[pais])) {
+          const option = document.createElement('option');
+          option.value = key;
+          option.textContent = key.toUpperCase();
+          permisoSelect.appendChild(option);
+        }
+      }
+      resultadoDiv.textContent = '';
+      detalleContenedor.classList.add('hidden');
+      detalleBoton.classList.add('hidden');
+      enlaceDGT.classList.add('hidden');
+    });
+
+    permisoSelect.addEventListener('change', () => {
+      const pais = paisSelect.value;
+      const tipoPermiso = permisoSelect.value;
+
+      if (licenciaData[pais] && licenciaData[pais][tipoPermiso]) {
+        resultadoDiv.textContent = `PUEDE CONDUCIR: ${licenciaData[pais][tipoPermiso]}`;
+        resultadoDiv.style.color = 'green';
+        detalleBoton.classList.remove('hidden');
+        enlaceDGT.classList.remove('hidden');
+      } else {
+        resultadoDiv.textContent = 'No se encontraron datos para su selección.';
+        resultadoDiv.style.color = 'red';
+        detalleBoton.classList.add('hidden');
+        enlaceDGT.classList.add('hidden');
+      }
+    });
+
+    detalleBoton.addEventListener('click', () => {
+      const pais = paisSelect.value;
+
+      if (licenciaData[pais]) {
+        detalleContenedor.innerHTML = '<h3 class="text-lg font-semibold mb-4">Categorías de licencias:</h3>';
+        const ul = document.createElement('ul');
+        ul.style.textAlign = 'left';
+        ul.classList.add('list-disc', 'pl-6');
+        
+
+        for (const [key, value] of Object.entries(licenciaData[pais])) {
+          const li = document.createElement('li');
+          li.textContent = `${key.toUpperCase()}: ${value}`;
+          ul.appendChild(li);
+        }
+
+        detalleContenedor.appendChild(ul);
+        detalleContenedor.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

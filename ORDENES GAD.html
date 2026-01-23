@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Documentos - GAD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  />
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    .gad-logo-header {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .back-button {
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .back-to-menu-button {
+      background-color: #f59e0b;
+    }
+    .back-to-menu-button:hover {
+      background-color: #d97706;
+    }
+    .back-button-history {
+      background-color: #4b5563;
+    }
+    .back-button-history:hover {
+      background-color: #374151;
+    }
+  </style>
+</head>
+<body>
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="gad-logo-header">
+      <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block" />
+    </div>
+  </header>
+
+  <main class="w-full max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Gestión de Documentos</h1>
+
+    <!-- Botón para mostrar formulario -->
+    <button
+      id="mostrarFormularioBtn"
+      class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mb-4"
+    >
+      ➕ Añadir nuevo documento
+    </button>
+
+    <!-- Formulario -->
+    <div
+      id="formularioContainer"
+      class="bg-white p-6 rounded-2xl shadow-md w-full hidden"
+    >
+      <div class="flex flex-col gap-4">
+        <label class="font-semibold">Tipo de Documento</label>
+        <input
+          list="tiposDocumento"
+          id="tipoDocumento"
+          placeholder="Selecciona o escribe un tipo"
+          class="border border-gray-300 rounded-lg px-3 py-2"
+        />
+        <datalist id="tiposDocumento">
+          <option value="Orden"></option>
+          <option value="Solicitud"></option>
+        </datalist>
+
+        <label class="font-semibold">Fecha</label>
+        <input
+          type="date"
+          id="fechaDocumento"
+          class="border border-gray-300 rounded-lg px-3 py-2"
+        />
+
+        <label class="font-semibold">Descripción</label>
+        <textarea
+          id="descripcionDocumento"
+          rows="2"
+          placeholder="Breve descripción del documento"
+          class="border border-gray-300 rounded-lg px-3 py-2"
+        ></textarea>
+
+        <label class="font-semibold">URL de OneDrive</label>
+        <input
+          type="url"
+          id="urlDocumento"
+          placeholder="Pega aquí la URL de OneDrive"
+          class="border border-gray-300 rounded-lg px-3 py-2"
+        />
+
+        <div class="flex gap-3 mt-4">
+          <button
+            id="guardarBtn"
+            class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
+          >
+            Guardar documento
+          </button>
+          <button
+            id="cancelarBtn"
+            class="bg-gray-400 text-white rounded-lg px-4 py-2 hover:bg-gray-500"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de documentos -->
+    <div
+      id="listaDocumentos"
+      class="mt-8 w-full bg-white rounded-xl shadow-md overflow-x-auto"
+    >
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-blue-600 text-white">
+          <tr>
+            <th class="py-2 px-3">Tipo</th>
+            <th class="py-2 px-3">Fecha</th>
+            <th class="py-2 px-3">Descripción</th>
+            <th class="py-2 px-3 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCuerpo" class="divide-y"></tbody>
+      </table>
+    </div>
+
+    <div class="nav-buttons">
+      <a href="index.html" class="back-button back-to-menu-button">Volver a Menú Principal</a>
+      <button onclick="history.back()" class="back-button back-button-history">Atrás</button>
+    </div>
+  </main>
+
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+    <div class="flex flex-col items-center">
+      <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4" />
+      <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+      <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+      <p>&copy; GAD - Todos los derechos reservados</p>
+    </div>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      push,
+      set,
+      onValue,
+      update,
+      remove,
+    } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const ordenesRef = ref(db, "ordenes");
+
+    // 🔗 Elementos del DOM
+    const mostrarFormularioBtn = document.getElementById("mostrarFormularioBtn");
+    const formularioContainer = document.getElementById("formularioContainer");
+    const guardarBtn = document.getElementById("guardarBtn");
+    const cancelarBtn = document.getElementById("cancelarBtn");
+    const tipoInput = document.getElementById("tipoDocumento");
+    const fechaInput = document.getElementById("fechaDocumento");
+    const descripcionInput = document.getElementById("descripcionDocumento");
+    const urlInput = document.getElementById("urlDocumento");
+    const tablaCuerpo = document.getElementById("tablaCuerpo");
+
+    let idEditando = null;
+
+    // 🎛 Mostrar / Ocultar formulario
+    mostrarFormularioBtn.addEventListener("click", () => {
+      formularioContainer.classList.toggle("hidden");
+      idEditando = null;
+      limpiarFormulario();
+    });
+    cancelarBtn.addEventListener("click", () => {
+      formularioContainer.classList.add("hidden");
+      limpiarFormulario();
+    });
+
+    // 💾 Guardar o actualizar documento
+    guardarBtn.addEventListener("click", async () => {
+      const tipo = tipoInput.value.trim();
+      const fecha = fechaInput.value;
+      const descripcion = descripcionInput.value.trim();
+      const url = urlInput.value.trim();
+
+      if (!tipo || !fecha) {
+        alert("Por favor, completa el tipo de documento y la fecha.");
+        return;
+      }
+
+      if (idEditando) {
+        await update(ref(db, "ordenes/" + idEditando), { tipo, fecha, descripcion, url });
+        idEditando = null;
+      } else {
+        await push(ordenesRef, { tipo, fecha, descripcion, url });
+      }
+
+      limpiarFormulario();
+      formularioContainer.classList.add("hidden");
+    });
+
+    function limpiarFormulario() {
+      tipoInput.value = "";
+      fechaInput.value = "";
+      descripcionInput.value = "";
+      urlInput.value = "";
+    }
+
+    // 📋 Mostrar lista en tiempo real
+    onValue(ordenesRef, (snapshot) => {
+      tablaCuerpo.innerHTML = "";
+      const datos = snapshot.val();
+
+      if (!datos) {
+        tablaCuerpo.innerHTML =
+          "<tr><td colspan='4' class='text-center text-gray-500 py-4'>No hay documentos guardados.</td></tr>";
+        return;
+      }
+
+      Object.entries(datos).forEach(([id, doc]) => {
+        const fila = document.createElement("tr");
+        fila.className = "hover:bg-gray-100";
+
+        fila.innerHTML = `
+          <td class="py-2 px-3">${doc.tipo}</td>
+          <td class="py-2 px-3">${doc.fecha}</td>
+          <td class="py-2 px-3">${doc.descripcion || "-"}</td>
+          <td class="py-2 px-3 text-center flex flex-wrap gap-2 justify-center">
+            <a href="${doc.url}" target="_blank" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"><i class="fas fa-eye"></i> Ver</a>
+            <button class="editar bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"><i class="fas fa-edit"></i></button>
+            <button class="eliminar bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"><i class="fas fa-trash"></i></button>
+          </td>
+        `;
+
+        // 📝 Editar documento
+        fila.querySelector(".editar").addEventListener("click", () => {
+          idEditando = id;
+          tipoInput.value = doc.tipo;
+          fechaInput.value = doc.fecha;
+          descripcionInput.value = doc.descripcion || "";
+          urlInput.value = doc.url || "";
+          formularioContainer.classList.remove("hidden");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        // 🗑️ Eliminar documento
+        fila.querySelector(".eliminar").addEventListener("click", async () => {
+          if (confirm("¿Seguro que deseas eliminar este documento?")) {
+            await remove(ref(db, "ordenes/" + id));
+          }
+        });
+
+        tablaCuerpo.appendChild(fila);
+      });
+    });
+  </script>
+</body>
+</html>

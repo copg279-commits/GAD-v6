@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAD - Calculadora Simple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos del diseño base */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            padding: 1rem;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .gad-logo-header {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        @media (min-width: 640px) {
+             .gad-logo-header {
+                width: 160px; 
+                height: 160px;
+            }
+        }
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            color: white;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+        .back-to-menu-button {
+            background-color: #f59e0b;
+        }
+        .back-to-menu-button:hover {
+            background-color: #d97706;
+        }
+        /* Fin de estilos del diseño base */
+        
+        /* Estilos específicos para el input de la calculadora (para centrar mejor el texto en algunos navegadores) */
+        #num1, #num2 {
+            -moz-appearance: textfield; /* Para Firefox */
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none; /* Para Chrome, Safari, Opera */
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="gad-logo-header">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <main>
+        
+        <div id="applicationContainer" class="w-full bg-white shadow-lg p-6 sm:p-8 rounded-xl border border-gray-200 min-h-[50vh]">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 text-center">Calculadora Simple Integrada</h2>
+            
+            <div class="p-6 bg-white border border-gray-200 rounded-xl shadow-lg w-full max-w-sm mx-auto">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center text-green-600">➕ SUMADORA GAD ➕</h3>
+                
+                <div class="flex items-center justify-center space-x-4 mb-6">
+                    <input type="number" id="num1" value="0" placeholder="Número 1" class="w-24 p-2 border border-blue-400 rounded-lg text-center text-lg focus:ring-blue-500 focus:border-blue-500">
+                    <span class="text-3xl font-light text-gray-700">+</span>
+                    <input type="number" id="num2" value="0" placeholder="Número 2" class="w-24 p-2 border border-blue-400 rounded-lg text-center text-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <button onclick="sumar()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out">
+                    <i class="fas fa-calculator mr-2"></i> Calcular Suma
+                </button>
+                
+                <div id="resultado" class="mt-6 text-2xl font-extrabold text-center text-gray-800 min-h-8"></div>
+            </div>
+            </div>
+        
+        <a href="index.html" class="back-button back-to-menu-button">
+            <i class="fas fa-arrow-left mr-2"></i> Volver a Menú Principal
+        </a>
+    </main>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200 shadow-inner w-full">
+        <div class="flex flex-col items-center px-4">
+            <hr class="border-t border-gray-400 w-full max-w-sm mx-auto mb-4">
+            <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+            <p>&copy; GAD - Todos los derechos reservados</p>
+        </div>
+    </footer>
+    
+    <script>
+        /**
+         * Función para sumar los dos números de la calculadora.
+         * Se coloca al final del body para asegurar que los elementos HTML ya existen.
+         */
+        function sumar() {
+            // Obtener los valores de los inputs, convertirlos a float y usar 0 si no son válidos (ej. vacíos).
+            const numero1 = parseFloat(document.getElementById('num1').value) || 0;
+            const numero2 = parseFloat(document.getElementById('num2').value) || 0;
+            
+            const suma = numero1 + numero2;
+            
+            // Mostrar el resultado, limitado a dos decimales para mayor claridad.
+            document.getElementById('resultado').textContent = 'El resultado es: ' + suma.toFixed(2);
+        }
+    </script>
+</body>
+</html>

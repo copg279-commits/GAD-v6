@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Listado de denuncias ORA - GAD</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* --- ARREGLO DEE ESTRUCTURA (BOX SIZING) --- */
+        * {
+            box-sizing: border-box; /* Esto evita que los rellenos ensanchen los elementos fuera de la pantalla */
+        }
+
+        /* --- ESTILOS GENERALES --- */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden; /* Evita scroll horizontal en el cuerpo */
+        }
+
+        .title-panel-blue {
+            background-color: #3b82f6;
+            display: flex; /* Cambiado de Grid a Flex para mejor adaptación */
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .title-panel-blue h1 {
+            color: white;
+            margin: 0;
+            padding: 0 10px;
+            font-size: 1.5em; /* Tamaño ajustado */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .title-panel-blue .header-logo-container {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+        .title-panel-blue .header-logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        footer {
+            background-color: #e0e0e0;
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            margin-top: auto;
+            box-sizing: border-box;
+        }
+        footer p { margin: 5px 0; font-size: 1em; color: #333; font-weight: bold; }
+
+        main {
+            flex: 1;
+            padding: 10px; /* Padding reducido para aprovechar pantalla */
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .app-container {
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            width: 100%;
+            overflow: hidden; /* Corta cualquier desbordamiento interno */
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-weight: 700;
+        }
+        h2 { font-size: 1.4em; }
+        h3 { font-size: 1.2em; }
+
+        /* --- BOTONES UNIFICADOS --- */
+        button {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease-in-out;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: white;
+            font-size: 0.9em;
+            /* Altura fija para que todos sean iguales */
+            height: 42px; 
+            white-space: nowrap;
+        }
+        button i { font-size: 1em; }
+        
+        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-primary:hover { box-shadow: 0 4px 10px rgba(41, 128, 185, 0.4); }
+        .btn-delete { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-delete:hover { box-shadow: 0 4px 10px rgba(192, 57, 43, 0.4); }
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-success:hover { box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-warning:hover { box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); }
+        .btn-info { background: linear-gradient(135deg, #5bc0de, #31b0d5); }
+        .btn-info:hover { box-shadow: 0 4px 10px rgba(49, 176, 213, 0.4); }
+        .btn-danger { background: linear-gradient(135deg, #ff8c00, #dc143c); } 
+        .btn-danger:hover { box-shadow: 0 4px 10px rgba(220, 20, 60, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #6c757d, #5a6268); }
+        .btn-secondary:hover { box-shadow: 0 4px 10px rgba(92, 98, 104, 0.4); }
+/* --- AQUÍ PEGAS EL CÓDIGO NUEVO --- */
+        .btn-help-custom { 
+            background: linear-gradient(135deg, #8E24AA, #D81B60); /* Violeta y Rosa fuerte */
+            color: white;
+            box-shadow: 0 4px 10px rgba(216, 27, 96, 0.4);
+            justify-content: center;
+        }
+        .btn-help-custom:hover { 
+            background: linear-gradient(135deg, #AB47BC, #EC407A);
+            transform: scale(1.02);
+        }
+        /* Icono papelera roja sin borde */
+        .btn-icon-delete {
+            background-color: transparent;
+            color: #ef4444; 
+            padding: 0;
+            margin: 0;
+            border: none; 
+            font-size: 1.3em; 
+            cursor: pointer;
+            height: auto; /* Altura auto para iconos */
+        }
+        
+        .btn-copy-matricula {
+            background-color: transparent;
+            color: #4CAF50; 
+            padding: 0;
+            margin-right: 5px; 
+            border: none; 
+            font-size: 0.9em; 
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        input[type="text"], input[type="number"], input[type="url"], input[type="date"], select {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 1em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Drop Zone */
+        #drop-zone {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 20px; 
+            text-align: center;
+            color: #555;
+            background-color: #f8f9fa;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        #drop-zone i {
+            font-size: 2.5em; 
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        /* --- CONTROLES Y LAYOUT --- */
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        .search-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-grow: 1;
+            max-width: 600px;
+            width: 100%;
+        }
+        .search-controls label {
+            font-size: 0.9em; font-weight: bold; color: #555;
+        }
+        
+        .search-buttons-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        .search-buttons-group button {
+            flex: 1; /* Botones Buscar/Deshacer ocupan el 50% cada uno */
+            margin: 0;
+        }
+
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-end;
+            width: 100%;
+        }
+        .filter-controls button {
+            flex: 1 1 auto; /* Los botones se adaptan al espacio disponible */
+            margin: 0;
+        }
+
+        .results-container {
+            overflow-x: auto; /* Permite scroll lateral en la tabla si es necesario */
+            padding-bottom: 10px;
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fdfdfd;
+        }
+        .results-header, .doc-row {
+            display: grid;
+            gap: 10px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            min-width: 700px; /* Ancho mínimo para mantener la tabla legible */
+            align-items: center;
+        }
+        .results-header {
+            font-weight: bold;
+            background: #e9f2f7;
+            border-bottom: 2px solid #3498db;
+            border-radius: 8px 8px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            color: #2c3e50;
+        }
+        .doc-row:nth-child(even) { background: #f9f9f9; }
+        .doc-row:hover { background: #eef4f9; }
+        
+        /* Colores de Fila */
+        .doc-row.highlight-blue { background-color: #bbdefb; } 
+        .doc-row.highlight-yellow { background-color: #fffde7; border-left: 5px solid #ffc107; } 
+        .doc-row.highlight-red { background-color: #ef9a9a; border-left: 5px solid #d32f2f; } 
+        .doc-row.highlight-green { background-color: #a5d6a7; border-left: 5px solid #388e3c; } 
+        
+        .revisado-cell { text-align: center; }
+        .revisado-cell.date-set { font-weight: bold; color: #0d47a1; cursor: pointer; }
+        
+        .estado-select {
+            width: 100%; padding: 5px; font-size: 0.9em;
+            border: 1px solid #ccc; border-radius: 4px;
+            font-weight: bold; cursor: pointer;
+        }
+        .estado-select[value="eurocop"] { background-color: #ffeb3b; color: #000; } 
+        .estado-select[value="alerta"] { background-color: #f44336; color: white; }
+        .estado-select[value="notificado"] { background-color: #4CAF50; color: white; }
+        
+        .doc-row .cell-matricula.group-color-1 { color: #D32F2F; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-2 { color: #1976D2; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-3 { color: #388E3C; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-4 { color: #F57C00; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-5 { color: #7B1FA2; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-6 { color: #5D4037; font-weight: bold; }
+        
+        #status-message {
+            margin-top: 15px; padding: 10px; border-radius: 5px; display: none; font-weight: bold;
+        }
+        #status-message.success { background-color: #e8f5e9; color: #27ae60; border: 1px solid #c8e6c9; }
+        #status-message.error { background-color: #fef2f2; color: #c0392b; border: 1px solid #f44336; }
+        #status-message.loading { background-color: #e0f2f7; color: #0288d1; border: 1px solid #b3e5fc; }
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%;
+            width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; margin-right: 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .modern-alert {
+            text-align: center; padding: 15px; margin: 15px 0; border-radius: 8px;
+            background-color: #f0f4f7; border: 1px solid #dcdcdc; color: #555; font-size: 0.9em; 
+        }
+         
+/* --- AYUDA FLOTANTE EDITABLE --- */
+        #help-toggle-container { margin-top: 20px; }
+        
+        /* Panel Fijo Superior (Overlay) */
+        #legend-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            max-height: 50vh; /* Ocupa mitad de pantalla */
+            overflow-y: auto;
+            background-color: #ffffff;
+            border-bottom: 5px solid #3b82f6;
+            padding: 20px;
+            z-index: 9999; /* Encima de todo */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; /* Oculto por defecto */
+        }
+        #legend-panel.visible { display: block; animation: slideDown 0.3s; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+        /* Barra de botones del panel */
+        .help-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+        }
+        
+        /* Área editable */
+        #legend-content-area { padding: 10px; line-height: 1.6; }
+        #legend-content-area[contenteditable="true"] {
+            border: 2px dashed #3498db; background-color: #f0f8ff; outline: none; cursor: text;
+        }
+
+        /* Colores */
+        .legend-blue { color: #0d47a1; font-weight: bold; }
+        .legend-yellow { color: #f57f17; font-weight: bold; }
+        .legend-green { color: #1b5e20; font-weight: bold; }
+        .legend-red { color: #c62828; font-weight: bold; }
+        
+        /* --- MODALES --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000;
+        }
+        .modal-container {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #ffffff; border-radius: 8px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); z-index: 1001;
+            width: 90%; max-width: 450px; overflow: hidden;
+        }
+        .modal-header { background: #f1f1f1; padding: 15px 20px; border-bottom: 1px solid #e0e0e0; }
+        .modal-content { padding: 20px; display: grid; gap: 15px; max-height: 60vh; overflow-y: auto; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; background: #f9f9f9; padding: 15px 20px; border-top: 1px solid #e0e0e0; }
+        
+        #sort-by-state-modal .modal-content { display: block; overflow-x: hidden; }
+        #sort-by-state-modal .modal-content button {
+            display: block; width: 100%; margin-bottom: 10px; text-align: left; padding: 12px 15px;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* --- MODO MÓVIL (CONSULTA SIMPLIFICADA) --- */
+        /* ------------------------------------------------------------------ */
+        @media (max-width: 768px) {
+            /* 1. Ocultar zona de carga de archivos */
+            #upload-section-container {
+                display: none !important;
+            }
+
+            /* 2. Ocultar botones peligrosos */
+            #undo-btn, #delete-all-btn {
+                display: none !important;
+            }
+
+            /* 3. Ajustar botones de filtro a 2 columnas */
+            .filter-controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .filter-controls button {
+                width: 100%;
+                margin: 0;
+            }
+
+            /* 4. Título más pequeño */
+            .title-panel-blue h1 { font-size: 1.2em; }
+            .header-logo-container { width: 50px; height: 50px; }
+
+            /* 5. MODO SOLO LECTURA EN TABLA */
+            /* Deshabilitar interacción con select y checkbox */
+            .estado-select {
+                pointer-events: none; /* No se puede pulsar */
+                border: none;
+                background-color: transparent !important; /* Quitar fondo de input */
+                color: #333 !important; /* Texto oscuro para leer */
+                appearance: none; /* Quitar flecha del select */
+                padding: 0;
+            }
+            /* Mantener colores de fondo solo si tienen estado (para visualización) */
+            .estado-select[value="eurocop"] { background-color: #ffeb3b !important; padding: 5px; border-radius: 4px; }
+            .estado-select[value="alerta"] { background-color: #f44336 !important; color: white !important; padding: 5px; border-radius: 4px; }
+            .estado-select[value="notificado"] { background-color: #4CAF50 !important; color: white !important; padding: 5px; border-radius: 4px; }
+
+            .revisado-cell input[type="checkbox"] {
+                display: none; /* Ocultar checkbox vacío */
+            }
+            .revisado-cell {
+                font-size: 0.8em;
+            }
+            
+            /* Ocultar botón borrar fila en móvil */
+            .btn-icon-delete { display: none; }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="app-container">
+
+            <div class="title-panel-blue">
+                <div class="header-logo-container">
+                    <img src="logoora.png" alt="Logo ORA">
+                </div>
+                <h1><i class="fas fa-file-invoice-dollar"></i> Listado de denuncias ORA</h1>
+                <div class="header-logo-container">
+                    <img src="logogad.png" alt="Logo GAD">
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;"><i class="fas fa-search"></i> Gestión de Denuncias</h2>
+                
+                <div class="controls-container">
+                    <div class="search-controls">
+                        <div>
+                            <label for="search-matricula">MATRÍCULA A BUSCAR (Exacta):</label>
+                            <input type="text" id="search-matricula" placeholder="Introduce la matrícula...">
+                        </div>
+                        <div class="align-bottom search-buttons-group">
+                            <button id="search-btn" class="btn-success" style="width: 100%;" title="Busca la matrícula introducida en la base de datos actual"><i class="fas fa-search"></i> Buscar</button>
+                            <button id="undo-btn" class="btn-delete" style="background: linear-gradient(135deg, #607d8b, #455a64); white-space: nowrap;" title="Elimina los datos del último archivo Excel cargado (Solo PC)">
+                                <i class="fas fa-undo"></i> Deshacer Última subida
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <button id="show-all-btn" class="btn-warning" title="Muestra todas las denuncias registradas"><i class="fas fa-list"></i> Mostrar Todos</button>
+                        <button id="sort-matricula-btn" class="btn-primary" title="Ordena la lista alfabéticamente por matrícula"><i class="fas fa-sort-alpha-down"></i> Matrícula</button>
+                        <button id="sort-fecha-btn" class="btn-info" title="Ordena por fecha de denuncia (Más reciente primero)"><i class="fas fa-calendar-alt"></i> Fecha</button>
+                        <button id="sort-estado-btn" class="btn-secondary" title="Filtra las denuncias por su estado (Notificado, Alerta, etc.)"><i class="fas fa-filter"></i> Filtrar por Estado</button>
+                        <button id="find-duplicates-btn" class="btn-danger" title="Muestra solo las matrículas que aparecen más de una vez"><i class="fas fa-copy"></i> Reincidentes</button>
+                        <button id="crear-alerta-btn" class="btn-info" title="Copia al portapapeles el texto para pegar en Eurocop"><i class="fas fa-exclamation-triangle"></i> Crear Alerta</button>
+                        <button id="delete-all-btn" class="btn-delete" title="¡PELIGRO! Borra toda la base de datos (Solo PC)"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
+                    </div>
+                </div>
+
+                <div id="upload-section-container" style="border-top: 1px solid #eee; margin-top: 20px; padding-top: 10px;">
+                    <h3 style="font-size: 1em; color: #555; margin-bottom: 5px;"><i class="fas fa-upload"></i> Cargar Datos</h3>
+                    <div id="drop-zone" title="Haz clic o arrastra un archivo Excel para añadir denuncias">
+                        <i class="fas fa-file-excel"></i>
+                        <p>Arrastra archivo o haz clic. <strong>AÑADE</strong> datos.</p>
+                    </div>
+                    <input type="file" id="file-input" accept=".xls, .xlsx" style="display: none;">
+                    <div id="status-message"></div>
+                </div>
+
+<button id="toggle-help-btn" class="btn-help-custom" style="width: 100%; margin-top: 20px;" title="Guía de Procedimiento">
+                <i class="fas fa-question-circle"></i> &nbsp; Ver Ayuda
+            </button>
+            
+            <div id="legend-panel">
+                <div class="help-toolbar">
+                    <h4 style="margin:0; color:#8E24AA;"><i class="fas fa-book-open"></i> Guía de Procedimiento</h4>
+                    <div style="display:flex; gap:10px;">
+                        <button id="edit-help-btn" class="btn-warning" style="height:35px; width:auto; font-size:0.9em;"><i class="fas fa-edit"></i> Editar</button>
+                        <button id="save-help-btn" class="btn-success" style="height:35px; width:auto; font-size:0.9em; display:none;"><i class="fas fa-save"></i> Guardar</button>
+                        <button id="close-help-btn" class="btn-delete" style="height:35px; width:auto; font-size:0.9em;"><i class="fas fa-times"></i> Cerrar</button>
+                    </div>
+                </div>
+
+                <div id="legend-content-area">
+                    <h5 style="margin-top:0; color:#8E24AA; font-size:1.1em; border-bottom: 2px solid #eee; padding-bottom:10px;">
+                        👋 Protocolo de Primera Vez
+                    </h5>
+
+                    <p style="margin-bottom: 15px;"><strong>1. IMPORTACIÓN Y FILTRADO</strong><br>
+                    Arrastra tu archivo Excel a la zona de carga. El sistema leerá los datos y <strong>eliminará automáticamente</strong> las matrículas con formato español (modernas y provinciales), dejando solo las extranjeras o atípicas para su revisión.</p>
+
+                    <p style="margin-bottom: 5px;"><strong>2. REVISIÓN DE REINCIDENTES (Prioritario)</strong><br>
+                    Antes de revisar una a una, pulsa el botón rojo <strong><i class="fas fa-copy"></i> Reincidentes</strong>.</p>
+                    <ul style="margin-top: 5px; margin-bottom: 15px;">
+                        <li>Si un vehículo aparece <strong>3 o más veces</strong>, selecciona en el desplegable: <span class="legend-red">Alerta grabada en Eurocop</span>.</li>
+                        <li>Pulsa el botón azul <strong><i class="fas fa-exclamation-triangle"></i> Crear Alerta</strong> para copiar el texto oficial y pégalo al dar de alta el vehículo de interés en Eurocop.</li>
+                    </ul>
+
+                    <p style="margin-bottom: 5px;"><strong>3. REVISIÓN INDIVIDUAL</strong><br>
+                    Pulsa el botón <strong>"Por Estado"</strong> y filtra por <strong>"Pendiente Revisión"</strong> para limpiar la pantalla.</p>
+                    <ul style="margin-top: 5px;">
+                        <li style="margin-bottom:8px;"><strong>Verificar:</strong> Usa el botón verde <i class="fas fa-copy" style="color:green;"></i> junto a la matrícula para copiarla y buscarla en Eurocop.</li>
+                        
+                        <li style="margin-bottom:8px;"><strong>CASO A: No constan datos</strong><br>
+                        Haz clic en la casilla o fecha de la columna <strong>"REVISADO"</strong>. 
+                        <br>➞ Se pondrá la fecha en <span class="legend-blue">AZUL</span> y el estado cambiará solo a <span class="legend-yellow">Sin datos en Eurocop</span>.</li>
+                        
+                        <li><strong>CASO B: Existen datos (Notificar)</strong><br>
+                        En el desplegable de estado, selecciona manualmente <span class="legend-green">Notificar a sanciones</span>.
+                        <br>➞ Se abrirá un formulario. Rellénalo con los datos del titular y pulsa "Aceptar".
+                        <br>➞ Esto copiará al portapapeles los datos + la plantilla de texto lista para pegar en el correo a Sanciones.</li>
+                    </ul>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+                    
+                    <p style="font-size: 0.9em;"><strong>🛠️ Herramientas útiles:</strong> Usa los botones superiores para <em>"Mostrar Todos"</em>, ordenar por <em>Fecha/Matrícula</em> o <em>"Deshacer"</em> si te equivocas al cargar un Excel. <br><em>(Nota: La versión móvil es de "Solo Lectura").</em></p>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const panel = document.getElementById('legend-panel');
+                    const contentArea = document.getElementById('legend-content-area');
+                    
+                    // HE CAMBIADO ESTO: 'vFinal_Definitiva' obligará a ignorar el texto viejo
+                    const savedText = localStorage.getItem('gadHelpText_vFinal_Definitiva');
+                    if(savedText) { contentArea.innerHTML = savedText; }
+
+                    const toggleBtn = document.getElementById('toggle-help-btn');
+                    const closeBtn = document.getElementById('close-help-btn');
+                    const editBtn = document.getElementById('edit-help-btn');
+                    const saveBtn = document.getElementById('save-help-btn');
+
+                    toggleBtn.addEventListener('click', () => { panel.classList.add('visible'); });
+                    closeBtn.addEventListener('click', () => { panel.classList.remove('visible'); });
+
+                    editBtn.addEventListener('click', () => {
+                        contentArea.contentEditable = "true";
+                        contentArea.focus();
+                        editBtn.style.display = 'none';
+                        saveBtn.style.display = 'inline-flex';
+                        panel.style.borderBottom = "5px solid #f39c12";
+                    });
+
+                    saveBtn.addEventListener('click', () => {
+                        contentArea.contentEditable = "false";
+                        localStorage.setItem('gadHelpText_vFinal_Definitiva', contentArea.innerHTML);
+                        alert("Texto de ayuda actualizado y guardado.");
+                        editBtn.style.display = 'inline-flex';
+                        saveBtn.style.display = 'none';
+                        panel.style.borderBottom = "5px solid #3b82f6";
+                    });
+                });
+            </script>
+
+                <h3 style="margin-top: 20px;">Resultados <span id="results-count">(0)</span></h3>
+                
+                <div class="results-container">
+                    <div id="results-header" class="results-header" style="display: none;">
+                        </div>
+                    <div id="search-results">
+                        <div class="modern-alert">
+                            <i class="fas fa-list-alt fa-2x"></i>
+                            <h4 style="color: #3498db; margin-top: 10px;">Sin Datos</h4>
+                            <p>Carga un archivo Excel o pulsa "Mostrar Todos" para ver las denuncias.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    
+    <div id="notification-modal-overlay" class="modal-overlay"></div>
+    <div id="notification-modal" class="modal-container">
+        <div class="modal-header">
+            <h2><i class="fas fa-paper-plane"></i> Notificar Datos Eurocop</h2>
+        </div>
+        <div class="modal-content">
+            <label for="modal-nombre">Nombre:</label>
+            <input type="text" id="modal-nombre" placeholder="Nombre completo...">
+            
+            <label for="modal-doi">DOI:</label>
+            <input type="text" id="modal-doi" placeholder="Nº de identificación NIE, DNI, otros">
+            
+            <label for="modal-direccion">Dirección:</label>
+            <input type="text" id="modal-direccion" placeholder="Dirección...">
+            
+            <label for="modal-localidad">Localidad:</label>
+            <input type="text" id="modal-localidad" placeholder="Localidad...">
+
+            <label for="modal-fecha-nacimiento">Fecha de Nacimiento:</label>
+            <input type="date" id="modal-fecha-nacimiento">
+            
+            <label for="modal-telefono">Teléfono:</label>
+            <input type="text" id="modal-telefono" placeholder="Teléfono...">
+        </div>
+        <div class="modal-buttons">
+            <button id="modal-cancel-btn" class="btn-warning"><i class="fas fa-times"></i> Cancelar</button>
+            <button id="modal-accept-btn" class="btn-success"><i class="fas fa-copy"></i> Aceptar y Copiar</button>
+        </div>
+    </div>
+    
+    <div id="sort-by-state-modal" class="modal-container">
+        <div class="modal-header">
+            <h2><i class="fas fa-filter"></i> Seleccionar Estado a Mostrar</h2>
+        </div>
+        <div class="modal-content">
+            <button class="btn-primary sort-by-state-option" data-state-value="notificado" data-state-icon="fas fa-check-circle" style="background: #4CAF50;">
+                <i class="fas fa-check-circle"></i> Notificado a Sanciones
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="alerta" data-state-icon="fas fa-exclamation-triangle" style="background: #f44336;">
+                <i class="fas fa-exclamation-triangle"></i> Alerta Grabada en Eurocop
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="eurocop" data-state-icon="fas fa-file" style="background: #ffeb3b; color: #333;">
+                <i class="fas fa-file"></i> Sin datos en Eurocop
+            </button>
+            <button class="btn-primary sort-by-state-option" data-state-value="" data-state-icon="fas fa-hourglass-half" style="background: #6c757d;">
+                <i class="fas fa-hourglass-half"></i> Pendiente Revisión
+            </button>
+        </div>
+        <div class="modal-buttons">
+            <button id="modal-sort-cancel-btn" class="btn-warning"><i class="fas fa-times"></i> Cancelar</button>
+        </div>
+    </div>
+    
+    <footer>
+        <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p>POLICÍA LOCAL DE ALICANTE</p>
+        <p>© GAD - Todos los derechos reservados</p>
+    </footer>
+
+
+    <script>
+        // --- CONFIGURACIÓN FIREBASE GAD-ALICANTE-V1 ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+        let app = null;
+        let database = null;
+
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log("✅ Firebase inicializado correctamente.");
+        } catch (error) {
+            console.error("❌ ERROR CRÍTICO DE FIREBASE:", error.message);
+            alert("❌ Error al inicializar Firebase. Revisa tus credenciales.");
+        }
+
+        const DENUNCIAS_ORA_REF = 'denuncias_ORA';
+        
+        const HEADER_DISPLAY_NAMES = {
+            'matricula': 'MATRÍCULA',
+            'fecha_de_creacion': 'FECHA DENUNCIA', 
+            'marca': 'MARCA',
+            'modelo': 'MODELO',
+            'revisado': 'REVISADO', 
+            'estado_expediente': 'ESTADO EXPEDIENTE',
+            'acciones': 'BORRAR' 
+        };
+        
+        const CANONICAL_KEYS_LIST = Object.keys(HEADER_DISPLAY_NAMES);
+        
+        let allDenuncias = []; 
+        let lastBackupData = null; 
+        let currentFilterMode = 'all'; 
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const statusMessage = document.getElementById('status-message');
+        
+        const searchInput = document.getElementById('search-matricula');
+        const searchBtn = document.getElementById('search-btn');
+        const undoBtn = document.getElementById('undo-btn'); 
+        
+        const sortMatriculaBtn = document.getElementById('sort-matricula-btn');
+        const sortFechaBtn = document.getElementById('sort-fecha-btn'); 
+        const sortEstadoBtn = document.getElementById('sort-estado-btn'); 
+        const showAllBtn = document.getElementById('show-all-btn');
+        const deleteAllBtn = document.getElementById('delete-all-btn');
+        
+        const findDuplicatesBtn = document.getElementById('find-duplicates-btn');
+        const crearAlertaBtn = document.getElementById('crear-alerta-btn'); 
+        
+        const resultsHeader = document.getElementById('results-header');
+        const searchResultsDiv = document.getElementById('search-results');
+        const resultsCount = document.getElementById('results-count');
+
+        let currentNotificadoSelect = null; 
+        let currentNotificadoDataObject = null;
+        let previousSelectValue = ""; 
+        let currentFechaSortOrder = 'desc'; 
+        
+        
+
+        function showStatus(message, type = 'loading') {
+            statusMessage.textContent = message;
+            statusMessage.className = type;
+            statusMessage.style.display = 'block';
+
+            if (type === 'loading') {
+                statusMessage.innerHTML = `<span class="loader"></span> ${message}`;
+            }
+        }
+        
+        // --- FUNCIÓN ROBUSTA COPIAR PORTAPAPELES ---
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            } else {
+                let textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                return new Promise((resolve, reject) => {
+                    try {
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        if (successful) resolve();
+                        else reject(new Error("Fallback copy failed"));
+                    } catch (err) {
+                        document.body.removeChild(textArea);
+                        reject(err);
+                    }
+                });
+            }
+        }
+
+        // --- CARGA DE ARCHIVO ---
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function sanitizeKey(key) {
+            if (!key) return '';
+            return key
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") 
+                .replace(/[.$#\[\]\/]/g, '_') 
+                .replace(/\s/g, '_');
+        }
+        
+        function getCanonicalKey(sanitizedKey) {
+            if (sanitizedKey === 'matricula') return 'matricula';
+            if (sanitizedKey === 'fecha_de_creacion' || sanitizedKey === 'fecha_creacion' || sanitizedKey === 'fechacreacion' || sanitizedKey === 'fecha') return 'fecha_de_creacion';
+            if (sanitizedKey === 'marca') return 'marca';
+            if (sanitizedKey === 'modelo') return 'modelo';
+            if (sanitizedKey === 'revisado') return 'revisado';
+            if (sanitizedKey === 'eurocop') return 'eurocop';
+            if (sanitizedKey === 'notificado') return 'notificado';
+            if (sanitizedKey === 'alerta') return 'alerta';
+            return null;
+        }
+
+        function handleFile(file) {
+            if (!file || !/\.(xlsx|xls)$/i.test(file.name)) {
+                showStatus("Error: El archivo debe ser un .xls o .xlsx", 'error');
+                return;
+            }
+
+            showStatus("Procesando archivo Excel...", 'loading');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (jsonData.length === 0) throw new Error("El archivo Excel está vacío o no tiene datos.");
+
+                    const sanitizedJsonData = jsonData.map(row => {
+                        const newRow = {};
+                        Object.keys(row).forEach(excelKey => {
+                            const sanitizedExcelKey = sanitizeKey(excelKey);
+                            const canonicalKey = getCanonicalKey(sanitizedExcelKey);
+                            
+                            if (canonicalKey) {
+                                if (canonicalKey === 'fecha_de_creacion' || canonicalKey === 'revisado') {
+                                    let value = row[excelKey];
+                                    if (value instanceof Date) {
+                                        newRow[canonicalKey] = value.toISOString();
+                                    } else if (typeof value === 'number' && value > 10000) {
+                                        let converted = new Date(Math.round((value - 25569) * 86400 * 1000));
+                                        newRow[canonicalKey] = converted.toISOString();
+                                    } else if (typeof value === 'string' && value.includes('/')) {
+                                        let [fecha, hora] = value.split(' ');
+                                        let [d, m, y] = fecha.split('/');
+                                        let [hh, mm] = hora ? hora.split(':') : [0, 0];
+                                        if (y && m && d) {
+                                            let fixed = new Date(Date.UTC(y, m - 1, d, hh || 0, mm || 0));
+                                            newRow[canonicalKey] = fixed.toISOString();
+                                        } else {
+                                             newRow[canonicalKey] = value ?? null;
+                                        }
+                                    } else if (typeof value === 'string' && value.includes('-')) {
+                                        let parsed = new Date(value);
+                                        if (!isNaN(parsed.getTime())) {
+                                            newRow[canonicalKey] = parsed.toISOString();
+                                        } else {
+                                            newRow[canonicalKey] = value ?? null;
+                                        }
+                                    } else {
+                                        newRow[canonicalKey] = value ?? null;
+                                    }
+                                } else {
+                                    newRow[canonicalKey] = row[excelKey];
+                                }
+                            }
+                        });
+                        return newRow;
+                    });
+                    
+                    const intermediateData = sanitizedJsonData.filter(row => Object.keys(row).length > 0);
+                    
+                    // --- FILTRADO AVANZADO DE MATRÍCULAS ---
+                    const modernSpanishRegex = /^\d{4}[A-Z]{3}$/i; 
+                    const provincialSuffixRegex = /^[A-Z]{1,2}\d{4}[A-Z]{1,2}$/i;
+
+                    let spanishPlatesCount = 0;
+                    const matriculaKey = 'matricula'; 
+
+                    const finalData = intermediateData.filter(row => {
+                        const plateValue = row[matriculaKey]; 
+                        if (plateValue) {
+                            const plate = String(plateValue).trim().replace(/\s/g, '');
+                            
+                            // Verificar Formato 1: Modernas
+                            if (modernSpanishRegex.test(plate)) {
+                                spanishPlatesCount++; 
+                                return false; // Eliminar
+                            }
+                            // Verificar Formato 2: Provinciales CON letra final
+                            if (provincialSuffixRegex.test(plate)) {
+                                spanishPlatesCount++;
+                                return false; // Eliminar
+                            }
+                        }
+                        return true; // Mantener (incluye extranjeras y provinciales sin letra final)
+                    });
+
+                    if (spanishPlatesCount > 0) {
+                        alert(`Se han detectado y eliminado ${spanishPlatesCount} matrículas españolas en formato actual o provincial.`);
+                    }
+                    
+                    if (finalData.length === 0) {
+                        throw new Error("El archivo no contiene datos válidos tras el filtrado.");
+                    }
+
+                    // --- DETECCIÓN DUPLICADOS ---
+                    const existingSignatures = new Set(allDenuncias.map(item => 
+                        `${String(item.matricula).trim()}_${item.fecha_de_creacion}`
+                    ));
+
+                    let exactDuplicatesCount = 0;
+                    finalData.forEach(item => {
+                        const signature = `${String(item.matricula).trim()}_${item.fecha_de_creacion}`;
+                        if (existingSignatures.has(signature)) {
+                            exactDuplicatesCount++;
+                        }
+                    });
+
+                    const duplicateRatio = finalData.length > 0 ? (exactDuplicatesCount / finalData.length) : 0;
+                    
+                    if (duplicateRatio > 0.8) {
+                        const confirmMessage = `⚠️ ¡ADVERTENCIA DE DUPLICADO! ⚠️\n\n` +
+                                             `El sistema ha detectado que el ${Math.round(duplicateRatio * 100)}% de los registros de este archivo YA EXISTEN en la base de datos (mismas matrículas en las mismas fechas).\n\n` +
+                                             `Es muy probable que estés subiendo el mismo archivo por error.\n\n` +
+                                             `¿Deseas continuar de todas formas y duplicar los datos?`;
+                        
+                        if (!window.confirm(confirmMessage)) {
+                            showStatus("Carga cancelada por el usuario.", 'info');
+                            document.getElementById('file-input').value = ""; 
+                            return; 
+                        }
+                    }
+                    
+                    addAndSaveToFirebase(finalData);
+
+                } catch (error) {
+                    console.error("Error al leer el archivo Excel:", error);
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function addAndSaveToFirebase(newData) {
+            if (!database) {
+                showStatus("Error: Firebase no está inicializado.", 'error');
+                return;
+            }
+
+            // --- BACKUP PARA DESHACER ---
+            // Guardamos el estado ANTES de añadir nada
+            lastBackupData = JSON.parse(JSON.stringify(allDenuncias));
+            
+            showStatus("Cargando datos existentes para comparar...", 'loading');
+            
+            try {
+                const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
+                const existingData = snapshot.val() || [];
+                const existingArray = Array.isArray(existingData) ? existingData : Object.values(existingData);
+
+                const matriculaKey = 'matricula';
+                
+                const existingStatusMap = {};
+                const existingCountMap = {};
+
+                existingArray.forEach(item => {
+                    const mat = String(item[matriculaKey] || '').trim().toUpperCase();
+                    if (mat) {
+                        if (item.alerta || item.notificado) {
+                            existingStatusMap[mat] = {
+                                alerta: item.alerta,
+                                notificado: item.notificado,
+                                revisado: item.revisado
+                            };
+                        }
+                        existingCountMap[mat] = (existingCountMap[mat] || 0) + 1;
+                    }
+                });
+
+                let reincidenciasAlertMsg = [];
+
+                const processedNewData = newData.map(newItem => {
+                    const newMat = String(newItem[matriculaKey] || '').trim().toUpperCase();
+                    
+                    if (newMat && existingCountMap[newMat]) {
+                        const count = existingCountMap[newMat];
+                        reincidenciasAlertMsg.push(`- ${newMat}: Constaba ${count} veces.`);
+
+                        if (existingStatusMap[newMat]) {
+                            if (existingStatusMap[newMat].alerta) newItem.alerta = true;
+                            if (existingStatusMap[newMat].notificado) newItem.notificado = true;
+                        }
+                    }
+                    return newItem;
+                });
+
+                if (reincidenciasAlertMsg.length > 0) {
+                    let msgText = "Se han detectado que estos vehículos ya se encontraban como reincidentes:\n\n";
+                    if (reincidenciasAlertMsg.length > 10) {
+                        msgText += reincidenciasAlertMsg.slice(0, 10).join('\n') + `\n... y ${reincidenciasAlertMsg.length - 10} más.`;
+                    } else {
+                        msgText += reincidenciasAlertMsg.join('\n');
+                    }
+                    msgText += "\n\nSe les ha aplicado el estado (Alerta/Notificado) correspondiente si lo tenían.";
+                    alert(msgText);
+                }
+
+                const combinedData = [...existingArray, ...processedNewData];
+                
+                showStatus(`Guardando ${newData.length} nuevos registros...`, 'loading');
+                await database.ref(DENUNCIAS_ORA_REF).set(combinedData);
+
+                showStatus(`¡Éxito! Se han añadido ${newData.length} registros.`, 'success');
+                loadAndDisplayData();
+
+            } catch (error) {
+                console.error("Error al guardar en Firebase:", error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function undoLastUpload() {
+            if (!lastBackupData) {
+                alert("No hay ninguna acción reciente para deshacer (o se ha recargado la página).");
+                return;
+            }
+
+            if (!confirm("⚠️ ¿Estás seguro de que quieres DESHACER la última subida?\n\nEsta acción eliminará los datos añadidos en la última carga de Excel y volverá al estado anterior.")) {
+                return;
+            }
+
+            showStatus("Restaurando estado anterior...", 'loading');
+
+            try {
+                await database.ref(DENUNCIAS_ORA_REF).set(lastBackupData);
+                
+                allDenuncias = JSON.parse(JSON.stringify(lastBackupData));
+                
+                lastBackupData = null; // Limpiamos el backup para no deshacer dos veces lo mismo
+                
+                showStatus("¡Deshacer completado! Se han restaurado los datos anteriores.", 'success');
+                
+                const searchVal = document.getElementById('search-matricula').value;
+                if (searchVal) {
+                     performSearch();
+                } else {
+                     displayResults(allDenuncias);
+                }
+
+            } catch (error) {
+                console.error("Error al deshacer:", error);
+                showStatus(`Error al deshacer: ${error.message}`, 'error');
+            }
+        }
+        
+        // Vincular el botón deshacer (siempre visible) a la función
+        if(undoBtn) {
+            undoBtn.onclick = undoLastUpload;
+        }
+
+        async function loadAndDisplayData() {
+            if (!database) return;
+            showStatus("Cargando datos desde Firebase...", 'loading');
+            try {
+                const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
+                const data = snapshot.val();
+
+                if (!data) {
+                    allDenuncias = [];
+                    showStatus("No hay datos en Firebase.", 'error');
+                } else {
+                    allDenuncias = Array.isArray(data) ? data : Object.values(data);
+                    showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
+                }
+                
+                const fechaKey = 'fecha_de_creacion';
+                const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                    const dateA = parseDate(a[fechaKey]) || new Date(0);
+                    const dateB = parseDate(b[fechaKey]) || new Date(0);
+                    return dateB - dateA; 
+                });
+                allDenuncias = sortedByDefault;
+                currentFechaSortOrder = 'desc';
+                sortFechaBtn.innerHTML = '<i class="fas fa-calendar-alt"></i> Fecha (Reciente)';
+                currentFilterMode = 'all'; // Default
+                displayResults(allDenuncias);
+
+            } catch (error) {
+                 console.error("Error al cargar datos:", error);
+                 showStatus(`Error: ${error.message}`, 'error');
+                 displayResults([]);
+            }
+        }
+        
+        function formatDisplayValue(value, key) {
+            if (value === null || typeof value === 'undefined') return 'N/A';
+            if (key === 'fecha_de_creacion') {
+                let date;
+                if (value instanceof Date) date = value; 
+                else if (typeof value === 'string') date = new Date(value);
+                else if (typeof value === 'number') date = new Date(Math.round((value - 25569) * 86400 * 1000));
+
+                if (date instanceof Date && !isNaN(date.getTime())) {
+                    const y = date.getUTCFullYear();
+                    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const d = String(date.getUTCDate()).padStart(2, '0');
+                    const h = String(date.getUTCHours()).padStart(2, '0');
+                    const min = String(date.getUTCMinutes()).padStart(2, '0');
+                    return `${d}/${m}/${y} ${h}:${min}`;
+                }
+            }
+            if (key === 'revisado') return formatRevisadoDate(value);
+            return value;
+        }
+
+        function updateSelectColor(select) {
+            const selectedValue = select.value;
+            select.style.backgroundColor = 'white';
+            select.style.color = '#333';
+            select.style.fontWeight = 'bold';
+            
+            // Buscar la opción seleccionada para actualizar su texto
+            const option = select.querySelector(`option[value="${selectedValue}"]`);
+            
+            if (selectedValue === 'eurocop') {
+                select.style.backgroundColor = '#ffeb3b'; 
+                select.style.color = '#000000';
+                select.style.fontWeight = '700';
+            } else if (selectedValue === 'alerta') {
+                select.style.backgroundColor = '#f44336'; 
+                select.style.color = 'white'; 
+                select.style.fontWeight = '700';
+            } else if (selectedValue === 'notificado') {
+                select.style.backgroundColor = '#4CAF50';
+                select.style.color = 'white'; 
+                select.style.fontWeight = '700';
+                if(option) option.textContent = "Notificado a sanciones"; // Cambio dinámico
+            } else {
+                 // Si volvemos a un estado neutro, asegurarnos que el texto de la opción 'notificado' vuelve a su estado original "Notificar" por si acaso
+                const notifOption = select.querySelector('option[value="notificado"]');
+                if(notifOption) notifOption.textContent = "Notificar a sanciones";
+            }
+            select.setAttribute('value', selectedValue);
+        }
+
+        function displayResults(results, isDuplicateSearch = false) {
+             searchResultsDiv.innerHTML = '';
+             resultsHeader.innerHTML = '';
+             resultsHeader.style.display = 'none';
+             resultsCount.textContent = `(${results.length})`;
+            
+            if (results.length === 0) {
+                searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><h4>Sin Resultados</h4><p>No se encontraron denuncias.</p></div>`;
+                return;
+            }
+
+            const headers = CANONICAL_KEYS_LIST; 
+            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 2fr 0.5fr';
+
+            resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
+            resultsHeader.style.gridTemplateColumns = gridLayout;
+            resultsHeader.style.display = 'grid';
+
+            const matriculaKey = 'matricula';
+            const colorClasses = ['group-color-1', 'group-color-2', 'group-color-3', 'group-color-4', 'group-color-5', 'group-color-6'];
+            let lastColorIndex = -1;
+            let currentColorIndex = 0;
+            let currentMatricula = null;
+            let matriculaCounter = 0; 
+
+            results.forEach(item => { 
+                const row = document.createElement('div');
+                row.classList.add('doc-row');
+
+                const originalIndex = allDenuncias.indexOf(item);
+                row.dataset.originalIndex = originalIndex;
+
+                let matriculaColorClass = '';
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase(); 
+
+                if (isDuplicateSearch) {
+                    if (matricula !== currentMatricula) {
+                        currentMatricula = matricula;
+                        matriculaCounter = 1; 
+                        let newColorIndex = Math.floor(Math.random() * colorClasses.length);
+                        while (newColorIndex === lastColorIndex && colorClasses.length > 1) { 
+                            newColorIndex = Math.floor(Math.random() * colorClasses.length);
+                        }
+                        lastColorIndex = newColorIndex;
+                        currentColorIndex = newColorIndex;
+                    } else {
+                        matriculaCounter++; 
+                    }
+                    matriculaColorClass = colorClasses[currentColorIndex];
+                }
+
+                let rowHTML = '';
+                let selectValue = "";
+                if (item.notificado === true) selectValue = "notificado";
+                else if (item.alerta === true) selectValue = "alerta";
+                else if (item.eurocop === true) selectValue = "eurocop";
+
+                // Lógica de texto para el botón Notificar
+                const labelNotificar = (selectValue === "notificado") ? "Notificado a sanciones" : "Notificar a sanciones";
+
+                headers.forEach(h => {
+                    if (h === 'estado_expediente') {
+                        rowHTML += `
+                        <div>
+                            <select class="estado-select" value="${selectValue}">
+                                <option value="" ${selectValue === "" ? "selected" : ""}>Pendiente Revisión</option>
+                                <option value="eurocop" ${selectValue === "eurocop" ? "selected" : ""}>Sin datos en Eurocop</option>
+                                <option value="alerta" ${selectValue === "alerta" ? "selected" : ""}>Alerta grabada en Eurocop</option>
+                                <option value="notificado" ${selectValue === "notificado" ? "selected" : ""}>${labelNotificar}</option>
+                            </select>
+                        </div>`;
+                    
+                    } else if (h === 'revisado') {
+                        const revisadoDate = item[h]; 
+                        const formattedDate = formatRevisadoDate(revisadoDate);
+                        if (formattedDate) {
+                            rowHTML += `<div class="revisado-cell date-set" data-state="date">${formattedDate}</div>`;
+                        } else {
+                            rowHTML += `<div class="revisado-cell" data-state="check"><input type="checkbox" class="check-revisado"></div>`;
+                        }
+                    
+                    } else if (h === 'acciones') {
+                        rowHTML += `<div style="text-align: center;"><button class="btn-icon-delete" title="Eliminar registro"><i class="fas fa-trash"></i></button></div>`;
+                    } else {
+                        const value = item[h];
+                        let cellClasses = '';
+                        let displayValue = formatDisplayValue(value, h);
+                        let matriculaContent = '';
+
+                        if (h === 'matricula') {
+                            cellClasses = 'cell-matricula ' + matriculaColorClass;
+                            
+                            let matriculaText = displayValue;
+                            if (isDuplicateSearch) {
+                                matriculaText = `${displayValue} (${matriculaCounter})`; 
+                            }
+                            
+                            matriculaContent += `<button class="btn-copy-matricula" title="Copiar" data-matricula="${matricula}"><i class="fas fa-copy"></i></button>`;
+                            matriculaContent += `<span class="matricula-text">${matriculaText}</span>`;
+                            
+                            rowHTML += `<div class="${cellClasses}">${matriculaContent}</div>`;
+                        } else {
+                            rowHTML += `<div>${displayValue}</div>`;
+                        }
+                    }
+                });
+                row.innerHTML = rowHTML;
+                row.style.gridTemplateColumns = gridLayout;
+                searchResultsDiv.appendChild(row);
+
+                const selectElement = row.querySelector('.estado-select');
+                if (selectElement) {
+                    updateSelectColor(selectElement);
+                }
+
+                updateRowColor(row);
+            });
+        }
+        
+        function performSearch() {
+            const searchQuery = searchInput.value.trim().toUpperCase();
+            if (!searchQuery) {
+                performSortFecha(true);
+                currentFilterMode = 'all'; // Reseteamos filtro
+                return;
+            }
+            const matriculaKey = 'matricula';
+            const results = allDenuncias.filter(item => {
+                return item && item[matriculaKey] && 
+                       String(item[matriculaKey]).toUpperCase().includes(searchQuery);
+            });
+            displayResults(results); 
+            currentFilterMode = 'search';
+        }
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('input', performSearch);
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); performSearch(); }});
+        
+        showAllBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            performSortFecha(true);
+            currentFilterMode = 'all';
+        });
+
+        sortMatriculaBtn.addEventListener('click', () => {
+            const matriculaKey = 'matricula'; 
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const matA = String(a[matriculaKey] || '').trim().toUpperCase();
+                const matB = String(b[matriculaKey] || '').trim().toUpperCase();
+                return matA.localeCompare(matB);
+            });
+            displayResults(sorted);
+            currentFilterMode = 'all'; 
+        });
+        
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) return dateStr;
+            if (String(dateStr).includes('/')) {
+                const parts = String(dateStr).split(' ');
+                const dateParts = parts[0].split('/');
+                if (dateParts.length === 3) {
+                    if (parts.length > 1) {
+                        const timeParts = parts[1].split(':');
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0] || 0, timeParts[1] || 0);
+                    } else {
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+                    }
+                }
+            }
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) return date;
+            return null;
+        }
+
+        function performSortFecha(keepOrder = false) {
+            const fechaKey = 'fecha_de_creacion'; 
+            const currentOrder = keepOrder ? currentFechaSortOrder : (currentFechaSortOrder === 'desc' ? 'asc' : 'desc');
+            
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return currentOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+            
+            if (!keepOrder) {
+                currentFechaSortOrder = currentOrder;
+            }
+
+            const text = currentFechaSortOrder === 'desc' ? 'Reciente' : 'Antigua';
+            sortFechaBtn.innerHTML = `<i class="fas fa-calendar-alt"></i> Fecha (${text})`;
+
+            displayResults(sorted); 
+        }
+
+        sortFechaBtn.addEventListener('click', () => performSortFecha(false));
+
+        function performSortByState(stateValue) {
+            // Guardamos el estado actual del filtro
+            if (stateValue === '') currentFilterMode = 'pending'; // Pendiente Revisión
+            else currentFilterMode = 'other_filter';
+
+            const filteredAndSorted = [...allDenuncias]
+                .filter(item => {
+                    if (stateValue === 'revisado') {
+                        return !!item.revisado && !item.eurocop && !item.alerta && !item.notificado;
+                    }
+                    if (stateValue === '') {
+                        return !item.revisado && !item.eurocop && !item.alerta && !item.notificado;
+                    }
+                    return item[stateValue] === true;
+                })
+                .sort((a, b) => {
+                    const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
+                    const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
+                    return dateB - dateA;
+                });
+
+            const countName = 
+                stateValue === 'notificado' ? 'Notificado a Sanciones' :
+                stateValue === 'alerta' ? 'Alerta Eurocop' :
+                stateValue === 'eurocop' ? 'Sin Datos Eurocop' :
+                stateValue === 'revisado' ? 'Solo Revisado' :
+                'Pendiente Revisión';
+
+            showStatus(`Mostrando ${filteredAndSorted.length} registros en estado: ${countName}`, "info");
+            displayResults(filteredAndSorted, false);
+            
+            document.getElementById('sort-by-state-modal').style.display = 'none';
+            document.getElementById('notification-modal-overlay').style.display = 'none';
+        }
+
+        sortEstadoBtn.addEventListener('click', () => {
+             document.getElementById('sort-by-state-modal').style.display = 'block';
+             document.getElementById('notification-modal-overlay').style.display = 'block';
+        });
+
+        document.querySelectorAll('.sort-by-state-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                performSortByState(e.currentTarget.dataset.stateValue);
+            });
+        });
+        
+        document.getElementById('modal-sort-cancel-btn').addEventListener('click', () => {
+            document.getElementById('sort-by-state-modal').style.display = 'none';
+            document.getElementById('notification-modal-overlay').style.display = 'none';
+        });
+
+        async function deleteAllData() {
+            const confirmation = window.prompt('Esto borrará PERMANENTEMENTE todos los datos. \n\nEscribe "BORRAR" y pulsa Aceptar.');
+            if (confirmation !== 'BORRAR') return;
+            if (!database) return;
+            showStatus("Borrando todo...", 'loading');
+            try {
+                await database.ref(DENUNCIAS_ORA_REF).remove();
+                showStatus("Datos borrados.", 'success');
+                allDenuncias = [];
+                displayResults([]);
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function formatRevisadoDate(dateValue) {
+            if (!dateValue) return '';
+            try {
+                let date = parseDate(dateValue); 
+                if (date && !isNaN(date.getTime())) {
+                    const d = String(date.getDate()).padStart(2, '0');
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const y = date.getFullYear();
+                    return `${d}-${m}-${y}`;
+                }
+                return '';
+            } catch (e) { return ''; }
+        }
+
+        function updateRowColor(row) {
+            if (!row) return;
+            const dataIndex = parseInt(row.dataset.originalIndex, 10);
+            const item = allDenuncias[dataIndex];
+            if (!item) return;
+
+            row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-red');
+
+            if (item.notificado) {
+                row.classList.add('highlight-green');
+            } else if (item.alerta) {
+                row.classList.add('highlight-red');
+            } else if (item.eurocop) {
+                row.classList.add('highlight-yellow');
+            } else if (item.revisado) { 
+                row.classList.add('highlight-blue'); 
+            }
+        }
+
+        function findAndDisplayDuplicates() {
+            if (!allDenuncias.length) {
+                showStatus("No hay datos cargados.", "info");
+                return;
+            }
+            showStatus("Buscando reincidentes...", "loading");
+            const matriculaCounts = new Map();
+            const matriculaKey = 'matricula';
+            for (const item of allDenuncias) {
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
+                if (matricula) matriculaCounts.set(matricula, (matriculaCounts.get(matricula) || 0) + 1);
+            }
+            const duplicateMatriculas = new Set();
+            for (const [matricula, count] of matriculaCounts.entries()) {
+                if (count > 1) duplicateMatriculas.add(matricula);
+            }
+            if (duplicateMatriculas.size === 0) {
+                showStatus("No se encontraron reincidentes.", "info");
+                displayResults([], false);
+                return;
+            }
+            const duplicatesList = allDenuncias.filter(item => {
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
+                return duplicateMatriculas.has(matricula);
+            });
+            const sortedDuplicates = duplicatesList.sort((a, b) => {
+                const matA = String(a[matriculaKey] || '').trim().toUpperCase();
+                const matB = String(b[matriculaKey] || '').trim().toUpperCase();
+                const matriculaComparison = matA.localeCompare(matB);
+                if (matriculaComparison !== 0) return matriculaComparison;
+                const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
+                const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
+                return dateB - dateA;
+            });
+            showStatus(`Se encontraron ${sortedDuplicates.length} registros de ${duplicateMatriculas.size} matrículas reincidentes.`, "success");
+            displayResults(sortedDuplicates, true);
+        }
+        
+        function crearAlertaEurocop() {
+            const alertText = 'INMOVILIZAR A DISPOSICIÓN DEL GAD POR REINCIDENCIA EN INFRACCIONES Art 87.5 LSV (CAUCIÓN).  Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación.';
+            copyToClipboard(alertText)
+                .then(() => alert("¡Texto de Alerta copiado!"))
+                .catch(err => alert('Error al copiar el texto: ' + err));
+        }
+
+        function syncDuplicatesState(matriculaRaw, sourceDataObject) {
+            if (!matriculaRaw) return;
+            
+            const matTarget = String(matriculaRaw).trim().toUpperCase();
+            
+            allDenuncias.forEach(item => {
+                const m = String(item.matricula || '').trim().toUpperCase();
+                if (m === matTarget) {
+                    
+                    if (sourceDataObject.revisado !== undefined) item.revisado = sourceDataObject.revisado;
+                    
+                    if (sourceDataObject.alerta !== undefined) item.alerta = sourceDataObject.alerta;
+                    if (sourceDataObject.notificado !== undefined) item.notificado = sourceDataObject.notificado;
+                    if (sourceDataObject.eurocop !== undefined) item.eurocop = sourceDataObject.eurocop; 
+
+                    if (item.revisado && !item.alerta && !item.notificado && !item.eurocop) {
+                        item.eurocop = true; 
+                    } 
+                    
+                    if (!item.revisado) {
+                        item.eurocop = false;
+                        item.alerta = false;
+                        item.notificado = false;
+                    }
+                }
+            });
+
+            const allRows = searchResultsDiv.querySelectorAll('.doc-row');
+            allRows.forEach(row => {
+                const idx = row.dataset.originalIndex;
+                if (idx) {
+                    const data = allDenuncias[parseInt(idx, 10)];
+                    if (data && String(data.matricula||'').trim().toUpperCase() === matTarget) {
+                        
+                        let selectedValue = "";
+                        if (data.notificado) selectedValue = "notificado";
+                        else if (data.alerta) selectedValue = "alerta";
+                        else if (data.eurocop) selectedValue = "eurocop";
+
+                        const select = row.querySelector('.estado-select');
+                        if (select) {
+                            select.value = selectedValue;
+                            select.setAttribute('value', selectedValue);
+                            updateSelectColor(select); 
+                        }
+
+                        const revisadoCell = row.querySelector('.revisado-cell');
+                        if (revisadoCell) {
+                            const fDate = formatRevisadoDate(data.revisado);
+                            if (fDate) {
+                                revisadoCell.innerHTML = fDate;
+                                revisadoCell.classList.add('date-set');
+                                revisadoCell.dataset.state = 'date';
+                            } else {
+                                revisadoCell.innerHTML = '<input type="checkbox" class="check-revisado">';
+                                revisadoCell.classList.remove('date-set');
+                                revisadoCell.dataset.state = 'check';
+                            }
+                        }
+                        
+                        updateRowColor(row);
+                    }
+                }
+            });
+            
+            database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
+        }
+
+        async function deleteRow(index) {
+            if (!confirm("¿Seguro que quieres eliminar este registro?")) return;
+            
+            allDenuncias.splice(index, 1);
+            
+            if (database) {
+                 await database.ref(DENUNCIAS_ORA_REF).set(allDenuncias);
+            }
+            
+            const isSearchingDuplicates = document.getElementById('results-count').textContent.includes('reincidentes');
+            if (isSearchingDuplicates) findAndDisplayDuplicates();
+            else if (searchInput.value.trim() !== '') performSearch();
+            else showAllBtn.click();
+        }
+
+        // --- FUNCIÓN HELPER PARA AUTO-BORRAR EN MODO PENDIENTE ---
+        function checkAndAutoHideRow(row) {
+            if (currentFilterMode === 'pending' && row) {
+                // Esperar 3 segundos
+                setTimeout(() => {
+                    // Verificar si el elemento sigue existiendo en el DOM
+                    if (document.body.contains(row)) {
+                         row.style.opacity = '0'; // Desvanecer
+                         setTimeout(() => {
+                            if (document.body.contains(row)) {
+                                row.style.display = 'none'; // Ocultar layout
+                                // Ajustar contador si es necesario (opcional)
+                                const countSpan = document.getElementById('results-count');
+                                let count = parseInt(countSpan.textContent.replace(/\D/g,''));
+                                if(count > 0) countSpan.textContent = `(${count - 1})`;
+                            }
+                         }, 500); // Esperar a que termine la transición de opacidad
+                    }
+                }, 3000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAndDisplayData();
+            
+            deleteAllBtn.addEventListener('click', deleteAllData);
+            findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
+            crearAlertaBtn.addEventListener('click', crearAlertaEurocop);
+            
+            searchResultsDiv.addEventListener('click', (e) => {
+                const copyBtn = e.target.closest('.btn-copy-matricula');
+                if (copyBtn) {
+                    const matricula = copyBtn.dataset.matricula;
+                    copyToClipboard(matricula)
+                        .then(() => {
+                            const originalTitle = copyBtn.title;
+                            copyBtn.title = '¡Copiado!';
+                            setTimeout(() => { copyBtn.title = originalTitle; }, 1000);
+                        })
+                        .catch(err => alert('Error al copiar: ' + err));
+                }
+            });
+
+            searchResultsDiv.addEventListener('focusin', (e) => {
+                if (e.target.classList.contains('estado-select')) {
+                    previousSelectValue = e.target.value;
+                }
+            });
+
+            // Listener GLOBAL CHANGE para el Select 
+            searchResultsDiv.addEventListener('change', (e) => {
+                const row = e.target.closest('.doc-row');
+                if (!row || typeof row.dataset.originalIndex === 'undefined') return;
+                const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                const dataObject = allDenuncias[dataIndex];
+                if (!dataObject) return;
+
+                if (e.target.classList.contains('estado-select')) {
+                    const newValue = e.target.value;
+                    e.target.setAttribute('value', newValue); 
+
+                    dataObject.eurocop = false;
+                    dataObject.alerta = false;
+                    dataObject.notificado = false;
+
+                    if (newValue !== "") {
+                        const today = new Date();
+                        dataObject.revisado = dataObject.revisado || today.toISOString(); 
+                        
+                        if (newValue === 'eurocop') { 
+                            dataObject.eurocop = true;
+                            syncDuplicatesState(dataObject.matricula, dataObject);
+                            checkAndAutoHideRow(row); // <--- TRIGGER AUTO HIDE
+
+                        } else if (newValue === 'alerta') {
+                            dataObject.alerta = true;
+                            syncDuplicatesState(dataObject.matricula, dataObject);
+                            checkAndAutoHideRow(row); // <--- TRIGGER AUTO HIDE
+
+                        } else if (newValue === 'notificado') {
+                            // Abrir Modal
+                            currentNotificadoSelect = e.target;
+                            currentNotificadoDataObject = dataObject;
+                            
+                            document.getElementById('modal-nombre').value = '';
+                            document.getElementById('modal-doi').value = '';
+                            document.getElementById('modal-direccion').value = '';
+                            document.getElementById('modal-localidad').value = '';
+                            document.getElementById('modal-fecha-nacimiento').value = '';
+                            document.getElementById('modal-telefono').value = '';
+                            document.getElementById('notification-modal').style.display = 'block';
+                            document.getElementById('notification-modal-overlay').style.display = 'block';
+                            document.getElementById('modal-nombre').focus(); 
+                        }
+                    } else {
+                        dataObject.revisado = null;
+                        syncDuplicatesState(dataObject.matricula, dataObject);
+                    }
+                    
+                    updateSelectColor(e.target); 
+                }
+            });
+            
+            searchResultsDiv.addEventListener('click', (e) => {
+                const target = e.target;
+
+                const deleteBtn = target.closest('.btn-icon-delete');
+                if (deleteBtn) {
+                    const row = deleteBtn.closest('.doc-row');
+                    const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                    deleteRow(dataIndex);
+                    return;
+                }
+
+                const cell = target.closest('.revisado-cell');
+                if (!cell) return;
+
+                const row = cell.closest('.doc-row');
+                if (!row || typeof row.dataset.originalIndex === 'undefined') return;
+                const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                const dataObject = allDenuncias[dataIndex];
+                
+                // --- LOGICA CLICK CHECK REVISADO (MODIFICADA) ---
+                if (target.classList.contains('check-revisado') || (target.classList.contains('revisado-cell') && target.dataset.state === 'check')) {
+                    const today = new Date();
+                    dataObject.revisado = today.toISOString();
+                    
+                    // CAMBIO: Poner automáticamente en EUROCOP (AMARILLO)
+                    dataObject.eurocop = true;
+                    dataObject.alerta = false;
+                    dataObject.notificado = false;
+                    
+                    syncDuplicatesState(dataObject.matricula, dataObject);
+                    checkAndAutoHideRow(row); 
+
+                }
+                else if (target.classList.contains('revisado-cell') && target.classList.contains('date-set')) {
+                    const confirmation = window.confirm("Aceptar: Actualizar fecha revisión.\nCancelar: Desactivar revisión.");
+                    if (confirmation) {
+                        const today = new Date();
+                        dataObject.revisado = today.toISOString();
+                    } else {
+                        dataObject.revisado = null;
+                        dataObject.eurocop = false; // Resetear
+                    }
+                    syncDuplicatesState(dataObject.matricula, dataObject);
+                }
+            });
+            
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationOverlay = document.getElementById('notification-modal-overlay');
+            const modalAcceptBtn = document.getElementById('modal-accept-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            
+            function closeModal(cancelled = false) {
+                notificationModal.style.display = 'none';
+                notificationOverlay.style.display = 'none';
+                if (cancelled && currentNotificadoSelect) {
+                    currentNotificadoSelect.value = previousSelectValue;
+                    currentNotificadoSelect.setAttribute('value', previousSelectValue);
+                    updateSelectColor(currentNotificadoSelect);
+                    
+                    const row = currentNotificadoSelect.closest('.doc-row');
+                    if (row) updateRowColor(row);
+
+                    if (previousSelectValue === "") {
+                        currentNotificadoDataObject.revisado = null;
+                    }
+                }
+                currentNotificadoSelect = null;
+                currentNotificadoDataObject = null;
+            }
+
+            modalCancelBtn.addEventListener('click', () => closeModal(true));
+            notificationOverlay.addEventListener('click', () => closeModal(true));
+
+            modalAcceptBtn.addEventListener('click', () => {
+                if (!currentNotificadoDataObject || !currentNotificadoSelect) return;
+                
+                const nombre = document.getElementById('modal-nombre').value;
+                const doi = document.getElementById('modal-doi').value;
+                const direccion = document.getElementById('modal-direccion').value;
+                const localidad = document.getElementById('modal-localidad').value;
+                const fechaNac = document.getElementById('modal-fecha-nacimiento').value;
+                const telefono = document.getElementById('modal-telefono').value;
+
+                const textToCopy = `
+Grupo de Análisis Documental (GAD) Policía Local de Alicante
+Le informamos de que disponemos de los siguientes datos en relación a este vehículo
+---
+DENUNCIA ORA:
+- Matrícula: ${currentNotificadoDataObject.matricula || 'N/A'}
+- Fecha: ${formatDisplayValue(currentNotificadoDataObject.fecha_de_creacion, 'fecha_de_creacion') || 'N/A'}
+- Marca: ${currentNotificadoDataObject.marca || 'N/A'}
+- Modelo: ${currentNotificadoDataObject.modelo || 'N/A'}
+---
+DATOS PERSONALES:
+- Nombre: ${nombre || 'N/A'}
+- DOI: ${doi || 'N/A'}
+- Dirección: ${direccion || 'N/A'}
+- Localidad: ${localidad || 'N/A'}
+- F. Nacimiento: ${fechaNac || 'N/A'}
+- Teléfono: ${telefono || 'N/A'}
+                `.trim().replace(/^\s+/gm, ''); 
+
+                copyToClipboard(textToCopy)
+                    .then(() => {
+                        currentNotificadoDataObject.notificado = true;
+                        currentNotificadoDataObject.eurocop = false;
+                        currentNotificadoDataObject.alerta = false;
+                        
+                        if (!currentNotificadoDataObject.revisado) {
+                             const today = new Date();
+                             currentNotificadoDataObject.revisado = today.toISOString();
+                        }
+                        
+                        syncDuplicatesState(currentNotificadoDataObject.matricula, currentNotificadoDataObject);
+                        
+                        // Actualizar visualmente el select a "Notificado a sanciones" inmediatamente
+                        updateSelectColor(currentNotificadoSelect);
+                        
+                        // AUTO HIDE LOGIC PARA EL MODAL
+                        const row = currentNotificadoSelect.closest('.doc-row');
+                        checkAndAutoHideRow(row);
+
+                        closeModal(false);
+                        alert('¡Notificación copiada! Estado actualizado para todos los duplicados.');
+                    })
+                    .catch(err => {
+                        alert('Error al copiar: ' + err);
+                        closeModal(true); 
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

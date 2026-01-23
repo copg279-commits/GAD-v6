@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguro Obligatorio de Vehículo por País</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 25px;
+            background-size: cover;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .flag-eu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 25px;
+            background: radial-gradient(circle at center, #ffde00 20%, transparent 20.5%), #003399;
+            background-size: 25px 25px;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .flag-eu::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 67'%3E%3Crect width='100' height='67' fill='%23003399'/%3E%3Cg fill='%23ffde00' transform='translate(50 33.5) rotate(-18)'%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(18)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(54)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(90)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(126)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(162)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(198)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(234)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(270)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(306)'/%3E%3Cpath d='M0 0l-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5 5 1.5-5 1.5z' transform='rotate(342)'/%3E%3C/g%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+
+        .flag-button-spain {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: black;
+        }
+
+        /* Banderas */
+        .flag-albania {
+            background-color: #e4002b;
+            position: relative;
+        }
+        .flag-albania::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 20px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 667'%3E%3Cpath fill='%23e4002b' d='M0 0h1000v667H0z'/%3E%3Cpath d='M498.7 517.9c-100-24.8-196.7-104-196.7-229.4C302 163.6 397.6 71.4 498.7 71.4c101.4 0 197 92.2 197 217.1 0 125.4-96.7 204.6-197 229.4zm.1-396c-76.3 0-138.2 60.5-138.2 135.2 0 74.7 61.9 135.2 138.2 135.2s138.2-60.5 138.2-135.2c.1-74.7-61.8-135.2-138.2-135.2z'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-alemania {
+            background: linear-gradient(to top, #ffce00 0%, #ffce00 33.3%, #d00 33.3%, #d00 66.6%, #000 66.6%, #000 100%);
+        }
+        .flag-andorra {
+            background: linear-gradient(to right, #113192 0%, #113192 33.3%, #fcd600 33.3%, #fcd600 66.6%, #d50032 66.6%, #d50032 100%);
+        }
+        .flag-austria {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33.3%, #fff 33.3%, #fff 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-azerbaiyan {
+            background: linear-gradient(to top, #009933 0%, #009933 33.3%, #c60b1e 33.3%, #c60b1e 66.6%, #00a1e0 66.6%, #00a1e0 100%);
+        }
+        .flag-belgica {
+            background: linear-gradient(to right, #000 0%, #000 33.3%, #ffc400 33.3%, #ffc400 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-bielorrusia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'%3E%3Cpath fill='%23d00' d='M0 0h1200v400H0z'/%3E%3Cpath fill='%23009933' d='M0 400h1200v200H0z'/%3E%3Cpath fill='%23fff' d='M0 0h100v600H0z'/%3E%3Cpath d='M0 0l20-10v600l-20 10z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-bosnia-herzegovina {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 6'%3E%3Cpath fill='%23003893' d='M0 0h12v6H0z'/%3E%3Cpath fill='%23fdbd11' d='M0 0l6 3L0 6z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-bulgaria {
+            background: linear-gradient(to top, #d00 0%, #d00 33.3%, #fff 33.3%, #fff 66.6%, #00966e 66.6%, #00966e 100%);
+        }
+        .flag-chipre {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 10'%3E%3Cpath fill='%23fff' d='M0 0h16v10H0z'/%3E%3Cpath fill='%23d19139' d='M2 5h12v3H2z'/%3E%3Cpath fill='%23666' d='M4 7h1v1h-1z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-croacia {
+            background: linear-gradient(to top, #ff0000 0%, #ff0000 33.3%, #fff 33.3%, #fff 66.6%, #0000ff 66.6%, #0000ff 100%);
+        }
+        .flag-dinamarca {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 21'%3E%3Cpath fill='%23c8102e' d='M0 0h28v21H0z'/%3E%3Cpath stroke='%23fff' stroke-width='3.5' d='M0 10.5h28M9.333 0v21'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-eslovaquia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 12'%3E%3Crect width='18' height='12' fill='%23fff'/%3E%3Crect width='18' height='8' y='4' fill='%230b4ea2'/%3E%3Crect width='18' height='4' y='8' fill='%23ee1c25'/%3E%3Cpath d='M6 6c0-1-1-2-1-3s1-2 1-3h-2c-1 0-1 2-1 3s0 3 1 3h2zm-2 2h4v-4h-4z'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-eslovenia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'%3E%3Crect width='1200' height='600' fill='%23fff'/%3E%3Crect width='1200' height='400' y='200' fill='%230000ff'/%3E%3Crect width='1200' height='200' y='400' fill='%23ff0000'/%3E%3Cpath d='M0 0l400 300L0 600z' fill='%23fff'/%3E%3Cpath d='M100 200a100 100 0 1 0 200 0 100 100 0 1 0-200 0z' fill='%23fff'/%3E%3Cpath d='M170 200a30 30 0 1 0 60 0 30 30 0 1 0-60 0z' fill='%23ff0000'/%3E%3Cpath d='M130 150l-20-40h40l-20 40z' fill='%23ff0000'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-españa {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33.3%, #ffc400 33.3%, #ffc400 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-estonia {
+            background: linear-gradient(to top, #fff 0%, #fff 33.3%, #000 33.3%, #000 66.6%, #0072b8 66.6%, #0072b8 100%);
+        }
+        .flag-finlandia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 11'%3E%3Crect width='18' height='11' fill='%23fff'/%3E%3Crect x='5' width='3' height='11' fill='%23003580'/%3E%3Crect y='4' width='18' height='3' fill='%23003580'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-francia {
+            background: linear-gradient(to right, #003399 0%, #003399 33.3%, #fff 33.3%, #fff 66.6%, #d00 66.6%, #d00 100%);
+        }
+        .flag-grecia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 18'%3E%3Cpath fill='%23002654' d='M0 0h27v18H0z'/%3E%3Cpath stroke='%23fff' stroke-width='2' d='M0 2h27m0 4H0m0 4h27m0 4H0'/%3E%3Cpath fill='%23fff' d='M0 0h10v10H0z'/%3E%3Cpath stroke='%23002654' stroke-width='2' d='M5 0v10M0 5h10'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-holanda {
+            background: linear-gradient(to top, #003399 0%, #003399 33.3%, #fff 33.3%, #fff 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-hungria {
+            background: linear-gradient(to top, #006600 0%, #006600 33.3%, #fff 33.3%, #fff 66.6%, #ff0000 66.6%, #ff0000 100%);
+        }
+        .flag-iran {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 700'%3E%3Crect width='1200' height='700' fill='%23e4002b'/%3E%3Crect width='1200' height='466.67' y='233.33' fill='%23fff'/%3E%3Crect width='1200' height='233.33' y='466.67' fill='%23009933'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-irlanda {
+            background: linear-gradient(to right, #009a49 0%, #009a49 33.3%, #fff 33.3%, #fff 66.6%, #ff7900 66.6%, #ff7900 100%);
+        }
+        .flag-islandia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 25 18'%3E%3Cpath fill='%230000ff' d='M0 0h25v18H0z'/%3E%3Cpath stroke='%23fff' stroke-width='3' d='M0 9h25M9 0v18'/%3E%3Cpath stroke='%23d00' stroke-width='2' d='M0 9h25M9 0v18'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-israel {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1100 800'%3E%3Cpath fill='%23fff' d='M0 0h1100v800H0z'/%3E%3Cpath fill='%2300c' d='M0 100h1100v100H0zm0 600h1100v100H0z'/%3E%3Cpath fill='%2300c' d='M550 400l-150 260L850 400l-150-260L250 660z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-italia {
+            background: linear-gradient(to right, #009246 0%, #009246 33.3%, #fff 33.3%, #fff 66.6%, #ce2b37 66.6%, #ce2b37 100%);
+        }
+        .flag-letonia {
+            background: linear-gradient(to top, #fff 0%, #fff 20%, #9e1d1f 20%, #9e1d1f 80%, #fff 80%, #fff 100%);
+        }
+        .flag-liechtenstein {
+            background: linear-gradient(to top, #003399 0%, #003399 50%, #c60b1e 50%, #c60b1e 100%);
+        }
+        .flag-lituania {
+            background: linear-gradient(to top, #ffc400 0%, #ffc400 33.3%, #006600 33.3%, #006600 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-luxemburgo {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33.3%, #fff 33.3%, #fff 66.6%, #00a1e0 66.6%, #00a1e0 100%);
+        }
+        .flag-macedonia-del-norte {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 500'%3E%3Crect width='1000' height='500' fill='%23d00'/%3E%3Cpath fill='%23ffc400' d='M0 200h1000M400 0v500'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-malta {
+            background: linear-gradient(to right, #fff 0%, #fff 50%, #c60b1e 50%, #c60b1e 100%);
+        }
+        .flag-marruecos {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1800 1200'%3E%3Crect width='1800' height='1200' fill='%23c60b1e'/%3E%3Cpath fill='%23006233' d='M900 600a300 300 0 1 0 0 0z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-moldavia {
+            background: linear-gradient(to right, #003399 0%, #003399 33.3%, #ffc400 33.3%, #ffc400 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-monaco {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 50%, #fff 50%, #fff 100%);
+        }
+        .flag-montenegro {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2500 1250'%3E%3Cpath fill='%23d00' d='M0 0h2500v1250H0z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-noruega {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Cpath fill='%23c8102e' d='M0 0h22v16H0z'/%3E%3Cpath fill='%23fff' d='M6 0h4v16H6z'/%3E%3Cpath fill='%23fff' d='M0 6h22v4H0z'/%3E%3Cpath fill='%2300205b' d='M7 0h2v16H7z'/%3E%3Cpath fill='%2300205b' d='M0 7h22v2H0z'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-polonia {
+            background: linear-gradient(to top, #fff 0%, #fff 50%, #c60b1e 50%, #c60b1e 100%);
+        }
+        .flag-portugal {
+            background: linear-gradient(to right, #006600 0%, #006600 40%, #c60b1e 40%, #c60b1e 100%);
+        }
+        .flag-reino-unido {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 300'%3E%3Cpath fill='%2300247d' d='M0 0h600v300H0z'/%3E%3Cpath stroke='%23fff' stroke-width='60' d='m0 0 600 300zm0 300 600-300z'/%3E%3Cpath stroke='%23cf142b' stroke-width='40' d='m0 0 600 300m0-300-600 300'/%3E%3Cpath stroke='%23fff' stroke-width='100' d='M300 0v300M0 150h600'/%3E%3Cpath stroke='%23cf142b' stroke-width='60' d='M300 0v300M0 150h600'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-republica-checa {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1800 1200'%3E%3Cpath fill='%23fff' d='M0 0h1800v600H0z'/%3E%3Cpath fill='%23d00' d='M0 600h1800v600H0z'/%3E%3Cpath fill='%230000ff' d='M0 0l900 600L0 1200z'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-rumania {
+            background: linear-gradient(to right, #003399 0%, #003399 33.3%, #ffc400 33.3%, #ffc400 66.6%, #c60b1e 66.6%, #c60b1e 100%);
+        }
+        .flag-rusia {
+            background: linear-gradient(to bottom, #fff 0%, #fff 33.3%, #003399 33.3%, #003399 66.6%, #d00 66.6%, #d00 100%);
+        }
+        .flag-serbia {
+            background: linear-gradient(to top, #d00 0%, #d00 33.3%, #003399 33.3%, #003399 66.6%, #fff 66.6%, #fff 100%);
+        }
+        .flag-suecia {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 1000'%3E%3Crect width='1600' height='1000' fill='%23006aa7'/%3E%3Crect x='500' width='200' height='1000' fill='%23fecc00'/%3E%3Crect y='400' width='1600' height='200' fill='%23fecc00'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-suiza {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320'%3E%3Crect width='320' height='320' fill='%23d00'/%3E%3Crect x='60' y='130' width='200' height='60' fill='%23fff'/%3E%3Crect x='130' y='60' width='60' height='200' fill='%23fff'/%3E%3C/svg%3E") no-repeat center center / cover;
+        }
+        .flag-tunez {
+            background-color: #e4002b;
+            position: relative;
+        }
+        .flag-tunez::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23fff'/%3E%3Cpath fill='%23e4002b' d='M50 20a30 30 0 0 0 0 60 30 30 0 0 1 0-60z'/%3E%3Cpath fill='%23e4002b' d='M50 35a15 15 0 1 0 0 30 15 15 0 1 0 0-30z'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-turquia {
+            background-color: #e4002b;
+            position: relative;
+        }
+        .flag-turquia::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23fff' d='M40 50a25 25 0 1 0 50 0 25 25 0 1 0-50 0z'/%3E%3Cpath fill='%23e4002b' d='M45 50a20 20 0 1 0 40 0 20 20 0 1 0-40 0z'/%3E%3Cpath fill='%23fff' d='M75 50a8 8 0 1 0-16 0 8 8 0 1 0 16 0z'/%3E%3C/svg%3E") no-repeat center center / contain;
+        }
+        .flag-ucrania {
+            background: linear-gradient(to top, #ffc400 0%, #ffc400 50%, #005bbb 50%, #005bbb 100%);
+        }
+        @media (max-width: 767px) {
+            .full-content {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+        <img
+            src="logogad.png"
+            alt="Logo GAD"
+            class="w-full h-full object-cover block"
+        >
+    </div>
+</header>
+
+<h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Requisitos de Seguro Obligatorio de Vehículo
+</h1>
+
+<p class="text-center mt-2 px-4">
+    Selecciona un país para ver el tipo de seguro obligatorio que requiere según OFESAUTO.
+</p>
+
+<select id="paises" onchange="mostrarSeguro()"
+    class="block mx-auto mt-4 p-2 text-base w-11/12 max-w-md border border-gray-300 rounded-lg">
+    <option value="">-- Seleccionar país --</option>
+    <option value="Albania">Albania</option>
+    <option value="Alemania">Alemania</option>
+    <option value="Andorra">Andorra</option>
+    <option value="Austria">Austria</option>
+    <option value="Azerbaiyán">Azerbaiyán</option>
+    <option value="Bélgica">Bélgica</option>
+    <option value="Bielorrusia">Bielorrusia</option>
+    <option value="Bosnia-Herzegovina">Bosnia-Herzegovina</option>
+    <option value="Bulgaria">Bulgaria</option>
+    <option value="Chipre">Chipre</option>
+    <option value="Croacia">Croacia</option>
+    <option value="Dinamarca">Dinamarca</option>
+    <option value="Eslovaquia">Eslovaquia</option>
+    <option value="Eslovenia">Eslovenia</option>
+    <option value="España">España</option>
+    <option value="Estonia">Estonia</option>
+    <option value="Finlandia">Finlandia</option>
+    <option value="Francia">Francia</option>
+    <option value="Grecia">Grecia</option>
+    <option value="Holanda">Holanda</option>
+    <option value="Hungría">Hungría</option>
+    <option value="Irán">Irán</option>
+    <option value="Irlanda">Irlanda</option>
+    <option value="Islandia">Islandia</option>
+    <option value="Israel">Israel</option>
+    <option value="Italia">Italia</option>
+    <option value="Letonia">Letonia</option>
+    <option value="Liechtenstein">Liechtenstein</option>
+    <option value="Lituania">Lituania</option>
+    <option value="Luxemburgo">Luxemburgo</option>
+    <option value="Macedonia del Norte">Macedonia del Norte</option>
+    <option value="Malta">Malta</option>
+    <option value="Marruecos">Marruecos</option>
+    <option value="Moldavia">Moldavia</option>
+    <option value="Mónaco">Mónaco</option>
+    <option value="Montenegro">Montenegro</option>
+    <option value="Noruega">Noruega</option>
+    <option value="Polonia">Polonia</option>
+    <option value="Portugal">Portugal</option>
+    <option value="Reino Unido">Reino Unido</option>
+    <option value="República Checa">República Checa</option>
+    <option value="Rumanía">Rumanía</option>
+    <option value="Rusia">Rusia</option>
+    <option value="Serbia">Serbia</option>
+    <option value="Suecia">Suecia</option>
+    <option value="Suiza">Suiza</option>
+    <option value="Túnez">Túnez</option>
+    <option value="Turquía">Turquía</option>
+    <option value="Ucrania">Ucrania</option>
+</select>
+
+<p class="text-center mt-2 px-4 text-sm text-gray-700">
+    Si el país no está en la lista se requiere <span class="font-bold text-red-600">SEFRÓN</span>
+</p>
+
+<div id="resultado" class="w-11/12 max-w-md mx-auto mt-6"></div>
+
+    <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+    const requisitos = {
+        // Datos basados en el listado de OFESAUTO y la confirmación del usuario
+        "Albania": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Alemania": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Andorra": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Austria": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Azerbaiyán": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Bélgica": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Bielorrusia": { tipoSeguro: "Sefrón (Seguro de Frontera)", color: "red" },
+        "Bosnia-Herzegovina": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Bulgaria": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Chipre": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Croacia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Dinamarca": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Eslovaquia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Eslovenia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "España": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Estonia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Finlandia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Francia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Grecia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Holanda": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Hungría": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Irán": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Irlanda": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Islandia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Israel": { tipoSeguro: "Sefrón (Seguro de Frontera)", color: "red" },
+        "Italia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Letonia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Liechtenstein": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Lituania": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Luxemburgo": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Macedonia del Norte": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Malta": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Marruecos": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Moldavia": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Mónaco": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Montenegro": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Noruega": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Polonia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Portugal": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Reino Unido": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "República Checa": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Rumanía": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Rusia": { tipoSeguro: "Sefrón (Seguro de Frontera)", color: "red" },
+        "Serbia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Suecia": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Suiza": { tipoSeguro: "Seguro ordinario", color: "blue" },
+        "Túnez": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Turquía": { tipoSeguro: "CIS - Carta Verde", color: "green" },
+        "Ucrania": { tipoSeguro: "CIS - Carta Verde", color: "green" }
+    };
+    
+    const flagClassMap = {
+        "Albania": "flag-albania",
+        "Alemania": "flag-alemania",
+        "Andorra": "flag-andorra",
+        "Austria": "flag-austria",
+        "Azerbaiyán": "flag-azerbaiyan",
+        "Bélgica": "flag-belgica",
+        "Bielorrusia": "flag-bielorrusia",
+        "Bosnia-Herzegovina": "flag-bosnia-herzegovina",
+        "Bulgaria": "flag-bulgaria",
+        "Chipre": "flag-chipre",
+        "Croacia": "flag-croacia",
+        "Dinamarca": "flag-dinamarca",
+        "Eslovaquia": "flag-eslovaquia",
+        "Eslovenia": "flag-eslovenia",
+        "España": "flag-españa",
+        "Estonia": "flag-estonia",
+        "Finlandia": "flag-finlandia",
+        "Francia": "flag-francia",
+        "Grecia": "flag-grecia",
+        "Holanda": "flag-holanda",
+        "Hungría": "flag-hungria",
+        "Irán": "flag-iran",
+        "Irlanda": "flag-irlanda",
+        "Islandia": "flag-islandia",
+        "Israel": "flag-israel",
+        "Italia": "flag-italia",
+        "Letonia": "flag-letonia",
+        "Liechtenstein": "flag-liechtenstein",
+        "Lituania": "flag-lituania",
+        "Luxemburgo": "flag-luxemburgo",
+        "Macedonia del Norte": "flag-macedonia-del-norte",
+        "Malta": "flag-malta",
+        "Marruecos": "flag-marruecos",
+        "Moldavia": "flag-moldavia",
+        "Mónaco": "flag-monaco",
+        "Montenegro": "flag-montenegro",
+        "Noruega": "flag-noruega",
+        "Polonia": "flag-polonia",
+        "Portugal": "flag-portugal",
+        "Reino Unido": "flag-reino-unido",
+        "República Checa": "flag-republica-checa",
+        "Rumanía": "flag-rumania",
+        "Rusia": "flag-rusia",
+        "Serbia": "flag-serbia",
+        "Suecia": "flag-suecia",
+        "Suiza": "flag-suiza",
+        "Túnez": "flag-tunez",
+        "Turquía": "flag-turquia",
+        "Ucrania": "flag-ucrania"
+    };
+
+    const euPaises = [
+        "Alemania", "Austria", "Bélgica", "Bulgaria", "Chipre", "Croacia", "Dinamarca", "Eslovaquia", "Eslovenia",
+        "España", "Estonia", "Finlandia", "Francia", "Grecia", "Holanda", "Hungría", "Irlanda", "Italia",
+        "Letonia", "Lituania", "Luxemburgo", "Malta", "Polonia", "Portugal", "República Checa", "Rumanía", "Suecia"
+    ];
+
+    const euAccessionDates = {
+        "Alemania": "1957", "Austria": "1995", "Bélgica": "1957", "Bulgaria": "2007", "Chipre": "2004", "Croacia": "2013",
+        "Dinamarca": "1973", "Eslovaquia": "2004", "Eslovenia": "2004", "España": "1986", "Estonia": "2004",
+        "Finlandia": "1995", "Francia": "1957", "Grecia": "1981", "Holanda": "1957", "Hungría": "2004",
+        "Irlanda": "1973", "Italia": "1957", "Letonia": "2004", "Lituania": "2004", "Luxemburgo": "1957",
+        "Malta": "2004", "Polonia": "2004", "Portugal": "1986", "República Checa": "2004", "Rumanía": "2007",
+        "Suecia": "1995"
+    };
+
+    const schengenStatus = {
+        // Países de la UE en el espacio Schengen
+        "Alemania": "Espacio Schengen",
+        "Austria": "Espacio Schengen",
+        "Bélgica": "Espacio Schengen",
+        "Dinamarca": "Espacio Schengen",
+        "Eslovaquia": "Espacio Schengen",
+        "Eslovenia": "Espacio Schengen",
+        "España": "Espacio Schengen",
+        "Estonia": "Espacio Schengen",
+        "Finlandia": "Espacio Schengen",
+        "Francia": "Espacio Schengen",
+        "Grecia": "Espacio Schengen",
+        "Holanda": "Espacio Schengen",
+        "Hungría": "Espacio Schengen",
+        "Italia": "Espacio Schengen",
+        "Letonia": "Espacio Schengen",
+        "Lituania": "Espacio Schengen",
+        "Luxemburgo": "Espacio Schengen",
+        "Malta": "Espacio Schengen",
+        "Polonia": "Espacio Schengen",
+        "Portugal": "Espacio Schengen",
+        "República Checa": "Espacio Schengen",
+        "Suecia": "Espacio Schengen",
+
+        // Países de la UE que se han incorporado a Schengen en fechas específicas
+        "Croacia": "Espacio Schengen (desde 1 de Enero de 2023)",
+        "Bulgaria": "Espacio Schengen (desde 1 de Enero de 2025)",
+        "Rumanía": "Espacio Schengen (desde 1 de Enero de 2025)",
+        
+        // Países no UE en el espacio Schengen
+        "Islandia": "Espacio Schengen",
+        "Liechtenstein": "Espacio Schengen",
+        "Noruega": "Espacio Schengen",
+        "Suiza": "Espacio Schengen",
+        "Andorra": "NO PERTENECE AL ESPACIO SCHENGEN",
+        "Mónaco": "NO PERTENECE AL ESPACIO SCHENGEN"
+    };
+
+    function mostrarSeguro() {
+        const pais = document.getElementById('paises').value;
+        const resultado = document.getElementById('resultado');
+        const info = requisitos[pais];
+        
+        resultado.innerHTML = ''; // Limpiar el resultado anterior
+
+        if (pais && info) {
+            let colorClase = '';
+            let textColorClase = '';
+            const flagClass = flagClassMap[pais];
+
+            if (info.color === "green") {
+                colorClase = 'bg-green-100 border border-green-400';
+                textColorClase = 'text-green-700';
+            } else if (info.color === "blue") {
+                colorClase = 'bg-blue-100 border border-blue-400';
+                textColorClase = 'text-blue-700';
+            } else if (info.color === "red") {
+                colorClase = 'bg-red-100 border border-red-400';
+                textColorClase = 'text-red-700';
+            }
+            
+            let euFlagHtml = '';
+            let euTextHtml = '';
+            if (euPaises.includes(pais)) {
+                euFlagHtml = '<div class="flag-eu"></div>';
+                const accessionDate = euAccessionDates[pais];
+                euTextHtml = `<p class="text-center mt-2 font-bold text-blue-700">ESTADO MIEMBRO UE (desde ${accessionDate})</p>`;
+            }
+
+            let schengenTextHtml = '';
+            if (schengenStatus[pais]) {
+                schengenTextHtml = `<p class="text-center mt-2 font-bold text-red-600 uppercase">${schengenStatus[pais]}</p>`;
+            } else {
+                schengenTextHtml = `<p class="text-center mt-2 font-bold text-red-600 uppercase">NO PERTENECE AL ESPACIO SCHENGEN</p>`;
+            }
+
+            resultado.innerHTML = `
+                <div class="p-4 rounded-lg ${colorClase} relative">
+                    ${euFlagHtml}
+                    <div class="flag ${flagClass}"></div>
+                    <p class="text-center font-bold ${textColorClase}">
+                        ${pais} necesita:
+                    </p>
+                    <p class="text-center mt-2 font-semibold ${textColorClase}">
+                        ${info.tipoSeguro}
+                    </p>
+                    ${euTextHtml}
+                    ${schengenTextHtml}
+                </div>
+            `;
+        }
+    }
+</script>
+
+</body>
+</html>

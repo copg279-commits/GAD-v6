@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocolo de Actuación - GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding-bottom: 50px; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 16px; border-radius: 5px; font-size: 14px; cursor: pointer; }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-back { background-color: #90EE90; color: #333; }
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 5px; border: 1px solid; }
+        .result-box.delito { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .result-box.infraccion { background-color: #ffeeba; border-color: #ffc720; color: #664d03; }
+        .result-box.ok { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .hidden { display: none; }
+        /* Estilo para el editor de texto enriquecido */
+        #edit-actuacion {
+            min-height: 200px;
+            border: 1px solid #ccc;
+            padding: 8px;
+            border-radius: 5px;
+            outline: none;
+            overflow: visible; /* Asegura que no haya scroll */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+        PROTOCOLO PERMISOS DSV
+    </h1>
+
+    <div class="w-11/12 max-w-md mx-auto mt-4 bg-white p-4 rounded-lg shadow-md container">
+        <p class="text-gray-700 font-bold uppercase">SELECCIONE EL SUPUESTO PARA COMENZAR:</p>
+        <div id="supuestos-container" class="mt-4 flex flex-col gap-2"></div>
+
+        <div id="question-container" class="mt-6"></div>
+
+        <div id="resultado" class="hidden result-box mt-6">
+            <h2 class="text-lg font-bold mb-2">Detalles del Caso</h2>
+            <div id="detalle-caso"></div>
+        </div>
+
+        <button onclick="window.location.href='index.html'" class="w-full p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md mt-6 transition hover:bg-yellow-200">
+            <i class="fas fa-arrow-left"></i> VOLVER AL MENÚ PRINCIPAL
+        </button>
+    </div>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200">
+        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+        <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+        <p>&copy; GAD - Todos los derechos reservados</p>
+    </footer>
+
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Editar Resultado</h3>
+            <form id="edit-form" class="space-y-4">
+                <div>
+                    <label for="edit-hecho" class="block text-sm font-medium text-gray-700">Hecho:</label>
+                    <input type="text" id="edit-hecho" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="edit-resumen" class="block text-sm font-medium text-gray-700">Resumen:</label>
+                    <input type="text" id="edit-resumen" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="edit-actuacion" class="block text-sm font-medium text-gray-700">Actuación:</label>
+                    <div id="edit-actuacion" contenteditable="true" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"></div>
+                </div>
+                <div class="flex justify-end space-x-4 mt-4">
+                    <button type="button" id="save-edit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Guardar</button>
+                    <button type="button" id="cancel-edit" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Config ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- Árboles de decisiones ---
+        const decisionTrees = {
+            "perdida-puntos": {
+                question: "¿CONDUCE DURANTE EL PERIODO DE PÉRDIDA DE VIGENCIA?",
+                options: {
+                    "SI (Solo permisos españoles)": "conduce-durante",
+                    "FINALIZADO SIN CURSO NI EXAMEN": "finalizado-no-curso-examen",
+                    "FINALIZADO CON CURSO SIN EXAMEN": "finalizado-no-examen",
+                    "FINALIZADO CON CURSO Y EXAMEN": "finalizado-si-examen",
+                    "NO TIENE CONOCIMIENTO EDICTAL": "no-conocimiento",
+                    "EN RECURSO DE ALZADA": "incidencias-recurso",
+                    "PENDIENTE DE RECURSO": "incidencias-pendiente"
+                }
+            },
+            "suspension-judicial": {
+                question: "¿LA CONDENA ES MAYOR A 2 AÑOS?",
+                options: {
+                    "NO": {
+                        question: "¿CUÁNDO CONDUCE?",
+                        options: {
+                            "DENTRO": "dentro-condena-menor",
+                            "FINALIZADO SIN CURSO": "finalizado-condena-menor-no-curso",
+                            "FINALIZADO CON CURSO": "finalizado-condena-menor-si-curso"
+                        }
+                    },
+                    "SI": {
+                        question: "¿CUÁNDO CONDUCE?",
+                        options: {
+                            "DENTRO": "dentro-condena-mayor",
+                            "FINALIZADO SIN CURSO NI EXAMEN": "finalizado-condena-mayor-no-curso-examen",
+                            "FINALIZADO CON CURSO Y EXAMEN": "finalizado-condena-mayor-si-curso-examen"
+                        }
+                    }
+                }
+            },
+            "carencia": {
+                question: "¿HA OBTENIDO ALGUNA VEZ EL PERMISO?",
+                options: {
+                    "NO": "nunca-obtenido",
+                    "TIENE PERMISO DE OTRO TIPO/PAÍS": "carecer-permiso"
+                }
+            },
+            "psicofisicas": {
+                question: "¿ES PÉRDIDA DE VIGENCIA O FALTA DE REQUISITOS?",
+                options: {
+                    "PÉRDIDA DE VIGENCIA": "perdida-psicofisicas",
+                    "SIN REQUISITOS EXIGIDOS": "sin-requisitos"
+                }
+            }
+        };
+
+        let history = [];
+        let currentSection = null;
+        let currentCaseKey = null;
+
+        function findCaseParent(caseKey) {
+            for (const section in decisionTrees) {
+                if (typeof decisionTrees[section].options === 'object') {
+                    for (const option in decisionTrees[section].options) {
+                        const nextNode = decisionTrees[section].options[option];
+                        if (typeof nextNode === 'string' && nextNode === caseKey) {
+                            return section;
+                        }
+                        if (typeof nextNode === 'object') {
+                            for (const nestedOption in nextNode.options) {
+                                if (nextNode.options[nestedOption] === caseKey) {
+                                    return section;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function initSupuestos() {
+            const container = document.getElementById("supuestos-container");
+            container.innerHTML = "";
+            for (let key in decisionTrees) {
+                const btnContainer = document.createElement("div");
+                btnContainer.className = "relative w-full";
+                const btn = document.createElement("button");
+                btn.className = "btn btn-primary w-full";
+                btn.textContent = key.replace(/-/g, " ").toUpperCase();
+                btn.onclick = () => startQuestions(key);
+                const editIcon = document.createElement("i");
+                editIcon.className = "fas fa-pencil-alt absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer z-10 text-white";
+                editIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    editButtonText(btn, key.replace(/-/g, " ").toUpperCase(), 'supuesto');
+                };
+                btnContainer.appendChild(btn);
+                btnContainer.appendChild(editIcon);
+                container.appendChild(btnContainer);
+            }
+        }
+
+        function startQuestions(sectionKey) {
+            const container = document.getElementById("question-container");
+            const resultDiv = document.getElementById("resultado");
+            container.innerHTML = "";
+            resultDiv.classList.add("hidden");
+            history = [];
+            currentSection = sectionKey;
+            if (!sectionKey) return;
+            const tree = decisionTrees[sectionKey];
+            history.push(tree);
+            showQuestion(tree);
+        }
+
+        function showQuestion(node) {
+            const container = document.getElementById("question-container");
+            container.innerHTML = `<p class=\"font-bold mb-2\">${node.question}</p>`;
+            for (let key in node.options) {
+                const btnContainer = document.createElement("div");
+                btnContainer.className = "relative w-full";
+                const btn = document.createElement("button");
+                btn.className = "btn btn-primary w-full mt-2";
+                btn.textContent = key.toUpperCase();
+                btn.onclick = () => handleAnswer(node.options[key]);
+                const editIcon = document.createElement("i");
+                editIcon.className = "fas fa-pencil-alt absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer z-10 text-white";
+                editIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    editButtonText(btn, key, node.options[key]);
+                };
+                btnContainer.appendChild(btn);
+                btnContainer.appendChild(editIcon);
+                container.appendChild(btnContainer);
+            }
+            const backBtn = document.createElement("button");
+            backBtn.className = "btn btn-back w-full mt-4";
+            backBtn.textContent = "VOLVER ATRÁS";
+            backBtn.onclick = goBack;
+            container.appendChild(backBtn);
+        }
+
+        function editButtonText(buttonElement, oldText, caseValue) {
+            const newText = prompt("Introduce el nuevo texto para el botón:", buttonElement.textContent);
+            if (newText === null || newText.trim() === "") return;
+            if (confirm(`¿Estás seguro de que deseas cambiar el texto a "${newText}"?`)) {
+                function updateDecisionTree(node, oldKey, newKey) {
+                    if (typeof node === 'object' && node.options) {
+                        const newOptions = {};
+                        let changed = false;
+                        for (const key in node.options) {
+                            if (key.toUpperCase() === oldKey.toUpperCase()) {
+                                newOptions[newKey] = node.options[key];
+                                changed = true;
+                            } else {
+                                newOptions[key] = node.options[key];
+                            }
+                        }
+                        if (changed) {
+                            node.options = newOptions;
+                            return true;
+                        }
+                        for (const key in node.options) {
+                            if (updateDecisionTree(node.options[key], oldKey, newKey)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+                if (caseValue === 'supuesto') {
+                    const newKey = newText.toLowerCase().replace(/ /g, "-");
+                    const oldKey = oldText.toLowerCase().replace(/ /g, "-");
+                    if (decisionTrees[oldKey]) {
+                        decisionTrees[newKey] = decisionTrees[oldKey];
+                        delete decisionTrees[oldKey];
+                        buttonElement.textContent = newText.toUpperCase();
+                        currentSection = newKey;
+                    }
+                } else {
+                    const currentPath = history[history.length - 1];
+                    updateDecisionTree(currentPath, oldText, newText.toUpperCase());
+                    buttonElement.textContent = newText.toUpperCase();
+                }
+            }
+        }
+
+        function handleAnswer(nextNode) {
+            if (typeof nextNode === "string") {
+                showResult(nextNode);
+            } else {
+                history.push(nextNode);
+                showQuestion(nextNode);
+            }
+        }
+
+        function goBack() {
+            const resultDiv = document.getElementById("resultado");
+            if (!resultDiv.classList.contains("hidden")) {
+                resultDiv.classList.add("hidden");
+                history = [];
+                showQuestion(decisionTrees[currentSection]);
+                return;
+            }
+            if (history.length > 1) {
+                history.pop();
+                showQuestion(history[history.length - 1]);
+            } else {
+                document.getElementById("question-container").innerHTML = "";
+                currentSection = null;
+            }
+        }
+
+        function showResult(optionKey) {
+            const resultDiv = document.getElementById("resultado");
+            const detailDiv = document.getElementById("detalle-caso");
+            const container = document.getElementById("question-container");
+            const parentKey = findCaseParent(optionKey);
+            if (!parentKey) {
+                detailDiv.innerHTML = "Error: No se encontró la categoría para este caso.";
+                resultDiv.className = `result-box delito`;
+                resultDiv.classList.remove("hidden");
+                return;
+            }
+            currentCaseKey = optionKey;
+            container.innerHTML = "";
+            detailDiv.innerHTML = "Cargando...";
+            db.ref(`protocolo/${parentKey}/options/${optionKey}`).once('value', (snapshot) => {
+                const info = snapshot.val();
+                if (info) {
+                    let hecho = info.hecho.replace("DELITO LSV art.384 CP- ATESTADO", "DSV DELITO art.384 CP - ATESTADO");
+                    let resumen = info.resumen.replace("DELITO LSV art.384 CP- ATESTADO", "DSV DELITO art.384 CP - ATESTADO");
+                    let actuacion = info.actuacion.replace("DELITO LSV art.384 CP- ATESTADO", "DSV DELITO art.384 CP - ATESTADO");
+                    detailDiv.innerHTML = `
+                        <div><strong>Hecho:</strong> ${hecho}</div>
+                        <div><strong>Resumen:</strong> ${resumen}</div>
+                        <div><strong>Actuación:</strong> ${actuacion}</div>
+                    `;
+                    resultDiv.className = `result-box ${info.tipo}`;
+                    resultDiv.classList.remove("hidden");
+                    const editBtn = document.createElement("button");
+                    editBtn.className = "btn btn-back w-full mt-4 bg-yellow-400 text-black";
+                    editBtn.textContent = "EDITAR RESULTADO";
+                    editBtn.onclick = () => openEditModal(info);
+                    container.appendChild(editBtn);
+                } else {
+                    detailDiv.innerHTML = "No se encontraron datos para este caso. Revise su base de datos de Firebase.";
+                    resultDiv.className = `result-box ok`;
+                    resultDiv.classList.remove("hidden");
+                }
+                const backBtn = document.createElement("button");
+                backBtn.className = "btn btn-back w-full mt-4";
+                backBtn.textContent = "VOLVER ATRÁS";
+                backBtn.onclick = goBack;
+                container.appendChild(backBtn);
+            }).catch(error => {
+                detailDiv.innerHTML = "Error al cargar los datos: " + error.message;
+                resultDiv.className = `result-box delito`;
+                resultDiv.classList.remove("hidden");
+            });
+        }
+
+        function openEditModal(data) {
+            const modal = document.getElementById("edit-modal");
+            document.getElementById("edit-hecho").value = data.hecho;
+            document.getElementById("edit-resumen").value = data.resumen;
+            document.getElementById("edit-actuacion").innerHTML = data.actuacion;
+            modal.classList.remove("hidden");
+        }
+
+        document.getElementById("save-edit").onclick = () => {
+            const parentKey = findCaseParent(currentCaseKey);
+            if (!parentKey) {
+                alert("Error: No se pudo encontrar la categoría del caso.");
+                return;
+            }
+            const updatedData = {
+                hecho: document.getElementById("edit-hecho").value,
+                resumen: document.getElementById("edit-resumen").value,
+                actuacion: document.getElementById("edit-actuacion").innerHTML
+            };
+            if (currentCaseKey) {
+                db.ref(`protocolo/${parentKey}/options/${currentCaseKey}`).update(updatedData)
+                    .then(() => {
+                        console.log("Cambios guardados con éxito.");
+                        document.getElementById("edit-modal").classList.add("hidden");
+                        showResult(currentCaseKey);
+                    })
+                    .catch((error) => {
+                        console.error("Error al guardar los cambios:", error);
+                        alert("Hubo un error al guardar los cambios.");
+                    });
+            } else {
+                alert("No se pudo guardar: no hay un caso seleccionado.");
+            }
+        };
+
+        document.getElementById("cancel-edit").onclick = () => {
+            document.getElementById("edit-modal").classList.add("hidden");
+        };
+
+        document.addEventListener("DOMContentLoaded", initSupuestos);
+    </script>
+</body>
+</html>

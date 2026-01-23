@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMI Master: Importación Universal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configurar el worker de PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #modal, #aiModal, #deleteModal, #summaryModal { transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        .loader {
+            border: 3px solid #374151;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+
+    <div class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-grow flex flex-col">
+        
+        <header class="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4 border-b border-gray-800 pb-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                    WMI Universal Database
+                </h1>
+                <p class="text-gray-400 text-sm mt-1">Gestión de datos con IA Multi-Formato</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center justify-center gap-3">
+                <div class="relative group">
+                    <select id="sortSelect" class="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-48 p-2.5 cursor-pointer hover:bg-gray-750 transition">
+                        <option value="alpha">🔤 Alfabético (A-Z)</option>
+                        <option value="time">🕒 Últimos Añadidos</option>
+                    </select>
+                </div>
+
+                <button id="refreshBtn" class="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 text-gray-300 transition" title="Recargar">
+                    🔄
+                </button>
+                
+                <button id="openAiImportBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg shadow-indigo-500/20 transition flex items-center gap-2 text-sm border border-indigo-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    Importar (Excel/PDF/Img)
+                </button>
+                
+                <button id="openModalBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition flex items-center gap-2 text-sm">
+                    + Añadir
+                </button>
+            </div>
+        </header>
+
+        <div class="sticky top-2 z-30 mb-4">
+            <div class="bg-gray-800/90 backdrop-blur-md p-1 rounded-xl shadow-xl border border-gray-700 flex items-center">
+                <select id="searchField" class="bg-transparent text-gray-300 text-sm font-medium py-3 px-4 outline-none border-r border-gray-700 cursor-pointer hover:text-white transition">
+                    <option value="wmi">WMI</option>
+                    <option value="fabricante">Fabricante</option>
+                    <option value="pais">País</option>
+                </select>
+                <div class="relative flex-grow">
+                    <input type="text" id="searchInput" placeholder="Buscar..." 
+                        class="w-full bg-transparent text-white placeholder-gray-500 text-lg px-4 py-2 outline-none uppercase font-mono">
+                    <div id="searchSpinner" class="hidden absolute right-3 top-3">
+                        <div class="loader w-5 h-5"></div>
+                    </div>
+                </div>
+                <button id="clearSearchBtn" class="hidden px-4 text-gray-500 hover:text-white">✕</button>
+            </div>
+        </div>
+
+        <div id="statusArea" class="h-6 text-center text-xs font-bold text-indigo-400 mb-2 tracking-wide uppercase"></div>
+
+        <div class="bg-gray-800 rounded-xl border border-gray-700 flex flex-col flex-grow overflow-hidden shadow-2xl">
+            <div class="grid grid-cols-12 gap-2 px-6 py-3 bg-gray-900/50 border-b border-gray-700 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <div class="col-span-2 md:col-span-1">WMI</div>
+                <div class="col-span-4 md:col-span-4">Fabricante</div>
+                <div class="col-span-3 md:col-span-3">País</div>
+                <div class="col-span-2 md:col-span-3 hidden md:block">Tipo</div>
+                <div class="col-span-3 md:col-span-1 text-right">Acciones</div>
+            </div>
+            <div id="dataList" class="flex-grow overflow-y-auto divide-y divide-gray-700/50 relative"></div>
+            <div id="scrollLoader" class="hidden py-3 flex justify-center bg-gray-800/80 border-t border-gray-700">
+                <div class="loader w-6 h-6"></div>
+            </div>
+            <div id="emptyMessage" class="hidden absolute inset-0 flex flex-col items-center justify-center text-gray-500 pointer-events-none mt-20">
+                <p class="text-sm">Sin resultados</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 opacity-0 backdrop-blur-sm">
+        <div class="bg-gray-800 w-full max-w-md rounded-xl shadow-2xl border border-gray-600 transform scale-95 transition-all">
+            <div class="p-6">
+                <h3 id="modalTitle" class="text-xl font-bold mb-4 text-white">Gestión WMI</h3>
+                <form id="saveForm" class="space-y-4">
+                    <div><label class="text-xs text-gray-400 uppercase font-bold">WMI</label><input type="text" id="wmiInput" maxlength="3" required class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white uppercase outline-none"></div>
+                    <div><label class="text-xs text-gray-400 uppercase font-bold">Fabricante</label><input type="text" id="fabricanteInput" required class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white uppercase outline-none"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs text-gray-400 uppercase font-bold">País</label><input type="text" id="paisInput" required class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white uppercase outline-none"></div>
+                        <div><label class="text-xs text-gray-400 uppercase font-bold">Tipo</label><input type="text" id="tipoInput" required class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white uppercase outline-none"></div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" id="closeModalBtn" class="px-4 py-2 text-sm text-gray-300">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="aiModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 opacity-0 backdrop-blur-sm">
+        <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl border border-gray-600 flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900">
+                <h3 class="text-xl font-bold text-indigo-400 flex items-center gap-2">
+                    🚀 Importación Universal
+                </h3>
+                <p class="text-xs text-gray-400 mt-1">Admite: Texto, JSON, HTML, CSV, Excel (.xlsx), PDF, Imágenes o URLs.</p>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Opción A: Pegar Texto, Código o URL</label>
+                    <textarea id="aiTextInput" placeholder='Ej: {"wmi": "WVW", "name": "VW"} ... O pega una URL (https://...) ... O código HTML de una tabla...' class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-3 text-white text-sm focus:border-indigo-500 outline-none font-mono"></textarea>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="h-px bg-gray-700 flex-grow"></div>
+                    <span class="text-gray-500 text-xs font-bold">O SUBIR ARCHIVO</span>
+                    <div class="h-px bg-gray-700 flex-grow"></div>
+                </div>
+
+                <div class="relative border-2 border-dashed border-gray-600 rounded-lg p-6 hover:border-indigo-500 hover:bg-gray-700/30 transition text-center group cursor-pointer">
+                    <input type="file" id="aiFileInput" accept="image/*, .pdf, .xlsx, .xls, .csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    
+                    <div id="fileUploadContent">
+                        <div class="text-gray-400 group-hover:text-white transition">
+                            <svg class="w-10 h-10 mx-auto mb-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span class="text-sm font-bold block">Arrastra o haz clic para subir</span>
+                            <span class="text-xs text-gray-500 mt-1 block">Excel, PDF, Imágenes, CSV</span>
+                        </div>
+                    </div>
+                    
+                    <div id="filePreview" class="hidden flex flex-col items-center justify-center">
+                        <img id="imagePreviewTag" class="hidden max-h-32 rounded shadow-lg border border-gray-500 mb-2">
+                        <div id="fileIconTag" class="hidden text-center">
+                            <svg class="w-12 h-12 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <p id="fileNameTag" class="text-sm font-bold text-white mt-1"></p>
+                        </div>
+                        <button type="button" id="removeFileBtn" class="mt-2 text-xs text-red-400 hover:text-red-300 underline">Quitar archivo</button>
+                    </div>
+                </div>
+
+                <div id="aiProgress" class="hidden space-y-2 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                    <div class="flex justify-between text-xs font-bold text-indigo-300 uppercase">
+                        <span id="aiStatusStep">Iniciando...</span>
+                        <span id="aiStatusPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div id="aiProgressBar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                <p id="aiErrorMsg" class="text-red-400 text-sm mt-2 text-center hidden bg-red-900/20 p-2 rounded"></p>
+            </div>
+            <div class="p-4 border-t border-gray-700 flex justify-end gap-3 bg-gray-800">
+                <button type="button" id="closeAiBtn" class="px-4 py-2 text-sm text-gray-300 hover:text-white">Cerrar</button>
+                <button type="button" id="runAiBtn" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-lg flex items-center gap-2">
+                    <span>⚡ Procesar con IA</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="summaryModal" class="fixed inset-0 bg-black/90 z-[60] hidden flex items-center justify-center p-4 opacity-0 backdrop-blur-md">
+        <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl border border-gray-600 flex flex-col max-h-[85vh]">
+            <div class="p-6 bg-gray-900 border-b border-gray-700 flex justify-between items-center rounded-t-xl">
+                <div><h3 class="text-xl font-bold text-white">📑 Resumen</h3><p class="text-sm text-gray-400">Cambios aplicados a la base de datos.</p></div>
+                <div class="text-right">
+                    <span id="summaryCountAdded" class="bg-green-900 text-green-300 text-xs font-bold px-2 py-1 rounded mr-2">0 Nuevos</span>
+                    <span id="summaryCountUpdated" class="bg-blue-900 text-blue-300 text-xs font-bold px-2 py-1 rounded">0 Actualizados</span>
+                </div>
+            </div>
+            <div class="p-0 overflow-y-auto bg-gray-800 flex-grow">
+                <table class="w-full text-sm text-left"><tbody id="summaryTableBody" class="divide-y divide-gray-700"></tbody></table>
+            </div>
+            <div class="p-4 border-t border-gray-700 bg-gray-900 rounded-b-xl flex justify-end">
+                <button id="closeSummaryBtn" class="px-6 py-2 bg-white text-gray-900 font-bold rounded hover:bg-gray-200">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 opacity-0">
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 text-center max-w-sm">
+            <h3 class="text-lg font-bold text-red-400 mb-2">¿Eliminar Registro?</h3>
+            <div class="flex justify-center gap-4 mt-6">
+                <button id="cancelDelete" class="px-4 py-2 bg-gray-700 rounded">No</button>
+                <button id="confirmDelete" class="px-4 py-2 bg-red-600 rounded font-bold">Sí</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, writeBatch, deleteDoc, query, where, getDocs, limit, startAfter, orderBy, documentId } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4", // Clave de Firebase
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasedatabase.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+        };
+        
+        // 🚨 CLAVE CORREGIDA (Simulada para evitar 404). DEBE REEMPLAZARSE por la clave de Google AI Studio.
+        // La clave anterior causaba un error 404 al usarla en el endpoint de Gemini.
+        const GEMINI_API_KEY = "GZSyDFx0wBf0MC7dreCopgHckrp0-Dk1ZiGhc"; // ⚠️ REEMPLAZAR CON SU CLAVE REAL DE GEMINI ⚠️
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let wmiCollectionRef = null;
+        let lastVisible = null;
+        let isFetching = false;
+        let hasMore = true;
+        let currentSearch = { term: "", field: "wmi" };
+        let currentSort = "alpha";
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                wmiCollectionRef = collection(db, `users/${user.uid}/wmi_codes`);
+                loadData(true);
+            } else { signInAnonymously(auth); }
+        });
+
+        // REFERENCIAS
+        const listContainer = document.getElementById('dataList');
+        const searchInput = document.getElementById('searchInput');
+        
+        // CARGA DE DATOS
+        async function loadData(reset = false) {
+            if (isFetching || (!reset && !hasMore)) return;
+            isFetching = true;
+            if (reset) { listContainer.innerHTML = ''; lastVisible = null; hasMore = true; document.getElementById('emptyMessage').classList.add('hidden'); }
+            document.getElementById('scrollLoader').classList.remove('hidden');
+
+            try {
+                let q;
+                const pageSize = 20;
+                if (currentSearch.term) {
+                    const term = currentSearch.term;
+                    const field = currentSearch.field;
+                    let constraints = [
+                        where(field === 'wmi' ? documentId() : field, '>=', term),
+                        where(field === 'wmi' ? documentId() : field, '<=', term + '\uf8ff'),
+                        orderBy(field === 'wmi' ? documentId() : field),
+                        limit(pageSize)
+                    ];
+                    if (lastVisible) constraints.splice(3, 0, startAfter(lastVisible));
+                    q = query(wmiCollectionRef, ...constraints);
+                } else {
+                    let constraints = [orderBy(currentSort === 'time' ? "lastModified" : documentId(), currentSort === 'time' ? "desc" : "asc"), limit(pageSize)];
+                    if (lastVisible) constraints.splice(1, 0, startAfter(lastVisible));
+                    q = query(wmiCollectionRef, ...constraints);
+                }
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) { hasMore = false; if (reset) document.getElementById('emptyMessage').classList.remove('hidden'); }
+                else { lastVisible = snapshot.docs[snapshot.docs.length - 1]; renderRows(snapshot.docs); if (snapshot.docs.length < pageSize) hasMore = false; }
+            } catch (error) { console.error(error); } 
+            finally { isFetching = false; document.getElementById('scrollLoader').classList.add('hidden'); }
+        }
+
+        function renderRows(docs) {
+            const fragment = document.createDocumentFragment();
+            docs.forEach(docSnap => {
+                const data = docSnap.data();
+                const div = document.createElement('div');
+                div.className = "grid grid-cols-12 gap-2 px-6 py-3 items-center hover:bg-gray-700/40 transition border-b border-gray-800 text-sm group";
+                div.innerHTML = `
+                    <div class="col-span-2 md:col-span-1 font-mono font-bold text-indigo-400">${docSnap.id}</div>
+                    <div class="col-span-4 md:col-span-4 truncate text-gray-300">${data.fabricante}</div>
+                    <div class="col-span-3 md:col-span-3 truncate text-gray-400">${data.pais}</div>
+                    <div class="col-span-2 md:col-span-3 hidden md:block truncate text-gray-500 text-xs">${data.tipo}</div>
+                    <div class="col-span-3 md:col-span-1 text-right opacity-60 group-hover:opacity-100">
+                        <button class="text-yellow-500 mr-3 edit-btn">✎</button><button class="text-red-500 delete-btn">✕</button>
+                    </div>`;
+                div.querySelector('.edit-btn').onclick = () => openModal(docSnap.id, data);
+                div.querySelector('.delete-btn').onclick = () => showDelete(docSnap.id);
+                fragment.appendChild(div);
+            });
+            listContainer.appendChild(fragment);
+        }
+
+        // EVENTOS UI
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            document.getElementById('searchSpinner').classList.remove('hidden');
+            debounceTimer = setTimeout(() => {
+                currentSearch.term = e.target.value.toUpperCase().trim();
+                currentSearch.field = document.getElementById('searchField').value;
+                loadData(true);
+                document.getElementById('searchSpinner').classList.add('hidden');
+            }, 400);
+        });
+        document.getElementById('refreshBtn').onclick = () => loadData(true);
+        document.getElementById('sortSelect').addEventListener('change', (e) => { currentSort = e.target.value; loadData(true); });
+        listContainer.addEventListener('scroll', () => { if (listContainer.scrollTop + listContainer.clientHeight >= listContainer.scrollHeight - 100) loadData(false); });
+
+        // GESTIÓN ARCHIVOS IA
+        const aiFileInput = document.getElementById('aiFileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileUploadContent = document.getElementById('fileUploadContent');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        let selectedFile = null;
+
+        aiFileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) handleFileSelect(file);
+        };
+
+        function handleFileSelect(file) {
+            selectedFile = file;
+            fileUploadContent.classList.add('hidden');
+            filePreview.classList.remove('hidden');
+            
+            const isImage = file.type.startsWith('image/');
+            if (isImage) {
+                document.getElementById('imagePreviewTag').src = URL.createObjectURL(file);
+                document.getElementById('imagePreviewTag').classList.remove('hidden');
+                document.getElementById('fileIconTag').classList.add('hidden');
+            } else {
+                document.getElementById('imagePreviewTag').classList.add('hidden');
+                document.getElementById('fileIconTag').classList.remove('hidden');
+                document.getElementById('fileNameTag').textContent = file.name;
+            }
+            document.getElementById('aiTextInput').placeholder = "Archivo seleccionado. Puedes añadir instrucciones extra aquí (opcional)...";
+        }
+
+        removeFileBtn.onclick = (e) => {
+            e.preventDefault();
+            selectedFile = null;
+            aiFileInput.value = "";
+            filePreview.classList.add('hidden');
+            fileUploadContent.classList.remove('hidden');
+            document.getElementById('aiTextInput').placeholder = 'Ej: {"wmi": "WVW"} ... O URL ... O código HTML...';
+        };
+
+        // PARSERS DE ARCHIVOS (EXCEL & PDF)
+        async function parseExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    let resultText = "";
+                    workbook.SheetNames.forEach(sheetName => {
+                        const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+                        resultText += `\n--- SHEET: ${sheetName} ---\n${csv}`;
+                    });
+                    resolve(resultText);
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function parsePDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += `\n--- PAGE ${i} ---\n${pageText}`;
+            }
+            return fullText;
+        }
+
+        // EJECUCIÓN IA
+        document.getElementById('runAiBtn').onclick = async () => {
+            const btn = document.getElementById('runAiBtn');
+            const textInput = document.getElementById('aiTextInput').value;
+            
+            if (!textInput && !selectedFile) return;
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            const progressDiv = document.getElementById('aiProgress');
+            progressDiv.classList.remove('hidden');
+            document.getElementById('aiErrorMsg').classList.add('hidden');
+            
+            const setProgress = (msg, p) => {
+                document.getElementById('aiStatusStep').textContent = msg;
+                document.getElementById('aiStatusPercent').textContent = p + '%';
+                document.getElementById('aiProgressBar').style.width = p + '%';
+            };
+
+            try {
+                setProgress("1/4 Procesando Entrada...", 10);
+                
+                let finalPromptText = textInput;
+                let imageBase64 = null;
+
+                // PROCESAR ARCHIVO SI EXISTE
+                if (selectedFile) {
+                    const type = selectedFile.type;
+                    const name = selectedFile.name.toLowerCase();
+                    
+                    if (type.startsWith('image/')) {
+                        // Imagen: Convertir a Base64 para Gemini Vision
+                        let imageData = await new Promise(r => {
+                            const reader = new FileReader();
+                            reader.onload = () => r(reader.result.split(',')[1]);
+                            reader.readAsDataURL(selectedFile);
+                        });
+                        imageBase64 = imageData;
+                    } else if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) {
+                        // Excel: Parsear a texto
+                        setProgress("Leyendo Excel...", 15);
+                        const excelText = await parseExcel(selectedFile);
+                        finalPromptText += "\n\n[EXCEL DATA START]\n" + excelText + "\n[EXCEL DATA END]";
+                    } else if (type === 'application/pdf' || name.endsWith('.pdf')) {
+                        // PDF: Parsear a texto
+                        setProgress("Extrayendo texto PDF...", 15);
+                        const pdfText = await parsePDF(selectedFile);
+                        finalPromptText += "\n\n[PDF CONTENT START]\n" + pdfText + "\n[PDF CONTENT END]";
+                    }
+                }
+
+                // Verificar si es URL
+                if (finalPromptText.trim().startsWith('http')) {
+                    finalPromptText = `USER PROVIDED URL: ${finalPromptText}. 
+                    Instruction: If this is a well-known URL or dataset, try to extract WMI data from your internal knowledge. 
+                    If it's a raw file URL you can infer, do it. If you cannot access it, return empty array.`;
+                }
+
+                setProgress("2/4 Analizando con IA...", 30);
+                
+                const extracted = await callGemini(
+                    `Extract WMI data. Input can be JSON, CSV, Excel dump, PDF text, or unstructured text.
+                    Ignore irrelevant headers. 
+                    Return STRICT JSON Array: [{"wmi":"XXX","fabricante":"Name","pais":"Country","tipo":"Type"}].
+                    Rules: WMI is 3 chars max (usually). Manufacturer name should be clean.`,
+                    finalPromptText, imageBase64
+                );
+
+                if (!extracted || extracted.length === 0) throw new Error("La IA no encontró datos válidos.");
+
+                setProgress(`3/4 Verificando ${extracted.length} registros...`, 60);
+
+                // Detección de Conflictos
+                const toAdd = [];
+                const conflicts = [];
+
+                for (const item of extracted) {
+                    // === CORRECCIÓN CRÍTICA: VALIDACIÓN WMI ===
+                    if (!item.wmi || typeof item.wmi !== 'string' || item.wmi.trim() === "") continue;
+                    
+                    const wmi = item.wmi.toUpperCase().trim();
+                    // Asegurar que no esté vacío tras trim
+                    if(!wmi) continue;
+
+                    const newItem = {
+                        wmi: wmi,
+                        fabricante: (item.fabricante || 'DESCONOCIDO').toUpperCase(),
+                        pais: (item.pais || 'DESCONOCIDO').toUpperCase(),
+                        tipo: (item.tipo || 'DESCONOCIDO').toUpperCase(),
+                        lastModified: Date.now()
+                    };
+
+                    const docSnap = await getDoc(doc(wmiCollectionRef, wmi));
+                    if (docSnap.exists()) {
+                        conflicts.push({ existing: docSnap.data(), incoming: newItem });
+                    } else {
+                        toAdd.push(newItem);
+                    }
+                }
+
+                // Resolución de conflictos con IA
+                let resolvedUpdates = [];
+                if (conflicts.length > 0) {
+                    setProgress(`Resolviendo ${conflicts.length} conflictos...`, 75);
+                    const prompt = `Resolve data conflicts. Choose the BETTER record (more complete name, specific country).
+                    Return JSON Array of the WINNING objects only.
+                    Conflicts: ${JSON.stringify(conflicts.map(c => ({ id: c.incoming.wmi, A: c.existing, B: c.incoming })))}`;
+                    resolvedUpdates = await callGemini(prompt);
+                    // Re-asegurar timestamps y estructura
+                    resolvedUpdates = resolvedUpdates.map(u => ({...u, lastModified: Date.now()}));
+                }
+
+                setProgress("4/4 Guardando...", 90);
+
+                const batchSize = 400;
+                let batch = writeBatch(db);
+                let count = 0;
+                const allOps = [...toAdd, ...resolvedUpdates];
+
+                for (const item of allOps) {
+                    // === DOBLE SEGURIDAD ANTES DE GUARDAR ===
+                    if(item.wmi && item.wmi.trim().length > 0) {
+                        batch.set(doc(wmiCollectionRef, item.wmi), item);
+                        count++;
+                        if (count >= batchSize) { await batch.commit(); batch = writeBatch(db); count = 0; }
+                    }
+                }
+                if (count > 0) await batch.commit();
+
+                document.getElementById('closeAiBtn').click();
+                showSummaryReport(toAdd, resolvedUpdates);
+                loadData(true);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('aiErrorMsg').textContent = e.message;
+                document.getElementById('aiErrorMsg').classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        };
+
+        // LLAMADA IA
+        async function callGemini(sysPrompt, textVal = "", base64 = null) {
+            // 🔥 CAMBIO CLAVE: Se actualiza el modelo a gemini-1.5-flash y la URL para usar el GEMINI_API_KEY
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`; 
+            const parts = [{ text: sysPrompt }];
+            if (textVal) parts.push({ text: textVal });
+            if (base64) parts.push({ inlineData: { mimeType: "image/jpeg", data: base64 } });
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: parts }],
+                    generationConfig: { responseMimeType: "application/json" }
+                })
+            });
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error("Modelo no encontrado (404). Verifica que la clave de API sea una clave de Google AI Studio, no de Firebase.");
+                }
+                const errorBody = await response.json();
+                throw new Error(`Error API ${response.status}: ${errorBody.error.message}`);
+            }
+
+            const json = await response.json();
+            if (json.error) throw new Error(json.error.message);
+            return JSON.parse(json.candidates[0].content.parts[0].text);
+        }
+
+        // MODAL RESUMEN
+        function showSummaryReport(added, updated) {
+            const tbody = document.getElementById('summaryTableBody');
+            tbody.innerHTML = "";
+            document.getElementById('summaryCountAdded').textContent = `${added.length} Nuevos`;
+            document.getElementById('summaryCountUpdated').textContent = `${updated.length} Actualizados`;
+            const createRow = (item, type) => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-gray-700 hover:bg-gray-700/50";
+                const badge = type === 'new' ? '<span class="bg-green-900 text-green-300 text-xs px-2 rounded">NUEVO</span>' : '<span class="bg-blue-900 text-blue-300 text-xs px-2 rounded">UPD</span>';
+                tr.innerHTML = `<td class="px-6 py-3">${badge}</td><td class="px-6 py-3 font-mono text-white">${item.wmi}</td><td class="px-6 py-3 text-gray-300">${item.fabricante}</td>`;
+                return tr;
+            };
+            updated.forEach(i => tbody.appendChild(createRow(i, 'update')));
+            added.forEach(i => tbody.appendChild(createRow(i, 'new')));
+            document.getElementById('summaryModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('summaryModal').classList.remove('opacity-0'), 10);
+        }
+        document.getElementById('closeSummaryBtn').onclick = () => {
+             document.getElementById('summaryModal').classList.add('opacity-0');
+             setTimeout(() => document.getElementById('summaryModal').classList.add('hidden'), 200);
+        };
+
+        // MODAL MANUAL (SIMPLIFICADO)
+        const modal = document.getElementById('modal');
+        window.openModal = (id, data) => { 
+            modal.classList.remove('hidden'); setTimeout(() => modal.classList.remove('opacity-0'), 10); 
+            if(id){ document.getElementById('wmiInput').value=id; document.getElementById('fabricanteInput').value=data.fabricante; document.getElementById('paisInput').value=data.pais; document.getElementById('tipoInput').value=data.tipo; document.getElementById('wmiInput').disabled=true; }
+            else { document.getElementById('saveForm').reset(); document.getElementById('wmiInput').disabled=false; }
+        };
+        document.getElementById('closeModalBtn').onclick = () => { modal.classList.add('opacity-0'); setTimeout(() => modal.classList.add('hidden'), 200); };
+        document.getElementById('saveForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('wmiInput').value.toUpperCase();
+            await setDoc(doc(wmiCollectionRef, id), { wmi: id, fabricante: document.getElementById('fabricanteInput').value.toUpperCase(), pais: document.getElementById('paisInput').value.toUpperCase(), tipo: document.getElementById('tipoInput').value.toUpperCase(), lastModified: Date.now() });
+            document.getElementById('closeModalBtn').click(); loadData(true);
+        };
+
+        // MODALES UI AUX
+        document.getElementById('openModalBtn').onclick = () => openModal();
+        document.getElementById('openAiImportBtn').onclick = () => { document.getElementById('aiModal').classList.remove('hidden'); setTimeout(() => document.getElementById('aiModal').classList.remove('opacity-0'), 10); };
+        document.getElementById('closeAiBtn').onclick = () => { document.getElementById('aiModal').classList.add('opacity-0'); setTimeout(() => document.getElementById('aiModal').classList.add('hidden'), 200); };
+        
+        // ELIMINAR
+        const delModal = document.getElementById('deleteModal');
+        let delId = null;
+        window.showDelete = (id) => { delId = id; delModal.classList.remove('hidden'); setTimeout(() => delModal.classList.remove('opacity-0'), 10); };
+        document.getElementById('cancelDelete').onclick = () => { delModal.classList.add('opacity-0'); setTimeout(() => delModal.classList.add('hidden'), 200); };
+        document.getElementById('confirmDelete').onclick = async () => { if(delId) await deleteDoc(doc(wmiCollectionRef, delId)); document.getElementById('cancelDelete').click(); loadData(true); };
+
+    </script>
+</body>
+</html>

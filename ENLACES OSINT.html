@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Enlaces OSINT - GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Gris azulado muy suave */
+        }
+        
+        /* Animación del formulario y ayuda */
+        .form-container, .help-container {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .form-container.active, .help-container.active {
+            opacity: 1;
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #2563EB;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #2563EB;
+        }
+        
+        /* Sombras suaves */
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-0 text-slate-800">
+
+    <header class="bg-gradient-to-r from-blue-900 to-blue-700 w-full shadow-lg py-6">
+        <div class="flex flex-col justify-center items-center">
+            <div class="w-32 h-32 rounded-full overflow-hidden shadow-2xl">
+                <img src="logogad.png" onerror="this.src='https://via.placeholder.com/150/0000FF/808080?text=GAD'" alt="Logo GAD" class="w-full h-full object-cover block">
+            </div>
+            <h1 class="text-white text-center mt-4 text-2xl font-bold tracking-wider uppercase drop-shadow-md px-4">
+                Buscador de Enlaces OSINT
+            </h1>
+        </div>
+    </header>
+
+    <div class="w-11/12 max-w-3xl mx-auto mt-6 flex justify-end items-center px-1">
+        <span class="mr-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Modo Edición</span>
+        <div class="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+            <input type="checkbox" name="toggle" id="editModeToggle" onchange="toggleEditMode()" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 left-0 transition-all duration-200 ease-in-out"/>
+            <label for="editModeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+        </div>
+    </div>
+
+    <div id="editHelpBox" class="help-container w-11/12 max-w-3xl mx-auto mt-4 bg-blue-50 border-l-4 border-blue-500 rounded shadow-sm p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wide">Guía de Administración</h3>
+                <div class="mt-2 text-sm text-blue-700 space-y-2">
+                    <p><span class="font-bold">1. Prioridad (▲ ▼):</span> Use las flechas para mover enlaces arriba o abajo. Los enlaces superiores tienen mayor visibilidad.</p>
+                    <p><span class="font-bold">2. Gestión de Estado:</span> Si un enlace no funciona, pulse <span class="bg-orange-100 text-orange-800 px-1 rounded text-xs font-bold">Reportar Link Caído</span>. Se marcará en rojo. Cuando esté corregido, pulse <span class="bg-emerald-100 text-emerald-800 px-1 rounded text-xs font-bold">Activar Link</span>.</p>
+                    <p><span class="font-bold">3. Edición:</span> El botón <span class="bg-blue-100 text-blue-800 px-1 rounded text-xs font-bold">Editar</span> permite modificar el nombre, la descripción y la URL del recurso.</p>
+                    <p><span class="font-bold">4. Eliminar:</span> Borra el recurso de forma permanente de la base de datos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="countrySearchContainer" class="w-11/12 max-w-3xl mx-auto mt-4">
+        <div class="bg-white p-6 md:p-8 rounded-xl card-shadow border border-slate-200">
+            <label class="block text-slate-600 text-xs font-bold mb-2 uppercase tracking-widest">Seleccionar País</label>
+            
+            <div class="relative w-full">
+                <select id="paises" onchange="buscar(this.value)"
+                        class="block appearance-none w-full bg-slate-50 border border-slate-300 text-slate-800 font-medium py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition shadow-sm truncate">
+                    <option value="">-- Seleccione un país --</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-2 text-right" id="infoText">Base de datos de recursos documentales</p>
+        </div>
+    </div>
+    
+    <div id="linkList" class="mt-6 w-11/12 max-w-3xl mx-auto text-left" style="display:none;">
+        
+        <div class="bg-blue-800 text-white p-5 rounded-t-xl shadow-md flex items-center justify-center gap-3">
+            <img id="titleFlag" class="h-6 w-auto rounded-sm shadow-sm" src="" alt="" style="display:none;">
+            <h2 class="text-lg md:text-xl font-bold uppercase tracking-wide text-center" id="resultsTitle">Enlaces</h2>
+        </div>
+
+        <div id="linksContainer" class="bg-white p-4 md:p-6 rounded-b-xl shadow-lg border border-t-0 border-slate-200 min-h-[150px] space-y-4">
+            </div>
+
+        <button 
+            onclick="volverAtras()" 
+            class="block mx-auto mt-8 w-full max-w-xs bg-white text-slate-600 font-bold py-3 px-6 rounded-full border border-slate-300 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm uppercase text-xs tracking-widest"
+        >
+            Cerrar Consulta
+        </button>
+    </div>
+
+    <div id="addLinkSection" class="w-11/12 max-w-3xl mx-auto mt-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg border border-green-100 overflow-hidden">
+            <div class="bg-green-700 p-3">
+                <h3 class="text-white text-sm font-bold text-center uppercase tracking-widest">Gestión de Contenido</h3>
+            </div>
+            <div class="p-6">
+                <button onclick="toggleFormulario()" id="toggleFormBtn"
+                        class="w-full bg-green-50 text-green-800 font-bold py-3 rounded-lg border border-green-200 hover:bg-green-100 transition shadow-sm flex items-center justify-center gap-2 text-sm uppercase">
+                    <span>+</span> Introducir Nuevo Enlace
+                </button>
+                
+                <div id="formularioEnlace" class="mt-4 form-container">
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="nuevoPais" class="block text-xs font-bold text-slate-500 uppercase mb-1">País</label>
+                                <input type="text" id="nuevoPais" placeholder="Ej: ALEMANIA" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="nuevaDescripcion" class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre del Recurso</label>
+                                <input type="text" id="nuevaDescripcion" placeholder="Ej: Registro Civil" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="nuevaUrl" class="block text-xs font-bold text-slate-500 uppercase mb-1">URL</label>
+                            <input type="url" id="nuevaUrl" placeholder="https://..." class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <button onclick="guardarNuevoEnlace()" class="w-full bg-green-700 text-white font-bold py-2 rounded shadow hover:bg-green-800 transition text-sm uppercase">
+                            Guardar en Base de Datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-12 flex justify-center pb-8">
+        <button onclick="window.location.href='index.html'"
+                class="w-11/12 max-w-xs p-3 bg-amber-400 text-amber-900 font-bold rounded shadow-md transition hover:bg-amber-300 border-b-4 border-amber-500 active:border-b-0 active:mt-1 uppercase tracking-widest text-xs">
+            Menú Principal
+        </button>
+    </div>
+
+    <footer class="mt-auto text-center py-8 bg-slate-900 text-slate-400 w-full">
+        <div class="w-11/12 max-w-3xl mx-auto border-t border-slate-700 pt-6 space-y-1">
+            <p class="font-bold text-white tracking-widest text-sm">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold text-slate-300 text-xs">POLICÍA LOCAL DE ALICANTE</p>
+            <p class="text-xs text-slate-500 mt-2">&copy; GAD - Todos los derechos reservados</p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
+    <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+  authDomain: "gad-alicante-v3.firebaseapp.com",
+  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gad-alicante-v3",
+  storageBucket: "gad-alicante-v3.firebasestorage.app",
+  messagingSenderId: "906986258369",
+  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+  measurementId: "G-Q0E3H1996K"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const enlacesRef = database.ref('enlaces_osint');
+
+        const countryMapping = {
+            "ALBANIA": { iso: "al", vehicle: "AL" },
+            "ALEMANIA": { iso: "de", vehicle: "D" },
+            "ANDORRA": { iso: "ad", vehicle: "AND" },
+            "ARGELIA": { iso: "dz", vehicle: "DZ" },
+            "ARGENTINA": { iso: "ar", vehicle: "RA" },
+            "ARMENIA": { iso: "am", vehicle: "AM" },
+            "AUSTRALIA": { iso: "au", vehicle: "AUS" },
+            "AUSTRIA": { iso: "at", vehicle: "A" },
+            "AZERBAIYAN": { iso: "az", vehicle: "AZ" },
+            "BELGICA": { iso: "be", vehicle: "B" },
+            "BIELORRUSIA": { iso: "by", vehicle: "BY" },
+            "BOLIVIA": { iso: "bo", vehicle: "BOL" },
+            "BOSNIA": { iso: "ba", vehicle: "BIH" },
+            "BRASIL": { iso: "br", vehicle: "BR" },
+            "BULGARIA": { iso: "bg", vehicle: "BG" },
+            "CANADA": { iso: "ca", vehicle: "CDN" },
+            "CHILE": { iso: "cl", vehicle: "RCH" },
+            "CHINA": { iso: "cn", vehicle: "RC" },
+            "CHIPRE": { iso: "cy", vehicle: "CY" },
+            "COLOMBIA": { iso: "co", vehicle: "CO" },
+            "COREA DEL SUR": { iso: "kr", vehicle: "ROK" },
+            "CROACIA": { iso: "hr", vehicle: "HR" },
+            "DINAMARCA": { iso: "dk", vehicle: "DK" },
+            "ECUADOR": { iso: "ec", vehicle: "EC" },
+            "EEUU": { iso: "us", vehicle: "USA" },
+            "EGIPTO": { iso: "eg", vehicle: "ET" },
+            "EMIRATOS ARABES": { iso: "ae", vehicle: "UAE" },
+            "ESLOVAQUIA": { iso: "sk", vehicle: "SK" },
+            "ESLOVENIA": { iso: "si", vehicle: "SLO" },
+            "ESPAÑA": { iso: "es", vehicle: "E" },
+            "ESTONIA": { iso: "ee", vehicle: "EST" },
+            "FINLANDIA": { iso: "fi", vehicle: "FIN" },
+            "FRANCIA": { iso: "fr", vehicle: "F" },
+            "GEORGIA": { iso: "ge", vehicle: "GE" },
+            "GRECIA": { iso: "gr", vehicle: "GR" },
+            "HUNGRIA": { iso: "hu", vehicle: "H" },
+            "INDIA": { iso: "in", vehicle: "IND" },
+            "IRLANDA": { iso: "ie", vehicle: "IRL" },
+            "ISLANDIA": { iso: "is", vehicle: "IS" },
+            "ISRAEL": { iso: "il", vehicle: "IL" },
+            "ITALIA": { iso: "it", vehicle: "I" },
+            "JAPON": { iso: "jp", vehicle: "J" },
+            "KAZAJISTAN": { iso: "kz", vehicle: "KZ" },
+            "LETONIA": { iso: "lv", vehicle: "LV" },
+            "LITUANIA": { iso: "lt", vehicle: "LT" },
+            "LUXEMBURGO": { iso: "lu", vehicle: "L" },
+            "MALTA": { iso: "mt", vehicle: "M" },
+            "MARRUECOS": { iso: "ma", vehicle: "MA" },
+            "MEXICO": { iso: "mx", vehicle: "MEX" },
+            "MOLDAVIA": { iso: "md", vehicle: "MD" },
+            "MONACO": { iso: "mc", vehicle: "MC" },
+            "MONTENEGRO": { iso: "me", vehicle: "MNE" },
+            "NORUEGA": { iso: "no", vehicle: "N" },
+            "NUEVA ZELANDA": { iso: "nz", vehicle: "NZ" },
+            "PAISES BAJOS": { iso: "nl", vehicle: "NL" },
+            "PAKISTAN": { iso: "pk", vehicle: "PK" },
+            "PARAGUAY": { iso: "py", vehicle: "PY" },
+            "PERU": { iso: "pe", vehicle: "PE" },
+            "POLONIA": { iso: "pl", vehicle: "PL" },
+            "PORTUGAL": { iso: "pt", vehicle: "P" },
+            "REINO UNIDO": { iso: "gb", vehicle: "UK" },
+            "REPUBLICA CHECA": { iso: "cz", vehicle: "CZ" },
+            "RUMANIA": { iso: "ro", vehicle: "RO" },
+            "RUSIA": { iso: "ru", vehicle: "RUS" },
+            "SAN MARINO": { iso: "sm", vehicle: "RSM" },
+            "SERBIA": { iso: "rs", vehicle: "SRB" },
+            "SUECIA": { iso: "se", vehicle: "S" },
+            "SUIZA": { iso: "ch", vehicle: "CH" },
+            "TUNEZ": { iso: "tn", vehicle: "TN" },
+            "TURQUIA": { iso: "tr", vehicle: "TR" },
+            "UCRANIA": { iso: "ua", vehicle: "UA" },
+            "URUGUAY": { iso: "uy", vehicle: "UY" },
+            "VENEZUELA": { iso: "ve", vehicle: "YV" }
+        };
+
+        function getCountryData(paisName) {
+            if (!paisName) return null;
+            const normalized = paisName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+            if (countryMapping[normalized]) return countryMapping[normalized];
+            const key = Object.keys(countryMapping).find(k => k.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === normalized);
+            if (key) return countryMapping[key];
+            return { iso: null, vehicle: null };
+        }
+
+        const paisesSelect = document.getElementById('paises');
+        const linkList = document.getElementById('linkList');
+        const resultsTitle = document.getElementById('resultsTitle');
+        const titleFlag = document.getElementById('titleFlag');
+        const linksContainer = document.getElementById('linksContainer');
+        const addLinkSection = document.getElementById('addLinkSection');
+        const helpBox = document.getElementById('editHelpBox'); // Referencia al cuadro de ayuda
+        const defaultLinkStatus = 'activo';
+
+        let enlacesData = {};
+        let isEditMode = false;
+
+        // --- GESTIÓN DEL MODO EDICIÓN ---
+        window.toggleEditMode = function() {
+            const checkbox = document.getElementById('editModeToggle');
+            isEditMode = checkbox.checked;
+            
+            // Mostrar/Ocultar formulario de añadir
+            addLinkSection.style.display = isEditMode ? 'block' : 'none';
+            
+            // Mostrar/Ocultar cuadro de ayuda
+            if (isEditMode) {
+                helpBox.style.display = 'block';
+                setTimeout(() => helpBox.classList.add('active'), 10);
+            } else {
+                helpBox.classList.remove('active');
+                setTimeout(() => helpBox.style.display = 'none', 400);
+            }
+
+            // Si ya hay un país seleccionado, refrescar la lista para ver los botones
+            if (paisesSelect.value) {
+                buscar(paisesSelect.value, true);
+            }
+        };
+
+        enlacesRef.on('value', (snapshot) => {
+            enlacesData = snapshot.val() || {};
+            const paises = Object.keys(enlacesData).sort();
+            const paisSeleccionadoAnterior = paisesSelect.value;
+            
+            paisesSelect.innerHTML = '<option value="">-- SELECCIONAR PAÍS --</option>';
+            
+            paises.forEach(pais => {
+                const data = getCountryData(pais);
+                const label = data.vehicle ? `${pais} (${data.vehicle})` : pais;
+                const option = document.createElement('option');
+                option.value = pais;
+                option.textContent = label;
+                paisesSelect.appendChild(option);
+            });
+            
+            if (paisSeleccionadoAnterior) paisesSelect.value = paisSeleccionadoAnterior;
+            if (paisesSelect.value) buscar(paisesSelect.value, true); 
+        });
+
+        window.buscar = function(pais, refreshing = false) {
+            isEditMode = document.getElementById('editModeToggle').checked; 
+            
+            // Sincronizar visibilidad de secciones
+            addLinkSection.style.display = isEditMode ? 'block' : 'none';
+            if (isEditMode) {
+                helpBox.style.display = 'block';
+                helpBox.classList.add('active');
+            } else {
+                helpBox.style.display = 'none';
+                helpBox.classList.remove('active');
+            }
+
+            linksContainer.innerHTML = '';
+
+            if (!pais) {
+                linkList.style.display = 'none';
+                return;
+            }
+
+            linkList.style.display = 'block';
+            
+            const data = getCountryData(pais);
+            const vehicleCode = data.vehicle ? `(${data.vehicle})` : '';
+            
+            resultsTitle.innerHTML = `ENLACES DE ${pais} <span class="text-blue-300 ml-2 text-lg">${vehicleCode}</span>`;
+            
+            if (data.iso) {
+                titleFlag.src = `https://flagcdn.com/h40/${data.iso}.png`;
+                titleFlag.style.display = 'block';
+            } else {
+                titleFlag.style.display = 'none';
+            }
+
+            let results = enlacesData[pais];
+            
+            if (results) {
+                let resultsClone = { ...results };
+                let entries = Object.entries(resultsClone);
+                
+                const needsMigration = entries.some(([, link]) => link.orden === undefined);
+                const ordenValues = entries.map(([, link]) => link.orden).filter(o => o !== undefined);
+                const hasDuplicates = ordenValues.length > 0 && new Set(ordenValues).size !== ordenValues.length;
+
+                if (needsMigration || hasDuplicates) {
+                    if (!refreshing) console.log(`Sincronizando orden para ${pais}...`);
+                    const updates = {};
+                    const stableSorted = Object.entries(resultsClone).sort(([, a], [, b]) => {
+                        const nombreA = a.nombre || a.descripcion || '';
+                        const nombreB = b.nombre || b.descripcion || '';
+                        return nombreA.localeCompare(nombreB);
+                    });
+                    stableSorted.forEach(([key], index) => {
+                        updates[`${pais}/${key}/orden`] = index;
+                    });
+                    enlacesRef.update(updates);
+                    linksContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">Actualizando estructura de datos...</div>`;
+                    return; 
+                }
+
+                const sortedLinks = Object.entries(resultsClone).sort(([, a], [, b]) => a.orden - b.orden);
+
+                sortedLinks.forEach(([key, link], index) => {
+                    const linkItem = document.createElement('div');
+                    linkItem.classList.add('bg-white', 'p-4', 'md:p-5', 'rounded-lg', 'border', 'border-slate-100', 'shadow-sm', 'hover:shadow-md', 'transition-shadow');
+
+                    if(link.status === 'caido' && !isEditMode) {
+                         linkItem.classList.add('opacity-75', 'bg-slate-50');
+                    }
+
+                    const linkAnchor = document.createElement('a');
+                    linkAnchor.href = link.url;
+                    linkAnchor.target = "_blank";
+                    linkAnchor.rel = "noreferrer";
+                    linkAnchor.classList.add('block', 'group');
+                    
+                    const linkTitle = document.createElement('h3');
+                    linkTitle.classList.add('font-bold', 'text-base', 'flex', 'items-center', 'gap-2', 'flex-wrap');
+                    
+                    const iconSvg = `<svg class="w-3 h-3 opacity-40 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>`;
+                    
+                    linkTitle.innerHTML = `<span class="break-words">${link.nombre}</span> ${iconSvg}`;
+                    
+                    if (link.status === 'caido') {
+                        linkTitle.classList.add('text-red-500', 'line-through', 'decoration-red-300');
+                    } else {
+                        linkTitle.classList.add('text-blue-800', 'group-hover:text-blue-600');
+                    }
+
+                    const linkDescription = document.createElement('p');
+                    linkDescription.classList.add('text-sm', 'text-slate-500', 'mt-1');
+                    linkDescription.textContent = link.descripcion;
+
+                    linkAnchor.appendChild(linkTitle);
+                    linkAnchor.appendChild(linkDescription);
+                    linkItem.appendChild(linkAnchor);
+                    
+                    const statusContainer = document.createElement('div');
+                    statusContainer.classList.add('mt-3', 'pt-2', 'border-t', 'border-slate-50');
+
+                    const statusTextRow = document.createElement('div');
+                    statusTextRow.classList.add('flex', 'justify-between', 'items-center');
+                    
+                    if (link.status === 'caido') {
+                        statusTextRow.innerHTML = `<span class="text-xs font-bold text-red-500 uppercase tracking-wide flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Inactivo</span>`;
+                    } else {
+                        statusTextRow.innerHTML = `<span class="text-xs font-bold text-emerald-600 uppercase tracking-wide flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Activo</span>`;
+                    }
+
+                    if (isEditMode) {
+                        const ordenLabel = document.createElement('span');
+                        ordenLabel.classList.add('text-xs', 'font-mono', 'text-slate-400');
+                        ordenLabel.textContent = `#${link.orden}`;
+                        statusTextRow.appendChild(ordenLabel);
+                    }
+                    
+                    statusContainer.appendChild(statusTextRow);
+
+                    if (isEditMode) {
+                        const buttonRow = document.createElement('div');
+                        buttonRow.classList.add('flex', 'flex-wrap', 'gap-2', 'mt-3');
+                        
+                        const btnClass = "text-xs font-bold px-2 py-1 rounded border transition hover:shadow-sm flex-grow md:flex-grow-0 text-center justify-center";
+                        
+                        const subirBtn = document.createElement('button');
+                        subirBtn.innerHTML = '▲';
+                        subirBtn.className = `${btnClass} bg-slate-50 border-slate-200 text-slate-600 hover:bg-white`;
+                        subirBtn.onclick = () => moverEnlace(pais, sortedLinks, index, 'arriba');
+                        if(index === 0) subirBtn.classList.add('opacity-30', 'cursor-not-allowed');
+
+                        const bajarBtn = document.createElement('button');
+                        bajarBtn.innerHTML = '▼';
+                        bajarBtn.className = `${btnClass} bg-slate-50 border-slate-200 text-slate-600 hover:bg-white`;
+                        bajarBtn.onclick = () => moverEnlace(pais, sortedLinks, index, 'abajo');
+                        if(index === sortedLinks.length - 1) bajarBtn.classList.add('opacity-30', 'cursor-not-allowed');
+
+                        const editBtn = document.createElement('button');
+                        editBtn.textContent = 'Editar';
+                        editBtn.className = `${btnClass} bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100`;
+                        editBtn.onclick = () => toggleEditForm(linkItem, true);
+
+                        const statusBtn = document.createElement('button');
+                        if (link.status === 'caido') {
+                            statusBtn.textContent = 'Activar Link'; // CAMBIO SOLICITADO
+                            statusBtn.className = `${btnClass} bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100`;
+                            statusBtn.onclick = () => toggleLinkStatus(pais, key, 'activo');
+                        } else {
+                            statusBtn.textContent = 'Reportar Link Caído'; // CAMBIO SOLICITADO
+                            statusBtn.className = `${btnClass} bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100`;
+                            statusBtn.onclick = () => toggleLinkStatus(pais, key, 'caido');
+                        }
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = 'Borrar';
+                        deleteBtn.className = `${btnClass} bg-red-50 border-red-100 text-red-600 hover:bg-red-100 ml-auto`;
+                        deleteBtn.onclick = () => eliminarEnlace(pais, key);
+
+                        buttonRow.append(subirBtn, bajarBtn, editBtn, statusBtn, deleteBtn);
+                        statusContainer.appendChild(buttonRow);
+                    }
+
+                    linkItem.appendChild(statusContainer);
+
+                    const editFormContainer = document.createElement('div');
+                    editFormContainer.classList.add('form-container', 'mt-3', 'bg-slate-50', 'p-3', 'rounded', 'border', 'border-slate-200');
+                    editFormContainer.innerHTML = `
+                        <div class="grid gap-2">
+                            <input type="text" value="${link.nombre}" class="edit-nombre w-full border border-slate-300 rounded px-2 py-1 text-xs" placeholder="Nombre">
+                            <input type="url" value="${link.url}" class="edit-url w-full border border-slate-300 rounded px-2 py-1 text-xs" placeholder="URL">
+                            <input type="text" value="${link.descripcion}" class="edit-descripcion w-full border border-slate-300 rounded px-2 py-1 text-xs" placeholder="Descripción">
+                            <div class="flex gap-2 mt-1">
+                                <button onclick="saveEditedLink('${pais}', '${key}')" class="flex-1 bg-blue-600 text-white text-xs py-1 rounded">Guardar</button>
+                                <button onclick="toggleEditForm(this.closest('.bg-white'), false)" class="flex-1 bg-slate-200 text-slate-600 text-xs py-1 rounded">Cancelar</button>
+                            </div>
+                        </div>
+                    `;
+                    linkItem.appendChild(editFormContainer);
+                    linksContainer.appendChild(linkItem);
+                });
+            } else {
+                linksContainer.innerHTML = `<div class="text-center py-8 text-slate-400">Sin enlaces registrados.</div>`;
+            }
+        };
+
+        window.moverEnlace = function(pais, sortedLinks, index, direccion) {
+            const itemActual = sortedLinks[index];
+            const indexOtro = (direccion === 'arriba') ? index - 1 : index + 1;
+            if (indexOtro < 0 || indexOtro >= sortedLinks.length) return;
+            const itemOtro = sortedLinks[indexOtro];
+            const updates = {};
+            updates[`${pais}/${itemActual[0]}/orden`] = itemOtro[1].orden;
+            updates[`${pais}/${itemOtro[0]}/orden`] = itemActual[1].orden;
+            enlacesRef.update(updates);
+        };
+
+        window.toggleLinkStatus = function(pais, key, status) {
+            enlacesRef.child(pais).child(key).update({ status: status });
+        };
+
+        window.eliminarEnlace = function(pais, key) {
+            if (confirm("¿Eliminar definitivamente?")) enlacesRef.child(pais).child(key).remove();
+        };
+
+        window.toggleEditForm = function(linkItem, show) {
+            const formContainer = linkItem.querySelector('.form-container');
+            if (show) {
+                formContainer.style.display = 'block';
+                setTimeout(() => formContainer.classList.add('active'), 10);
+            } else {
+                formContainer.classList.remove('active');
+                setTimeout(() => formContainer.style.display = 'none', 400);
+            }
+        };
+
+        window.saveEditedLink = function(pais, key) {
+            const btn = event.target; 
+            const linkElement = btn.closest('.bg-white');
+            const nuevoNombre = linkElement.querySelector('.edit-nombre').value.trim();
+            const nuevaUrl = linkElement.querySelector('.edit-url').value.trim();
+            const nuevaDescripcion = linkElement.querySelector('.edit-descripcion').value.trim();
+            
+            if (!nuevoNombre || !nuevaUrl) return;
+
+            enlacesRef.child(pais).child(key).update({
+                nombre: nuevoNombre,
+                url: nuevaUrl,
+                descripcion: nuevaDescripcion
+            }).then(() => toggleEditForm(linkElement, false));
+        };
+
+        window.volverAtras = function() {
+            linkList.style.display = 'none';
+            paisesSelect.value = '';
+            resultsTitle.innerHTML = '';
+            titleFlag.style.display = 'none';
+        };
+
+        window.toggleFormulario = function() {
+            const formulario = document.getElementById('formularioEnlace');
+            const toggleBtn = document.getElementById('toggleFormBtn');
+            formulario.classList.toggle('active');
+            
+            if (formulario.classList.contains('active')) {
+                formulario.style.display = 'block';
+                toggleBtn.innerHTML = '<span>×</span> Cancelar';
+                toggleBtn.classList.replace('bg-green-50', 'bg-slate-100');
+                toggleBtn.classList.replace('text-green-800', 'text-slate-600');
+            } else {
+                setTimeout(() => formulario.style.display = 'none', 500);
+                toggleBtn.innerHTML = '<span>+</span> Introducir Nuevo Enlace';
+                toggleBtn.classList.replace('bg-slate-100', 'bg-green-50');
+                toggleBtn.classList.replace('text-slate-600', 'text-green-800');
+            }
+        };
+
+        window.guardarNuevoEnlace = function() {
+            const paisInput = document.getElementById('nuevoPais').value.trim();
+            const paisKey = paisInput.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+            
+            const descripcion = document.getElementById('nuevaDescripcion').value.trim();
+            const url = document.getElementById('nuevaUrl').value.trim();
+
+            if (!paisKey || !descripcion || !url) return alert("Datos incompletos.");
+
+            const paisLinks = enlacesData[paisKey] || {};
+            const ordenValues = Object.values(paisLinks).map(l => l.orden).filter(o => o !== undefined);
+            const maxOrden = ordenValues.length > 0 ? Math.max(...ordenValues) : -1;
+
+            enlacesRef.child(paisKey).push({
+                nombre: descripcion, 
+                url: url,
+                descripcion: descripcion,
+                status: defaultLinkStatus,
+                orden: maxOrden + 1 
+            }).then(() => {
+                alert("Guardado.");
+                document.getElementById('nuevoPais').value = '';
+                document.getElementById('nuevaDescripcion').value = '';
+                document.getElementById('nuevaUrl').value = '';
+                toggleFormulario();
+            });
+        };
+    </script>
+</body>
+</html>

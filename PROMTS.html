@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestor de Prompts - GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- ESTILOS IDÉNTICOS AL INDEX.HTML --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0; padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .top-bar-strip {
+            background-color: #1e3a8a;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            height: 50px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .top-back-btn {
+            background-color: #dc2626; 
+            border: none;
+            margin-right: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 15px;
+            border-radius: 4px;
+            color: white;
+            height: 30px;
+            display: flex; align-items: center;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        header.logo-header {
+            background-color: #1e40af; 
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 40;
+            flex-shrink: 0;
+        }
+
+        .logo-container {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #1e40af; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- DISEÑO DEL GESTOR --- */
+        .main-content-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: 1rem auto;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        .prompt-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            border-left: 6px solid #1e40af;
+        }
+
+        .prompt-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #111827;
+            text-transform: uppercase;
+        }
+
+        .prompt-review {
+            font-size: 0.95rem;
+            color: #4b5563;
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        .prompt-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .prompt-details.active { display: block; }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            background-color: #f9fafb;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .btn-gad {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-view { background-color: #16a34a; color: white; }
+        .btn-delete { background-color: #ef4444; color: white; }
+        .btn-save-update { background-color: #1e40af; color: white; width: 100%; justify-content: center; }
+
+        /* FOOTER IDÉNTICO AL INDEX */
+        footer {
+            width: 100%;
+            padding: 1.5rem 0;
+            margin-top: auto;
+            background-color: #e5e7eb;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar-strip">
+    <a href="index.html" class="top-back-btn"><i class="fas fa-arrow-left mr-2"></i> VOLVER</a>
+    <span class="ml-auto font-bold text-xs uppercase tracking-widest">Biblioteca de Prompts GAD</span>
+</div>
+
+<header class="logo-header">
+    <div class="logo-container">
+        <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+    </div>
+</header>
+
+<div class="main-content-wrapper">
+    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+        <h2 class="text-xl font-extrabold text-gray-800 mb-4 uppercase flex items-center">
+            <i class="fas fa-plus-circle mr-2 text-blue-700"></i> Nuevo Registro de Prompt
+        </h2>
+        <div class="flex flex-col gap-3">
+            <input type="text" id="p-title" placeholder="Título del Prompt" class="p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="p-review" placeholder="Breve reseña / Resumen" class="p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500">
+            <textarea id="p-content" placeholder="Escribe aquí el PROMPT principal..." class="p-3 border rounded-lg bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+            <button onclick="saveNewPrompt()" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-3 rounded-lg shadow-lg transition-transform active:scale-95">
+                <i class="fas fa-save mr-2"></i> GUARDAR EN BASE DE DATOS
+            </button>
+        </div>
+    </div>
+
+    <hr class="border-gray-300 mb-8">
+
+    <div id="prompts-list">
+        <div id="status-msg" class="text-center py-12 font-bold text-gray-400">
+            <i class="fas fa-circle-notch fa-spin text-4xl mb-3"></i><br>
+            <span class="tracking-widest">SINCRONIZANDO CON FIREBASE...</span>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-gray-200 mt-auto py-6 text-center">
+    <div class="px-4">
+        <hr class="border-t border-gray-400 w-full max-w-md mx-auto mb-4">
+        <p class="font-bold text-gray-800 uppercase">Grupo de Análisis Documental</p>
+        <p class="font-bold text-gray-800 uppercase">Policía Local de Alicante</p>
+        <p class="text-sm text-gray-600 mt-2">&copy; GAD - Todos los derechos reservados</p>
+    </div>
+</footer>
+
+<script>
+    // --- CONFIGURACIÓN DE TU FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+      measurementId: "G-Q0E3H1996K"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const NODE_NAME = 'prompts_gad'; // Nodo de tu captura
+
+    // Función para guardar (usa el campo 'prompt' como en tu captura)
+    function saveNewPrompt() {
+        const title = document.getElementById('p-title').value.trim();
+        const review = document.getElementById('p-review').value.trim();
+        const promptText = document.getElementById('p-content').value.trim();
+
+        if (!title || !promptText) { alert("Título y Prompt son obligatorios"); return; }
+
+        db.ref(NODE_NAME).push({
+            title: title,
+            review: review,
+            prompt: promptText, // Corregido: 'prompt' en lugar de 'content'
+            timestamp: Date.now()
+        }).then(() => {
+            document.getElementById('p-title').value = '';
+            document.getElementById('p-review').value = '';
+            document.getElementById('p-content').value = '';
+            alert("Guardado correctamente en GAD Cloud");
+        });
+    }
+
+    // Escucha de datos
+    function initLibrary() {
+        db.ref(NODE_NAME).on('value', (snapshot) => {
+            const list = document.getElementById('prompts-list');
+            list.innerHTML = ''; 
+
+            if (!snapshot.exists()) {
+                list.innerHTML = '<div class="text-center text-gray-400 font-bold py-10">BIBLIOTECA VACÍA - AÑADE TU PRIMER PROMPT</div>';
+                return;
+            }
+
+            const data = snapshot.val();
+            const keys = Object.keys(data).reverse();
+
+            keys.forEach(key => {
+                const item = data[key];
+                const card = document.createElement('div');
+                card.className = 'prompt-card';
+                card.innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                        <div class="flex-grow">
+                            <div class="prompt-title">${item.title}</div>
+                            <div class="prompt-review">${item.review || 'Sin reseña'}</div>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="toggleDetails('${key}')" class="btn-gad btn-view flex-1 md:flex-none">
+                                <i class="fas fa-eye"></i> VER / EDITAR
+                            </button>
+                            <button onclick="deletePrompt('${key}')" class="btn-gad btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="details-${key}" class="prompt-details">
+                        <textarea id="text-${key}">${item.prompt || ''}</textarea> 
+                        <button onclick="updatePrompt('${key}')" class="btn-gad btn-save-update">
+                            <i class="fas fa-sync-alt mr-2"></i> ACTUALIZAR CAMBIOS
+                        </button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }, (error) => {
+            document.getElementById('prompts-list').innerHTML = `<p class="text-red-500 font-bold text-center">Error de Conexión: ${error.message}</p>`;
+        });
+    }
+
+    window.toggleDetails = (key) => {
+        const el = document.getElementById(`details-${key}`);
+        el.classList.toggle('active');
+    };
+
+    window.updatePrompt = (key) => {
+        const newText = document.getElementById(`text-${key}`).value;
+        db.ref(`${NODE_NAME}/${key}`).update({ prompt: newText }).then(() => alert("✅ Cambios guardados"));
+    };
+
+    window.deletePrompt = (key) => {
+        if (confirm("¿Seguro que deseas eliminar este registro del GAD?")) {
+            db.ref(`${NODE_NAME}/${key}`).remove();
+        }
+    };
+
+    // Lanzar la carga inmediatamente
+    initLibrary();
+</script>
+
+</body>
+</html>

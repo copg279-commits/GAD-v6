@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Códigos Armonizados y Nacionales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    .flag-button-spain {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+  </style>
+</head>
+<style>
+    .search-input {
+        text-transform: uppercase;
+    }
+    .result-box-container {
+        position: relative;
+        background-color: #e0f7fa; /* Nuevo color de fondo azul claro */
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        text-align: left;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        margin-bottom: 1rem;
+    }
+    .flag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 25px;
+        background-size: cover;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+    .flag-españa {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+    }
+    .flag-alemania {
+        background: linear-gradient(to top, #ffce00 0%, #ffce00 33%, #d00 33%, #d00 66%, #000 66%, #000 100%);
+    }
+    .flag-austria {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #fff 33%, #fff 66%, #c60b1e 66%, #c60b1e 100%);
+    }
+    .flag-bulgaria {
+        background: linear-gradient(to top, #00966e 0%, #00966e 33%, #fff 33%, #fff 66%, #d00 66%, #d00 100%);
+    }
+    .flag-croacia {
+        background: linear-gradient(to top, #003399 0%, #003399 33%, #fff 33%, #fff 66%, #d00 66%, #d00 100%);
+    }
+    .flag-dinamarca {
+        background-color: #c60b1e;
+    }
+    .flag-dinamarca::before, .flag-dinamarca::after {
+        content: '';
+        position: absolute;
+        background-color: #fff;
+    }
+    .flag-dinamarca::before {
+        width: 100%;
+        height: 5px;
+        top: 10px;
+    }
+    .flag-dinamarca::after {
+        width: 5px;
+        height: 100%;
+        left: 17.5px;
+    }
+    .flag-eslovaquia {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #003399 33%, #003399 66%, #fff 66%, #fff 100%);
+    }
+    .flag-eslovenia {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #003399 33%, #003399 66%, #fff 66%, #fff 100%);
+    }
+    .flag-estonia {
+        background: linear-gradient(to top, #000 0%, #000 33%, #003399 33%, #003399 66%, #d00 66%, #d00 100%);
+    }
+    .flag-francia {
+        background: linear-gradient(to right, #003399 0%, #003399 33%, #fff 33%, #fff 66%, #d00 66%, #d00 100%);
+    }
+    .flag-grecia {
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 18'%3E%3Cpath fill='%23002654' d='M0 0h27v18H0z'/%3E%3Cpath stroke='%23fff' stroke-width='2' d='M0 2h27m0 4H0m0 4h27m0 4H0'/%3E%3Cpath fill='%23fff' d='M0 0h10v10H0z'/%3E%3Cpath stroke='%23002654' stroke-width='2' d='M5 0v10M0 5h10'/%3E%3C/svg%3E") no-repeat center center / contain;
+    }
+    .flag-hungria {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #fff 33%, #fff 66%, #00966e 66%, #00966e 100%);
+    }
+    .flag-irlanda {
+        background: linear-gradient(to right, #009a49 0%, #009a49 33%, #fff 33%, #fff 66%, #ff7900 66%, #ff7900 100%);
+    }
+    .flag-reino-unido {
+         background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'%3E%3CclipPath id='a'%3E%3Cpath d='M30 15h30v15H30zM0 0h30v15H0zM0 15h30v15H0zM30 0h30v15H30z'/%3E%3C/clipPath%3E%3Cpath fill='%2300247d' d='M0 0h60v30H0z'/%3E%3Cg stroke='%23fff' stroke-width='6'%3E%3Cpath d='M0 0l60 30M60 0L0 30'/%3E%3Cpath stroke='%23cf142b' d='M0 0l60 30M60 0L0 30' stroke-width='4' clip-path='url(%23a)'/%3E%3Cpath d='M30 0v30M0 15h60'/%3E%3Cpath stroke='%23cf142b' d='M30 0v30M0 15h60' stroke-width='4'/%3E%3C/g%3E%3C/svg%3E") no-repeat center center / contain;
+    }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+        Buscador Códigos Armonizados y Nacionales
+    </h1>
+    <p class="text-center mt-2 px-4">
+        Introduce un código o palabras clave para buscar su significado.
+    </p>
+
+    <div class="w-11/12 max-w-md mx-auto mt-4">
+        <p class="text-center mb-2">
+            Introduce el código para buscar su significado:
+        </p>
+        <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Ej: 01.06 o 106" 
+            class="search-input w-full p-3 text-base border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+            onclick="buscarCodigo()" 
+            class="block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition"
+        >
+            Buscar por Código
+        </button>
+    </div>
+
+    <div class="w-11/12 max-w-md mx-auto mt-6">
+        <p class="text-center mb-2">
+            O introduce palabras clave para buscar códigos:
+        </p>
+        <input 
+            type="text" 
+            id="inverseSearchInput" 
+            placeholder="Ej: gafas de contacto" 
+            class="w-full p-3 text-base border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+            onclick="buscarInverso()" 
+            class="block mx-auto mt-4 w-full bg-gray-500 text-white font-bold py-3 rounded-md hover:bg-gray-600 transition"
+        >
+            Buscar por Palabras Clave
+        </button>
+    </div>
+
+    <div id="resultado" class="mt-6 w-11/12 max-w-md mx-auto text-left">
+        <div class="result-box-container">
+            <p class="text-gray-500">
+                El significado del código o los códigos coincidentes aparecerán aquí.
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+    const codigosArmonizados = {
+        "01": "Corrección y protección de la visión",
+        "01.01": "Gafas",
+        "01.02": "Lentes de contacto",
+        "01.05": "Recubrimiento de un ojo",
+        "01.06": "Gafas o lentes de contacto",
+        "01.07": "Ayuda óptica específica",
+        "02": "Prótesis auditiva o ayuda a la comunicación",
+        "03": "Prótesis u órtesis del aparato locomotor",
+        "03.01": "Prótesis u órtesis de los miembros superiores",
+        "03.02": "Prótesis u órtesis de los miembros inferiores",
+        "05": "Restricción de la conducción",
+        "10": "Transmisión adaptada",
+        "15": "Embrague adaptado",
+        "15.02": "Embrague accionado con la mano",
+        "15.03": "Embrague automatizado",
+        "20": "Mecanismos de freno adaptados",
+        "20.01": "Pedal de freno adaptado",
+        "20.03": "Pedal de freno accionado con el pie izquierdo",
+        "20.06": "Freno accionado con la mano",
+        "20.13": "Freno accionado con la rodilla",
+        "25": "Mecanismos de aceleración adaptados",
+        "25.01": "Pedal de acelerador adaptado",
+        "25.04": "Acelerador accionado con la mano",
+        "25.05": "Acelerador accionado con la rodilla",
+        "25.08": "Pedal del acelerador situado a la izquierda",
+        "33.01": "Sistemas accionados por una fuerza externa y controlados por una mano",
+        "33.02": "Sistemas accionados por una fuerza externa y controlados con las dos manos",
+        "40": "Dirección adaptada",
+        "40.05": "Volante adaptado (de mayor o menor diámetro, más grueso)",
+        "40.09": "Dirección controlada con el pie",
+        "40.14": "Sistema de dirección alternativo controlado con una mano o brazo",
+        "40.15": "Sistema de dirección alternativo controlado con las dos manos o los dos brazos",
+        "42": "Retrovisores interiores/laterales modificados",
+        "42.01": "Retrovisor adaptado",
+        "42.03": "Dispositivo interior adicional que permita la visión lateral",
+        "42.05": "Dispositivo de visión del ángulo muerto",
+        "44.08": "Altura del asiento ajustada",
+        "45": "Únicamente motocicletas con sidecar",
+        "46": "Únicamente triciclos",
+        "47": "Limitado a los vehículos de más de dos ruedas",
+        "50": "Limitado a un vehículo/un número de chasis específico (NIV)",
+        "61": "Limitación a conducción diurna",
+        "62": "Limitación a conducción en el radio de ... km del lugar de residencia",
+        "63": "Conducción sin pasajeros",
+        "64": "Conducción con una limitación de velocidad",
+        "67": "Conducción no permitida en autopista",
+        "68": "Exclusión del alcohol",
+        "69": "Dispositivo antiarranque en caso de alcoholemia",
+        "70": "Canje del permiso n.º ... expedido por ...",
+        "71": "Duplicado del permiso n.º ...",
+        "78": "Limitado a vehículos sin pedal de embrague",
+        "95": "Conductor profesional",
+        "96": "Conjunto de vehículos (remolque) de hasta 4.250 kg",
+        "101": "Permiso D o D1. Limitado a conducción de autobuses en trayectos cuyo radio no sea superior a 50 km",
+        "102": "Permiso prorrogado 4 años",
+        "105": "Velocidad limitada a… por causas administrativas",
+        "106": "Fecha de primera expedición del permiso",
+        "107": "Periodo de prueba"
+    };
+
+    const codigosNacionales = {
+        "ALEMANIA": {
+            "104": "Debe llevar un certificado médico válido.",
+            "171*": "Categoría C1, también válida para vehículos de motor de categoría D con una masa máxima autorizada no superior a 7 500 kg, pero sin pasajeros",
+            "172*": "Clase C, también válida para vehículos a motor de clase D, pero sin pasajeros",
+            "174*": "Categoría L, también válida para remolcar tractores con una velocidad máxima por diseño no superior a 40 km/h",
+            "175**": "Categoría L, también válida para la conducción de vehículos de motor con una velocidad máxima por diseño no superior a 25 km/h",
+            "176": "Condición: Hasta la edad de 18 años solo para viajes dentro de Alemania y en el marco de la formación",
+            "177": "Restricciones, disposiciones accesorias e información adicional según anexo",
+            "178*": "Condición para Clase D o D1: Solo viajes en servicios regulares",
+            "179*": "Condición: Clase D1 solo para viajes en los que se transporten principalmente miembros de la familia",
+            "181": "Clase T, solo válido para vehículos de motor Clase S (desde el 19.1.2013 AM)",
+            "182**": "Condiciones para las clases D1, D1E, D, DE, C y CE: Hasta la edad de 21 años, solo viajes nacionales y en el marco de la formación",
+            "184": "Condiciones: Hasta 18 años, vehículos de motor de clase B (y, si no está tachado en el certificado de prueba, clase BE) y clase B con número de código 96",
+            "185": "Requisitos para las clases C y CE: Solo hasta los 21 años",
+            "186": "Requisitos para las clases D1 y D1E: Solo hasta los 21 años",
+            "187": "Requisitos para las clases D y DE: Solo hasta los 24 años",
+            "188": "Condición para la clase C: hasta los 21 años solo en Alemania y solo para viajes de emergencia",
+            "189": "Condición para la clase D: hasta los 24 años solo en Alemania y solo para viajes de emergencia",
+            "190": "Requisitos para la clase C/D: hasta los 21/24 años solo en Alemania para conducir vehículos en talleres",
+            "191": "Clase B elegible a nivel nacional hasta la edad de 21 años para conducir vehículos de motor de tres ruedas clase A1",
+            "193": "a. hasta la edad de 21 años para conducir vehículos de motor de tres ruedas clase A1",
+            "194": "b. después de haber alcanzado la edad mínima prescrita en la letra a para conducir vehículos de motor de tres ruedas de categoría A.",
+            "195": "Condición para la clase AM: Hasta la edad de 16 años",
+            "196": "En Alemania, las motocicletas (incluidas las con sidecar) con una cilindrada de hasta 125 cm3, una potencia del motor no superior a 11 kW",
+            "197": "La prueba se realizó en un vehículo de motor con transmisión automática y se completó la formación práctica en la conducción de vehículos de clase B con transmisión manual."
+        },
+        "AUSTRIA": {
+            "104": "La autorización para conducir se extenderá en base a exámenes médicos de acuerdo con la Sección 2 (3) última oración de la Ley de Licencia de Conducir-Ordenanza de Salud (FSG-GV).",
+            "105": "El 1 de noviembre de 2008 se eliminó el código 105 (conducción de vehículos de clase D desocupados con permiso de conducción C).",
+            "110": "Extensión del período de prueba",
+            "110.01": "Primera prórroga del período de prueba hasta (DD.MM.YYYY)",
+            "110.02": "Segunda prórroga del período de prueba hasta (DD.MM.YYYY)",
+            "110.03": "Tercera prórroga del período de prueba hasta (DD.MM.YYYY)",
+            "111": "Permiso para conducir motocicletas de acuerdo con la Sección 2, Párrafo 1 Z 5 lit.c FSG",
+            "114": "Autorización para conducir vehículos de motor de tres ruedas con permiso de conducción de categoría B antes de los 21 años",
+            "115": "Autorización para conducir (todas) motocicletas con una potencia de motor no superior a 25 kW y una relación potencia/peso en orden de marcha no superior a 0,16 kW/kg con permiso de conducción de categoría A2",
+            "116": "Autorización para conducir vehículos a motor de cuatro ruedas de masa neta no superior a 400 kg con permiso de conducción de clase A",
+            "120": "Vehículos eléctricos con una masa total máxima admisible no superior a 4.250 kg de conformidad con el artículo 2, apartado 1a, de la FSG"
+        },
+        "BULGARIA": {
+            "100": "Corrección de la visión y solo permitido para un vehículo específico (número de chasis)",
+            "103": "Conductor que tiene derecho a conducir un vehículo automotor de categoría D y derecho a conducir un trolebús",
+            "104": "Vigencia limitada del permiso de conducción por motivos médicos:"
+        },
+        "CROACIA": {
+            "100": "El soporte no puede operar vehículos con una potencia superior a 80 kw.",
+            "101": "Los conductores jóvenes no pueden circular vehículos en circulación a una velocidad superior a 80 km/h en una carretera rápida, superior a 100 km/h en una carretera destinada exclusivamente a vehículos de motor o superior a 120 km/h en una autopista. Uso restringido de las categorías C, CE, D y DE",
+            "102": "Para personas que solo tienen una licencia de categoría FoG"
+        },
+        "DINAMARCA": {
+            "100": "El titular solo tiene derecho a conducir motocicletas sin sidecar",
+            "107": "El titular solo tiene derecho a conducir vehículos en los que se haya instalado un alcolock",
+            "125": "El titular sólo tiene derecho a conducir un triciclo",
+            "126": "El titular tiene derecho a conducir una motocicleta de dos ruedas sin sidecar con una relación entre la potencia del motor y el peso en vacío de no más de 0,16 kW, kg. También es condición que la motocicleta tenga una potencia de motor no superior a 25 kW.",
+            "130": "El titular solo tiene derecho a conducir un triciclo con una potencia de motor superior a 15 kW o un triciclo con una potencia de motor superior a 15 kW hasta que haya cumplido los 22 años y tenga al menos 1 año de experiencia en la categoría A2.",
+            "135": "El titular solo tiene derecho a conducir un triciclo con una potencia de más de 15 kW o un triciclo con una potencia de motor de más de 15 kW hasta la edad de 24 años.",
+            "136": "Hasta los 20 años, el titular solo tiene derecho a conducir vehículos al servicio como empleado, recluta o voluntario en la defensa, la Guardia Nacional o el servicio de rescate del estado (A2)",
+            "137": "El titular solo tiene derecho a conducir vehículos al servicio como empleado, recluta o voluntario en la defensa, la Guardia Nacional o el servicio de salvamento estatal (A2)",
+            "138": "Hasta los 24 años, el titular solo tiene derecho a conducir vehículos al servicio como empleado, recluta o voluntario en la defensa, la Guardia Nacional o el servicio de salvamento del estado (A)",
+            "139": "Hasta los 20 años, el titular solo tiene derecho a conducir vehículos que hayan sido probados para su reparación o mantenimiento (A2)",
+            "140": "El titular solo tiene derecho a conducir vehículos probados en relación con la reparación o el mantenimiento hasta que haya cumplido los 22 años y tenga al menos 2 años de experiencia en la categoría A2 (A).",
+            "141": "Hasta los 18 años, el titular solo tiene derecho a conducir vehículos sujetos a conducción acompañada según el régimen piloto de permisos de conducción para menores de 17 años.",
+            "150": "El titular deberá llevar gafas protectoras o lentes de contacto cuando conduzca vehículos de las categorías C1, C, C1/E, C/E, D1, D, D1/E, D/E",
+            "175": "El titular sólo tiene derecho a conducir un pequeño ciclomotor (Derogado)",
+            "176": "El propietario no debe conducir un ciclomotor pequeño (Derogado)",
+            "180": "Hasta los 21 años, el titular solo tiene derecho a conducir vehículos al servicio como empleado, recluta o voluntario de las fuerzas armadas, la Guardia Nacional, los servicios de emergencia o la policía (categoría C)",
+            "181": "Hasta los 24 años, el titular solo tiene derecho a conducir vehículos al servicio como empleado, recluta o voluntario en las fuerzas armadas, la Guardia Nacional, los servicios de rescate o la policía (categoría D)",
+            "182": "Hasta los 21 años, el titular solo tiene derecho como mecánico o similar, o cuando el permiso de conducción se utilice para la formación como mecánico o similar, para conducir vehículos que se prueban en relación con la reparación o el mantenimiento (categoría C)",
+            "183": "Hasta los 24 años, el titular sólo tiene derecho como mecánico o similar, o cuando el permiso de conducción se utilice para la formación como mecánico o similar, a conducir vehículos que se prueben en relación con el mantenimiento (categoría D)",
+            "184": "Hasta la edad de 21 años, el titular solo tiene derecho a conducir vehículos de acuerdo con las normas del Decreto Ejecutivo sobre los requisitos de calificación para ciertos conductores de vehículos en el transporte por carretera (C)",
+            "185": "Hasta la edad de 24 años, el titular solo tiene derecho a conducir vehículos de acuerdo con las normas del Decreto Ejecutivo sobre los requisitos de calificación para ciertos conductores de vehículos en el transporte por carretera (D)",
+            "187": "Hasta la edad de 21 años, el titular solo tiene derecho a conducir vehículos en el servicio como empleado, recluta o voluntario en la defensa, la Guardia Nacional o el servicio de rescate del estado (categoría C/E)",
+            "188": "Hasta la edad de 24 años, el titular solo tiene derecho a conducir vehículos en el servicio como empleado, recluta o voluntario en la defensa, la Guardia Nacional o el servicio de rescate estatal (categoría D / E)",
+            "200": "Titular tiene permiso de conducir para tractor/herramienta eléctrica (Revocado)",
+            "225": "El titular sólo tiene derecho a conducir un tractor en relación con la conducción a que se refiere el artículo 3 de la Ley de Matriculación de Vehículos.",
+            "250": "El propietario ha realizado un curso de socorro de emergencia.",
+            "400": "El titular dispone de un permiso de conducción de transporte comercial de viajeros de categoría B (Revocado)",
+            "425": "El titular dispone de un permiso de conducción para el transporte comercial de viajeros de categoría D.",
+            "426": "El titular dispone de un permiso de conducción para el transporte comercial de viajeros de la categoría D1",
+            "450": "El titular dispone de un permiso de conducción para el transporte comercial de viajeros de las categorías By D (Revocado)",
+            "451": "El titular dispone de un permiso de conducción para el transporte comercial de viajeros de las categorías B y D1 (Revocado)",
+            "500": "El titular está autorizado para dirigir una empresa como instructor de conducción para la categoría AM (ciclomotor grande), A1, A2 y A",
+            "525": "El titular está aprobado para administrar un negocio como instructor de manejo para la categoría B.",
+            "550": "El titular está homologado para dirigir una empresa como instructor de manejo para las categorías B, B/E, C1, C, C1/E, C/E, D1, D, D1/E y D/E"
+        },
+        "ESLOVAQUIA": {
+            "500.": "Examen médico periódico de conformidad con el artículo 86, apartado 2, letra c), de la Ley N° 8/20_09 de tráfico por carretera",
+            "600.": "Examen psicológico periódico de conformidad con el artículo 88, apartado 4, de la Ley N° 8/2009 de circulación vial",
+            "600.09": "Transporte de mercancías peligrosas no permitido"
+        },
+        "ESLOVENIA": {
+            "210": "Derecho a conducir vehículos militares de categoría C y CE cuando tenga 18 años",
+            "211": "Derecho a conducir vehículos militares de categoría D y DE a partir de los 21 años de edad",
+            "220": "Conductor novato"
+        },
+        "ESTONIA": {
+            "101": "Permiso de conducir preliminar: se requiere el uso de la señal de conductor novato. Límite de velocidad máxima 90 km/h.",
+            "102": "A estas categorías solo se les permite conducir mientras el recluta está en las Fuerzas de Defensa.",
+            "105": "Motocicleta con una potencia de salida de 25 kW o una potencia efectiva del motor de máximo 0,16 Kw/kg"
+        },
+        "FRANCIA": {
+            "101": "C: restringido a 7,5 toneladas para conductores menores de 21 años",
+            "102": "CE: restringido a 7,5 toneladas para conductores menores de 21 años",
+            "103": "D: restringido al servicio nacional de pasajeros en rutas de 50 km o menos, para conductores menores de 23 años que obtuvieron su licencia a través de una formación acelerada",
+            "106": "Libertad condicional",
+            "107": "Todas las categorías: enclavamiento de alcohol",
+            "108": "AM: restringido a vehículos AM de categoría 2 o 3 ruedas para conductores menores de 16 años",
+            "109": "AM: restringido a la categoría de vehículos cuadriciclos ligeros AM",
+            "110": "No autorizado a conducir vehículos de la categoría D que entren en el ámbito de aplicación de la Directiva 2003/59/CE.",
+            "111": "Categoría A limitada a motocicletas con una potencia máxima de salida de 35kW y una relación potencia/peso máxima de 0.2kW/kg",
+        },
+        "GRECIA": {
+            "103": "Visión monocular",
+            "105": "Discapacidad auditiva",
+            "106": "Restricción de la extensión del permiso de conducción a las categorías del grupo II, por razones médicas",
+            "107": "Plazo de validez administrativa de la licencia, por razones médicas",
+            "110": "Permiso de conducir convertido expedido por las fuerzas armadas",
+            "116": "El permiso de conducir se expidió con menos categorías que en el documento de permiso de conducir anterior",
+            "120": "Prohibición de ocupaciones que requieran que la persona interesada sea titular de una licencia de categoría C, D, CE o DE"
+        },
+        "HUNGRIA": {
+            "100": "No apto para conducir",
+            "101": "Apto para el grupo de salud 1 (restringidos a servicios de transporte por carretera/pasajeros)",
+            "102": "Apto para el grupo de salud 2",
+            "104": "No se permite el agrupamiento de pasajeros",
+            "105": "No debe conducir un vehículo que utilice un signo distintivo",
+            "110": "Gafas de repuesto son obligatorias",
+            "111": "Necesario espejo retrovisor de doble cara",
+            "181": "Prórroga de la habilitación inicial del permiso de conducción",
+            "182": "Categoría restringida 'A'",
+            "183": "Prohibido de categoría internacional",
+            "184": "Prohibido del tipo de vehículo",
+            "185": "Tractor agrícola de categoría 'T' con remolque ligero",
+            "186": "Además de los vehículos definidos en la categoría 'K', puede conducir un vehículo lento y un remolque",
+            "187.": "Con remolque agrícola de categoría 'T'",
+            "270": "Una licencia de conducir obtenida sobre la base de una regulación legal separada para conducir un autobús operado por las fuerzas armadas también da derecho al conductor a conducir otros autobuses después de cumplir 21 años."
+        },
+        "IRLANDA": {
+            "100": "Restringido a vehículos adaptados a la discapacidad del concesionario",
+            "101": "Renovación sujeta a la presentación de un informe médico válido",
+            "102": "Licencia diplomática",
+            "109": "El permiso de aprendizaje es válido por dos meses a partir de la fecha de emisión",
+            "115": "Donante de órganos",
+            "991": "Los titulares de permisos de aprendizaje en las categorías A1, A2, AM, A, W y B deben esperar 6 meses antes de tomar el examen de manejo",
+            "992": "Segundo permiso de aprendizaje en la categoría",
+            "993": "Tercer o posterior Permiso de Aprendizaje en la categoría",
+            "999": "Debe ir acompañado de un conductor cualificado",
+        },
+        "IRLANDA DEL NORTE / REINO UNIDO": {}
+    };
+
+    function buscarCodigo() {
+        const input = document.getElementById('searchInput').value.trim().toUpperCase();
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.innerHTML = '';
+        
+        let resultados = [];
+
+        // Buscar en códigos armonizados
+        if (codigosArmonizados[input]) {
+            resultados.push({
+                codigo: input,
+                descripcion: codigosArmonizados[input],
+                pais: 'ESPAÑA',
+                tipo: 'Armonizado'
+            });
+        }
+
+        // Buscar en códigos nacionales de otros países
+        for (const pais in codigosNacionales) {
+            if (codigosNacionales[pais][input]) {
+                resultados.push({
+                    codigo: input,
+                    descripcion: codigosNacionales[pais][input],
+                    pais: pais,
+                    tipo: 'Nacional'
+                });
+            }
+        }
+        
+        if (resultados.length > 0) {
+            resultados.forEach(res => {
+                const box = document.createElement('div');
+                box.className = 'result-box-container';
+
+                const flagDiv = document.createElement('div');
+                const flagClass = `flag-${res.pais.toLowerCase()}`;
+                flagDiv.className = `flag ${flagClass}`;
+                box.appendChild(flagDiv);
+
+                const textP = document.createElement('p');
+                textP.innerHTML = `
+                    <p class="font-bold">Código ${res.codigo} (${res.tipo} - ${res.pais}):</p>
+                    <p>${res.descripcion}</p>
+                `;
+                box.appendChild(textP);
+                resultadoDiv.appendChild(box);
+            });
+        } else {
+            resultadoDiv.innerHTML = `
+                <div class="result-box-container p-4 rounded-lg bg-red-100 border border-red-400">
+                    <p class="text-red-700 font-bold">
+                        No se encontró ningún significado para el código: ${input}
+                    </p>
+                </div>
+            `;
+        }
+    }
+
+    function buscarInverso() {
+        const input = document.getElementById('inverseSearchInput').value.trim().toLowerCase();
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.innerHTML = '';
+        
+        const resultados = [];
+        
+        // Búsqueda en códigos armonizados
+        for (const codigo in codigosArmonizados) {
+            if (codigosArmonizados[codigo].toLowerCase().includes(input)) {
+                resultados.push({
+                    codigo: codigo,
+                    descripcion: codigosArmonizados[codigo],
+                    pais: "ESPAÑA",
+                    tipo: "Armonizado"
+                });
+            }
+        }
+
+        // Búsqueda en códigos nacionales
+        for (const pais in codigosNacionales) {
+            for (const codigo in codigosNacionales[pais]) {
+                if (codigosNacionales[pais][codigo].toLowerCase().includes(input)) {
+                    resultados.push({
+                        codigo: codigo,
+                        descripcion: codigosNacionales[pais][codigo],
+                        pais: pais,
+                        tipo: "Nacional"
+                    });
+                }
+            }
+        }
+        
+        if (resultados.length > 0) {
+            resultados.forEach(res => {
+                const box = document.createElement('div');
+                box.className = 'result-box-container';
+
+                const flagDiv = document.createElement('div');
+                const flagClass = `flag-${res.pais.toLowerCase()}`;
+                flagDiv.className = `flag ${flagClass}`;
+                box.appendChild(flagDiv);
+
+                const textP = document.createElement('p');
+                textP.innerHTML = `
+                    <p class="font-bold">Código ${res.codigo} (${res.tipo} - ${res.pais}):</p>
+                    <p>${res.descripcion}</p>
+                `;
+                box.appendChild(textP);
+                resultadoDiv.appendChild(box);
+            });
+        } else {
+            resultadoDiv.innerHTML = `
+                <div class="result-box-container p-4 rounded-lg bg-red-100 border border-red-400">
+                    <p class="text-red-700 font-bold">
+                        No se encontraron códigos para las palabras clave: "${input}"
+                    </p>
+                </div>
+            `;
+        }
+    }
+
+    // Event Listeners para la tecla Enter
+    document.getElementById("searchInput").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            buscarCodigo();
+        }
+    });
+
+    document.getElementById("inverseSearchInput").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            buscarInverso();
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIN DECODER - GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos generales para el cuerpo */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Fondo gris claro */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100svh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Contenedor principal para centrar el contenido y empujar el footer */
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0 1rem;
+            box-sizing: border-box;
+        }
+        
+        /* Contenedor blanco (la "tarjeta") */
+        .menu-card {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Contenedor del formulario y resultado */
+        .decoder-section {
+            background-color: #f9fafb;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Ajuste para el header con dos logos */
+        .header-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-3 shadow-md">
+        <div class="header-logos">
+            <div class="w-28 h-28 rounded-full overflow-hidden shadow-lg">
+                <img src="logovin.png" alt="Logo VIN" class="w-full h-full object-cover block">
+            </div>
+            <div class="w-28 h-28 rounded-full overflow-hidden shadow-lg">
+                <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content-wrapper px-4 sm:px-8 lg:px-12 py-8">
+        <div class="menu-card">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800">
+                VIN DECODER
+            </h1>
+
+            <div class="decoder-section">
+                <p class="text-center text-sm font-bold text-gray-600">Decodificar la primera sección (WMI)</p>
+                <p class="text-center text-xs text-gray-500">
+                    Ingrese los primeros 3 dígitos del VIN para obtener el país y el fabricante.
+                </p>
+                <form id="wmiForm" class="space-y-4">
+                    <div>
+                        <label for="wmi" class="block text-sm font-medium text-gray-700">Sección WMI:</label>
+                        <input type="text" id="wmi" maxlength="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ej. 1G2">
+                    </div>
+                    
+                    <button type="button" onclick="decodeWMI()" class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Decodificar WMI</button>
+                </form>
+
+                <div id="wmiResult" class="p-4 bg-gray-50 rounded-md shadow-inner text-sm hidden"></div>
+            </div>
+
+            <div class="decoder-section">
+                <p class="text-center text-sm font-bold text-gray-600">Decodificar la segunda sección (VDS)</p>
+                <p class="text-center text-xs text-gray-500">
+                    Ingrese los dígitos 4 a 9 del VIN para obtener el tipo de vehículo, la serie y el estilo.
+                </p>
+                <form id="vdsForm" class="space-y-4">
+                    <div>
+                        <label for="vds" class="block text-sm font-medium text-gray-700">Sección VDS:</label>
+                        <input type="text" id="vds" maxlength="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ej. B55A">
+                    </div>
+                    
+                    <button type="button" onclick="decodeVDS()" class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Decodificar VDS</button>
+                </form>
+
+                <div id="vdsResult" class="p-4 bg-gray-50 rounded-md shadow-inner text-sm hidden"></div>
+            </div>
+
+            <button onclick="window.location.href='index.html'"
+                    class="w-full mt-4 p-2.5 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-500 text-base lg:text-xl">
+                MENÚ PRINCIPAL
+            </button>
+        </div>
+    </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+    <script>
+        const wmiDatabase = {
+            // América del Norte
+            "1F1": { country: "United States", manufacturer: "Subaru" },
+            "1F2": { country: "United States", manufacturer: "Subaru" },
+            "1G1": { country: "United States", manufacturer: "Chevrolet" },
+            "1G2": { country: "United States", manufacturer: "Pontiac" },
+            "1G3": { country: "United States", manufacturer: "Oldsmobile" },
+            "1G4": { country: "United States", manufacturer: "Buick" },
+            "1G6": { country: "United States", manufacturer: "Cadillac" },
+            "1G8": { country: "United States", manufacturer: "Saturn" },
+            "1H5": { country: "United States", manufacturer: "Honda USA - Power Equipment" },
+            "1HG": { country: "United States", manufacturer: "Honda USA" },
+            "1M1": { country: "United States", manufacturer: "Mack Trucks" },
+            "1M2": { country: "United States", manufacturer: "Mack Trucks" },
+            "1ME": { country: "United States", manufacturer: "Mercury" },
+            "1N4": { country: "United States", manufacturer: "Nissan USA" },
+            "1NX": { country: "United States", manufacturer: "Toyota USA" },
+            "1VW": { country: "United States", manufacturer: "Volkswagen USA" },
+            "1YV": { country: "United States", manufacturer: "Mazda USA" },
+            "1ZV": { country: "United States", manufacturer: "Ford USA - Performance" },
+            "2F1": { country: "United States", manufacturer: "Ford USA (CAMI - Canadá)" },
+            "2G1": { country: "United States", manufacturer: "Chevrolet (CAMI - Canadá)" },
+            "3FA": { country: "United States", manufacturer: "Ford USA (Hermosillo, México)" },
+            "3GN": { country: "United States", manufacturer: "Chevrolet USA (México)" },
+            "4T1": { country: "United States", manufacturer: "Toyota USA" },
+            "4US": { country: "United States", manufacturer: "BMW USA" },
+            "5GA": { country: "United States", manufacturer: "Buick" },
+            "5L1": { country: "United States", manufacturer: "Lincoln USA" },
+            "5TD": { country: "United States", manufacturer: "Toyota USA" },
+            "5YJ": { country: "United States", manufacturer: "Tesla Motors" },
+            "2A3": { country: "Canada", manufacturer: "Chrysler Canada" },
+            "2C3": { country: "Canada", manufacturer: "Chrysler Canada" },
+            "2FZ": { country: "Canada", manufacturer: "Sterling Trucks" },
+            "2G1": { country: "Canada", manufacturer: "Chevrolet Canada" },
+            "2G2": { country: "Canada", manufacturer: "Pontiac Canada" },
+            "2HG": { country: "Canada", manufacturer: "Honda Canada" },
+            "2HJ": { country: "Canada", manufacturer: "Honda Canada" },
+            "2L9": { country: "Canada", manufacturer: "Nova Bus Canada" },
+            "2T1": { country: "Canada", manufacturer: "Toyota Canada" },
+            "2V4": { country: "Canada", manufacturer: "Volkswagen Canada" },
+            "2WK": { country: "Canada", manufacturer: "Western Star Trucks" },
+            "3C3": { country: "Mexico", manufacturer: "Chrysler Mexico" },
+            "3FN": { country: "Mexico", manufacturer: "Ford Mexico" },
+            "3GN": { country: "Mexico", manufacturer: "Chevrolet Mexico" },
+            "3GZ": { country: "Mexico", manufacturer: "Cadillac Mexico" },
+            "3HA": { country: "Mexico", manufacturer: "International Mexico" },
+            "3HG": { country: "Mexico", manufacturer: "Honda Mexico" },
+            "3HM": { country: "Mexico", manufacturer: "Honda Mexico" },
+            "3JT": { country: "Mexico", manufacturer: "Isuzu Mexico" },
+            "3MD": { country: "Mexico", manufacturer: "Mazda Mexico" },
+            "3VW": { country: "Mexico", manufacturer: "Volkswagen Mexico" },
+            "3WY": { country: "Mexico", manufacturer: "Western Star Mexico" },
+            "3N1": { country: "Mexico", manufacturer: "Nissan Mexico" },
+            "3N6": { country: "Mexico", manufacturer: "Nissan Mexico" },
+            "3NS": { country: "Mexico", manufacturer: "Nissan Mexico" },
+
+            // Sudamérica
+            "8A1": { country: "Argentina", manufacturer: "Renault" },
+            "8A3": { country: "Argentina", manufacturer: "Toyota" },
+            "8A8": { country: "Argentina", manufacturer: "Ford" },
+            "8AF": { country: "Argentina", manufacturer: "Fiat" },
+            "8AG": { country: "Argentina", manufacturer: "General Motors" },
+            "8AJ": { country: "Argentina", manufacturer: "Jeep" },
+            "8AK": { country: "Argentina", manufacturer: "Volkswagen" },
+            "8AN": { country: "Argentina", manufacturer: "Nissan" },
+            "8AP": { country: "Argentina", manufacturer: "Peugeot" },
+            "8AW": { country: "Argentina", manufacturer: "Honda" },
+            "8AY": { country: "Argentina", manufacturer: "Mercedes-Benz" },
+            "8AZ": { country: "Argentina", manufacturer: "Citroën" },
+            "8GG": { country: "Argentina", manufacturer: "General Motors" },
+            "8U1": { country: "Argentina", manufacturer: "Audi" },
+            "8U2": { country: "Argentina", manufacturer: "BMW" },
+            "8U3": { country: "Argentina", manufacturer: "Volvo" },
+            "9BG": { country: "Brasil", manufacturer: "General Motors" },
+            "93H": { country: "Brasil", manufacturer: "Honda" },
+            "94D": { country: "Brasil", manufacturer: "Ford" },
+            "95P": { country: "Brasil", manufacturer: "Fiat" },
+
+            // Europa
+            "W0L": { country: "Alemania", manufacturer: "Opel" }, 
+            "WAG": { country: "Alemania", manufacturer: "Audi" },
+            "WAU": { country: "Alemania", manufacturer: "Audi" },
+            "WBA": { country: "Alemania", manufacturer: "BMW" },
+            "WBS": { country: "Alemania", manufacturer: "BMW Motorsport" },
+            "WDB": { country: "Alemania", manufacturer: "Mercedes-Benz" },
+            "WDC": { country: "Alemania", manufacturer: "Mercedes-Benz" },
+            "WDD": { country: "Alemania", manufacturer: "Daimler AG" },
+            "WDW": { country: "Alemania", manufacturer: "EvoBus GmbH" },
+            "WEB": { country: "Alemania", manufacturer: "EvoBus GmbH" },
+            "WF0": { country: "Alemania", manufacturer: "Ford" },
+            "WJM": { country: "Alemania", manufacturer: "Irmscher" },
+            "WJR": { country: "Alemania", manufacturer: "Irmscher Automobilbau" },
+            "WKA": { country: "Alemania", manufacturer: "Karl Kässbohrer Fahrzeugwerke" },
+            "WKW": { country: "Alemania", manufacturer: "Karmann" },
+            "WMA": { country: "Alemania", manufacturer: "MAN" },
+            "WME": { country: "Alemania", manufacturer: "Smart" },
+            "WMX": { country: "Alemania", manufacturer: "Intermeccanica" },
+            "WP0": { country: "Alemania", manufacturer: "Porsche" },
+            "WP1": { country: "Alemania", manufacturer: "Porsche" },
+            "WUA": { country: "Alemania", manufacturer: "Audi" },
+            "WVW": { country: "Alemania", manufacturer: "Volkswagen" },
+            "WVG": { country: "Alemania", manufacturer: "Volkswagen SUVs" },
+            "U1V": { country: "Austria", manufacturer: "Volkswagen Group" },
+            "U1W": { country: "Austria", manufacturer: "Volkswagen Group" },
+            "U1X": { country: "Austria", manufacturer: "Volkswagen Group" },
+            "U5A": { country: "Austria", manufacturer: "Steyr-Daimler-Puch" },
+            "U5B": { country: "Austria", manufacturer: "Magna Steyr" },
+            "U5C": { country: "Austria", manufacturer: "KTM" },
+            "U5D": { country: "Austria", manufacturer: "AVL" },
+            "U5E": { country: "Austria", manufacturer: "BMW (fabricado en Austria)" },
+            "U5F": { country: "Austria", manufacturer: "MAN (camiones)" },
+            "VF1": { country: "Francia", manufacturer: "Renault" },
+            "VF3": { country: "Francia", manufacturer: "Peugeot" },
+            "VF7": { country: "Francia", manufacturer: "Citroën" },
+            "VFA": { country: "Francia", manufacturer: "Amilcar" },
+            "VFE": { country: "Francia", manufacturer: "Renault Trucks" },
+            "VG6": { country: "Francia", manufacturer: "Peugeot Motorcycles" },
+            "ZAA": { country: "Italia", manufacturer: "Fabricante General" },
+            "ZFA": { country: "Italia", manufacturer: "Fiat" },
+            "ZFF": { country: "Italia", manufacturer: "Ferrari" },
+            "ZAM": { country: "Italia", manufacturer: "Maserati" },
+            "ZHW": { country: "Italia", manufacturer: "Lamborghini" },
+            "SAL": { country: "Reino Unido", manufacturer: "Land Rover" },
+            "SAJ": { country: "Reino Unido", manufacturer: "Jaguar" },
+            "SCC": { country: "Reino Unido", manufacturer: "Lotus" },
+            "SCF": { country: "Reino Unido", manufacturer: "Aston Martin" },
+            "SCR": { country: "Reino Unido", manufacturer: "ROVER" },
+            "SV1": { country: "Reino Unido", manufacturer: "Aston Martin" },
+            "TMB": { country: "República Checa", manufacturer: "Škoda" },
+            "TMT": { country: "República Checa", manufacturer: "Tatra" },
+            "XTA": { country: "Rusia", manufacturer: "AvtoVAZ (Lada)" },
+            "XTT": { country: "Rusia", manufacturer: "UAZ" },
+            "VSE": { country: "España", manufacturer: "Iveco Bus" },
+            "VF7": { country: "España", manufacturer: "Citroën" },
+            "VSS": { country: "España", manufacturer: "SEAT" },
+            "VSX": { country: "España", manufacturer: "Citroën" },
+            "VSY": { country: "España", manufacturer: "Peugeot" },
+            "VV0": { country: "España", manufacturer: "Opel" },
+            "VV1": { country: "España", manufacturer: "Renault" },
+            "YV1": { country: "Suecia", manufacturer: "Volvo Cars" },
+            "YV4": { country: "Suecia", manufacturer: "Volvo Cars" },
+            "YS1": { country: "Suecia", manufacturer: "Saab" },
+            "YS3": { country: "Suecia", manufacturer: "Saab" },
+            "YS4": { country: "Suecia", manufacturer: "Scania AB" },
+
+            // Asia
+            "JHM": { country: "Japón", manufacturer: "Honda" },
+            "JHG": { country: "Japón", manufacturer: "Honda" },
+            "JHL": { country: "Japón", manufacturer: "Honda" },
+            "JHR": { country: "Japón", manufacturer: "Honda" },
+            "JKL": { country: "Japón", manufacturer: "Kawasaki" },
+            "JMB": { country: "Japón", manufacturer: "Mitsubishi" },
+            "JMZ": { country: "Japón", manufacturer: "Mazda" },
+            "JN1": { country: "Japón", manufacturer: "Nissan" },
+            "JN3": { country: "Japón", manufacturer: "Nissan" },
+            "JNK": { country: "Japón", manufacturer: "Nissan" },
+            "JS2": { country: "Japón", manufacturer: "Suzuki" },
+            "JS3": { country: "Japón", manufacturer: "Suzuki" },
+            "JSA": { country: "Japón", manufacturer: "Suzuki" },
+            "JT1": { country: "Japón", manufacturer: "Toyota" },
+            "JT2": { country: "Japón", manufacturer: "Toyota" },
+            "JT3": { country: "Japón", manufacturer: "Toyota" },
+            "JT4": { country: "Japón", manufacturer: "Toyota" },
+            "JT5": { country: "Japón", manufacturer: "Toyota" },
+            "JTD": { country: "Japón", manufacturer: "Toyota" },
+            "JTE": { country: "Japón", manufacturer: "Toyota" },
+            "JTH": { country: "Japón", manufacturer: "Lexus" },
+            "JTL": { country: "Japón", manufacturer: "Toyota" },
+            "JTM": { country: "Japón", manufacturer: "Toyota" },
+            "JTN": { country: "Japón", manufacturer: "Nissan" },
+            "JTD": { country: "Japón", manufacturer: "Toyota" },
+            "KNM": { country: "Corea del Sur", manufacturer: "Renault Samsung Motors" },
+            "KNA": { country: "Corea del Sur", manufacturer: "Kia Motors" },
+            "KNB": { country: "Corea del Sur", manufacturer: "Kia Motors" },
+            "KNC": { country: "Corea del Sur", manufacturer: "Kia Motors" },
+            "KND": { country: "Corea del Sur", manufacturer: "Kia Motors" },
+            "KNE": { country: "Corea del Sur", manufacturer: "Kia Motors" },
+            "KNH": { country: "Corea del Sur", manufacturer: "Hyundai" },
+            "KPT": { country: "Corea del Sur", manufacturer: "SsangYong" },
+            "KLA": { country: "Corea del Sur", manufacturer: "Daewoo" },
+            "KLH": { country: "Corea del Sur", manufacturer: "Daewoo Bus" },
+            "KLF": { country: "Corea del Sur", manufacturer: "GM Daewoo" },
+            "KMH": { country: "Corea del Sur", manufacturer: "Hyundai" },
+            "KMT": { country: "Corea del Sur", manufacturer: "Hyundai Translead" },
+            "KMY": { country: "Corea del Sur", manufacturer: "Daewoo Bus" },
+            "KNX": { country: "Corea del Sur", manufacturer: "Renault Samsung Motors" },
+            "KM8": { country: "Corea del Sur", manufacturer: "Hyundai" },
+            "LFM": { country: "China", manufacturer: "Dongfeng Motor Corporation" },
+            "LFP": { country: "China", manufacturer: "FAW Group" },
+            "LGB": { country: "China", manufacturer: "Geely" },
+            "LGW": { country: "China", manufacturer: "Great Wall Motor" },
+            "LHG": { country: "China", manufacturer: "Guangzhou Automobile Group" },
+            "LJ1": { country: "China", manufacturer: "Jiangling Motors" },
+            "LLV": { country: "China", manufacturer: "Lifan Industry" },
+            "LSD": { country: "China", manufacturer: "BYD Auto" },
+            "LSG": { country: "China", manufacturer: "SAIC Motor" },
+            "LSV": { country: "China", manufacturer: "Changan Automobile" },
+            "LTV": { country: "China", manufacturer: "Dongfeng Liuzhou Motor" },
+            "LVH": { country: "China", manufacturer: "Hongqi" },
+            "LVR": { country: "China", manufacturer: "Chery" },
+            "LWV": { country: "China", manufacturer: "Wuling Motors" },
+            "LZE": { country: "China", manufacturer: "Zotye Auto" },
+            "MA1": { country: "India", manufacturer: "Mahindra & Mahindra" },
+            "MA3": { country: "India", manufacturer: "Maruti Suzuki" },
+            "MA7": { country: "India", manufacturer: "Mitsubishi" },
+            "MAJ": { country: "India", manufacturer: "Ford India" },
+            "MAL": { country: "India", manufacturer: "Hyundai India" },
+            "MAT": { country: "India", manufacturer: "Tata Motors" },
+            "MBH": { country: "India", manufacturer: "Ashok Leyland" },
+            "MBJ": { country: "India", manufacturer: "Toyota Kirloskar" },
+            "MC2": { country: "India", manufacturer: "Volvo Eicher" },
+            "MDC": { country: "India", manufacturer: "DAF Trucks" },
+            "MDH": { country: "India", manufacturer: "Bharat Benz" },
+            "MD9": { country: "India", manufacturer: "SML Isuzu" },
+            "MD1": { country: "India", manufacturer: "MAN Trucks" },
+
+            // Oceanía
+            "6FP": { country: "Australia", manufacturer: "Ford Australia" },
+            "6FZ": { country: "Australia", manufacturer: "Holden" },
+            "6G1": { country: "Australia", manufacturer: "Mazda Australia" },
+            "6G2": { country: "Australia", manufacturer: "Nissan Australia" },
+            "6G3": { country: "Australia", manufacturer: "Honda Australia" },
+            "6G4": { country: "Australia", manufacturer: "Mitsubishi Australia" },
+            "6G5": { country: "Australia", manufacturer: "Subaru Australia" },
+            "6G6": { country: "Australia", manufacturer: "Toyota Australia" },
+            "6G7": { country: "Australia", manufacturer: "Isuzu Australia" },
+            "6G8": { country: "Australia", manufacturer: "BMW Australia" },
+            "6G9": { country: "Australia", manufacturer: "Mercedes-Benz Australia" },
+            "6H0": { country: "Australia", manufacturer: "Volkswagen Australia" },
+            "6H1": { country: "Australia", manufacturer: "Hyundai Australia" },
+            "6H2": { country: "Australia", manufacturer: "Kia Australia" },
+            "6H3": { country: "Australia", manufacturer: "Lexus Australia" },
+            "6H4": { country: "Australia", manufacturer: "Jaguar Australia" },
+            "6H5": { country: "Australia", manufacturer: "Land Rover Australia" },
+            "6H6": { country: "Australia", manufacturer: "Volvo Australia" },
+            "6H7": { country: "Australia", manufacturer: "Audi Australia" },
+            "6H8": { country: "Australia", manufacturer: "Mini Australia" },
+            "6H9": { country: "Australia", manufacturer: "Peugeot Australia" },
+
+            // África
+            "AAV": { country: "Sudáfrica", manufacturer: "Volkswagen Sudáfrica" },
+            "AD1": { country: "Sudáfrica", manufacturer: "Ford Sudáfrica" },
+            "AFR": { country: "Sudáfrica", manufacturer: "Toyota Sudáfrica" },
+            "AHT": { country: "Sudáfrica", manufacturer: "Hino Sudáfrica" },
+            "JA9": { country: "Sudáfrica", manufacturer: "Isuzu Sudáfrica" },
+            "LBJ": { country: "Egipto", manufacturer: "Brilliance Egipto" },
+            "LBE": { country: "Egipto", manufacturer: "BMW Egipto" },
+            "LBW": { country: "Egipto", manufacturer: "BYD Egipto" },
+            "MD2": { country: "Nigeria", manufacturer: "Stallion Group" },
+            "ND1": { country: "Sudáfrica", manufacturer: "Ford Sudáfrica" },
+            "NM0": { country: "Sudáfrica", manufacturer: "Ford Sudáfrica" },
+            "PA0": { country: "Sudáfrica", manufacturer: "Porsche Sudáfrica" },
+            "RA0": { country: "Sudáfrica", manufacturer: "Renault Sudáfrica" },
+            "SA0": { country: "Sudáfrica", manufacturer: "Suzuki Sudáfrica" },
+            "TA0": { country: "Sudáfrica", manufacturer: "Toyota Sudáfrica" },
+            "UA0": { country: "Sudáfrica", manufacturer: "Ulysse Sudáfrica" },
+            "VA0": { country: "Sudáfrica", manufacturer: "Volkswagen Sudáfrica" },
+            "WA0": { country: "Sudáfrica", manufacturer: "Wolseley Sudáfrica" },
+            "ADT": { country: "Sudáfrica", manufacturer: "Audi Sudáfrica" },
+            "BFA": { country: "Kenia", manufacturer: "Kenya Vehicle Manufacturers" },
+            "BLA": { country: "Tanzania", manufacturer: "Tanzania Vehicle Manufacturing Company" },
+            "BSA": { country: "Sudáfrica", manufacturer: "Suzuki Sudáfrica" },
+            "CAA": { country: "Egipto", manufacturer: "El Nasr Automotive Manufacturing Company" },
+            "CFA": { country: "Marruecos", manufacturer: "Société Marocaine de Construction Automobile" },
+            "DAA": { country: "Egipto", manufacturer: "Arab American Vehicles" },
+            "DFA": { country: "Marruecos", manufacturer: "Société Industrielle de Transport Automobile" },
+            "EAA": { country: "Etiopía", manufacturer: "Ethiopian National Automotive Assembly" },
+            "EFA": { country: "Mozambique", manufacturer: "Sociedade de Automóveis de Manobra" },
+            "FAA": { country: "Ghana", manufacturer: "Ghana National Petroleum Corporation" },
+            "FFA": { country: "Nigeria", manufacturer: "Nigerian Automotive Manufacturing Company" },
+            "FLA": { country: "Madagascar", manufacturer: "Société Malgache de Construction Automobile" },
+            "GAA": { country: "Sudáfrica", manufacturer: "GAC Sudáfrica" },
+            "HAA": { country: "Sudáfrica", manufacturer: "Hino Sudáfrica" },
+            "LA0": { country: "Sudáfrica", manufacturer: "Lancia Sudáfrica" },
+            "MA0": { country: "Sudáfrica", manufacturer: "Maserati Sudáfrica" },
+            "NA0": { country: "Sudáfrica", manufacturer: "Napoli Sudáfrica" },
+            "PA0": { country: "Sudáfrica", manufacturer: "Porsche Sudáfrica" },
+            "RA0": { country: "Sudáfrica", manufacturer: "Renault Sudáfrica" },
+            "SA0": { country: "Sudáfrica", manufacturer: "Suzuki Sudáfrica" },
+        };
+
+        function decodeWMI() {
+            const wmi = document.getElementById('wmi').value.toUpperCase();
+            const resultDiv = document.getElementById('wmiResult');
+
+            let resultHtml = "";
+            if (wmiDatabase[wmi]) {
+                resultHtml += `<p><strong>WMI:</strong> ${wmi}</p>`;
+                resultHtml += `<p><strong>País:</strong> ${wmiDatabase[wmi].country}</p>`;
+                resultHtml += `<p><strong>Fabricante:</strong> ${wmiDatabase[wmi].manufacturer}</p>`;
+            } else {
+                resultHtml += `<p><strong>WMI:</strong> ${wmi} - Información no encontrada.</p>`;
+            }
+
+            resultDiv.innerHTML = resultHtml;
+            resultDiv.classList.remove('hidden');
+        }
+
+        // Base de datos simplificada para VDS de Volkswagen (WMI: WVW)
+        const vdsDatabaseVW = {
+            motor: {
+                'A': '1.0L', 'B': '1.2L', 'C': '1.4L', 'D': '1.6L',
+                'E': '1.8L', 'F': '2.0L', 'G': '2.5L', 'H': '3.0L',
+                'J': '3.2L'
+            },
+            transmision: {
+                'A': 'Automática', 'B': 'Manual', 'C': 'DSG',
+                'D': 'Automática con tracción total', 'E': 'Manual con tracción total'
+            },
+            carroceria: {
+                'A': 'Sedán', 'B': 'Hatchback', 'C': 'Coupé',
+                'D': 'Convertible', 'E': 'SUV', 'F': 'Camioneta',
+                'G': 'Furgoneta'
+            },
+            linea: {
+                'A': 'Golf', 'B': 'Passat', 'C': 'Jetta',
+                'D': 'Tiguan', 'E': 'Touareg', 'F': 'Beetle',
+                'G': 'Polo'
+            },
+            seguridad: {
+                '1': 'Airbags frontales', '2': 'Airbags frontales y laterales',
+                '3': 'Paquete de seguridad avanzado'
+            }
+        };
+
+        function decodeVDS() {
+            const wmi = document.getElementById('wmi').value.toUpperCase();
+            const vds = document.getElementById('vds').value.toUpperCase();
+            const resultDiv = document.getElementById('vdsResult');
+
+            let resultHtml = "";
+
+            if (wmi === "WVW") {
+                const motor = vds.charAt(0);
+                const transmision = vds.charAt(1);
+                const carroceria = vds.charAt(2);
+                const linea = vds.charAt(3);
+                const seguridad = vds.charAt(4);
+
+                resultHtml += `<p><strong>Sección VDS:</strong> ${vds}</p>`;
+                resultHtml += `<hr class="my-2 border-gray-300">`;
+                resultHtml += `<p><strong>Motor:</strong> ${vdsDatabaseVW.motor[motor] || 'No encontrado'}</p>`;
+                resultHtml += `<p><strong>Transmisión:</strong> ${vdsDatabaseVW.transmision[transmision] || 'No encontrado'}</p>`;
+                resultHtml += `<p><strong>Carrocería:</strong> ${vdsDatabaseVW.carroceria[carroceria] || 'No encontrado'}</p>`;
+                resultHtml += `<p><strong>Línea de Modelo:</strong> ${vdsDatabaseVW.linea[linea] || 'No encontrado'}</p>`;
+                resultHtml += `<p><strong>Seguridad:</strong> ${vdsDatabaseVW.seguridad[seguridad] || 'No encontrado'}</p>`;
+
+            } else {
+                resultHtml += `<p><strong>VDS:</strong> ${vds} - No se encontró información detallada para este fabricante. Por favor, ingrese un WMI de Volkswagen (ej. WVW) para decodificar esta sección.</p>`;
+            }
+
+            resultDiv.innerHTML = resultHtml;
+            resultDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

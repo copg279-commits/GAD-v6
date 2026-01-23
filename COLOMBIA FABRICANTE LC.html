@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  <title>Consulta de Fabricante LC</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+      background-color: white;
+    }
+    .input-prefix {
+      font-weight: bold;
+      color: red;
+      margin-right: 0.25rem;
+    }
+    .input-number {
+      border: none;
+      outline: none;
+      flex: 1;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-2">
+  <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+    <img
+      src="logogad.png"
+      alt="Logo GAD"
+      class="w-full h-full object-cover block"
+    >
+  </div>
+</header>
+
+<h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Consulta de Fabricante LC
+</h1>
+
+<p class="text-center mt-2 px-4">
+    Introduce el número del código LC:
+</p>
+
+<div class="w-11/12 max-w-md mx-auto mt-4">
+  <img src="logocolombia.png" alt="Logo Colombia" class="w-full">
+</div>
+
+<div class="input-wrapper w-11/12 max-w-md mx-auto mt-4">
+  <span class="input-prefix">LC</span>
+  <input id="numero" type="text" class="input-number" placeholder="01" maxlength="2">
+</div>
+
+<button onclick="buscarFabricante()" class="block mx-auto mt-4 w-11/12 max-w-md bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md">
+  Buscar
+</button>
+
+<button onclick="mostrarTodos()" class="block mx-auto mt-4 w-11/12 max-w-md bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-md">
+  Ver lista completa
+</button>
+
+<div id="resultado" class="w-11/12 max-w-md mx-auto mt-6 text-lg font-semibold text-gray-800 text-center"></div>
+
+    <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+  const fabricantes = {
+    "LC01": "CARVAJAL (Hasta 2012) MORPHO (2012 a 2018) IDEMIA (Desde 2018)",
+    "LC02": "HOGIER GARTNER",
+    "LC03": "SERVICIOS INTEGRALES",
+    "LC04": "UNION TEMPORAL",
+    "LC05": "OBERTHUR",
+    "LC06": "VALID HOGUIER",
+    "LC07": "COSMO (Desde octubre 2017) COSMOCOLOR (Soportes a partir de LC20)",
+    "LC08": "PURA BARUTAMA",
+    "LC09": "THOMAS GREG & SONS",
+    "LC10": "INTEXUS",
+    "LC11": "IC&S.A:S",
+    "LC12": "MUVA S.A.S."
+  };
+
+  function buscarFabricante() {
+    const num = document.getElementById("numero").value.trim().padStart(2, '0');
+    const codigo = `LC${num.toUpperCase()}`;
+    const resultado = document.getElementById("resultado");
+    if (fabricantes[codigo]) {
+      resultado.textContent = `Fabricante: ${fabricantes[codigo]}`;
+    } else {
+      resultado.textContent = "Código no encontrado. Verifica el número ingresado.";
+    }
+  }
+
+  function mostrarTodos() {
+    const resultado = document.getElementById("resultado");
+    let listaHTML = `
+      <div class="mt-4 p-4 bg-white rounded-md shadow-md table-responsive">
+        <table class="w-full text-sm text-left text-gray-500">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+              <th scope="col" class="py-3 px-6">Código LC</th>
+              <th scope="col" class="py-3 px-6">Fabricante</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    for (const codigo in fabricantes) {
+      if (fabricantes.hasOwnProperty(codigo)) {
+        listaHTML += `
+          <tr class="bg-white border-b">
+            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${codigo}</td>
+            <td class="py-4 px-6">${fabricantes[codigo]}</td>
+          </tr>
+        `;
+      }
+    }
+
+    listaHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    resultado.innerHTML = listaHTML;
+  }
+  
+  // Permitir que Enter dispare la búsqueda
+  document.getElementById("numero").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+      buscarFabricante();
+    }
+  });
+</script>
+</body>
+</html>

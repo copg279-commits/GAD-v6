@@ -1,0 +1,254 @@
+/**
+ * Script FINAL y ÚNICO para la sincronización de archivos de Drive a Google Sheets y luego a Firebase.
+ * * ESTRUCTURA DE SALIDA EN SHEETS MODIFICADA: PAIS | TIPO DE DOCUMENTO | NOMBRE | ENLACE URL.
+ * * Incluye búsqueda recursiva para manejar las subcarpetas.
+ */
+
+// =========================================================================
+// CONFIGURACIÓN CENTRAL (¡Sólo aquí!)
+// =========================================================================
+const FIREBASE_URL = "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app"; 
+const FIREBASE_SECRET = "mxfkSXOgQIySNWYfl6bg7buBCA4Jeph36mVnheTp"; // Clave de Firebase
+const DRIVE_ID_DOCUMENTOS = "1I9hHrrots4guJtaxACXa2H9Wxy2tC81V"; 
+const DRIVE_ID_VEHICULOS = "1T8TgWuqYuvrqBhk1QBV3J6kRt02dR_fv"; 
+// =========================================================================
+
+
+/**
+ * Elimina caracteres no válidos de Firebase de una clave: $ # [ ] / .
+ */
+function sanitizeKey(key) {
+    // Reemplaza los caracteres prohibidos por vacíos y espacios por guiones bajos
+    return key.replace(/[\$\#\[\]\/\.]/g, '').trim().replace(/ /g, '_'); 
+}
+
+
+/**
+ * Función recursiva para buscar archivos, capturando el path de carpetas.
+ * @param {GoogleAppsScript.Drive.Folder} folder Carpeta actual.
+ * @param {Array<any[]>} fileData Array donde se guardan los datos.
+ * @param {string} rootId El ID de la carpeta raíz del inventario.
+ * @param {string[]} currentPath Nombres de las subcarpetas desde el rootId.
+ */
+function searchFilesRecursively(folder, fileData, rootId, currentPath) {
+  
+  const folderName = folder.getName();
+  
+  // Agregar el nombre de la carpeta actual al path, solo si NO es la carpeta raíz.
+  const isRoot = (folder.getId() === rootId);
+  const newPath = isRoot ? [] : [...currentPath, folderName]; 
+
+  // 1. Buscar Archivos en la carpeta actual
+  const files = folder.getFiles();
+  while (files.hasNext()) {
+      const file = files.next();
+      if (file.getMimeType() !== MimeType.FOLDER) {
+          
+          const fileName = file.getName();
+          const fileUrl = file.getUrl();
+          
+          let pais = "General";
+          let tipoDocumento = "N/A";
+          
+          // La jerarquía de carpetas relevante está en newPath:
+          // newPath[0] es la primera subcarpeta (PAIS).
+          // newPath[1] es la segunda subcarpeta (TIPO DE DOCUMENTO).
+          
+          if (newPath.length >= 1) {
+              pais = newPath[0]; // Primer nivel: PAIS
+          }
+          if (newPath.length >= 2) {
+              tipoDocumento = newPath[1]; // Segundo nivel: TIPO DE DOCUMENTO
+          }
+          
+          // Si el archivo está en la carpeta País pero no hay subcarpeta de Tipo de Documento:
+          if (newPath.length === 1) {
+              tipoDocumento = "General";
+          }
+          
+          // Si el archivo está en la raíz de Documentos/Vehículos:
+          if (newPath.length === 0) {
+              pais = (rootId === DRIVE_ID_DOCUMENTOS) ? "Documentos_Raiz" : "Vehiculos_Raiz";
+              tipoDocumento = "General";
+          }
+
+
+          fileData.push([
+              pais,
+              tipoDocumento,
+              fileName,
+              fileUrl
+          ]);
+      }
+  }
+  
+  // 2. Buscar Subcarpetas y llamar a sí misma (recursión)
+  const subFolders = folder.getFolders();
+  while (subFolders.hasNext()) {
+    const subFolder = subFolders.next();
+    searchFilesRecursively(subFolder, fileData, rootId, newPath); 
+  }
+}
+
+
+/**
+ * Función genérica para obtener metadatos de una carpeta de Drive (y sus subcarpetas si aplica).
+ * @param {string} folderId ID de la carpeta de Drive.
+ * @param {string} sheetName Nombre de la hoja de destino.
+ * @param {string[]} headers Encabezados de columna.
+ */
+function populateSheetFromDrive(folderId, sheetName, headers) {
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(sheetName);
+    
+    // Crea o limpia la hoja
+    if (!sheet) {
+        sheet = ss.insertSheet(sheetName);
+    } else {
+        sheet.clearContents();
+    }
+    
+    // Escribir encabezados
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
+
+    try {
+        const rootFolder = DriveApp.getFolderById(folderId);
+        const data = [];
+        
+        // Llama a la función recursiva. El path inicial es vacío.
+        searchFilesRecursively(rootFolder, data, folderId, []);
+        
+        const fileCount = data.length;
+
+        // Escribir todos los datos (4 columnas)
+        if (fileCount > 0) {
+            sheet.getRange(2, 1, data.length, data[0].length).setValues(data);
+        }
+        
+        Browser.msgBox(`✅ ÉXITO: Hoja "${sheetName}" creada y ${fileCount} archivos de Drive (incluyendo subcarpetas) cargados con la nueva estructura de 4 columnas.`);
+
+    } catch (e) {
+        Browser.msgBox(`❌ ERROR al acceder a Drive para ${sheetName}: Mensaje: ${e.toString()}`);
+    }
+}
+
+
+/**
+ * Función genérica para sincronizar una hoja con Firebase.
+ * * Ahora lee 4 columnas (PAIS, TIPO_DOCUMENTO, NOMBRE, ENLACE).
+ */
+function syncSheetToFirebase(sheetName, firebaseNode) {
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(sheetName);
+
+    if (!sheet || sheet.getLastRow() < 2) {
+        Browser.msgBox(`❌ ERROR: La hoja "${sheetName}" está vacía o no existe.`);
+        return;
+    }
+
+    // Columnas A, B, C, D (4 columnas) desde la fila 2.
+    const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4); 
+    const data = range.getValues(); 
+    
+    const firebasePayload = {};
+    let recordCount = 0;
+    
+    data.forEach((row) => {
+        // Leemos las 4 columnas en orden:
+        const pais = row[0].toString().trim();
+        const tipoDocumento = row[1].toString().trim(); 
+        const nombreArchivo = row[2].toString().trim();
+        const enlace = row[3].toString().trim(); 
+
+        if (nombreArchivo === "") return; 
+
+        // Usamos PAIS + TIPO DE DOCUMENTO como clave combinada para el nodo de Firebase.
+        const combinedKey = sanitizeKey(`${pais}_${tipoDocumento}`).toUpperCase();
+        // Usamos el nombre del archivo sanitizado como clave única del documento.
+        const uniqueDocKey = sanitizeKey(nombreArchivo).toUpperCase(); 
+
+        if (combinedKey === "" || uniqueDocKey === "") return; 
+        
+        // Inicializa la clave combinada (PAIS_TIPODOC) como un OBJETO para que sea EXPANDIBLE
+        if (!firebasePayload[combinedKey]) {
+             firebasePayload[combinedKey] = {}; 
+        }
+
+        // Asignación al sub-nodo
+        firebasePayload[combinedKey][uniqueDocKey] = {
+            Pais: pais,
+            TipoDocumento: tipoDocumento,
+            NombreArchivo: nombreArchivo,
+            Enlace: enlace,
+            Timestamp: new Date().getTime()
+        };
+        
+        recordCount++;
+    });
+    
+
+    // Envío a Firebase (PUT sobrescribe TODO el nodo)
+    const url = `${FIREBASE_URL}/${firebaseNode}.json?auth=${FIREBASE_SECRET}`;
+    const options = {
+        method: "put", 
+        contentType: "application/json",
+        payload: JSON.stringify(firebasePayload),
+        muteHttpExceptions: true
+    };
+
+    try {
+        const response = UrlFetchApp.fetch(url, options);
+        const code = response.getResponseCode();
+        
+        if (code === 200) {
+            Browser.msgBox(`✅ ÉXITO: ${recordCount} registros de ${firebaseNode} sincronizados con el nodo /${firebaseNode} en Firebase.`);
+        } else {
+            const error = JSON.parse(response.getContentText());
+            Browser.msgBox(`❌ ERROR (${code}) en ${firebaseNode}: Fallo al subir. Mensaje: ${JSON.stringify(error)}`);
+        }
+    } catch(e) {
+        Browser.msgBox(`❌ ERROR FATAL en ${firebaseNode}: No se pudo conectar. Mensaje: ${e.toString()}`);
+    }
+}
+
+
+// =========================================================================
+// FUNCIONES ESPECÍFICAS LLAMADAS DESDE EL MENÚ
+// =========================================================================
+
+function fillDocumentos() {
+    // NUEVOS ENCABEZADOS Y ORDEN
+    const headers = ["PAIS", "TIPO DE DOCUMENTO", "NOMBRE DEL ARCHIVO", "ENLACE URL"];
+    populateSheetFromDrive(DRIVE_ID_DOCUMENTOS, "DOCUMENTOS", headers);
+}
+
+function syncDocumentos() {
+    syncSheetToFirebase("DOCUMENTOS", "documentos");
+}
+
+function fillVehiculos() {
+    // NUEVOS ENCABEZADOS Y ORDEN
+    const headers = ["PAIS", "TIPO DE DOCUMENTO", "NOMBRE DEL ARCHIVO", "ENLACE URL"];
+    populateSheetFromDrive(DRIVE_ID_VEHICULOS, "VEHÍCULOS", headers);
+}
+
+function syncVehiculos() {
+    syncSheetToFirebase("VEHÍCULOS", "vehiculos");
+}
+
+
+/**
+ * Crea el menú '⚙️ INVENTARIO FIREBASE' en la Hoja al abrirla.
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('⚙️ INVENTARIO FIREBASE') 
+      .addItem('1A. Llenar DOCUMENTOS (Desde Drive)', 'fillDocumentos')
+      .addItem('1B. Llenar VEHÍCULOS (Desde Drive)', 'fillVehiculos')
+      .addSeparator()
+      .addItem('2A. Sincronizar DOCUMENTOS a Firebase', 'syncDocumentos')
+      .addItem('2B. Sincronizar VEHÍCULOS a Firebase', 'syncVehiculos')
+      .addToUi();
+}

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0457C9">
+    
+    <title>Inventario Documentos GAD</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* TUS ESTILOS ORIGINALES INTACTOS */
+        :root {
+            --primary-color: #0457C9;
+            --bg-color: #f4f6f9;
+            --text-color: #333;
+            --card-bg: #fff;
+            --eye-color: #28a745;
+            --danger-color: #dc3545;
+            --gad-gold: #f1c40f;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            height: 120px; padding: 0 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .header-left { flex: 1; text-align: left; white-space: nowrap; }
+        .header-title { color: white; font-size: 24px; font-weight: 700; margin: 0; }
+        .header-center { flex: 0 0 auto; display: flex; justify-content: center; align-items: center; height: 100%; }
+        .logo { height: 100px; width: auto; object-fit: contain; }
+        .header-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 25px; }
+
+        .btn-help-premium {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: white; padding: 8px 18px; border-radius: 30px;
+            cursor: pointer; font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.3s ease; text-transform: uppercase;
+        }
+        .btn-help-premium:hover { background: white; color: var(--primary-color); }
+
+        .stats-counter { color: white; font-size: 32px; font-weight: 900; line-height: 1; display: block; }
+        .stats-label { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.8); display: block; }
+        .stats-group { text-align: right; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px; }
+
+        .controls-container { background: white; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .search-wrapper { max-width: 1200px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+        .search-input-container { position: relative; flex: 1; }
+        
+        .search-input {
+            width: 100%; padding: 15px 20px 15px 50px; font-size: 16px;
+            border: 2px solid #ddd; border-radius: 50px; outline: none; height: 54px;
+        }
+        .search-input:focus { border-color: var(--primary-color); }
+        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #888; font-size: 18px; }
+
+        .btn-clear {
+            background-color: var(--danger-color); color: white; border: none;
+            border-radius: 50px; padding: 0 30px; height: 54px; font-size: 16px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .filters-chips { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .chip {
+            padding: 8px 16px; background: #e9ecef; border: none; border-radius: 20px;
+            cursor: pointer; font-size: 14px; font-weight: 500; color: #555;
+        }
+        .chip.active { background: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(4, 87, 201, 0.3); }
+        .divider { width: 1px; background: #ccc; margin: 0 10px; height: 30px; }
+
+        .results-container { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 0 20px 40px 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+
+        .card {
+            background: white; border-radius: 8px; padding: 12px 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid #eee; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: var(--primary-color); }
+        .card-content { flex: 1; overflow: hidden; padding-right: 10px; }
+        
+        .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+        .badge-loc { background: #e3f2fd; color: #1565c0; }
+        .badge-dpi { background: #f5f5f5; color: #616161; }
+        .badge-veh { background: #e8f5e9; color: #2e7d32; }
+        .card-title { font-size: 14px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .btn-view {
+            color: var(--eye-color); font-size: 24px; padding: 8px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: transparent; border: none;
+        }
+        .btn-view:hover { background-color: rgba(40, 167, 69, 0.1); transform: scale(1.1); }
+
+        .pie-pagina { background-color: var(--primary-color); color: white; text-align: center; padding: 15px 0; margin-top: auto; font-size: 14px; }
+        .loader-box { text-align: center; padding: 50px; font-size: 18px; color: #666; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(3px); padding: 15px;
+        }
+
+        .modal-content-help {
+            background: white; padding: 0; border-radius: 10px;
+            max-width: 600px; width: 100%; position: relative;
+            max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+        
+        .help-header {
+            background: var(--primary-color); color: white; padding: 15px 20px;
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+        .help-header h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .help-body { padding: 20px; color: #444; overflow-y: auto; flex: 1; }
+        .btn-close-help { cursor: pointer; font-size: 24px; color: white; opacity: 0.8; background: none; border: none; }
+        .help-section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .help-section:last-child { border: none; }
+        .help-title { font-weight: 700; color: var(--primary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 16px; }
+        .help-example { background: #f8f9fa; border-left: 4px solid var(--gad-gold); padding: 10px 15px; margin: 10px 0; font-size: 13px; color: #555; font-style: italic; }
+        .btn-modal-ok { background-color: var(--primary-color); color: white; border: none; padding: 15px 0; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+
+        #modalVisor {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 5000; flex-direction: column;
+        }
+        #modalVisor.active { display: flex; }
+        .viewer-top {
+            position: absolute; top: 0; left: 0; width: 100%; height: 50px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+            display: flex; align-items: center; justify-content: flex-start;
+            padding: 0 15px; z-index: 5002; pointer-events: none; gap: 15px;
+        }
+        .btn-close-viewer {
+            pointer-events: auto; background: #dc3545; color: white; border: none;
+            width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); flex-shrink: 0;
+        }
+        .viewer-title {
+            color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px #000;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            text-align: left; max-width: 65%; opacity: 0.9;
+        }
+        .iframe-container { flex: 1; width: 100%; height: 100%; position: relative; background: #000; }
+        #visor-iframe { width: 100%; height: 100%; border: none; display: block; }
+        .nav-overlay {
+            position: absolute; top: 50%; width: 100%; transform: translateY(-50%);
+            display: flex; justify-content: space-between; padding: 0 10px;
+            pointer-events: none; z-index: 5001;
+        }
+        .nav-btn {
+            pointer-events: auto; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.3); color: white; width: 50px; height: 50px;
+            border-radius: 50%; font-size: 24px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+        }
+        .nav-btn:hover { background: rgba(241, 196, 15, 0.8); color: black; }
+        #visor-loader {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-size: 16px; background: rgba(0,0,0,0.8);
+            padding: 15px 25px; border-radius: 30px; z-index: 5000;
+            display: flex; gap: 10px; align-items: center;
+        }
+
+        @media screen and (max-width: 768px) {
+            header { height: auto; flex-direction: column; padding: 15px; gap: 15px; }
+            .header-left, .header-center, .header-right { width: 100%; text-align: center; justify-content: center; }
+            .header-center { order: 1; margin-bottom: 5px; }
+            .header-left { order: 2; margin-bottom: 10px; white-space: normal; width: 100%; }
+            .header-right { order: 3; justify-content: space-evenly; }
+            .header-title { font-size: 18px; white-space: normal; line-height: 1.2; }
+            .search-wrapper { flex-direction: column; gap: 10px; }
+            .search-input-container, .btn-clear { width: 100%; }
+            .nav-btn { width: 45px; height: 45px; font-size: 20px; background: rgba(0,0,0,0.4); }
+            .modal-content-help { max-height: 80vh; }
+        }
+
+        :fullscreen header, :fullscreen .controls-container, :fullscreen .pie-pagina { display: none; }
+        :fullscreen #modalVisor { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1 class="header-title">INVENTARIO DE DOCUMENTOS GAD</h1>
+        </div>
+        <div class="header-center">
+            <img src="logogad.png" alt="GAD Logo" class="logo" onerror="this.style.display='none'">
+        </div>
+        <div class="header-right">
+            <button class="btn-help-premium" onclick="toggleModalAyuda(true)">
+                <i class="fa-regular fa-circle-question"></i> AYUDA
+            </button>
+            <div class="stats-group">
+                <span id="stats-number" class="stats-counter">--</span>
+                <span class="stats-label">Documentos</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls-container">
+        <div class="search-wrapper">
+            <div class="search-input-container">
+                <i class="fa-solid fa-search search-icon"></i>
+                <input type="text" id="buscador" class="search-input" 
+                       placeholder="Ej: España DNI 2025"
+                       onkeyup="aplicarFiltrosInteligentes()">
+            </div>
+            <button class="btn-clear" onclick="limpiarBusqueda()">
+                <i class="fa-solid fa-eraser"></i> Limpiar
+            </button>
+        </div>
+
+        <div class="filters-chips">
+            <button class="chip active" onclick="setFiltro('cat', 'TODOS', this)">Todo</button>
+            <button class="chip" onclick="setFiltro('cat', 'PERSONAS', this)"><i class="fa-solid fa-user"></i> Personas</button>
+            <button class="chip" onclick="setFiltro('cat', 'VEHICULOS', this)"><i class="fa-solid fa-car"></i> Vehículos</button>
+            <div class="divider"></div>
+            <button class="chip active" onclick="setFiltro('cal', 'TODOS', this)">Todas DPI</button>
+            <button class="chip" onclick="setFiltro('cal', '600', this)">600 DPI</button>
+            <button class="chip" onclick="setFiltro('cal', '2400', this)">2400 DPI</button>
+        </div>
+    </div>
+
+    <div class="results-container">
+        <div id="loader" class="loader-box">
+            <i class="fa-solid fa-sync fa-spin"></i> Sincronizando con GAD V3...
+        </div>
+        <div id="grid-resultados" class="grid"></div>
+    </div>
+
+    <div id="modalAyuda" class="modal-overlay" onclick="if(event.target === this) toggleModalAyuda(false)">
+        <div class="modal-content-help">
+            <div class="help-header">
+                <h2><i class="fa-solid fa-book-open"></i> Manual de Operador</h2>
+                <button class="btn-close-help" onclick="toggleModalAyuda(false)">✕</button>
+            </div>
+            
+            <div class="help-body">
+                <div class="help-section">
+                    <div class="help-title"><i class="fa-solid fa-magnifying-glass"></i> 1. Cómo buscar documentos</div>
+                    <p>El buscador es inteligente. No necesitas escribir acentos ni mayúsculas.</p>
+                    
+                    <div class="help-example">
+                        <b>Ejemplo 1:</b> Si escribes "rumania", el sistema encontrará "Rumanía".<br>
+                        <b>Ejemplo 2:</b> Escribe "Alemania PNC 2024" para ver el documento concreto.<br>
+                        <b>Ejemplo 3:</b> Escribe "PNC" para Permisos de Conducción o "PSP" para Pasaporte.
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-title"><i class="fa-solid fa-eye" style="color:var(--eye-color)"></i> 2. El Visor de Imágenes</div>
+                    <p>Al pulsar el icono del ojo, se abre el documento en pantalla completa.</p>
+                    <ul>
+                        <li><strong>Zoom Táctil:</strong> En el móvil, usa dos dedos sobre la pantalla (gesto de pellizco) para ampliar y ver las microescrituras.</li>
+                        <li><strong>Navegación:</strong> Usa las flechas laterales para ver otros documentos de la misma carpeta sin salir.</li>
+                    </ul>
+                    
+                    <div class="help-example" style="background:#fff3cd; border-color:#ffc107;">
+                        💡 <strong>Nota:</strong> Pulsa el botón <b>ROJO</b> para cerrar o pulsa el botón de la derecha para entrar en Google Drive en ventana nueva y así poder editar el documento.
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-title"><i class="fa-solid fa-layer-group"></i> 3. Filtros Rápidos</div>
+                    <p>Usa los botones grises (chips) debajo del buscador para filtrar rápidamente:</p>
+                    <ul>
+                        <li><strong>Personas vs Vehículos:</strong> Separa DNI/Pasaportes de Cartas de Coche.</li>
+                        <li><strong>600 vs 2400 DPI:</strong> Elige entre calidad estándar o ultra-alta definición.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button class="btn-modal-ok" onclick="toggleModalAyuda(false)">ENTENDIDO, VOLVER AL INVENTARIO</button>
+        </div>
+    </div>
+
+    <div id="modalVisor">
+        <div class="viewer-top">
+            <button class="btn-close-viewer" onclick="cerrarVisor()">✕</button>
+            <div class="viewer-title" id="visor-titulo">Cargando...</div>
+        </div>
+
+        <div id="visor-loader"><i class="fa-solid fa-spinner fa-spin"></i> Cargando Documento...</div>
+
+        <div class="nav-overlay">
+            <button class="nav-btn" onclick="cambiarDoc(-1)">&#10094;</button>
+            <button class="nav-btn" onclick="cambiarDoc(1)">&#10095;</button>
+        </div>
+
+        <div class="iframe-container">
+            <iframe id="visor-iframe" src="" allow="autoplay; fullscreen"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN FIREBASE V3 (NUEVA)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasestorage.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+            measurementId: "G-Q0E3H1996K"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let BD_GLOBAL = [];
+        let LISTA_REPRODUCCION = []; 
+        let INDICE_ACTUAL = 0;
+        let filtros = { cat: 'TODOS', cal: 'TODOS' };
+
+        // LOGICA DEL VISOR (¡¡ARREGLADA PARA V3!!)
+        const modalVisor = document.getElementById('modalVisor');
+        const iframeEl = document.getElementById('visor-iframe');
+        const tituloEl = document.getElementById('visor-titulo');
+        const loaderVisor = document.getElementById('visor-loader');
+
+        function abrirVisor(idUnico) {
+            const docClicado = BD_GLOBAL.find(d => d._idUnico === idUnico);
+            if (!docClicado) return;
+
+            // TRUCO MAESTRO: Como la nueva base de datos no tiene carpetas reales, 
+            // usamos la propiedad '_carpeta' (que hemos llenado con el PAIS) 
+            // para agrupar las imágenes.
+            // Así, al darle a la flecha, solo pasas al siguiente documento DE ESE PAÍS.
+            
+            LISTA_REPRODUCCION = BD_GLOBAL.filter(d => d._carpeta === docClicado._carpeta);
+            
+            // Si por alguna razón la lista sale vacía (error de datos), usamos la global
+            if (LISTA_REPRODUCCION.length === 0) LISTA_REPRODUCCION = BD_GLOBAL;
+
+            INDICE_ACTUAL = LISTA_REPRODUCCION.findIndex(d => d._idUnico === idUnico);
+
+            entrarFullscreen();
+            modalVisor.classList.add('active');
+            cargarDocumentoActual();
+        }
+
+        function cargarDocumentoActual() {
+            if (INDICE_ACTUAL < 0 || INDICE_ACTUAL >= LISTA_REPRODUCCION.length) return;
+            
+            const doc = LISTA_REPRODUCCION[INDICE_ACTUAL];
+            tituloEl.innerText = `${INDICE_ACTUAL + 1}/${LISTA_REPRODUCCION.length} - ${doc.NombreDocumento}`;
+            loaderVisor.style.display = 'flex';
+
+            let urlLimpia = doc.Enlace;
+            if (urlLimpia.includes('/view')) {
+                urlLimpia = urlLimpia.replace(/\/view.*/, '/preview');
+            } else if (!urlLimpia.includes('/preview') && !urlLimpia.includes('id=')) {
+                 urlLimpia += '/preview';
+            }
+
+            iframeEl.src = urlLimpia;
+            iframeEl.onload = function() {
+                loaderVisor.style.display = 'none';
+            };
+        }
+
+        function cambiarDoc(direccion) {
+            let nuevoIndice = INDICE_ACTUAL + direccion;
+            if (nuevoIndice < 0) nuevoIndice = LISTA_REPRODUCCION.length - 1;
+            if (nuevoIndice >= LISTA_REPRODUCCION.length) nuevoIndice = 0;
+
+            INDICE_ACTUAL = nuevoIndice;
+            cargarDocumentoActual();
+        }
+
+        function cerrarVisor() {
+            modalVisor.classList.remove('active');
+            iframeEl.src = "";
+            salirFullscreen();
+        }
+
+        function entrarFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        }
+        function salirFullscreen() {
+            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        }
+        document.addEventListener('keydown', (e) => {
+            if (!modalVisor.classList.contains('active')) return;
+            if (e.key === "ArrowLeft") cambiarDoc(-1);
+            if (e.key === "ArrowRight") cambiarDoc(1);
+            if (e.key === "Escape") cerrarVisor();
+        });
+
+        // UTILIDADES
+        function normalizarTexto(texto) {
+            if (!texto) return "";
+            return texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+        }
+
+        // CARGA DE DATOS (VERSIÓN V3 SIN BUCLE x8)
+        async function cargarInventario() {
+            const nodos = [
+                { id: 'BD_DOCUMENTOS 600 DPI', cat: 'PERSONAS', cal: '600' },
+                { id: 'BD_VEHICULOS 600 DPI', cat: 'VEHICULOS', cal: '600' }
+            ];
+
+            let lista = [];
+            let contadorId = 0;
+
+            for (let nodo of nodos) {
+                try {
+                    const snap = await db.ref(nodo.id).once('value');
+                    const data = snap.val();
+                    if (!data) continue;
+
+                    // AQUI ESTA LA MAGIA: 
+                    // 1. Usamos Object.entries para leer la lista plana (sin subcarpetas).
+                    // 2. Asignamos 'doc.Pais' a '_carpeta'. Esto permite que el VISOR
+                    //    sepa que todos los docs de "ESPAÑA" pertenecen al mismo grupo.
+                    
+                    Object.entries(data).forEach(([key, doc]) => {
+                        if (!doc || !doc.NombreDocumento) return;
+
+                        const rawText = `${doc.NombreDocumento} ${doc.Pais} ${doc.TipoDocumento} ${doc.SubtipoDocumento || ''} ${doc.EstadoProvincia || ''}`;
+                        const textoNormalizado = normalizarTexto(rawText).replace(/_/g, ' ').replace(/-/g, ' ');
+                        const palabrasClave = textoNormalizado.split(/\s+/).filter(w => w.length > 0);
+
+                        // TRUCO: Si no hay país, usamos "General" para que no rompa el visor
+                        let carpetaVirtual = doc.Pais || "General"; 
+
+                        lista.push({
+                            ...doc,
+                            _cat: nodo.cat,
+                            _cal: nodo.cal,
+                            _palabras: palabrasClave,
+                            _carpeta: carpetaVirtual, // <--- ESTO ARREGLA EL CARRUSEL
+                            _idUnico: contadorId++
+                        });
+                    });
+                } catch (e) { console.error("Error nodo " + nodo.id, e); }
+            }
+
+            // Ordenamos alfabéticamente por PAÍS (A-Z) para que quede bonito
+            BD_GLOBAL = lista.sort((a, b) => {
+                const paisA = (a.Pais || 'ZZZ').toUpperCase();
+                const paisB = (b.Pais || 'ZZZ').toUpperCase();
+                if (paisA < paisB) return -1;
+                if (paisA > paisB) return 1;
+                return (a.NombreDocumento || '').localeCompare(b.NombreDocumento || '');
+            });
+
+            document.getElementById('loader').style.display = 'none';
+            aplicarFiltrosInteligentes();
+        }
+
+        function aplicarFiltrosInteligentes() {
+            const inputRaw = document.getElementById('buscador').value;
+            const input = normalizarTexto(inputRaw).trim();
+            const terminos = input.split(/\s+/).filter(t => t.length > 0);
+            const grid = document.getElementById('grid-resultados');
+            const statsNum = document.getElementById('stats-number');
+            
+            grid.innerHTML = '';
+
+            const resultados = BD_GLOBAL.filter(doc => {
+                if (filtros.cat !== 'TODOS' && doc._cat !== filtros.cat) return false;
+                if (filtros.cal !== 'TODOS' && doc._cal !== filtros.cal) return false;
+                if (terminos.length > 0) return terminos.every(t => doc._palabras.some(p => p.startsWith(t)));
+                return true;
+            });
+
+            if (resultados.length > 0) {
+                statsNum.innerText = resultados.length.toLocaleString();
+                // Mostramos 100 para no bloquear el navegador
+                resultados.slice(0, 100).forEach(doc => {
+                    const esVehiculo = doc._cat === 'VEHICULOS';
+                    let ubicacion = doc.EstadoProvincia && doc.EstadoProvincia !== 'N/A' ? doc.EstadoProvincia : doc.Pais;
+                    const iconCat = esVehiculo ? '<i class="fa-solid fa-car"></i>' : '<i class="fa-solid fa-user"></i>';
+                    const badgeClass = esVehiculo ? 'badge-veh' : 'badge-loc';
+
+                    const html = `
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-badges">
+                                    <span class="badge ${badgeClass}">${iconCat} ${ubicacion}</span>
+                                    <span class="badge badge-dpi">${doc._cal} DPI</span>
+                                </div>
+                                <div class="card-title" title="${doc.NombreDocumento}">
+                                    ${doc.NombreDocumento}
+                                </div>
+                            </div>
+                            <button class="btn-view" onclick="abrirVisor(${doc._idUnico})" title="Ver">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>`;
+                    grid.innerHTML += html;
+                });
+            } else {
+                statsNum.innerText = "0";
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">Sin resultados</div>`;
+            }
+        }
+
+        function setFiltro(tipo, valor, btn) {
+            filtros[tipo] = valor;
+            const padre = btn.parentElement;
+            padre.querySelectorAll(`button[onclick*="'${tipo}'"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            aplicarFiltrosInteligentes();
+        }
+
+        function limpiarBusqueda() {
+            document.getElementById('buscador').value = '';
+            aplicarFiltrosInteligentes();
+        }
+
+        function toggleModalAyuda(mostrar) {
+            document.getElementById('modalAyuda').style.display = mostrar ? 'flex' : 'none';
+        }
+
+        cargarInventario();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Destrucción de Placas - GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            flex: 1;
+            padding: 1rem; 
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .gad-logo-header {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0; 
+        }
+        .gad-logo-header img {
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block;
+        }
+
+        .quick-nav-button {
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            padding: 0.6rem 0.5rem; 
+            font-size: 0.75rem; 
+            font-weight: bold;
+            color: white;
+            border-radius: 0.5rem;
+            text-align: center;
+            transition: background-color 0.15s ease;
+            text-decoration: none; 
+            height: 40px;
+        }
+        @media (min-width: 640px) { 
+            .quick-nav-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem; 
+                height: 45px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive {
+                border: 0;
+                overflow-x: auto; 
+            }
+            .table-responsive thead {
+                display: none;
+            }
+            .table-responsive tr {
+                display: block;
+                margin-bottom: 0.5rem;
+                border: 1px solid #e5e7eb; 
+                border-radius: 0.5rem; 
+            }
+            .table-responsive td {
+                display: block;
+                text-align: right !important; 
+                padding: 0.5rem 1rem;
+                border-bottom: 1px solid #f3f4f6; 
+                position: relative;
+                font-size: 0.875rem; 
+            }
+            .table-responsive td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 1rem;
+                width: 45%; 
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+                color: #4b5563; 
+            }
+            .table-responsive td:nth-child(1), 
+            .table-responsive td:nth-child(2), 
+            .table-responsive td:nth-child(7) { 
+                text-align: center !important;
+                background-color: #f3f4f6; 
+            }
+            .table-responsive td:nth-child(1)::before,
+            .table-responsive td:nth-child(2)::before {
+                content: ''; 
+            }
+            .table-responsive td:last-child {
+                border-bottom: 0;
+            }
+        }
+        
+        .button-green { background-color: #22c55e; } 
+        .button-green:hover { background-color: #16a34a; }
+        
+        .button-blue-light { background-color: #38bdf8; } 
+        .button-blue-light:hover { background-color: #0ea5e9; }
+        
+        .button-yellow { background-color: #facc15; } 
+        .button-yellow:hover { background-color: #eab308; }
+        
+        .button-gray { background-color: #4b5563; } 
+        .button-gray:hover { background-color: #374151; }
+
+        .table-row-even { background-color: #f9fafb; }
+        .table-row-odd { background-color: #ffffff; }
+        .sort-header { cursor: pointer; user-select: none; }
+        .sort-icon { margin-left: 0.5rem; }
+        .delete-icon { color: #ef4444; cursor: pointer; transition: color 0.15s; }
+        .delete-icon:hover { color: #b91c1c; }
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); display: none;
+            justify-content: center; align-items: center; z-index: 1000; overflow-y: auto;
+        }
+        .modal-content {
+            background-color: white; padding: 1.5rem; 
+            border-radius: 0.75rem;
+            width: 95%; 
+            max-width: 600px; 
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0; 
+        }
+
+        .inline-edit-input {
+            border: 1px solid #3b82f6; 
+            padding: 4px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 0.875rem; 
+            line-height: 1.25rem;
+        }
+        
+        .permanent-delete-icon { 
+            color: #ef4444; 
+            cursor: pointer; 
+            transition: color 0.15s; 
+            margin-left: 8px;
+        }
+        .permanent-delete-icon:hover { 
+            color: #b91c1c; 
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-4"> 
+        <div class="gad-logo-header">
+            <img src="logogad.png" alt="Logo GAD" class="block">
+        </div>
+    </header>
+
+    <main>
+        <div class="flex flex-col justify-start mb-6 space-y-4"> 
+
+            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900"> 
+                Registro de Destrucción de Placas 
+                <span class="text-lg md:text-xl font-semibold text-red-600 ml-0 mt-1 md:ml-4 md:mt-0 block md:inline">
+                    (Total: <span id="plateCounter">0</span>)
+                </span>
+            </h1>
+
+            <div id="quickNavButtons" class="grid grid-cols-3 gap-3 w-full"> 
+                
+                <button id="openNewPlateModal" class="quick-nav-button button-green">
+                    <i class="fas fa-plus-circle hidden sm:inline mr-1"></i> Nueva Placa
+                </button>
+                
+                <button id="openAnuladasModal" class="quick-nav-button button-blue-light">
+                    <i class="fas fa-trash-restore hidden sm:inline mr-1"></i> Devolución (<span id="anuladasCount">0</span>)
+                </button>
+                
+                <a href="index.html" class="quick-nav-button button-yellow">
+                    <i class="fas fa-home hidden sm:inline mr-1"></i> Volver Menú
+                </a>
+                
+            </div>
+            
+        </div>
+
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> 
+            <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Generación y Consulta Rápida</h2> 
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+                <div class="col-span-1">
+                    <label for="lotNumber" class="block text-sm font-medium text-gray-700 mb-1">Próximo Lote</label> 
+                    <input type="text" id="lotNumber" readonly 
+                            class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm bg-gray-100 font-bold cursor-default"> 
+                </div>
+                
+                <div class="col-span-1 order-3 lg:order-2"> 
+                    <button id="generateLotButton" disabled
+                            class="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-md shadow-lg transition duration-150 ease-in-out hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-sm"> 
+                        Generar Lote <span id="selectedCount" class="font-normal"> (0)</span>
+                    </button>
+                </div>
+
+                <div class="col-span-1 order-2 lg:order-3"> 
+                    <label for="searchPlate" class="block text-sm font-medium text-gray-700 mb-1">Buscar Placa</label>
+                    <div class="relative">
+                        <input type="text" id="searchPlate" placeholder="Ej: GY846WR" 
+                               class="w-full border-2 border-blue-300 rounded-xl shadow-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 px-3 py-2 text-sm font-medium uppercase transition duration-200"> 
+                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-xl mb-8 border border-gray-200"> 
+            <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Administración de Lotes Creados</h2> 
+            <div class="overflow-x-auto shadow-md rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Lote</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">EUROCOP</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-2/12">Total</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">FECHA DESTRUCCIÓN</th> 
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lotAdminBody" class="divide-y divide-gray-200">
+                        <tr><td colspan="5" class="text-center py-3 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200 table-responsive">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12"> 
+                            <input type="checkbox" id="selectAllCheckbox" class="rounded text-red-600 border-gray-300">
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">#</th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PAIS">
+                            País <span class="sort-icon" id="sortIconPAIS"></span>
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="PLACA">
+                            Placa <span class="sort-icon" id="sortIconPLACA"></span>
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12 sort-header" data-sort-by="FECHA_AGREGADA">
+                            Fecha Agregada <span class="sort-icon" id="sortIconFECHA_AGREGADA"></span>
+                        </th>
+                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-3/12">Estado / Lote</th>
+                        <th scope="col" class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="platesTableBody" class="divide-y divide-gray-200">
+                    <tr id="loadingRow"><td colspan="7" class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+    </main>
+
+<footer class="mt-auto text-center py-4 bg-gray-200 text-xs"> 
+    <div class="flex flex-col items-center">
+        <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-2"> 
+        <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+        <p>&copy; GAD - Todos los derechos reservados</p>
+    </div>
+</footer>
+
+    <div id="newPlateModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Añadir Nueva Placa</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="newPlateCountry" class="block text-sm font-medium text-gray-700">País</label>
+                    <input type="text" id="newPlateCountry" list="countryDatalist" class="mt-1 w-full border-gray-300 rounded-md shadow-sm p-2.5 focus:border-blue-500 uppercase" placeholder="Ej: FRANCIA" required>
+                    <datalist id="countryDatalist"></datalist>
+                </div>
+                <div>
+                    <label for="newPlateNumber" class="block text-sm font-medium text-gray-700">Número de Placa</label>
+                    <input type="text" id="newPlateNumber" class="mt-1 w-full border-gray-300 rounded-md shadow-sm p-2.5 focus:border-blue-500 uppercase" placeholder="Ej: WX123YZ" required>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button id="closeNewPlateModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition text-sm">Cancelar</button>
+                    <button id="saveNewPlateButton" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-sm"><i class="fas fa-save"></i> Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="consultLotModal" class="modal">
+        <div class="modal-content">
+            <h3 id="consultLotTitle" class="text-xl font-bold mb-4 text-gray-800">Placas del Lote</h3>
+            <div class="h-64 overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50">
+                <ul id="consultLotList" class="space-y-1 text-gray-700">
+                    </ul>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button id="exportLotToExcelButton" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm"><i class="fas fa-file-excel"></i> Exportar</button>
+                <button id="closeConsultLotModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition text-sm">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="anuladasModal" class="modal">
+        <div class="modal-content max-w-4xl"> 
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Devolución de Placas</h3> 
+            <div class="h-80 overflow-y-auto border border-gray-300 rounded-md p-2 bg-gray-50"> 
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">País</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Placa</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Fecha Devolución</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider w-3/12">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="anuladasListBody" class="divide-y divide-gray-200">
+                        <tr><td colspan="4" class="text-center py-4 text-gray-500">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end mt-6">
+                <button id="closeAnuladasModal" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition text-sm">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getDatabase, ref, get, update, push, remove, set } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+        // 1. CONFIGURACIÓN DE TU PROYECTO (¡DEBES REEMPLAZAR LOS VALORES DE TUS CLAVES!)
+       const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+        // 2. Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        
+        let allPlatesData = []; 
+        let anuladasData = []; 
+        let uniqueLots = {}; 
+        let currentSort = { column: 'FECHA_AGREGADA', direction: 'desc' }; // Orden por defecto por fecha (más reciente primero)
+        let lotEurocopData = {}; 
+        let currentPlatesInConsultedLot = [];
+        let knownCountries = []; 
+
+        // --- FUNCIONES PRINCIPALES DE CARGA Y PERSISTENCIA ---
+        
+async function loadLotMetadata() {
+    try {
+        const dbRef = ref(database, 'lotes');
+        const snapshot = await get(dbRef);
+        lotEurocopData = {}; 
+
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            Object.entries(data).forEach(([lotNumber, metadata]) => {
+                if (metadata && metadata.eurocop !== undefined) {
+                    lotEurocopData[lotNumber] = metadata.eurocop;
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error al cargar metadatos de lotes (EUROCOP):", error);
+    }
+}
+        
+        async function saveEurocopValue(inputElement) {
+            const lotNumber = inputElement.dataset.lotNumber; 
+            const value = inputElement.value.trim();
+            
+            if (lotEurocopData[lotNumber] === value) {
+                return;
+            }
+            
+            lotEurocopData[lotNumber] = value;
+            
+            try {
+                const lotRef = ref(database, `lotes/${lotNumber}`);
+                await update(lotRef, { eurocop: value });
+                
+                inputElement.style.borderColor = 'green';
+                setTimeout(() => {
+                     inputElement.style.borderColor = '';
+                }, 1000);
+                
+            } catch (error) {
+                console.error(`Error al guardar EUROCOP para ${lotNumber}:`, error);
+                alert(`Error al guardar EUROCOP. Revisa la consola.`);
+                inputElement.style.borderColor = 'red';
+            }
+        }
+        
+        async function loadPlates() {
+            const tableBody = document.getElementById('platesTableBody');
+            tableBody.innerHTML = '<tr id="loadingRow"><td colspan="7" class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>';
+            document.getElementById('lotAdminBody').innerHTML = '<tr><td colspan="5" class="text-center py-3 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Cargando lotes...</td></tr>'; 
+
+            try {
+                await loadLotMetadata(); 
+                await loadAnuladas(); 
+                
+                const dbRef = ref(database, 'placas_destruccion');
+                const snapshot = await get(dbRef);
+
+                tableBody.innerHTML = ''; 
+                allPlatesData = []; 
+                uniqueLots = {}; 
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val(); 
+                    
+                    allPlatesData = Object.entries(data).map(([key, value]) => {
+                        if (value.LoteDestruccion && value.LoteDestruccion.trim() !== "") {
+                            const lotName = value.LoteDestruccion;
+                            if (!uniqueLots[lotName]) {
+                                uniqueLots[lotName] = [];
+                            }
+                            uniqueLots[lotName].push(key);
+                        }
+                        return { id: key, ...value };
+                    });
+
+                    // Asignar fecha 06/10/2025 a placas existentes que no tengan fecha
+                    await assignDefaultDateToExistingPlates();
+                    
+                    await getNextLotNumber();
+                    document.getElementById('plateCounter').textContent = allPlatesData.length; 
+                    
+                    extractAndRenderCountries(); 
+                    
+                    renderPlates(allPlatesData);
+                    loadLotAdministrationPanel(); 
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-orange-500">❌ Base de datos vacía. Asegúrate de importar el JSON en Firebase.</td></tr>';
+                    document.getElementById('plateCounter').textContent = '0';
+                    loadLotAdministrationPanel(); 
+                }
+
+            } catch (error) {
+                console.error("🚨 ERROR CRÍTICO al cargar placas (SDK):", error);
+                alert("❌ ERROR: No se pudo conectar a Firebase. Revisa si la configuración es correcta.");
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Error al cargar datos. Comprueba la Consola (F12).</td></tr>';
+            }
+        }
+
+        // Función para asignar fecha 06/10/2025 a placas existentes sin fecha
+        async function assignDefaultDateToExistingPlates() {
+            const updates = {};
+            let needsUpdate = false;
+            
+            allPlatesData.forEach(plate => {
+                if (!plate.FECHA_AGREGADA) {
+                    // Asignar fecha 06/10/2025 a placas existentes
+                    updates[`placas_destruccion/${plate.id}/FECHA_AGREGADA`] = "2025-10-06T00:00:00.000Z";
+                    plate.FECHA_AGREGADA = "2025-10-06T00:00:00.000Z";
+                    needsUpdate = true;
+                }
+            });
+            
+            if (needsUpdate) {
+                try {
+                    await update(ref(database), updates);
+                    console.log("Fechas asignadas a placas existentes correctamente");
+                } catch (error) {
+                    console.error("Error al asignar fechas a placas existentes:", error);
+                }
+            }
+        }
+
+        // --- FUNCIONES SECUNDARIAS DE CARGA Y AUTOCONFIGURACIÓN ---
+
+        function extractAndRenderCountries() {
+            const uniqueCountriesSet = new Set();
+            allPlatesData.forEach(placa => {
+                if (placa.PAIS && placa.PAIS.trim() !== "") {
+                    uniqueCountriesSet.add(placa.PAIS.trim().toUpperCase()); 
+                }
+            });
+
+            knownCountries = Array.from(uniqueCountriesSet).sort();
+
+            const datalist = document.getElementById('countryDatalist');
+            datalist.innerHTML = ''; 
+
+            knownCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                datalist.appendChild(option);
+            });
+        }
+        
+        async function loadAnuladas() {
+            try {
+                const dbRef = ref(database, 'placas_anuladas');
+                const snapshot = await get(dbRef);
+                anuladasData = []; 
+                if (snapshot.exists()) {
+                    const data = snapshot.val(); 
+                    anuladasData = Object.entries(data).map(([key, value]) => ({ id: key, ...value }));
+                }
+                document.getElementById('anuladasCount').textContent = anuladasData.length;
+            } catch (error) {
+                console.error("Error al cargar placas anuladas:", error);
+            }
+        }
+        
+        async function getNextLotNumber() {
+            try {
+                let maxLotNumber = 0;
+                
+                allPlatesData.forEach(placa => {
+                    if (placa.LoteDestruccion) {
+                        const match = placa.LoteDestruccion.match(/LOTE (\d+)/i);
+                        if (match) {
+                            const currentLotNum = parseInt(match[1]);
+                            if (currentLotNum > maxLotNumber) {
+                                maxLotNumber = currentLotNum;
+                            }
+                        }
+                    }
+                });
+                
+                const nextLotNum = maxLotNumber + 1;
+                const lotName = `LOTE ${nextLotNum}`;
+                document.getElementById('lotNumber').value = lotName;
+                return lotName;
+
+            } catch (error) {
+                console.error("Error al determinar el próximo número de lote:", error);
+                document.getElementById('lotNumber').value = 'LOTE 1';
+                return 'LOTE 1';
+            }
+        }
+        
+        function renderPlates(platesToRender) {
+            const tableBody = document.getElementById('platesTableBody');
+            tableBody.innerHTML = '';
+            
+            if (document.getElementById('searchPlate').value.trim() === "") {
+                // 1. Criterio principal: Mover PENDIENTES al inicio y Loteados al final
+                platesToRender.sort((a, b) => {
+                    const isADestroyed = !!a.LoteDestruccion && a.LoteDestruccion.trim() !== "";
+                    const isBDestroyed = !!b.LoteDestruccion && b.LoteDestruccion.trim() !== "";
+
+                    // PENDIENTE (false) va antes que DESTRUIDO (true)
+                    if (isADestroyed !== isBDestroyed) {
+                        return isADestroyed ? 1 : -1; 
+                    }
+
+                    // 2. Criterio secundario: Ordenar por columna seleccionada (PAIS, PLACA o FECHA_AGREGADA)
+                    let aVal, bVal;
+                    
+                    if (currentSort.column === 'FECHA_AGREGADA') {
+                        // Para fechas, usamos el valor numérico del timestamp
+                        aVal = a.FECHA_AGREGADA ? new Date(a.FECHA_AGREGADA).getTime() : 0;
+                        bVal = b.FECHA_AGREGADA ? new Date(b.FECHA_AGREGADA).getTime() : 0;
+                    } else {
+                        // Para texto (PAIS o PLACA)
+                        aVal = String(a[currentSort.column] || '').toUpperCase();
+                        bVal = String(b[currentSort.column] || '').toUpperCase();
+                    }
+                    
+                    if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            
+            let totalPlates = platesToRender.length; 
+            
+            if (platesToRender.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No se encontraron placas que coincidan con la búsqueda.</td></tr>';
+            }
+
+            platesToRender.forEach((placa, i) => {
+                const key = placa.id;
+                const isDestroyed = placa.LoteDestruccion && placa.LoteDestruccion.trim() !== "";
+                const rowClass = i % 2 === 0 ? 'table-row-even' : 'table-row-odd';
+                
+                // Formatear fecha para mostrar
+                let fechaFormateada = '';
+                if (placa.FECHA_AGREGADA) {
+                    const fecha = new Date(placa.FECHA_AGREGADA);
+                    fechaFormateada = fecha.toLocaleDateString('es-ES');
+                }
+                
+                const row = document.createElement('tr');
+                row.classList.add(rowClass, 'hover:bg-yellow-100', 'transition', 'duration-150');
+                if (isDestroyed) {
+                    row.classList.add('bg-green-100', 'hover:bg-green-200');
+                }
+
+                // ADAPTACIÓN CLAVE: Se añaden los atributos data-label a las celdas
+                row.innerHTML = `
+                    <td data-label="Seleccionar" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <input type="checkbox" data-plate-id="${key}" ${isDestroyed ? 'disabled' : ''} class="plate-checkbox rounded text-red-600 border-gray-300">
+                    </td>
+                    <td data-label="#" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${totalPlates - i}</td> 
+                    <td id="pais-${key}" data-label="País" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">${placa.PAIS || ''}</td>
+                    <td id="placa-${key}" data-label="Placa" class="px-6 py-4 whitespace-nowrap text-base font-bold text-red-600">${placa.PLACA || ''}</td>
+                    <td data-label="Fecha Agregada" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fechaFormateada}</td>
+                    <td data-label="Estado / Lote" class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${isDestroyed ? 'text-green-700' : 'text-gray-400'}">
+                        ${isDestroyed ? `<i class="fas fa-check-circle"></i> ${placa.LoteDestruccion}` : 'PENDIENTE'}
+                    </td>
+                    <td data-label="Acción" class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium flex justify-center items-center space-x-3">
+                        ${isDestroyed ? '' : `<i class="fas fa-edit edit-icon text-blue-600 hover:text-blue-800 cursor-pointer" data-plate-id="${key}" title="Editar País/Placa"></i>`}
+                        <i class="fas fa-times-circle delete-icon" data-plate-id="${key}" title="Anular placa y mover a sección 'Devolución'"></i>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            document.querySelectorAll('.plate-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateLotButton);
+            });
+            document.querySelectorAll('.delete-icon').forEach(icon => {
+                icon.addEventListener('click', handleAnularPlate); 
+            });
+            // Listener para el icono de edición
+            document.querySelectorAll('.edit-icon').forEach(icon => {
+                icon.addEventListener('click', handleEditPlate);
+            });
+
+            updateLotButton(); 
+        }
+        
+        function loadLotAdministrationPanel() {
+            const lotAdminBody = document.getElementById('lotAdminBody');
+            lotAdminBody.innerHTML = '';
+            
+            const sortedLots = Object.keys(uniqueLots).sort((a, b) => {
+                const numA = parseInt((a.match(/LOTE (\d+)/i) || [0, 0])[1]);
+                const numB = parseInt((b.match(/LOTE (\d+)/i) || [0, 0])[1]);
+                return numB - numA; 
+            });
+
+            if (sortedLots.length === 0) {
+                lotAdminBody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-gray-500">Aún no se ha generado ningún lote.</td></tr>'; 
+                return;
+            }
+
+            sortedLots.forEach((lotName, i) => {
+                const plateCount = uniqueLots[lotName].length;
+                const row = document.createElement('tr');
+                row.classList.add(i % 2 === 0 ? 'bg-gray-50' : 'bg-white', 'hover:bg-red-50');
+                
+                const lotNumberOnly = lotName.replace(/\s*\([^)]*\)/, '');
+                const dateMatch = lotName.match(/\((.*?)\)/);
+                
+                const eurocopValue = lotEurocopData[lotNumberOnly] || ''; 
+
+                row.innerHTML = `
+                    <td class="px-3 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">${lotNumberOnly}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" value="${eurocopValue}" data-lot-number="${lotNumberOnly}" placeholder="Nº EUROCOP"
+                               class="eurocop-input w-full border border-gray-300 rounded-md p-1 text-xs" 
+                               onchange="saveEurocopValue(this)">
+                    </td>
+                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500">${plateCount}</td>
+                    <td class="px-3 py-3 whitespace-nowrap text-xs text-gray-500">${dateMatch ? dateMatch[1] : 'Desconocida'}</td> 
+                    <td class="px-3 py-3 whitespace-nowrap text-sm font-medium flex flex-col sm:flex-row items-start sm:items-center justify-start space-y-1 sm:space-y-0 sm:space-x-2"> 
+                        <button data-lot-name="${lotName}" class="consult-lot-btn text-blue-600 hover:text-blue-700 font-bold text-xs whitespace-nowrap w-full sm:w-auto"> 
+                            <i class="fas fa-search-plus"></i> Consultar
+                        </button>
+                        <button data-lot-name="${lotName}" class="undo-lot-admin-btn text-red-600 hover:text-red-900 font-bold text-xs whitespace-nowrap w-full sm:w-auto">
+                            <i class="fas fa-undo"></i> Deshacer Lote
+                        </button>
+                    </td>
+                `;
+                lotAdminBody.appendChild(row);
+            });
+            
+            document.querySelectorAll('.consult-lot-btn').forEach(btn => {
+                btn.addEventListener('click', handleConsultLot);
+            });
+            document.querySelectorAll('.undo-lot-admin-btn').forEach(btn => {
+                btn.addEventListener('click', handleUndoLot);
+            });
+        }
+        
+        function renderAnuladasModal() {
+            const anuladasListBody = document.getElementById('anuladasListBody');
+            anuladasListBody.innerHTML = '';
+            
+            if (anuladasData.length === 0) {
+                anuladasListBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No hay placas anuladas.</td></tr>';
+                return;
+            }
+            
+            anuladasData.forEach((placa, i) => {
+                const row = document.createElement('tr');
+                row.classList.add(i % 2 === 0 ? 'bg-gray-50' : 'bg-white', 'hover:bg-yellow-50');
+                
+                // Formatear fecha de devolución
+                let fechaDevolucionFormateada = '';
+                if (placa.FECHA_ANULACION) {
+                    const fecha = new Date(placa.FECHA_ANULACION);
+                    fechaDevolucionFormateada = fecha.toLocaleDateString('es-ES');
+                }
+                
+                row.innerHTML = `
+                    <td class="px-3 py-2 text-sm font-bold text-gray-700">${placa.PAIS || ''}</td>
+                    <td class="px-3 py-2 text-sm font-bold text-red-600">${placa.PLACA || ''}</td>
+                    <td class="px-3 py-2 text-sm text-gray-500">${fechaDevolucionFormateada}</td>
+                    <td class="px-3 py-2 text-center">
+                        <div class="flex justify-center items-center space-x-2">
+                            <button data-plate-id="${placa.id}" class="restore-plate-btn text-green-600 hover:text-green-900 font-bold text-xs whitespace-nowrap">
+                                <i class="fas fa-trash-restore"></i> Restaurar
+                            </button>
+                            <i class="fas fa-trash permanent-delete-icon" data-plate-id="${placa.id}" title="Eliminar permanentemente"></i>
+                        </div>
+                    </td>
+                `;
+                anuladasListBody.appendChild(row);
+            });
+            
+            document.querySelectorAll('.restore-plate-btn').forEach(btn => {
+                btn.addEventListener('click', handleRestorePlate);
+            });
+            document.querySelectorAll('.permanent-delete-icon').forEach(icon => {
+                icon.addEventListener('click', handlePermanentDelete);
+            });
+        }
+
+        // --- FUNCIONES DE GESTIÓN DE EVENTOS ---
+
+        function handleEditPlate(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const paisCell = document.getElementById(`pais-${plateId}`);
+            const placaCell = document.getElementById(`placa-${plateId}`);
+            
+            const currentPais = paisCell.textContent;
+            const currentPlaca = placaCell.textContent;
+            
+            // Crear inputs de edición
+            paisCell.innerHTML = `<input type="text" value="${currentPais}" class="inline-edit-input" id="edit-pais-${plateId}" list="countryDatalist">`;
+            placaCell.innerHTML = `<input type="text" value="${currentPlaca}" class="inline-edit-input" id="edit-placa-${plateId}">`;
+            
+            // Enfocar el campo de país
+            document.getElementById(`edit-pais-${plateId}`).focus();
+            
+            // Agregar eventos para guardar al presionar Enter o perder foco
+            const saveEdit = () => {
+                const newPais = document.getElementById(`edit-pais-${plateId}`).value.trim().toUpperCase();
+                const newPlaca = document.getElementById(`edit-placa-${plateId}`).value.trim().toUpperCase();
+                
+                if (newPais && newPlaca) {
+                    updatePlateInDatabase(plateId, newPais, newPlaca);
+                } else {
+                    // Restaurar valores originales si están vacíos
+                    paisCell.textContent = currentPais;
+                    placaCell.textContent = currentPlaca;
+                }
+            };
+            
+            document.getElementById(`edit-pais-${plateId}`).addEventListener('blur', saveEdit);
+            document.getElementById(`edit-placa-${plateId}`).addEventListener('blur', saveEdit);
+            document.getElementById(`edit-pais-${plateId}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveEdit();
+            });
+            document.getElementById(`edit-placa-${plateId}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveEdit();
+            });
+        }
+        
+        async function updatePlateInDatabase(plateId, newPais, newPlaca) {
+            try {
+                const plateRef = ref(database, `placas_destruccion/${plateId}`);
+                await update(plateRef, { PAIS: newPais, PLACA: newPlaca });
+                
+                // Actualizar en la interfaz
+                document.getElementById(`pais-${plateId}`).textContent = newPais;
+                document.getElementById(`placa-${plateId}`).textContent = newPlaca;
+                
+                // Actualizar en el array local
+                const plateIndex = allPlatesData.findIndex(p => p.id === plateId);
+                if (plateIndex !== -1) {
+                    allPlatesData[plateIndex].PAIS = newPais;
+                    allPlatesData[plateIndex].PLACA = newPlaca;
+                }
+                
+            } catch (error) {
+                console.error("Error al actualizar placa:", error);
+                alert("Error al actualizar la placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleAnularPlate(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const plate = allPlatesData.find(p => p.id === plateId);
+            
+            if (!plate) {
+                alert("Error: No se encontró la placa para anular.");
+                return;
+            }
+            
+            if (confirm(`¿Estás seguro de que deseas anular la placa ${plate.PLACA} (${plate.PAIS}) y moverla a "Devolución de Placas"?`)) {
+                anularPlate(plateId, plate);
+            }
+        }
+        
+        async function anularPlate(plateId, plateData) {
+            try {
+                // 1. Mover a placas_anuladas
+                const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
+                await update(anuladasRef, {
+                    PAIS: plateData.PAIS,
+                    PLACA: plateData.PLACA,
+                    FECHA_ANULACION: new Date().toISOString() // Fecha de devolución automática
+                });
+                
+                // 2. Eliminar de placas_destruccion
+                const plateRef = ref(database, `placas_destruccion/${plateId}`);
+                await remove(plateRef);
+                
+                // 3. Actualizar interfaz
+                await loadPlates(); 
+                await loadAnuladas(); 
+                
+                alert(`Placa ${plateData.PLACA} anulada y movida a "Devolución de Placas".`);
+                
+            } catch (error) {
+                console.error("Error al anular placa:", error);
+                alert("Error al anular la placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleRestorePlate(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const plate = anuladasData.find(p => p.id === plateId);
+            
+            if (!plate) {
+                alert("Error: No se encontró la placa para restaurar.");
+                return;
+            }
+            
+            if (confirm(`¿Restaurar la placa ${plate.PLACA} (${plate.PAIS}) a la lista principal?`)) {
+                restorePlate(plateId, plate);
+            }
+        }
+        
+        async function restorePlate(plateId, plateData) {
+            try {
+                // 1. Mover de vuelta a placas_destruccion
+                const plateRef = ref(database, `placas_destruccion/${plateId}`);
+                await update(plateRef, {
+                    PAIS: plateData.PAIS,
+                    PLACA: plateData.PLACA,
+                    FECHA_AGREGADA: new Date().toISOString() // Nueva fecha al restaurar
+                });
+                
+                // 2. Eliminar de placas_anuladas
+                const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
+                await remove(anuladasRef);
+                
+                // 3. Actualizar interfaz
+                await loadPlates(); 
+                await loadAnuladas(); 
+                renderAnuladasModal(); 
+                
+                alert(`Placa ${plateData.PLACA} restaurada correctamente.`);
+                
+            } catch (error) {
+                console.error("Error al restaurar placa:", error);
+                alert("Error al restaurar la placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handlePermanentDelete(event) {
+            const plateId = event.currentTarget.dataset.plateId;
+            const plate = anuladasData.find(p => p.id === plateId);
+            
+            if (!plate) {
+                alert("Error: No se encontró la placa para eliminar.");
+                return;
+            }
+            
+            if (confirm(`¿ELIMINAR PERMANENTEMENTE la placa ${plate.PLACA} (${plate.PAIS})? Esta acción no se puede deshacer.`)) {
+                permanentDeletePlate(plateId);
+            }
+        }
+        
+        async function permanentDeletePlate(plateId) {
+            try {
+                // Eliminar de placas_anuladas
+                const anuladasRef = ref(database, `placas_anuladas/${plateId}`);
+                await remove(anuladasRef);
+                
+                // Actualizar interfaz
+                await loadAnuladas(); 
+                renderAnuladasModal(); 
+                
+                alert("Placa eliminada permanentemente.");
+                
+            } catch (error) {
+                console.error("Error al eliminar placa:", error);
+                alert("Error al eliminar la placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleConsultLot(event) {
+            const lotName = event.currentTarget.dataset.lotName;
+            const plateIds = uniqueLots[lotName] || [];
+            
+            document.getElementById('consultLotTitle').textContent = `Placas del ${lotName}`;
+            const consultLotList = document.getElementById('consultLotList');
+            consultLotList.innerHTML = '';
+            
+            currentPlatesInConsultedLot = [];
+            
+            if (plateIds.length === 0) {
+                consultLotList.innerHTML = '<li class="text-gray-500">No hay placas en este lote.</li>';
+            } else {
+                plateIds.forEach(plateId => {
+                    const plate = allPlatesData.find(p => p.id === plateId);
+                    if (plate) {
+                        currentPlatesInConsultedLot.push(plate);
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center py-1 px-2 hover:bg-blue-50 rounded';
+                        li.innerHTML = `
+                            <span class="font-semibold">${plate.PAIS || 'N/A'}</span>
+                            <span class="font-bold text-red-600">${plate.PLACA || 'N/A'}</span>
+                        `;
+                        consultLotList.appendChild(li);
+                    }
+                });
+            }
+            
+            document.getElementById('consultLotModal').style.display = 'flex';
+        }
+        
+        function handleUndoLot(event) {
+            const lotName = event.currentTarget.dataset.lotName;
+            const plateIds = uniqueLots[lotName] || [];
+            
+            if (plateIds.length === 0) {
+                alert("No hay placas en este lote para deshacer.");
+                return;
+            }
+            
+            if (confirm(`¿Estás seguro de que deseas deshacer el ${lotName}? Esto marcará ${plateIds.length} placas como PENDIENTES.`)) {
+                undoLot(lotName, plateIds);
+            }
+        }
+        
+        async function undoLot(lotName, plateIds) {
+            try {
+                const updates = {};
+                plateIds.forEach(plateId => {
+                    updates[`placas_destruccion/${plateId}/LoteDestruccion`] = "";
+                });
+                
+                await update(ref(database), updates);
+                
+                alert(`Lote ${lotName} deshecho. ${plateIds.length} placas marcadas como PENDIENTES.`);
+                await loadPlates(); 
+                
+            } catch (error) {
+                console.error("Error al deshacer lote:", error);
+                alert("Error al deshacer el lote. Inténtalo de nuevo.");
+            }
+        }
+        
+        function updateLotButton() {
+            const selectedCount = document.querySelectorAll('.plate-checkbox:checked').length;
+            document.getElementById('selectedCount').textContent = `(${selectedCount})`;
+            document.getElementById('generateLotButton').disabled = selectedCount === 0;
+        }
+        
+        async function handleGenerateLot() {
+            const selectedCheckboxes = document.querySelectorAll('.plate-checkbox:checked');
+            const selectedPlateIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.plateId);
+            
+            if (selectedPlateIds.length === 0) {
+                alert("No hay placas seleccionadas para generar el lote.");
+                return;
+            }
+            
+            const lotName = document.getElementById('lotNumber').value;
+            const currentDate = new Date().toLocaleDateString('es-ES');
+            
+            if (confirm(`¿Generar ${lotName} con ${selectedPlateIds.length} placas seleccionadas?`)) {
+                await generateLot(selectedPlateIds, lotName, currentDate);
+            }
+        }
+        
+async function generateLot(plateIds, lotName, currentDate) {
+    try {
+        const updates = {};
+        
+        // 1. Actualizar cada placa con el nombre del lote
+        plateIds.forEach(plateId => {
+            updates[`placas_destruccion/${plateId}/LoteDestruccion`] = lotName;
+        });
+        
+        // 2. ✅ CREAR METADATOS DEL LOTE EN FIREBASE (ESTO FALTABA)
+        updates[`lotes/${lotName}`] = {
+            fechaCreacion: currentDate,
+            totalPlacas: plateIds.length,
+            eurocop: "" // Inicializar vacío
+        };
+        
+        await update(ref(database), updates);
+        
+        alert(`✅ ${lotName} generado correctamente con ${plateIds.length} placas.`);
+        await loadPlates(); 
+        
+    } catch (error) {
+        console.error("Error al generar lote:", error);
+        alert("Error al generar el lote. Inténtalo de nuevo.");
+    }
+}
+        
+        function handleSearchPlate() {
+            const searchTerm = document.getElementById('searchPlate').value.trim().toUpperCase();
+            
+            if (searchTerm === "") {
+                renderPlates(allPlatesData);
+                return;
+            }
+            
+            const filteredPlates = allPlatesData.filter(placa => 
+                (placa.PLACA && placa.PLACA.toUpperCase().includes(searchTerm)) ||
+                (placa.PAIS && placa.PAIS.toUpperCase().includes(searchTerm))
+            );
+            
+            renderPlates(filteredPlates);
+        }
+        
+        function handleSort(column) {
+            // Si ya está ordenando por esta columna, cambiar la dirección
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                // Si es una nueva columna, ordenar ascendente por defecto
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Actualizar iconos de ordenación
+            updateSortIcons();
+            
+            // Re-renderizar la tabla
+            renderPlates(allPlatesData);
+        }
+        
+        function updateSortIcons() {
+            // Limpiar todos los iconos
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.innerHTML = '';
+            });
+            
+            // Añadir icono a la columna actualmente ordenada
+            const currentIcon = document.getElementById(`sortIcon${currentSort.column}`);
+            if (currentIcon) {
+                currentIcon.innerHTML = currentSort.direction === 'asc' ? 
+                    '<i class="fas fa-sort-up"></i>' : 
+                    '<i class="fas fa-sort-down"></i>';
+            }
+        }
+        
+        async function handleSaveNewPlate() {
+            const country = document.getElementById('newPlateCountry').value.trim().toUpperCase();
+            const plateNumber = document.getElementById('newPlateNumber').value.trim().toUpperCase();
+            
+            if (!country || !plateNumber) {
+                alert("Por favor, completa ambos campos: País y Número de Placa.");
+                return;
+            }
+            
+            // Verificar si la placa ya existe
+            const plateExists = allPlatesData.some(placa => 
+                placa.PLACA === plateNumber && placa.PAIS === country
+            );
+            
+            if (plateExists) {
+                alert("Esta placa ya existe en la base de datos.");
+                return;
+            }
+            
+            try {
+                const newPlateRef = push(ref(database, 'placas_destruccion'));
+                const fechaAgregada = new Date().toISOString(); // Fecha automática del día actual
+                
+                await update(newPlateRef, {
+                    PAIS: country,
+                    PLACA: plateNumber,
+                    FECHA_AGREGADA: fechaAgregada,
+                    LoteDestruccion: ""
+                });
+                
+                // Limpiar formulario
+                document.getElementById('newPlateCountry').value = '';
+                document.getElementById('newPlateNumber').value = '';
+                
+                // Cerrar modal
+                document.getElementById('newPlateModal').style.display = 'none';
+                
+                // Recargar datos
+                await loadPlates();
+                
+                alert(`Placa ${plateNumber} (${country}) añadida correctamente.`);
+                
+            } catch (error) {
+                console.error("Error al guardar nueva placa:", error);
+                alert("Error al guardar la nueva placa. Inténtalo de nuevo.");
+            }
+        }
+        
+        function handleExportToExcel() {
+            if (currentPlatesInConsultedLot.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+            
+            // Crear contenido CSV
+            let csvContent = "PAIS,PLACA\n";
+            currentPlatesInConsultedLot.forEach(plate => {
+                csvContent += `"${plate.PAIS || ''}","${plate.PLACA || ''}"\n`;
+            });
+            
+            // Crear y descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const fileName = `lote_${document.getElementById('consultLotTitle').textContent.replace(/\s+/g, '_')}.csv`;
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- INICIALIZACIÓN DE EVENT LISTENERS ---
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar datos iniciales
+            loadPlates();
+            
+            // Configurar ordenación
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    handleSort(header.dataset.sortBy);
+                });
+            });
+            
+            // Inicializar iconos de ordenación
+            updateSortIcons();
+            
+            // Event listeners para los botones principales
+            document.getElementById('openNewPlateModal').addEventListener('click', () => {
+                document.getElementById('newPlateModal').style.display = 'flex';
+            });
+            
+            document.getElementById('closeNewPlateModal').addEventListener('click', () => {
+                document.getElementById('newPlateModal').style.display = 'none';
+            });
+            
+            document.getElementById('saveNewPlateButton').addEventListener('click', handleSaveNewPlate);
+            
+            document.getElementById('openAnuladasModal').addEventListener('click', () => {
+                renderAnuladasModal();
+                document.getElementById('anuladasModal').style.display = 'flex';
+            });
+            
+            document.getElementById('closeAnuladasModal').addEventListener('click', () => {
+                document.getElementById('anuladasModal').style.display = 'none';
+            });
+            
+            document.getElementById('closeConsultLotModal').addEventListener('click', () => {
+                document.getElementById('consultLotModal').style.display = 'none';
+            });
+            
+            document.getElementById('generateLotButton').addEventListener('click', handleGenerateLot);
+            
+            document.getElementById('searchPlate').addEventListener('input', handleSearchPlate);
+            
+            document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.plate-checkbox:not(:disabled)');
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+                updateLotButton();
+            });
+            
+            document.getElementById('exportLotToExcelButton').addEventListener('click', handleExportToExcel);
+            
+            // Cerrar modales al hacer clic fuera
+            window.addEventListener('click', function(event) {
+                const newPlateModal = document.getElementById('newPlateModal');
+                const anuladasModal = document.getElementById('anuladasModal');
+                const consultLotModal = document.getElementById('consultLotModal');
+                
+                if (event.target === newPlateModal) {
+                    newPlateModal.style.display = 'none';
+                }
+                if (event.target === anuladasModal) {
+                    anuladasModal.style.display = 'none';
+                }
+                if (event.target === consultLotModal) {
+                    consultLotModal.style.display = 'none';
+                }
+            });
+            
+            // Permitir Enter para guardar nueva placa
+            document.getElementById('newPlateCountry').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('newPlateNumber').focus();
+                }
+            });
+            
+            document.getElementById('newPlateNumber').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSaveNewPlate();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

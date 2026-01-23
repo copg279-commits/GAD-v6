@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copia de Seguridad Firebase RDB (Módulo Final)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .controls {
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        #backupNowBtn {
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+        }
+        #backupNowBtn:hover {
+            background-color: #2980b9;
+        }
+        #backupNowBtn:active {
+            transform: scale(0.99);
+        }
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 0;
+            color: #34495e;
+        }
+        .logs-header h3 {
+            margin: 0;
+            border-bottom: none;
+        }
+        #clearLogsBtn {
+            padding: 8px 15px;
+            width: auto;
+            margin: 0;
+            background-color: #e74c3c;
+            color: white;
+            font-size: 14px;
+        }
+        #clearLogsBtn:hover {
+            background-color: #c0392b;
+        }
+        .logs {
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 100px;
+        }
+        .log-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dotted #eee;
+            font-size: 14px;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-time {
+            color: #6c757d;
+            font-weight: normal;
+        }
+        .log-name {
+            font-weight: bold;
+        }
+        .log-success {
+            color: #28a745;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .log-info {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Copia de Seguridad de Firebase RDB</h1>
+        <p>Base de datos: <strong>GAD-ALICANTE (v3)</strong></p>
+        <p>⭐ **Módulo Manual:** La copia se realiza **solo** al pulsar el botón.</p>
+        
+        <div class="controls">
+            <button id="backupNowBtn">
+                Realizar Copia de Seguridad Manual y Descargar
+            </button>
+        </div>
+        
+        <div class="logs-header">
+            <h3>Registro Histórico de Copias (Últimas 10)</h3>
+            <button id="clearLogsBtn" title="Eliminar todo el historial de copias guardado en Firebase">
+                🗑️ Eliminar Historial Remoto
+            </button>
+        </div>
+        <div id="logs" class="logs">
+            <p style="color: #999;">Cargando historial remoto...</p>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------------------------
+        // --- CONFIGURACIÓN (CON TU TOKEN SECRETO INSERTADO) -------------------
+        // ----------------------------------------------------------------------
+        const FIREBASE_CONFIG = {
+            name: 'GAD-ALICANTE (v3)',
+            baseUrl: 'https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app',
+            // Token insertado por el usuario:
+            token: 'mxfkSXOgQIySNWYfl6bg7buBCA4Jeph36mVnheTp' 
+        };
+
+        const LOGS_PATH = '/backup_logs';
+        
+        // Elementos DOM
+        const backupNowBtn = document.getElementById('backupNowBtn');
+        const logsElement = document.getElementById('logs');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        
+        let backupHistory = []; 
+
+        // ----------------------------------------------------------------------
+        // --- UTILIDADES DE FIREBASE Y LOGS ------------------------------------
+        // ----------------------------------------------------------------------
+
+        /** Construye la URL de Firebase con el path y el token. SIEMPRE añade .json. */
+        function getFirebaseUrl(path) {
+            // Siempre añadimos .json para forzar una URL absoluta y evitar redirecciones.
+            return `${FIREBASE_CONFIG.baseUrl}${path}.json?auth=${FIREBASE_CONFIG.token}`;
+        }
+
+        // Función para dibujar los logs en la interfaz
+        function renderLogs() {
+            logsElement.innerHTML = ''; 
+            
+            // 1. Ordenar por tiempo (más reciente primero)
+            const sortedHistory = backupHistory
+                .filter(entry => entry.time) 
+                .sort((a, b) => new Date(b.time) - new Date(a.time));
+
+            // 2. Tomar solo las 10 entradas más recientes
+            const logsToDisplay = sortedHistory.slice(0, 10); 
+
+            if (logsToDisplay.length === 0) {
+                logsElement.innerHTML = '<p style="color: #999;">Aún no hay registros de copias en Firebase.</p>';
+                return;
+            }
+            
+            // 3. Iterar y renderizar solo las 10 seleccionadas
+            logsToDisplay.forEach(entry => {
+                const logDiv = document.createElement('div');
+                logDiv.className = 'log-entry';
+                
+                let statusClass = entry.type === 'success' ? 'log-success' : entry.type === 'error' ? 'log-error' : 'log-info';
+                let statusText = entry.type === 'success' ? '✅ Éxito' : entry.type === 'error' ? '❌ Error' : '💬 Info';
+                
+                const statusSpan = `<span class="${statusClass}">${statusText}</span>`;
+                
+                logDiv.innerHTML = `
+                    <span class="log-time">${new Date(entry.time).toLocaleString('es-ES')}</span>
+                    <span class="log-name">${entry.name}</span>
+                    ${statusSpan}
+                `;
+                logsElement.appendChild(logDiv);
+            });
+        }
+        
+        /** Lee el historial de logs desde Firebase. */
+        async function fetchLogsFromFirebase() {
+            try {
+                // Leer logs desde /backup_logs.json
+                const response = await fetch(getFirebaseUrl(LOGS_PATH));
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP al cargar logs: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data) {
+                    // Mantenemos el historial completo en memoria, solo limitamos la vista
+                    backupHistory = Object.values(data);
+                } else {
+                    backupHistory = [];
+                }
+
+                renderLogs();
+            } catch (error) {
+                console.error("Error al cargar el historial de Firebase:", error);
+                logsElement.innerHTML = `<p class="log-error">Error al cargar logs: ${error.message}. Asegúrate de que el archivo se abre correctamente desde GitHub Pages o un servidor local.</p>`;
+            }
+        }
+
+        /** Guarda un nuevo log en Firebase usando POST. */
+        async function saveLogToFirebase(logEntry) {
+            try {
+                const response = await fetch(getFirebaseUrl(LOGS_PATH), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(logEntry)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP al guardar log: ${response.status} ${response.statusText}`);
+                }
+                
+                await fetchLogsFromFirebase();
+
+            } catch (error) {
+                console.error("Error al guardar el log en Firebase:", error);
+                alert(`❌ Error al guardar el log en Firebase. Revisa la consola (F12) y verifica el Token.`);
+            }
+        }
+
+        /** Agrega un registro. */
+        async function addLog(name, type = 'success') {
+            const now = new Date();
+            const logEntry = {
+                time: now.toISOString(), 
+                name: name,
+                type: type
+            };
+            
+            if (type === 'info') {
+                backupHistory.unshift(logEntry);
+                renderLogs();
+            } else {
+                await saveLogToFirebase(logEntry);
+            }
+        }
+        
+        /** Función para descargar el JSON */
+        function downloadJSON(data, name) {
+            const now = new Date();
+            const dateString = now.toISOString().slice(0, 16).replace('T', '_').replace(/:/g, '-').replace(/-/g, '_');
+            const cleanName = name.replace(/\s*\(.*\)/, ''); 
+            const fileName = `backup_${cleanName.toUpperCase()}_${dateString}.json`;
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ----------------------------------------------------------------------
+        // --- LÓGICA DE BACKUP MANUAL ------------------------------------------
+        // ----------------------------------------------------------------------
+
+        /** Realiza la descarga de la BD y registra el evento. */
+        async function performSingleBackup(config) {
+            const { name } = config;
+            
+            // Usar la URL base con el .json agregado por getFirebaseUrl
+            const FIREBASE_URL_AUTH = getFirebaseUrl('/'); 
+            
+            console.log(`Intentando copiar ${name} (Manual)...`);
+            
+            try {
+                const response = await fetch(FIREBASE_URL_AUTH);
+                
+                if (!response.ok) {
+                    let errorMessage = `HTTP Error: ${response.status} ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.error) {
+                            errorMessage += ` - Firebase Error: ${errorData.error}`;
+                        }
+                    } catch (e) { /* no es JSON */ }
+                    throw new Error(errorMessage);
+                }
+                
+                const data = await response.json();
+                
+                downloadJSON(data, name);
+                await addLog(`Copia de seguridad de ${name} completada. Archivo descargado.`, 'success');
+                
+            } catch (error) {
+                console.error(`Error en la copia de ${name}:`, error);
+                alert(`❌ Error al copiar ${name}. Revisa la consola (F12) y verifica que el Token de seguridad sea correcto.`);
+                await addLog(`FALLO al copiar ${name}: ${error.message}`, 'error');
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // --- CONTROLADORES E INICIALIZACIÓN -----------------------------------
+        // ----------------------------------------------------------------------
+
+        // Controlador del botón principal (Copia Manual)
+        backupNowBtn.addEventListener('click', async () => {
+            
+            backupNowBtn.disabled = true;
+            backupNowBtn.textContent = 'Procesando... Por favor, espere.';
+
+            await performSingleBackup(FIREBASE_CONFIG); 
+            
+            backupNowBtn.textContent = 'Realizar Copia de Seguridad Manual y Descargar';
+            backupNowBtn.disabled = false;
+        });
+
+        // Controlador del botón de eliminar historial
+        clearLogsBtn.addEventListener('click', async () => {
+            if (confirm('⚠️ ¿Estás seguro de que quieres eliminar COMPLETAMENTE el historial de copias de seguridad de Firebase? Esta acción es IRREVERSIBLE.')) {
+                
+                try {
+                    // La URL ya tendrá .json añadido por getFirebaseUrl
+                    const response = await fetch(getFirebaseUrl(LOGS_PATH), {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP al eliminar logs: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    backupHistory = []; 
+                    renderLogs(); 
+
+                    await addLog('Historial de copias ha sido BORRADO de Firebase.', 'info');
+
+                } catch (error) {
+                    console.error("Error al eliminar el historial de Firebase:", error);
+                    alert(`❌ Fallo al eliminar el historial de Firebase. Revisa la consola (F12).`);
+                    logsElement.innerHTML = `<p class="log-error">Fallo al eliminar logs: ${error.message}</p>`;
+                }
+            }
+        });
+
+        // Inicialización (Solo carga el historial remoto)
+        async function init() {
+            await fetchLogsFromFirebase();
+            addLog('Herramienta inicializada. Lista para copia manual.', 'info'); 
+        }
+
+        // Ejecutar la inicialización al cargar la página
+        init();
+    </script>
+</body>
+</html>

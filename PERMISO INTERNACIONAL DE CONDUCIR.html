@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Permiso Internacional de Conducir (PIC)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flag-button-spain {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        }
+        /* Asegura que no haya scroll horizontal */
+        body, html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center font-sans">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-4 shadow-md">
+    <div class="w-32 h-32 rounded-full overflow-hidden shadow-lg bg-blue-600 flex items-center justify-center">
+        <img
+            src="logogad.png"
+            alt="Logo GAD"
+            class="w-full h-full object-cover"
+        >
+    </div>
+</header>
+
+<main class="w-full flex flex-col items-center px-4 flex-grow">
+    
+    <h1 class="text-black text-center mt-6 text-xl font-bold leading-tight">
+        Permiso Internacional de Conducir (PIC)
+    </h1>
+
+    <p class="text-center mt-3 text-gray-800 text-base max-w-md">
+        Selecciona un país para verificar si precisa o no Permiso Internacional de Conducir y si tiene convenio de canje con España.
+    </p>
+
+    <div class="w-full max-w-md mt-6">
+        <select id="paises" onchange="mostrarInfoPais()"
+            class="block w-full p-3 text-lg bg-white border border-gray-400 rounded-lg shadow-sm text-center appearance-none">
+            <option value="">-- TOCA AQUÍ PARA ELEGIR --</option>
+            <option value="Albania">Albania</option>
+            <option value="Argelia">Argelia</option>
+            <option value="Argentina">Argentina</option>
+            <option value="Australia">Australia</option>
+            <option value="Bahamas (The)">Bahamas (The)</option>
+            <option value="Bangladesh">Bangladesh</option>
+            <option value="Barbados">Barbados</option>
+            <option value="Benin">Benin</option>
+            <option value="Bielorrusia">Bielorrusia</option>
+            <option value="Bolivia">Bolivia</option>
+            <option value="Bosnia y Herzegovina">Bosnia y Herzegovina</option>
+            <option value="Botswana">Botswana</option>
+            <option value="Brasil">Brasil</option>
+            <option value="Brunei Darussalam">Brunei Darussalam</option>
+            <option value="Burkina Faso">Burkina Faso</option>
+            <option value="Camboya">Camboya</option>
+            <option value="Canadá">Canadá</option>
+            <option value="Chile">Chile</option>
+            <option value="Colombia">Colombia</option>
+            <option value="Congo">Congo</option>
+            <option value="Corea del Sur">Corea del Sur</option>
+            <option value="Costa de Marfil">Costa de Marfil</option>
+            <option value="Costa Rica">Costa Rica</option>
+            <option value="Cuba">Cuba</option>
+            <option value="Ecuador">Ecuador</option>
+            <option value="Egipto">Egipto</option>
+            <option value="El Salvador">El Salvador</option>
+            <option value="Emiratos Árabes">Emiratos Árabes</option>
+            <option value="Estados Unidos">Estados Unidos</option>
+            <option value="Filipinas">Filipinas</option>
+            <option value="Fiji">Fiji</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Ghana">Ghana</option>
+            <option value="Guatemala">Guatemala</option>
+            <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
+            <option value="Honduras">Honduras</option>
+            <option value="India">India</option>
+            <option value="Islandia">Islandia</option>
+            <option value="Israel">Israel</option>
+            <option value="Jamaica">Jamaica</option>
+            <option value="Japón">Japón</option>
+            <option value="Jordania">Jordania</option>
+            <option value="Kirguistán">Kirguistán</option>
+            <option value="Laos">Laos</option>
+            <option value="Líbano">Líbano</option>
+            <option value="Lesoto">Lesoto</option>
+            <option value="Liechtenstein">Liechtenstein</option>
+            <option value="Macedonia del Norte">Macedonia del Norte</option>
+            <option value="Madagascar">Madagascar</option>
+            <option value="Malawi">Malawi</option>
+            <option value="Malasia">Malasia</option>
+            <option value="Mali">Mali</option>
+            <option value="Malta">Malta</option>
+            <option value="Marruecos">Marruecos</option>
+            <option value="México">México</option>
+            <option value="Moldavia">República de Moldova</option>
+            <option value="Mónaco">Mónaco</option>
+            <option value="Montenegro">Montenegro</option>
+            <option value="Namibia">Namibia</option>
+            <option value="Nicaragua">Nicaragua</option>
+            <option value="Níger">Níger</option>
+            <option value="Nigeria">Nigeria</option>
+            <option value="Noruega">Noruega</option>
+            <option value="Nueva Zelanda">Nueva Zelanda</option>
+            <option value="Panamá">Panamá</option>
+            <option value="Paraguay">Paraguay</option>
+            <option value="Papúa Nueva Guinea">Papúa Nueva Guinea</option>
+            <option value="Perú">Perú</option>
+            <option value="Puerto Rico">Puerto Rico</option>
+            <option value="Reino Unido e Irlanda del Norte">Reino Unido e Irlanda del Norte</option>
+            <option value="República Árabe Siria">República Árabe Siria</option>
+            <option value="República Centroafricana">República Centroafricana</option>
+            <option value="República Democrática del Congo">República Democrática del Congo</option>
+            <option value="República Dominicana">República Dominicana</option>
+            <option value="Rusia">Rusia</option>
+            <option value="Ruanda">Ruanda</option>
+            <option value="San Marino">San Marino</option>
+            <option value="Santa Sede">Santa Sede</option>
+            <option value="Santo Tomé y Príncipe">Santo Tomé y Príncipe</option>
+            <option value="Senegal">Senegal</option>
+            <option value="Serbia">Serbia</option>
+            <option value="Sierra Leona">Sierra Leona</option>
+            <option value="Singapur">Singapur</option>
+            <option value="Sri Lanka">Sri Lanka</option>
+            <option value="Sudáfrica">Sudáfrica</option>
+            <option value="Suiza">Suiza</option>
+            <option value="Tailandia">Tailandia</option>
+            <option value="Togo">Togo</option>
+            <option value="Trinidad y Tobago">Trinidad y Tobago</option>
+            <option value="Túnez">Túnez</option>
+            <option value="Turquía">Turquía</option>
+            <option value="Ucrania">Ucrania</option>
+            <option value="Uganda">Uganda</option>
+            <option value="Uruguay">Uruguay</option>
+            <option value="Venezuela">Venezuela</option>
+            <option value="Vietnam">Vietnam</option>
+            <option value="Zimbabue">Zimbabue</option>
+            <option value="Sin Convenio">País sin convenio (ejemplo)</option>
+        </select>
+    </div>
+
+    <div id="resultado" class="w-full max-w-md mt-6"></div>
+
+    <div class="mt-8 mb-8 w-full flex justify-center">
+        <button onclick="window.location.href='index.html'"
+                class="w-full max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200 text-lg border-none">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
+</main>
+
+<footer class="w-full bg-gray-200 py-6 mt-auto text-center">
+    <div class="max-w-md mx-auto w-11/12">
+        <hr class="border-t border-gray-400 mb-4 mx-auto">
+        <p class="font-bold text-sm">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p class="font-bold text-sm">POLICÍA LOCAL DE ALICANTE</p>
+        <p class="text-xs mt-2">&copy; GAD - Todos los derechos reservados</p>
+    </div>
+</footer>
+
+<script>
+    const conveniosCanje = {
+        "Andorra": { tieneConvenio: true, fecha: "03/02/2000" },
+        "Argelia": { tieneConvenio: true, fecha: "06/10/2000" },
+        "Argentina": { tieneConvenio: true, fecha: "31/07/2002" },
+        "Bolivia": { tieneConvenio: true, fecha: "23/11/2007" },
+        "Brasil": { tieneConvenio: true, fecha: "07/04/2009" },
+        "Chile": { tieneConvenio: true, fecha: "10/06/2005" },
+        "Colombia": { tieneConvenio: true, fecha: "31/07/2003" },
+        "Corea del Sur": { tieneConvenio: true, fecha: "14/01/2000" },
+        "Costa Rica": { tieneConvenio: true, fecha: "10/08/2020" },
+        "Ecuador": { tieneConvenio: true, fecha: "25/09/2003" },
+        "El Salvador": { tieneConvenio: true, fecha: "24/06/2009" },
+        "Filipinas": { tieneConvenio: true, fecha: "21/09/2008" },
+        "Georgia": { tieneConvenio: true, fecha: "29/09/2024" },
+        "Guatemala": { tieneConvenio: true, fecha: "21/09/2008" },
+        "Honduras": { tieneConvenio: true, fecha: "26/11/2024" },
+        "Japón": { tieneConvenio: true, fecha: "21/01/2000" },
+        "Macedonia del Norte": { tieneConvenio: true, fecha: "27/12/2011" },
+        "Marruecos": { tieneConvenio: true, fecha: "08/06/2004" },
+        "Mónaco": { tieneConvenio: true, fecha: "13/11/2013" },
+        "Moldavia": { tieneConvenio: true, fecha: "29/09/2024" },
+        "Nicaragua": { tieneConvenio: true, fecha: "04/06/2013" },
+        "Nueva Zelanda": { tieneConvenio: true, fecha: "02/06/2023" },
+        "Panamá": { tieneConvenio: true, fecha: "11/07/2014" },
+        "Paraguay": { tieneConvenio: true, fecha: "28/10/2007" },
+        "Perú": { tieneConvenio: true, fecha: "20/12/2007" },
+        "Reino Unido e Irlanda del Norte": { tieneConvenio: true, fecha: "16/03/2023" },
+        "República Dominicana": { tieneConvenio: true, fecha: "15/09/2005" },
+        "Serbia": { tieneConvenio: true, fecha: "22/07/2024" },
+        "Suiza": { tieneConvenio: true, fecha: "11/11/1997" },
+        "Túnez": { tieneConvenio: true, fecha: "27/07/2011" },
+        "Turquía": { tieneConvenio: true, fecha: "29/04/2011" },
+        "Ucrania": { tieneConvenio: true, fecha: "10/05/2011" },
+        "Uruguay": { tieneConvenio: true, fecha: "29/07/2009" },
+        "Venezuela": { tieneConvenio: false, fecha: "", fechaSuspension: "2021" },
+        "Sin Convenio": { tieneConvenio: false, fecha: "" }
+    };
+
+    const conveniosPIC = {
+        "Albania": { ginebra: true, viena: true, ginebraInfo: "ratificó el 1 de octubre de 1969", vienaInfo: "ratificó el 29 de junio de 2000" },
+        "Argelia": { ginebra: true, viena: false, ginebraInfo: "ratificó el 16 de mayo de 1963", vienaInfo: null },
+        "Argentina": { ginebra: true, viena: false, ginebraInfo: "ratificó el 25 de noviembre de 1960", vienaInfo: null },
+        "Australia": { ginebra: true, viena: false, ginebraInfo: "ratificó el 7 de diciembre de 1954", vienaInfo: null },
+        "Bahamas (The)": { ginebra: false, viena: true, ginebraInfo: null, vienaInfo: "ratificó el 14 de mayo de 1991" },
+        "Bangladesh": { ginebra: true, viena: false, ginebraInfo: "ratificó el 6 de diciembre de 1978", vienaInfo: null },
+        "Barbados": { ginebra: true, viena: false, ginebraInfo: "ratificó el 5 de marzo de 1971", vienaInfo: null },
+        "Benin": { ginebra: true, viena: true, ginebraInfo: "ratificó el 5 de diciembre de 1961", vienaInfo: "ratificó el 7 de julio de 2022" },
+        "Bielorrusia": { ginebra: false, viena: true, ginebraInfo: null, vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 18 de junio de 1974" },
+        "Bolivia": { ginebra: true, viena: false, ginebraInfo: "ratificó el 30 de abril de 1962", vienaInfo: null },
+        "Bosnia y Herzegovina": { ginebra: false, viena: true, ginebraInfo: null, vienaInfo: "ratificó el 1 de septiembre de 1993" },
+        "Botswana": { ginebra: true, viena: false, ginebraInfo: "ratificó el 3 de enero de 1967", vienaInfo: null },
+        "Brasil": { ginebra: true, viena: true, ginebraInfo: "sin fecha", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 29 de octubre de 1980" },
+        "Brunei Darussalam": { ginebra: true, viena: false, ginebraInfo: "ratificó el 12 de marzo de 2020", vienaInfo: null },
+        "Burkina Faso": { ginebra: true, viena: false, ginebraInfo: "ratificó el 31 de agosto de 2009", vienaInfo: null },
+        "Camboya": { ginebra: true, viena: false, ginebraInfo: "ratificó el 14 de marzo de 1956", vienaInfo: null },
+        "Canadá": { ginebra: true, viena: false, ginebraInfo: "ratificó el 23 de diciembre de 1965", vienaInfo: null },
+        "Chile": { ginebra: true, viena: true, ginebraInfo: "ratificó el 10 de agosto de 1960", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 14 de junio de 1982" },
+        "Colombia": { ginebra: false, viena: false, ginebraInfo: null, vienaInfo: null },
+        "Congo": { ginebra: true, viena: false, ginebraInfo: "ratificó el 15 de mayo de 1962", vienaInfo: null },
+        "Corea del Sur": { ginebra: true, viena: true, ginebraInfo: "ratificó el 14 de junio de 1971", vienaInfo: "firmó el 29 de diciembre de 1969 y ratificó el 29 de agosto de 1972" },
+        "Costa de Marfil": { ginebra: true, viena: true, ginebraInfo: "ratificó el 8 de diciembre de 1961", vienaInfo: "ratificó el 24 de julio de 1985" },
+        "Costa Rica": { ginebra: false, viena: true, ginebraInfo: null, vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 14 de diciembre de 1999" },
+        "Cuba": { ginebra: true, viena: true, ginebraInfo: "ratificó el 1 de octubre de 1952", vienaInfo: "ratificó el 30 de septiembre de 1977" },
+        "Ecuador": { ginebra: true, viena: true, ginebraInfo: "ratificó el 26 de septiembre de 1962", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 27 de febrero de 1980" },
+        "Egipto": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 28 de mayo de 1957", vienaInfo: "ratificó el 15 de diciembre de 2023" },
+        "El Salvador": { ginebra: true, viena: false, ginebraInfo: "ratificó el 24 de junio de 2009", vienaInfo: "no es firmante" },
+        "Emiratos Árabes": { ginebra: true, viena: true, ginebraInfo: "ratificó el 10 de enero de 2007", vienaInfo: "ratificó el 10 de enero de 2007" },
+        "Estados Unidos": { ginebra: true, viena: false, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 30 de agosto de 1950", vienaInfo: null },
+        "Filipinas": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 15 de septiembre de 1952", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 27 de diciembre de 1973" },
+        "Fiji": { ginebra: true, viena: false, ginebraInfo: "ratificó el 31 de octubre de 1972", vienaInfo: null },
+        "Georgia": { ginebra: true, viena: true, ginebraInfo: "ratificó el 23 de julio de 1993", vienaInfo: "ratificó el 23 de julio de 1993" },
+        "Ghana": { ginebra: true, viena: true, ginebraInfo: "ratificó el 6 de enero de 1959", vienaInfo: "firmó el 22 de agosto de 1969 y ratificó el 22 de agosto de 1969" },
+        "Guatemala": { ginebra: true, viena: false, ginebraInfo: "ratificó el 10 de enero de 1962", vienaInfo: null },
+        "Guinea Ecuatorial": { ginebra: false, viena: false, ginebraInfo: null, vienaInfo: null },
+        "Honduras": { ginebra: true, viena: true, ginebraInfo: "ratificó el 13 de febrero de 2020", vienaInfo: "ratificó el 3 de febrero de 2020" },
+        "India": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 9 de marzo de 1962", vienaInfo: "ratificó el 17 de noviembre de 1977" },
+        "Islandia": { ginebra: true, viena: false, ginebraInfo: "ratificó el 22 de julio de 1983", vienaInfo: null },
+        "Israel": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 6 de enero de 1955", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 11 de mayo de 1971" },
+        "Jamaica": { ginebra: true, viena: false, ginebraInfo: "ratificó el 9 de agosto de 1963", vienaInfo: null },
+        "Japón": { ginebra: true, viena: false, ginebraInfo: "ratificó el 7 de agosto de 1964", vienaInfo: null },
+        "Jordania": { ginebra: true, viena: false, ginebraInfo: "ratificó el 14 de enero de 1960", vienaInfo: null },
+        "Kirguistán": { ginebra: true, viena: true, ginebraInfo: "ratificó el 22 de marzo de 1994", vienaInfo: "ratificó el 30 de agosto de 2006" },
+        "Laos": { ginebra: true, viena: false, ginebraInfo: "ratificó el 6 de marzo de 1959", vienaInfo: null },
+        "Líbano": { ginebra: true, viena: false, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 2 de agosto de 1963", vienaInfo: null },
+        "Lesoto": { ginebra: true, viena: false, ginebraInfo: "ratificó el 27 de septiembre de 1973", vienaInfo: null },
+        "Liechtenstein": { ginebra: true, viena: true, ginebraInfo: "ratificó el 2 de marzo de 2020", vienaInfo: "ratificó el 2 de marzo de 2020" },
+        "Macedonia del Norte": { ginebra: true, viena: true, ginebraInfo: "ratificó el 12 de marzo de 2001", vienaInfo: "ratificó el 18 de agosto de 1993" },
+        "Madagascar": { ginebra: true, viena: false, ginebraInfo: "ratificó el 27 de junio de 1962", vienaInfo: null },
+        "Malawi": { ginebra: true, viena: false, ginebraInfo: "ratificó el 17 de febrero de 1965", vienaInfo: null },
+        "Malasia": { ginebra: true, viena: false, ginebraInfo: "ratificó el 10 de septiembre de 1958", vienaInfo: null },
+        "Mali": { ginebra: true, viena: false, ginebraInfo: "ratificó el 19 de noviembre de 1962", vienaInfo: null },
+        "Malta": { ginebra: true, viena: false, ginebraInfo: "ratificó el 3 de enero de 1966", vienaInfo: null },
+        "Marruecos": { ginebra: true, viena: true, ginebraInfo: "ratificó el 7 de noviembre de 1956", vienaInfo: "ratificó el 29 de diciembre de 1982" },
+        "México": { ginebra: false, viena: false, ginebraInfo: null, vienaInfo: "Firmó el 8 de noviembre de 1968 pero no lo ratificó." },
+        "Moldavia": { ginebra: false, viena: true, ginebraInfo: null, vienaInfo: "ratificó el 26 de mayo de 1993" },
+        "Mónaco": { ginebra: true, viena: true, ginebraInfo: "ratificó el 3 de agosto de 1951", vienaInfo: "ratificó el 6 de junio de 1978" },
+        "Montenegro": { ginebra: true, viena: true, ginebraInfo: "ratificó el 23 de octubre de 2006", vienaInfo: "ratificó el 23 de octubre de 2006" },
+        "Namibia": { ginebra: true, viena: false, ginebraInfo: "ratificó el 13 de octubre de 1993", vienaInfo: null },
+        "Nicaragua": { ginebra: true, viena: false, ginebraInfo: "ratificó el 18 de octubre de 1965", vienaInfo: null },
+        "Níger": { ginebra: true, viena: true, ginebraInfo: "ratificó el 25 de agosto de 1961", vienaInfo: "ratificó el 11 de julio de 1975" },
+        "Nigeria": { ginebra: true, viena: true, ginebraInfo: "ratificó el 3 de febrero de 2011", vienaInfo: "ratificó el 18 de octubre de 2018" },
+        "Noruega": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 11 de abril de 1957", vienaInfo: "firmó el 23 de diciembre de 1969 y ratificó el 1 de abril de 1985" },
+        "Nueva Zelanda": { ginebra: true, viena: false, ginebraInfo: "ratificó el 12 de febrero de 1958", vienaInfo: null },
+        "Panamá": { ginebra: true, viena: false, ginebraInfo: "ratificó el 18 de octubre de 1965", vienaInfo: null },
+        "Paraguay": { ginebra: true, viena: false, ginebraInfo: "ratificó el 18 de octubre de 1965", vienaInfo: null },
+        "Papúa Nueva Guinea": { ginebra: true, viena: false, ginebraInfo: "ratificó el 12 de febrero de 1981", vienaInfo: null },
+        "Perú": { ginebra: true, viena: true, ginebraInfo: "ratificó el 9 de julio de 1957", vienaInfo: "ratificó el 6 de octubre de 2006" },
+        "Puerto Rico": { ginebra: true, viena: false, ginebraInfo: "sin fecha", vienaInfo: null },
+        "Reino Unido e Irlanda del Norte": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 8 de julio de 1957", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 28 de marzo de 2018" },
+        "República Árabe Siria": { ginebra: true, viena: false, ginebraInfo: "ratificó el 11 de diciembre de 1953", vienaInfo: null },
+        "República Centroafricana": { ginebra: true, viena: true, ginebraInfo: "ratificó el 4 de septiembre de 1962", vienaInfo: "ratificó el 3 de febrero de 1988" },
+        "República Democrática del Congo": { ginebra: true, viena: true, ginebraInfo: "ratificó el 6 de marzo de 1961", vienaInfo: "ratificó el 25 de julio de 1977" },
+        "República Dominicana": { ginebra: true, viena: false, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 15 de agosto de 1957", vienaInfo: null },
+        "Rusia": { ginebra: true, viena: true, ginebraInfo: "ratificó el 17 de agosto de 1959", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 7 de junio de 1974" },
+        "Ruanda": { ginebra: true, viena: false, ginebraInfo: "ratificó el 5 de agosto de 1964", vienaInfo: null },
+        "San Marino": { ginebra: true, viena: true, ginebraInfo: "ratificó el 19 de marzo de 1962", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 20 de julio de 1970" },
+        "Santa Sede": { ginebra: true, viena: true, ginebraInfo: "ratificó el 5 de octubre de 1953", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 8 de noviembre de 1968" },
+        "Santo Tomé y Príncipe": { ginebra: true, viena: false, ginebraInfo: "ratificó el 8 de julio de 1964", vienaInfo: null },
+        "Senegal": { ginebra: true, viena: true, ginebraInfo: "ratificó el 13 de julio de 1962", vienaInfo: "ratificó el 16 de agosto de 1972" },
+        "Serbia": { ginebra: true, viena: true, ginebraInfo: "ratificó el 12 de marzo de 2001", vienaInfo: "ratificó el 12 de marzo de 2001" },
+        "Sierra Leona": { ginebra: true, viena: false, ginebraInfo: "ratificó el 13 de marzo de 1962", vienaInfo: null },
+        "Singapur": { ginebra: true, viena: false, ginebraInfo: "ratificó el 29 de noviembre de 1972", vienaInfo: null },
+        "Sri Lanka": { ginebra: true, viena: true, ginebraInfo: "ratificó el 26 de julio de 1957", vienaInfo: "ratificó el 15 de agosto de 1976" },
+        "Sudáfrica": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 y ratificó el 9 de julio de 1952", vienaInfo: "ratificó el 1 de noviembre de 1977" },
+        "Suiza": { ginebra: true, viena: true, ginebraInfo: "firmó el 19 de septiembre de 1949 pero no lo ratificó", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 11 de diciembre de 1991" },
+        "Tailandia": { ginebra: true, viena: true, ginebraInfo: "ratificó el 15 de agosto de 1962", vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 1 de mayo de 2020" },
+        "Togo": { ginebra: true, viena: false, ginebraInfo: "ratificó el 27 de febrero de 1962", vienaInfo: null },
+        "Trinidad y Tobago": { ginebra: true, viena: false, ginebraInfo: "ratificó el 8 de julio de 1964", vienaInfo: null },
+        "Túnez": { ginebra: true, viena: true, ginebraInfo: "ratificó el 8 de noviembre de 1957", vienaInfo: "ratificó el 5 de enero de 2004" },
+        "Turquía": { ginebra: true, viena: true, ginebraInfo: "ratificó el 17 de enero de 1956", vienaInfo: "ratificó el 22 de enero de 2013" },
+        "Ucrania": { ginebra: false, viena: true, ginebraInfo: null, vienaInfo: "firmó el 8 de noviembre de 1968 y ratificó el 12 de julio de 1974" },
+        "Uganda": { ginebra: true, viena: true, ginebraInfo: "ratificó el 15 de abril de 1965", vienaInfo: "ratificó el 23 de agosto de 2022" },
+        "Uruguay": { ginebra: true, viena: true, ginebraInfo: "ratificó el 29 de julio de 2009", vienaInfo: "ratificó el 8 de abril de 1981" },
+        "Venezuela": { ginebra: false, viena: false, ginebraInfo: null, vienaInfo: null },
+        "Vietnam": { ginebra: true, viena: true, ginebraInfo: "ratificó el 2 de noviembre de 1953", vienaInfo: "ratificó el 20 de agosto de 2014" },
+        "Zimbabue": { ginebra: true, viena: true, ginebraInfo: "ratificó el 1 de diciembre de 1998", vienaInfo: "ratificó el 31 de julio de 1981" },
+        "Sin Convenio": { tieneConvenio: false, fecha: "" }
+    };
+
+    const excepcionNoPIC = [
+        "Argentina", "Bolivia", "Chile", "Colombia", "Costa Rica", "Cuba", "Ecuador",
+        "El Salvador", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá",
+        "Paraguay", "Perú", "República Dominicana", "Uruguay", "Venezuela",
+        "Albania", "Bielorrusia", "Bosnia y Herzegovina", "Burkina Faso",
+        "Macedonia del Norte", "Montenegro", "Rusia", "Serbia", "Brasil"
+    ];
+
+    const excepcionesConCanjeQueNecesitanPIC = ['Corea del Sur', 'Japón'];
+
+    function mostrarInfoPais() {
+        const pais = document.getElementById('paises').value;
+        const resultadoDiv = document.getElementById('resultado');
+
+        if (!pais) {
+            resultadoDiv.innerHTML = "";
+            return;
+        }
+
+        const infoPIC = conveniosPIC[pais];
+        const infoCanje = conveniosCanje[pais];
+
+        let html = '';
+
+        // Sección de información sobre la necesidad del PIC
+        html += `<h3 class="text-center text-black text-lg font-bold mb-2">¿NECESITA PERMISO INTERNACIONAL PARA CONDUCIR EN ESPAÑA?</h3>`;
+
+        let picNecesidadHtml = '';
+        const esExcepcionIdioma = excepcionNoPIC.includes(pais);
+        const tieneConvenioCanje = infoCanje && infoCanje.tieneConvenio;
+        const necesitaPicPorCanje = excepcionesConCanjeQueNecesitanPIC.includes(pais);
+        const noNecesitaPic = esExcepcionIdioma || (tieneConvenioCanje && !necesitaPicPorCanje);
+
+        if (pais === "Venezuela") {
+            picNecesidadHtml = `
+                <div class="p-4 rounded-lg bg-red-100 border border-red-400 mb-4">
+                    <p class="text-red-700 font-bold">
+                        No. Venezuela no expide el PIC. Deben presentar <strong>CERTIFICACIÓN CONSULAR CON APOSTILLA</strong>.
+                    </p>
+                </div>
+            `;
+        } else if (noNecesitaPic) {
+            let mensajeAdicional = '';
+            if (esExcepcionIdioma) {
+                mensajeAdicional = `El permiso de conducir está redactado en castellano o tiene los pictogramas similares a la Unión Europea.`;
+            } else if (tieneConvenioCanje) {
+                mensajeAdicional = `Tiene convenio de canje de permiso de conducir con España.`;
+            }
+            picNecesidadHtml = `
+                <div class="p-4 rounded-lg bg-blue-100 border border-blue-400 mb-4">
+                    <p class="text-blue-700 font-bold">
+                        NO PRECISA PERMISO INTERNACIONAL
+                    </p>
+                    <p class="text-blue-700 font-bold text-sm mt-2">
+                        (${mensajeAdicional})
+                    </p>
+                </div>
+            `;
+        } else {
+            picNecesidadHtml = `
+                <div class="p-4 rounded-lg bg-red-100 border border-red-400 mb-4">
+                    <p class="text-red-700 font-bold">
+                        SÍ PRECISA PERMISO INTERNACIONAL
+                    </p>
+                </div>
+            `;
+        }
+        html += picNecesidadHtml;
+
+        // Sección de información sobre la expedición del PIC
+        html += `<h3 class="text-center text-black text-lg font-bold mb-2">¿PUEDE EXPEDIR PERMISO INTERNACIONAL?</h3>`;
+        
+        let picExpedicionHtml = '';
+
+        if (infoPIC) {
+            const puedeEmitirGinebra = infoPIC.ginebra && infoPIC.ginebraInfo && !infoPIC.ginebraInfo.includes("no lo ratificó");
+            const puedeEmitirViena = infoPIC.viena && infoPIC.vienaInfo && !infoPIC.vienaInfo.includes("no lo ratificó");
+            const puedeEmitirPIC = puedeEmitirGinebra || puedeEmitirViena;
+            const colorClase = puedeEmitirPIC ? 'bg-green-100 border-green-400' : 'bg-red-100 border-red-400';
+            const textoColorClase = puedeEmitirPIC ? 'text-green-700' : 'text-red-700';
+
+            let listaConvenios = '';
+            if (infoPIC.ginebra) {
+                const convenioGinebraColor = infoPIC.ginebraInfo.includes("no lo ratificó") ? 'text-red-700' : textoColorClase;
+                listaConvenios += `<li class="${convenioGinebraColor}">Convenio de Ginebra de 1949: ${infoPIC.ginebraInfo}</li>`;
+            }
+            if (infoPIC.viena) {
+                const convenioVienaColor = infoPIC.vienaInfo.includes("no lo ratificó") ? 'text-red-700' : textoColorClase;
+                listaConvenios += `<li class="${convenioVienaColor}">Convenio de Viena de 1968: ${infoPIC.vienaInfo}</li>`;
+            }
+            
+            let statusMessage = '';
+            if (puedeEmitirPIC) {
+                statusMessage = `¡Sí! ${pais} puede emitir PIC por el Convenio de ${[puedeEmitirGinebra ? 'Ginebra' : '', puedeEmitirViena ? 'Viena' : ''].filter(Boolean).join(' y ')}.`;
+            } else {
+                statusMessage = `No, ${pais} no puede emitir PIC porque no ratificó ninguno de los convenios de tráfico.`;
+            }
+            
+            picExpedicionHtml = `
+                <div class="p-4 rounded-lg ${colorClase} mb-4">
+                    <ul class="${textoColorClase} text-left font-bold list-disc ml-4">
+                        <li class="mb-2"><strong>${statusMessage}</strong></li>
+                        ${listaConvenios}
+                    </ul>
+                </div>
+            `;
+        } else {
+            picExpedicionHtml = `
+                <div class="p-4 rounded-lg bg-red-100 border border-red-400 mb-4">
+                    <p class="text-red-700 text-center font-bold">
+                        No existe información sobre convenios que rijan la emisión de PIC para este país.
+                    </p>
+                </div>
+            `;
+        }
+        html += picExpedicionHtml;
+
+        // Sección de información sobre el canje con España
+        html += `
+            <h3 class="text-center text-black text-lg font-bold mb-2">¿EXISTE CONVENIO DE CANJE?</h3>
+        `;
+        const infoCanjeHtml = `
+            <div class="p-4 rounded-lg ${infoCanje?.tieneConvenio ? 'bg-yellow-100 border border-yellow-400' : 'bg-red-100 border border-red-400'}">
+                <ul class="${infoCanje?.tieneConvenio ? 'text-yellow-700' : 'text-red-700'} text-left font-bold list-disc ml-4">
+                    <li>${infoCanje?.tieneConvenio ? `¡Sí! ${pais} tiene convenio de canje de permiso de conducir con España.` : `No, ${pais} no tiene un convenio de canje con España.`}</li>
+                    ${infoCanje?.tieneConvenio ? `<li>Fecha de entrada en vigor: ${infoCanje.fecha}</li>` : (infoCanje?.fechaSuspension ? `<li>El canje fue suspendido en ${infoCanje.fechaSuspension}.</li>` : '')}
+                    ${!infoCanje?.tieneConvenio ? `<li>Deberá obtener un nuevo permiso de conducir español.</li>` : ''}
+                </ul>
+                ${infoCanje?.tieneConvenio ? `
+                    <div class="mt-4 text-center">
+                        <a href="https://www.dgt.es/nuestros-servicios/permisos-de-conducir/permisos-extranjeros-y-de-fuerzas-y-cuerpos-de-seguridad/canjes-de-permisos/paises-con-convenio-de-canjes/" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+                            ¿Dudas con las equivalencias?<br>Ver Canje de Notas DGT
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        html += infoCanjeHtml;
+        resultadoDiv.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>

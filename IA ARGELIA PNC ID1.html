@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación Permiso Argelia PRO + IA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* TIPOGRAFÍA Y BASE */
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: #f8fafc; }
+    
+    /* CABECERA */
+    .header-pro {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: white;
+        box-shadow: 0 4px 15px -3px rgba(37, 99, 235, 0.3);
+        position: relative;
+        overflow: hidden; 
+    }
+    
+    /* PESTAÑAS (TABS) */
+    .tab-container { display: flex; border-bottom: 2px solid #e2e8f0; background: #fff; }
+    .tab-btn {
+        flex: 1; padding: 16px; text-align: center; font-weight: 800; color: #94a3b8;
+        cursor: pointer; transition: all 0.2s; border-bottom: 4px solid transparent;
+        text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem;
+    }
+    .tab-btn:hover { background-color: #f1f5f9; color: #475569; }
+    .tab-btn.active-a { border-bottom-color: #2563eb; color: #2563eb; background-color: #eff6ff; }
+    .tab-btn.active-l { border-bottom-color: #7c3aed; color: #7c3aed; background-color: #f5f3ff; }
+
+    /* TABLA */
+    .table-container-scroll { max-height: 60vh; overflow-y: auto; }
+    .table-container-scroll::-webkit-scrollbar { width: 6px; }
+    .table-container-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+    .table-container-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    /* TARJETA REFERENCIA */
+    .reference-card {
+        background: white; border-radius: 1rem; overflow: hidden;
+        border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        /* Sin efecto hover de escala */
+    }
+
+    /* DROP ZONE */
+    .drop-zone {
+        border: 3px dashed #cbd5e1; border-radius: 1rem; transition: all 0.3s ease; 
+        background-color: #ffffff; height: 100%; display: flex; flex-direction: column;
+        justify-content: center; align-items: center;
+    }
+    .drop-zone.drag-active {
+        background-color: #eff6ff; border-color: #2563eb; transform: scale(1.02);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* LOADING SPINNER */
+    .loading-overlay {
+        position: fixed; inset: 0; background: rgba(255,255,255,0.98); 
+        z-index: 100; display: flex; flex-direction: column; 
+        align-items: center; justify-content: center;
+    }
+    .spinner {
+        width: 60px; height: 60px; border: 6px solid #e5e7eb; 
+        border-top: 6px solid #2563eb; border-radius: 50%; 
+        animation: spin 1s linear infinite; margin-bottom: 24px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* TOAST */
+    #toast-notification {
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+        transform: translateY(100px); opacity: 0;
+    }
+    #toast-notification.show { transform: translateY(0); opacity: 1; }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* MODAL AYUDA */
+    .help-modal {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+        z-index: 60; display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+    .help-content {
+        background: white; width: 90%; max-width: 600px; max-height: 85vh; 
+        overflow-y: auto; border-radius: 1rem; padding: 2rem; 
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen pb-6">
+
+  <div id="toast-notification" class="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-4 border-l-4 border-green-500 max-w-sm">
+      <span id="toast-icon" class="text-2xl">✅</span>
+      <div>
+          <h4 class="font-bold text-sm uppercase text-green-400">Notificación</h4>
+          <p id="toast-message" class="text-sm font-medium text-gray-200">Operación realizada</p>
+      </div>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <h3 class="text-blue-800 font-extrabold text-2xl tracking-wide animate-pulse">PROCESANDO...</h3>
+      <p class="text-gray-500 text-sm mt-2 font-semibold">Analizando documento y consultando bases de datos</p>
+  </div>
+
+  <div id="helpModal" class="help-modal">
+      <div class="help-content fade-in">
+          <button onclick="toggleHelp()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-2xl">&times;</button>
+          <h2 class="text-2xl font-extrabold text-blue-800 mb-6 border-b pb-2">Manual de Usuario y Ayuda</h2>
+          
+          <div class="space-y-4 text-gray-700 text-sm leading-relaxed">
+              
+              <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm">
+                  <h3 class="font-bold text-yellow-800 mb-2 text-base flex items-center gap-2">⚙️ Configuración API Gemini</h3>
+                  <p class="mb-2">Para el correcto funcionamiento del análisis de imagen:</p>
+                  <ul class="list-disc ml-5 space-y-2">
+                      <li><strong>Modelo obligatorio:</strong> Debes usar siempre <code>gemini-2.5-flash</code>. Es el único probado y funcional para esta tarea.</li>
+                      <li><strong>Si falla la API:</strong> Si cambias de navegador o la IA deja de responder (error de cuota o clave inválida), pulsa el botón <strong>OBTENER CLAVE API</strong> en los ajustes para ir a tu listado privado, copia una nueva y pégala en el campo correspondiente.</li>
+                  </ul>
+              </div>
+
+              <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <h3 class="font-bold text-blue-900 mb-2 text-base">🔢 Introducción Manual</h3>
+                  <p>Puedes escribir el número de serie en el buscador principal:</p>
+                  <ul class="list-disc ml-5 mt-2 space-y-1">
+                      <li>El sistema te dirá si el número es <strong>coherente</strong> basándose en registros anteriores y posteriores.</li>
+                      <li>Si el número ya existe, te permitirá <strong>editarlo</strong> si detectas algún error.</li>
+                      <li>Si no existe, podrás <strong>añadirlo</strong> manualmente.</li>
+                  </ul>
+              </div>
+
+              <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                  <h3 class="font-bold text-purple-900 mb-2 text-base">📂 Organización Automática</h3>
+                  <p>Los registros se guardan automáticamente en su listado correspondiente:</p>
+                  <ul class="list-disc ml-5 mt-2 space-y-1">
+                      <li><strong>Serie A:</strong> Documentos estándar.</li>
+                      <li><strong>Serie L:</strong> Licencias que empiezan por la letra L.</li>
+                  </ul>
+              </div>
+
+              <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                  <h3 class="font-bold text-green-900 mb-2 text-base">🤖 Arrastrar y Soltar (IA)</h3>
+                  <p>Puedes arrastrar una imagen del permiso directamente al recuadro:</p>
+                  <ul class="list-disc ml-5 mt-2 space-y-1">
+                      <li>El sistema extraerá automáticamente: <strong>Número de Serie</strong>, <strong>Vilaya (traducida)</strong> y <strong>Fecha de Expedición</strong>.</li>
+                      <li><strong>Advertencia:</strong> La API es gratuita. No arrastres muchos documentos de golpe (hazlo uno a uno) o el sistema podría saturarse y dejar de funcionar temporalmente.</li>
+                  </ul>
+              </div>
+          </div>
+          
+          <button onclick="toggleHelp()" class="mt-6 w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-black transition">ENTENDIDO</button>
+      </div>
+  </div>
+
+  <div class="absolute top-4 right-4 z-50 flex flex-col gap-2 items-end">
+      <button onclick="toggleSettings()" class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:bg-white/20 transition flex items-center gap-2">
+          ⚙️ AJUSTES IA
+      </button>
+      
+      <button onclick="toggleHelp()" class="bg-yellow-400/90 text-yellow-900 border border-yellow-500/30 px-4 py-2 rounded-full text-xs font-bold shadow-lg hover:bg-yellow-400 transition flex items-center gap-2">
+          ❓ AYUDA
+      </button>
+  </div>
+
+  <div id="settingsPanel" class="hidden absolute top-28 right-4 w-80 bg-white border border-gray-200 shadow-2xl rounded-xl p-6 z-50 fade-in">
+      <h4 class="font-bold text-gray-800 mb-4 border-b pb-2">Configuración Gemini API</h4>
+      
+      <label class="block text-xs font-bold text-gray-500 mb-1">API KEY</label>
+      <div class="relative mb-4">
+          <input type="password" id="apiKeyInput" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none pr-10">
+          <button onclick="toggleVisibility()" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none" title="Mostrar/Ocultar Clave">
+              <span id="eyeIcon">👁️</span>
+          </button>
+      </div>
+
+      <label class="block text-xs font-bold text-gray-500 mb-1">MODELO</label>
+      <input type="text" id="modelInput" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-xs mb-4" placeholder="gemini-2.5-flash">
+      
+      <button onclick="saveSettings()" class="w-full bg-blue-600 text-white font-bold text-xs py-3 rounded-lg hover:bg-blue-700 transition mb-4">GUARDAR Y CERRAR</button>
+      
+      <hr class="border-gray-200 mb-4">
+      
+      <a href="CLAVES API.html" target="_blank" class="block w-full bg-gray-800 text-white text-center font-bold text-xs py-3 rounded-lg hover:bg-black transition flex items-center justify-center gap-2 no-underline">
+        🔑 OBTENER CLAVE API
+      </a>
+      <p class="text-[10px] text-gray-400 mt-2 text-center">Abre el listado privado de claves.</p>
+  </div>
+
+  <header class="header-pro py-8 shadow-lg relative z-10">
+    <div class="container mx-auto flex flex-col items-center justify-center">
+        <div class="w-32 h-32 mb-2 flex items-center justify-center transition-transform hover:scale-105">
+            <img src="logogad.png" onerror="this.style.opacity='0'" alt="GAD Logo" class="w-full h-full object-contain drop-shadow-lg" style="background: transparent;">
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">VERIFICACIÓN PERMISO ARGELIA</h1>
+        <p class="text-blue-100 text-sm font-bold mt-1 tracking-widest uppercase opacity-90">Sistema Integral Anti-Fraude (Series A y L)</p>
+    </div>
+  </header>
+
+  <main class="w-full max-w-6xl mx-auto px-4 mt-8 flex-grow">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 items-stretch">
+        
+        <div class="reference-card p-2 bg-white flex flex-col items-center justify-center relative group">
+            <div class="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm z-10">
+                GUÍA DE REFERENCIA
+            </div>
+            <div class="w-full h-full overflow-hidden rounded-lg flex items-center justify-center bg-gray-50">
+                <img src="logoargelia2.jpg" alt="Ejemplo Permiso Argelia" class="max-w-full max-h-[350px] object-contain">
+            </div>
+            <p class="text-xs text-gray-400 mt-2 font-medium text-center pb-2">Verifica la ubicación del Número de Soporte y Wilaya</p>
+        </div>
+
+        <div id="mainDropZone" class="drop-zone p-4 md:p-8 text-center relative cursor-pointer group bg-white shadow-sm hover:shadow-md">
+            <div class="pointer-events-none mb-6">
+                <div class="inline-block p-4 rounded-full bg-blue-50 text-blue-500 mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Arrastra el documento aquí</h2>
+                <p class="text-gray-400 text-sm mt-1">O pega imagen (Ctrl+V) • Detecta A/L y Wilaya</p>
+            </div>
+
+            <div class="w-full border-t border-gray-100 pt-6 pointer-events-auto">
+                <p class="text-xs text-gray-400 font-bold uppercase mb-2 tracking-wide text-left pl-1">Búsqueda Rápida</p>
+                <div class="flex shadow-sm rounded-lg ring-1 ring-gray-200 overflow-hidden w-full">
+                    <input type="text" id="numero" placeholder="Ej: A12345 o L98765" 
+                           class="flex-1 min-w-0 p-3 border-none outline-none uppercase font-mono text-lg text-center bg-gray-50 focus:bg-white transition-colors">
+                    <button onclick="buscarFechaManual()" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 md:px-6 transition flex items-center gap-2">
+                        🔍 <span class="hidden sm:inline">BUSCAR</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="output" class="mb-8 text-center fade-in empty:hidden"></div>
+
+    <div id="aiResultBox" class="hidden mb-10 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden fade-in max-w-4xl mx-auto ring-1 ring-gray-100">
+        <div id="aiHeader" class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 class="font-bold text-lg flex items-center gap-2 text-gray-800" id="aiTitle">🤖 Análisis Inteligente</h3>
+            <span class="text-xs font-mono text-gray-500 bg-gray-200 px-2 py-1 rounded" id="aiModelBadge">AI MODE</span>
+        </div>
+        
+        <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
+                    <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Número</span>
+                    <span id="aiNumero" class="block text-2xl font-mono font-bold text-gray-900 break-all">---</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
+                    <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fecha</span>
+                    <span id="aiFecha" class="block text-2xl font-mono font-bold text-gray-900">--/--/--</span>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
+                    <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Wilaya</span>
+                    <span id="aiWilaya" class="block text-xl font-bold text-blue-700 uppercase">---</span>
+                </div>
+            </div>
+
+            <div id="aiValidationMsg" class="mb-6 text-sm p-5 rounded-lg border-l-4 shadow-sm bg-white"></div>
+            <div id="aiActions" class="space-y-3"></div>
+            <button onclick="cerrarPanelIA()" class="mt-6 text-xs text-gray-400 hover:text-gray-600 underline w-full text-center">Descartar resultados</button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-10">
+        <div class="p-5 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50 gap-4">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                🗄️ BASE DE DATOS <span id="dbCounter" class="text-xs font-bold text-white bg-blue-600 px-3 py-1 rounded-full shadow-sm">Cargando...</span>
+            </h3>
+            <div class="flex gap-2">
+                <button onclick="prepararNuevoManual()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-bold rounded-lg shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
+                    <span>➕</span> AÑADIR
+                </button>
+                <button onclick="toggleView('list')" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700 transition flex items-center gap-2">
+                    <span>📋</span> LISTADO
+                </button>
+            </div>
+        </div>
+
+        <div id="formularioNuevosDatos" class="hidden p-8 bg-blue-50/30">
+            <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md border border-gray-100 relative">
+                <button onclick="cancelarEdicion()" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 font-bold text-xs transition">✕ CANCELAR</button>
+                <h4 id="formTitle" class="text-gray-700 font-bold text-lg mb-6 border-b pb-3 flex items-center gap-2">
+                    📝 Nuevo Registro
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 tracking-wide">NÚMERO DE SOPORTE</label>
+                        <input type="text" id="nuevoNumero" class="w-full border border-gray-300 p-3 rounded-lg text-lg uppercase focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 font-mono transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 tracking-wide">FECHA EXPEDICIÓN</label>
+                        <input type="date" id="nuevaFecha" class="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 tracking-wide">WILAYA (ESPAÑOL)</label>
+                        <input type="text" id="nuevaWilaya" class="w-full border border-gray-300 p-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Ej: Orán">
+                    </div>
+                </div>
+                <button id="btnGuardarForm" onclick="guardarManual()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-lg hover:bg-black transition shadow-lg text-sm tracking-widest uppercase">GUARDAR REGISTRO</button>
+            </div>
+        </div>
+
+        <div id="cpiDataTable" class="hidden">
+            <div class="tab-container">
+                <div id="tabA" onclick="switchTab('A')" class="tab-btn active-a">SERIE A <span id="countA" class="ml-1 text-xs opacity-60 font-mono">(0)</span></div>
+                <div id="tabL" onclick="switchTab('L')" class="tab-btn">SERIE L <span id="countL" class="ml-1 text-xs opacity-60 font-mono">(0)</span></div>
+            </div>
+
+            <div class="table-wrapper">
+                <div id="containerA" class="table-container-scroll">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-blue-700 uppercase bg-blue-50 sticky top-0 shadow-sm z-10">
+                            <tr>
+                                <th class="px-6 py-4 font-bold bg-blue-50">Número</th>
+                                <th class="px-6 py-4 font-bold bg-blue-50">Fecha Exp.</th>
+                                <th class="px-6 py-4 font-bold text-right bg-blue-50">Wilaya</th>
+                                <th class="px-6 py-4 font-bold text-right bg-blue-50">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listA" class="divide-y divide-gray-100 bg-white"></tbody>
+                    </table>
+                    <div id="emptyA" class="hidden text-center py-16 text-gray-400">
+                        <p class="text-lg">Sin registros en Serie A</p>
+                    </div>
+                </div>
+
+                <div id="containerL" class="hidden table-container-scroll">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-purple-700 uppercase bg-purple-50 sticky top-0 shadow-sm z-10">
+                            <tr>
+                                <th class="px-6 py-4 font-bold bg-purple-50">Número</th>
+                                <th class="px-6 py-4 font-bold bg-purple-50">Fecha Exp.</th>
+                                <th class="px-6 py-4 font-bold text-right bg-purple-50">Wilaya</th>
+                                <th class="px-6 py-4 font-bold text-right bg-purple-50">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listL" class="divide-y divide-gray-100 bg-white"></tbody>
+                    </table>
+                    <div id="emptyL" class="hidden text-center py-16 text-gray-400">
+                         <p class="text-lg">Sin registros en Serie L</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </main>
+
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script>
+    // --- 1. CONFIG FIREBASE ---
+// --- 1. CONFIG FIREBASE (CORREGIDA A V3) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4", 
+        authDomain: "gad-alicante-v3.firebaseapp.com",
+        databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gad-alicante-v3",
+        storageBucket: "gad-alicante-v3.firebasestorage.app", // Corregido el bucket también
+        messagingSenderId: "906986258369",
+        appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+        measurementId: "G-Q0E3H1996K"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const refOld = db.ref('licencias_argelia_nuevas'); 
+    const refNew = db.ref('licencias_argelia_L');      
+
+    // VARIABLES GLOBALES
+    let globalStore = [];
+    let editState = { isEditing: false, key: null, source: null }; 
+    let currentAiData = null; 
+
+    // --- 2. SISTEMA DE NOTIFICACIONES (TOAST) ---
+    function showToast(msg, type='success') {
+        const t = document.getElementById('toast-notification');
+        const icon = document.getElementById('toast-icon');
+        const text = document.getElementById('toast-message');
+
+        text.textContent = msg;
+        
+        if(type==='error') {
+            t.className = "fixed bottom-6 right-6 z-50 bg-red-900 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-4 border-l-4 border-red-500 max-w-sm show";
+            icon.textContent = "⚠️";
+        } else {
+            t.className = "fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-4 border-l-4 border-green-500 max-w-sm show";
+            icon.textContent = "✅";
+        }
+
+        setTimeout(() => {
+            t.classList.remove('show');
+        }, 3500);
+    }
+
+    // --- 3. GESTIÓN DE DATOS UNIFICADA ---
+    function procesarDatosGlobales() {
+        const listA = [];
+        const listL = [];
+        globalStore.forEach(item => {
+            const num = item.numero ? item.numero.toUpperCase().trim() : '';
+            if (num.startsWith('L')) listL.push(item);
+            else listA.push(item);
+        });
+
+        // ORDENAR ALFABÉTICAMENTE (A -> Z)
+        const sorter = (a, b) => {
+            const numA = a.numero || "";
+            const numB = b.numero || "";
+            return numA.localeCompare(numB, undefined, { numeric: true, sensitivity: 'base' });
+        };
+
+        listA.sort(sorter);
+        listL.sort(sorter);
+
+        renderTabla(listA, 'listA', 'emptyA', 'countA');
+        renderTabla(listL, 'listL', 'emptyL', 'countL');
+        document.getElementById('dbCounter').textContent = `Total: ${globalStore.length}`;
+    }
+
+    function extraerValorNumerico(str) {
+        if (!str) return 0;
+        return parseInt(str.replace(/\D/g, '')) || 0;
+    }
+
+    // Listeners
+    refOld.on('value', snap => {
+        globalStore = globalStore.filter(d => d.source !== 'old');
+        if (snap.exists()) {
+            snap.forEach(child => {
+                const val = child.val();
+                globalStore.push({ key: child.key, numero: val.numero, fecha: formatoFechaSalida(val.fecha), wilaya: val.wilaya || '', source: 'old' });
+            });
+        }
+        procesarDatosGlobales();
+    });
+
+    refNew.on('value', snap => {
+        globalStore = globalStore.filter(d => d.source !== 'new');
+        if (snap.exists()) {
+            snap.forEach(child => {
+                const val = child.val();
+                globalStore.push({ key: child.key, numero: val.numero, fecha: formatoFechaSalida(val.fecha), wilaya: val.wilaya || '', source: 'new' });
+            });
+        }
+        procesarDatosGlobales();
+    });
+
+    function renderTabla(datos, tbodyId, emptyId, countId) {
+        const tbody = document.getElementById(tbodyId);
+        const empty = document.getElementById(emptyId);
+        document.getElementById(countId).textContent = `(${datos.length})`;
+        tbody.innerHTML = '';
+
+        if (datos.length === 0) {
+            empty.classList.remove('hidden'); return;
+        }
+        empty.classList.add('hidden');
+
+        datos.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50 transition border-b border-gray-100 group";
+            
+            const wSafe = d.wilaya ? d.wilaya.replace(/'/g, "\\'") : '';
+            
+            tr.innerHTML = `
+                <td class="px-6 py-4 font-mono font-bold text-gray-800 text-base">${d.numero}</td>
+                <td class="px-6 py-4 text-gray-600">${d.fecha}</td>
+                <td class="px-6 py-4 text-right uppercase text-xs font-bold text-gray-500">${d.wilaya || '---'}</td>
+                <td class="px-6 py-4 text-right flex justify-end gap-2">
+                    <button onclick="iniciarEdicion('${d.key}', '${d.source}', '${d.numero}', '${d.fecha}', '${wSafe}')" class="text-white bg-blue-500 hover:bg-blue-600 font-bold px-2 py-1 rounded text-xs shadow-sm transition-transform hover:scale-105" title="Editar">
+                       ✏️
+                    </button>
+                    <button onclick="eliminarRegistro('${d.key}', '${d.source}')" class="text-white bg-red-400 hover:bg-red-500 font-bold px-2 py-1 rounded text-xs shadow-sm transition-transform hover:scale-105" title="Eliminar">
+                       ✕
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- 4. LÓGICA DE EDICIÓN Y GUARDADO ---
+
+    function prepararNuevoManual() {
+        editState = { isEditing: false, key: null, source: null };
+        document.getElementById('formTitle').textContent = "📝 Nuevo Registro";
+        document.getElementById('btnGuardarForm').textContent = "GUARDAR REGISTRO";
+        document.getElementById('btnGuardarForm').className = "w-full bg-gray-900 text-white font-bold py-4 rounded-lg hover:bg-black transition shadow-lg text-sm tracking-widest uppercase";
+        document.getElementById('nuevoNumero').value = '';
+        document.getElementById('nuevaFecha').value = '';
+        document.getElementById('nuevaWilaya').value = '';
+        document.getElementById('nuevoNumero').disabled = false;
+        toggleView('form');
+    }
+
+    function prepararGuardadoDesdeBusqueda(num) {
+        prepararNuevoManual();
+        document.getElementById('nuevoNumero').value = num;
+        document.getElementById('nuevaFecha').focus();
+    }
+
+    function iniciarEdicion(key, source, num, fecha, wilaya) {
+        editState = { isEditing: true, key: key, source: source };
+        document.getElementById('formTitle').textContent = "✏️ Editar / Actualizar Registro";
+        document.getElementById('btnGuardarForm').textContent = "ACTUALIZAR REGISTRO";
+        document.getElementById('btnGuardarForm').className = "w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition shadow-lg text-sm tracking-widest uppercase";
+        
+        document.getElementById('nuevoNumero').value = num;
+        document.getElementById('nuevoNumero').disabled = true; 
+        document.getElementById('nuevaFecha').value = convertirFechaInput(fecha);
+        document.getElementById('nuevaWilaya').value = wilaya;
+        
+        document.getElementById('output').innerHTML = '';
+        document.getElementById('aiResultBox').classList.add('hidden');
+        
+        toggleView('form');
+    }
+
+    function cancelarEdicion() {
+        toggleView('list');
+    }
+
+    function guardarManual() {
+        const n = document.getElementById('nuevoNumero').value.trim().toUpperCase();
+        const f = document.getElementById('nuevaFecha').value;
+        const w = document.getElementById('nuevaWilaya').value.trim();
+
+        if(!n || !f) { showToast("Número y Fecha son obligatorios", "error"); return; }
+        
+        const [y, m, d] = f.split('-');
+        const fechaGuardar = `${d}/${m}/${y}`;
+
+        if (editState.isEditing) {
+            // ACTUALIZAR (usando la key existente)
+            const ref = (editState.source === 'old') ? refOld : refNew;
+            ref.child(editState.key).update({ fecha: fechaGuardar, wilaya: w })
+               .then(() => { 
+                   showToast(`${n} Actualizado`); 
+                   toggleView('list'); 
+               })
+               .catch(e => showToast("Error: " + e.message, "error"));
+        } else {
+            // NUEVO: Guardar usando el NÚMERO como KEY
+            const ref = n.startsWith('L') ? refNew : refOld;
+            
+            ref.child(n).set({ numero: n, fecha: fechaGuardar, wilaya: w })
+               .then(() => { 
+                   showToast(`${n} Guardado`); 
+                   toggleView('list'); 
+                   switchTab(n.startsWith('L') ? 'L' : 'A');
+               })
+               .catch(e => showToast("Error: " + e.message, "error"));
+        }
+    }
+
+    function eliminarRegistro(key, source) {
+        if(confirm("¿Eliminar definitivamente?")) {
+            const ref = (source === 'old') ? refOld : refNew;
+            ref.child(key).remove()
+                .then(() => showToast("Registro eliminado"))
+                .catch(e => showToast("Error: " + e.message, "error"));
+        }
+    }
+
+    // --- 5. FORMATOS DE FECHA ---
+    function formatoFechaSalida(f) {
+        if (!f) return "---";
+        if (f.includes('/')) return f; 
+        if (f.includes('-')) {
+            const [y, m, d] = f.split('-');
+            return `${d}/${m}/${y}`;
+        }
+        return f;
+    }
+    
+    function convertirFechaInput(f) {
+        if (!f || !f.includes('/')) return '';
+        const [d, m, y] = f.split('/');
+        return `${y}-${m}-${d}`;
+    }
+
+    // --- 6. BÚSQUEDA Y AI ---
+    let geminiApiKey = localStorage.getItem('ai_api_key') || '';
+    let geminiModelName = localStorage.getItem('gemini_model_name') || 'gemini-2.5-flash';
+
+    function buscarFechaManual() {
+        const input = document.getElementById('numero').value.trim().toUpperCase();
+        const output = document.getElementById('output');
+        output.innerHTML = '';
+        document.getElementById('aiResultBox').classList.add('hidden');
+        if (!input) return;
+
+        const exacto = globalStore.find(d => d.numero === input);
+        if (exacto) {
+            const wSafe = exacto.wilaya ? exacto.wilaya.replace(/'/g, "\\'") : '';
+            output.innerHTML = `
+                <div class="inline-block bg-blue-50 border border-blue-200 p-6 rounded-xl text-left shadow-sm">
+                    <h3 class="text-blue-800 font-bold text-lg mb-2">✅ DOCUMENTO REGISTRADO</h3>
+                    <p class="text-gray-700">Número: <strong>${exacto.numero}</strong></p>
+                    <p class="text-gray-700">Fecha: <strong>${exacto.fecha}</strong></p>
+                    <p class="text-blue-600 font-bold mt-1 mb-3">Wilaya: ${exacto.wilaya || '---'}</p>
+                    <button onclick="iniciarEdicion('${exacto.key}', '${exacto.source}', '${exacto.numero}', '${exacto.fecha}', '${wSafe}')" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 text-xs">
+                        ✏️ EDITAR DATOS
+                    </button>
+                </div>`;
+            return;
+        }
+
+        const val = extraerValorNumerico(input);
+        const dataset = input.startsWith('L') ? globalStore.filter(d=>d.numero.startsWith('L')) : globalStore.filter(d=>!d.numero.startsWith('L'));
+        
+        // Sorting para la estimación
+        const sorted = [...dataset].sort((a,b) => extraerValorNumerico(a.numero) - extraerValorNumerico(b.numero));
+        
+        const ant = sorted.filter(d => extraerValorNumerico(d.numero) < val).pop();
+        const post = sorted.find(d => extraerValorNumerico(d.numero) > val);
+
+        let htmlEst = `<p class="text-gray-400 italic mb-4">Sin datos suficientes para estimar.</p>`;
+        if (ant && post) {
+            const f1 = new Date(convertirFechaInput(ant.fecha)).getTime();
+            const f2 = new Date(convertirFechaInput(post.fecha)).getTime();
+            const prop = (val - extraerValorNumerico(ant.numero)) / (extraerValorNumerico(post.numero) - extraerValorNumerico(ant.numero));
+            const fEst = new Date(f1 + prop * (f2 - f1));
+            htmlEst = `
+                <div class="mb-4">
+                    <p class="text-xs text-gray-400 uppercase font-bold">Fecha Estimada</p>
+                    <p class="text-3xl font-bold text-gray-800">${fEst.toLocaleDateString('es-ES')}</p>
+                </div>`;
+        }
+
+        output.innerHTML = `
+            <div class="inline-block bg-white border-l-4 border-orange-400 p-6 rounded-r-xl shadow-lg text-left max-w-md w-full">
+                <div class="flex justify-between mb-4"><h4 class="text-orange-500 font-bold uppercase">⚠️ NO REGISTRADO</h4></div>
+                ${htmlEst}
+                <button onclick="prepararGuardadoDesdeBusqueda('${input}')" class="w-full bg-gray-800 text-white font-bold py-2 rounded hover:bg-black transition flex justify-center gap-2 mt-2">
+                    📝 AÑADIR AHORA
+                </button>
+            </div>`;
+    }
+
+    async function callGemini(base64) {
+        if (!geminiApiKey) { showToast("Configura API Key", "error"); return null; }
+        const PROMPT = `Analiza este permiso de conducir de Argelia. Return JSON: {"numero":"...", "fecha":"DD/MM/AAAA", "wilaya":"... (Traducida al español)"}. Si la fecha no se ve en casilla 4a, busca otra fecha.`;
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }] })
+            });
+            const data = await res.json();
+            let txt = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+            const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
+            return JSON.parse(txt.substring(s, e+1));
+        } catch (e) { showToast("Error AI: " + e.message, "error"); return null; }
+    }
+
+    function processImage(file) {
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const res = await callGemini(reader.result.split(',')[1]);
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            if (res) analizarResultado(res.numero.replace(/\s/g,'').toUpperCase(), formatoFechaSalida(res.fecha), res.wilaya);
+        }
+    }
+
+    function analizarResultado(num, fecha, wilaya) {
+        const box = document.getElementById('aiResultBox');
+        const actions = document.getElementById('aiActions');
+        box.classList.remove('hidden');
+        document.getElementById('output').innerHTML = '';
+
+        document.getElementById('aiNumero').textContent = num;
+        document.getElementById('aiFecha').textContent = fecha;
+        document.getElementById('aiWilaya').textContent = wilaya;
+
+        currentAiData = { num, fecha, wilaya };
+
+        const existe = globalStore.find(d => d.numero === num);
+        
+        const wSafe = wilaya ? wilaya.replace(/'/g, "\\'") : '';
+
+        if (existe) {
+            const wExistSafe = existe.wilaya ? existe.wilaya.replace(/'/g, "\\'") : '';
+            
+            let msg = `Documento registrado.<br>Fecha: ${existe.fecha}`;
+            let btnHtml = `
+                <button onclick="iniciarEdicion('${existe.key}', '${existe.source}', '${existe.numero}', '${existe.fecha}', '${wExistSafe}')" class="w-full bg-blue-600 text-white font-bold py-3 rounded shadow hover:bg-blue-700">
+                    ✏️ EDITAR
+                </button>`;
+
+            if (wilaya && wilaya !== 'Desconocido' && (!existe.wilaya || existe.wilaya.trim() === '')) {
+                msg += `<br><span class="text-green-700 font-bold">¡NUEVA WILAYA: ${wilaya}!</span>`;
+                btnHtml = `
+                    <button onclick="iniciarEdicion('${existe.key}', '${existe.source}', '${existe.numero}', '${existe.fecha}', '${wSafe}')" class="w-full bg-green-600 text-white font-bold py-4 rounded-lg shadow-lg hover:bg-green-700 animate-pulse">
+                        🔄 ACTUALIZAR CON WILAYA
+                    </button>`;
+                configAlerta('verde', 'MEJORA DETECTADA', msg);
+            } else {
+                configAlerta('azul', 'YA REGISTRADO', msg);
+            }
+            actions.innerHTML = btnHtml;
+
+        } else {
+            const dataset = num.startsWith('L') ? globalStore.filter(d=>d.numero.startsWith('L')) : globalStore.filter(d=>!d.numero.startsWith('L'));
+            const val = extraerValorNumerico(num);
+            const sorted = [...dataset].sort((a,b)=>extraerValorNumerico(a.numero)-extraerValorNumerico(b.numero));
+            const ant = sorted.filter(d=>extraerValorNumerico(d.numero)<val).pop();
+            const post = sorted.find(d=>extraerValorNumerico(d.numero)>val);
+            
+            const fDoc = new Date(convertirFechaInput(fecha));
+            let err = "";
+            if(ant && new Date(convertirFechaInput(ant.fecha)) > fDoc) err = "Fecha anterior a registro previo.";
+            if(post && new Date(convertirFechaInput(post.fecha)) < fDoc) err = "Fecha posterior a registro siguiente.";
+
+            if(err) {
+                configAlerta('rojo', '⚠️ POSIBLE INCONGRUENCIA', err);
+                actions.innerHTML = `<button onclick="iniciarEdicion(null, null, '${num}', '${fecha}', '${wSafe}')" class="w-full bg-gray-600 text-white font-bold py-3 rounded shadow hover:bg-gray-700">✏️ REVISAR MANUALMENTE</button>`;
+            } else {
+                configAlerta('verde', 'SECUENCIA CORRECTA', 'Documento coherente.');
+                actions.innerHTML = `
+                    <div class="flex gap-2">
+                        <button onclick="guardarDesdeAI()" class="flex-1 bg-green-600 text-white font-bold py-3 rounded shadow hover:bg-green-700">💾 GUARDAR</button>
+                        <button onclick="iniciarEdicion(null, null, '${num}', '${fecha}', '${wSafe}')" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded shadow hover:bg-gray-200">✏️ EDITAR</button>
+                    </div>`;
+            }
+        }
+    }
+
+    // GUARDAR USANDO LA KEY PERSONALIZADA
+    function guardarDesdeAI() {
+        if(!currentAiData) return;
+        const { num, fecha, wilaya } = currentAiData; 
+        
+        const ref = num.startsWith('L') ? refNew : refOld;
+        
+        // Guardar usando el NÚMERO como KEY
+        ref.child(num).set({ numero: num, fecha: fecha, wilaya: wilaya || '' })
+            .then(() => { 
+                showToast(`${num} Guardado`); 
+                cerrarPanelIA(); 
+                switchTab(num.startsWith('L')?'L':'A'); 
+                currentAiData = null; 
+            })
+            .catch(e => showToast("Error: " + e.message, "error"));
+    }
+
+    // --- UI HELPERS ---
+    function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('hidden'); document.getElementById('apiKeyInput').value=geminiApiKey; document.getElementById('modelInput').value=geminiModelName; }
+    function saveSettings() { geminiApiKey=document.getElementById('apiKeyInput').value; geminiModelName=document.getElementById('modelInput').value; localStorage.setItem('ai_api_key', geminiApiKey); localStorage.setItem('gemini_model_name', geminiModelName); toggleSettings(); }
+    
+    // Toggle Help
+    function toggleHelp() {
+        const modal = document.getElementById('helpModal');
+        const display = modal.style.display;
+        modal.style.display = (display === 'flex') ? 'none' : 'flex';
+    }
+
+    function toggleVisibility() {
+        const input = document.getElementById('apiKeyInput');
+        const icon = document.getElementById('eyeIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
+    function toggleView(v) { 
+        document.getElementById('formularioNuevosDatos').classList.toggle('hidden', v!=='form');
+        document.getElementById('cpiDataTable').classList.toggle('hidden', v!=='list');
+    }
+    function switchTab(t) {
+        document.getElementById('containerA').classList.toggle('hidden', t!=='A');
+        document.getElementById('containerL').classList.toggle('hidden', t!=='L');
+        document.getElementById('tabA').classList.toggle('active-a', t==='A');
+        document.getElementById('tabL').classList.toggle('active-l', t==='L');
+    }
+    function cerrarPanelIA() { document.getElementById('aiResultBox').classList.add('hidden'); }
+    function configAlerta(c,t,m) {
+        const h=document.getElementById('aiHeader'), b=document.getElementById('aiValidationMsg');
+        const cols = { rojo: ['bg-red-600','bg-red-50 text-red-800 border-red-500'], verde: ['bg-green-600','bg-green-50 text-green-800 border-green-500'], azul: ['bg-blue-600','bg-blue-50 text-blue-800 border-blue-500'] };
+        h.className=`px-6 py-4 border-b flex justify-between items-center ${cols[c][0]} text-white`;
+        b.className=`mb-6 text-sm p-5 rounded-lg border-l-4 shadow-sm ${cols[c][1]}`;
+        document.getElementById('aiTitle').innerHTML=t; b.innerHTML=m;
+    }
+
+    // Events
+    const dz=document.getElementById('mainDropZone');
+    ['dragenter','dragover'].forEach(e=>dz.addEventListener(e,(ev)=>{ev.preventDefault();dz.classList.add('drag-active')}));
+    ['dragleave','drop'].forEach(e=>dz.addEventListener(e,(ev)=>{ev.preventDefault();dz.classList.remove('drag-active')}));
+    dz.addEventListener('drop',e=>{if(e.dataTransfer.files[0])processImage(e.dataTransfer.files[0])});
+    window.addEventListener('paste',e=>{for(let i of e.clipboardData.items)if(i.type.startsWith('image'))processImage(i.getAsFile())});
+    document.getElementById("numero").addEventListener("keypress",e=>{if(e.key==="Enter")buscarFechaManual()});
+  </script>
+</body>
+</html>

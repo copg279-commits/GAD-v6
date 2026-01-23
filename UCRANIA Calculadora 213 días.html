@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CALCULADORA DE MATRICULACIÓN DE VEHÍCULOS UCRANIANOS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        .flag-button-spain {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+      CALCULADORA DE MATRICULACIÓN DE VEHÍCULOS UCRANIANOS
+  </h1>
+
+  <form class="space-y-4 w-11/12 max-w-md mx-auto mt-4" id="dateForm">
+    <div class="text-left">
+      <label class="block text-gray-700 font-medium mb-2" for="expeditionDate">
+        Fecha de expedición de la Tarjeta de Residencia:
+      </label>
+      <input type="date" id="expeditionDate" name="expeditionDate" required
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+    <button type="submit"
+      class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+      Calcular
+    </button>
+  </form>
+
+  <div id="result" class="mt-4 text-center text-base font-medium w-11/12 max-w-md mx-auto"></div>
+
+    <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    document.getElementById('dateForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const expeditionDate = new Date(document.getElementById('expeditionDate').value);
+      const resultDiv = document.getElementById('result');
+
+      if (isNaN(expeditionDate)) {
+        resultDiv.innerHTML = '<p class="text-red-500 font-medium">Por favor, introduce una fecha válida.</p>';
+        return;
+      }
+
+      const daysToAdd = 213;
+      const dueDate = new Date(expeditionDate);
+      dueDate.setDate(dueDate.getDate() + daysToAdd);
+
+      const today = new Date();
+      const formattedDueDate = dueDate.toLocaleDateString('es-ES', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      if (today < dueDate) {
+        resultDiv.innerHTML = `
+          <p class="text-green-500 font-medium">
+            Todavía no tiene obligación de matricular.<br>
+            Puede circular con matrícula ucraniana hasta <strong>${formattedDueDate}</strong>.
+          </p>`;
+      } else {
+        resultDiv.innerHTML = `
+          <p class="text-red-500 font-medium">
+            Tiene obligación de matricular en España según la Nota Informativa de la DGT <strong>NI 28/2022</strong>.
+          </p>`;
+      }
+    });
+  </script>
+</body>
+</html>

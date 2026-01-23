@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canje de Permisos de Conducir con España</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flag-button-spain {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .flag-button-white {
+            background-color: #fff;
+            color: #000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+        <img
+            src="logogad.png"
+            alt="Logo GAD"
+            class="w-full h-full object-cover block"
+        >
+    </div>
+</header>
+
+<h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Convenio de canje de permisos de conducir con España
+</h1>
+
+<div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto">
+    <h2 class="text-lg font-semibold mb-4">Verifique si existe convenio de canje</h2>
+    <div class="mb-4">
+        <label for="pais" class="block text-center text-sm font-bold text-gray-700 mb-1">País</label>
+        <select id="pais" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Seleccione un país</option>
+            <option value="andorra">Andorra</option>
+            <option value="argelia">Argelia</option>
+            <option value="argentina">Argentina</option>
+            <option value="bolivia">Bolivia</option>
+            <option value="brasil">Brasil</option>
+            <option value="chile">Chile</option>
+            <option value="colombia">Colombia</option>
+            <option value="corea_del_sur">Corea del Sur</option>
+            <option value="costa_rica">Costa Rica</option>
+            <option value="ecuador">Ecuador</option>
+            <option value="el_salvador">El Salvador</option>
+            <option value="filipinas">Filipinas</option>
+            <option value="georgia">Georgia</option>
+            <option value="guatemala">Guatemala</option>
+            <option value="honduras">Honduras</option>
+            <option value="japon">Japón</option>
+            <option value="macedonia_del_norte">Macedonia del Norte</option>
+            <option value="marruecos">Marruecos</option>
+            <option value="moldavia">Moldavia</option>
+            <option value="monaco">Mónaco</option>
+            <option value="nicaragua">Nicaragua</option>
+            <option value="nueva_zelanda">Nueva Zelanda</option>
+            <option value="panama">Panamá</option>
+            <option value="paraguay">Paraguay</option>
+            <option value="peru">Perú</option>
+            <option value="reino_unido">Reino Unido e Irlanda del Norte</option>
+            <option value="republica_dominicana">República Dominicana</option>
+            <option value="serbia">Serbia</option>
+            <option value="suiza">Suiza</option>
+            <option value="tunez">Túnez</option>
+            <option value="turquia">Turquía</option>
+            <option value="ucrania">Ucrania</option>
+            <option value="uruguay">Uruguay</option>
+            <option value="venezuela">Venezuela</option>
+        </select>
+    </div>
+    <div id="resultado"></div>
+</div>
+
+<div class="mt-8 flex flex-col items-center justify-center space-y-4">
+    <p class="text-center font-bold">¿Quieres saber si precisa PIC?</p>
+    <button onclick="window.location.href='PERMISO INTERNACIONAL DE CONDUCIR.html'"
+            class="w-11/12 max-w-md p-4 text-white font-bold rounded-lg shadow-md transition bg-blue-800 hover:bg-red-900">
+        PERMISO INTERNACIONAL DE CONDUCIR
+    </button>
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+    const convenios = {
+        andorra: { tieneConvenio: true, fecha: "03-02-2000" },
+        argelia: { tieneConvenio: true, fecha: "06-10-2000" },
+        argentina: { tieneConvenio: true, fecha: "31-07-2002" },
+        bolivia: { tieneConvenio: true, fecha: "23-11-2007" },
+        brasil: { tieneConvenio: true, fecha: "07-04-2009" },
+        chile: { tieneConvenio: true, fecha: "10-06-2005" },
+        colombia: { tieneConvenio: true, fecha: "31-07-2003" },
+        corea_del_sur: { tieneConvenio: true, fecha: "14-01-2000" },
+        costa_rica: { tieneConvenio: true, fecha: "10-08-2020" },
+        ecuador: { tieneConvenio: true, fecha: "25-09-2003 y 14-09-2024", tieneModificacion: true },
+        el_salvador: { tieneConvenio: true, fecha: "24-06-2009" },
+        filipinas: { tieneConvenio: true, fecha: "21-09-2008" },
+        georgia: { tieneConvenio: true, fecha: "29-09-2024" },
+        guatemala: { tieneConvenio: true, fecha: "21-09-2008" },
+        honduras: { tieneConvenio: true, fecha: "26-11-2024" },
+        japon: { tieneConvenio: true, fecha: "21-01-2000" },
+        macedonia_del_norte: { tieneConvenio: true, fecha: "05-11-2011" },
+        marruecos: { tieneConvenio: true, fecha: "08-06-2004 y 07-04-2024", tieneModificacion: true },
+        moldavia: { tieneConvenio: true, fecha: "29-09-2024" },
+        monaco: { tieneConvenio: true, fecha: "13-11-2013" },
+        nicaragua: { tieneConvenio: true, fecha: "02-01-2012" },
+        nueva_zelanda: { tieneConvenio: true, fecha: "02-06-2023" },
+        panama: { tieneConvenio: true, fecha: "11-07-2014" },
+        paraguay: { tieneConvenio: true, fecha: "20-10-2007" },
+        peru: { tieneConvenio: true, fecha: "28-01-2004" },
+        reino_unido: { tieneConvenio: true, fecha: "16-03-2023" },
+        republica_dominicana: { tieneConvenio: true, fecha: "16-01-2007" },
+        serbia: { tieneConvenio: true, fecha: "11-03-2009 y 24-05-2017", tieneModificacion: true },
+        suiza: { tieneConvenio: true, fecha: "02-07-1998" },
+        tunez: { tieneConvenio: true, fecha: "29-07-2011" },
+        turquia: { tieneConvenio: true, fecha: "25-04-2011" },
+        ucrania: { tieneConvenio: true, fecha: "31-10-2010" },
+        uruguay: { tieneConvenio: true, fecha: "05-11-2003" },
+        venezuela: { tieneConvenio: false, fechaSuspension: "15-06-2017" }
+    };
+
+    const paisSelect = document.getElementById('pais');
+    const resultado = document.getElementById('resultado');
+
+    paisSelect.addEventListener('change', (e) => {
+        const paisSeleccionado = e.target.value;
+        mostrarResultado(paisSeleccionado);
+    });
+
+    function mostrarResultado(pais) {
+        if (pais) {
+            const info = convenios[pais];
+            if (info && info.tieneConvenio) {
+                let fechaTexto = '';
+                if (info.tieneModificacion) {
+                    const fechas = info.fecha.split(' y ');
+                    fechaTexto = `
+                        Fecha de firma del acuerdo: <span class="font-semibold">${fechas[0]}</span><br>
+                        Fecha de modificación del acuerdo: <span class="font-semibold">${fechas[1]}</span>
+                    `;
+                } else {
+                    fechaTexto = `
+                        Fecha de entrada en vigor: <span class="font-semibold">${info.fecha}</span>
+                    `;
+                }
+                
+                resultado.innerHTML = `
+                    <div class="p-4 rounded-lg bg-green-100 border border-green-400">
+                        <p class="text-green-700 text-center font-bold">
+                            ¡Sí! ${pais.charAt(0).toUpperCase() + pais.slice(1).replace(/_/g, ' ')} tiene convenio de canje de permiso de conducir con España.
+                        </p>
+                        <p class="text-green-700 text-center mt-2">
+                            ${fechaTexto}
+                        </p>
+                 <a href="https://www.dgt.es/nuestros-servicios/permisos-de-conducir/permisos-extranjeros-y-de-fuerzas-y-cuerpos-de-seguridad/canjes-de-permisos/paises-con-convenio-de-canjes/" target="_blank" class="block w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700 mt-4">Ver equivalencias DGT</a>
+                    </div>
+                `;
+            } else {
+                let mensajeAdicional = '';
+                if (info && info.fechaSuspension) {
+                    mensajeAdicional = `El canje fue suspendido en ${info.fechaSuspension}.`;
+                } else if (info && !info.tieneConvenio) {
+                    mensajeAdicional = `Deberá obtener un nuevo permiso de conducir español.`;
+                }
+
+                resultado.innerHTML = `
+                    <div class="p-4 rounded-lg bg-red-100 border border-red-400">
+                        <p class="text-red-700 text-center font-bold">
+                            No, ${pais.charAt(0).toUpperCase() + pais.slice(1).replace(/_/g, ' ')} no tiene un convenio de canje con España.
+                        </p>
+                        <p class="text-red-700 text-center mt-2">
+                            ${mensajeAdicional}
+                        </p>
+                    </div>
+                `;
+            }
+        } else {
+            resultado.innerHTML = "";
+        }
+    }
+</script>
+
+</body>
+</html>

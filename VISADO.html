@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Países que Precisan Visado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flag-button-spain {
+            background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: black;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+        <img
+            src="logogad.png"
+            alt="Logo GAD"
+            class="w-full h-full object-cover block"
+        >
+    </div>
+</header>
+
+<h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Países que Precisan Visado
+</h1>
+
+<p class="text-center mt-2 px-4">
+    Selecciona un país para verificar si requiere visado.
+</p>
+<p class="text-center px-4 text-green-600 font-bold">(Si el país no está en la lista, no necesita visado)</p>
+
+<select id="paises" onchange="mostrarVisado()"
+    class="block mx-auto mt-4 p-2 text-base w-11/12 max-w-md border border-gray-300 rounded-lg">
+    <option value="">-- Seleccionar país --</option>
+    <option value="Afganistán">Afganistán</option>
+    <option value="Albania">Albania</option>
+    <option value="Angola">Angola</option>
+    <option value="Arabia Saudí">Arabia Saudí</option>
+    <option value="Argelia">Argelia</option>
+    <option value="Armenia">Armenia</option>
+    <option value="Azerbaiyán">Azerbaiyán</option>
+    <option value="Bangladés">Bangladés</option>
+    <option value="Baréin">Baréin</option>
+    <option value="Belice">Belice</option>
+    <option value="Benín">Benín</option>
+    <option value="Bielorrusia">Bielorrusia</option>
+    <option value="Bolivia">Bolivia</option>
+    <option value="Botsuana">Botsuana</option>
+    <option value="Burkina Faso">Burkina Faso</option>
+    <option value="Burundi">Burundi</option>
+    <option value="Bután">Bután</option>
+    <option value="Cabo Verde">Cabo Verde</option>
+    <option value="Camboya">Camboya</option>
+    <option value="Camerún">Camerún</option>
+    <option value="Catar">Catar</option>
+    <option value="Chad">Chad</option>
+    <option value="China">China</option>
+    <option value="Comoras">Comoras</option>
+    <option value="Congo">Congo</option>
+    <option value="Corea del Norte">Corea del Norte</option>
+    <option value="Costa de Marfil">Costa de Marfil</option>
+    <option value="Cuba">Cuba</option>
+    <option value="Ecuador">Ecuador</option>
+    <option value="Egipto">Egipto</option>
+    <option value="Emiratos Árabes Unidos">Emiratos Árabes Unidos</option>
+    <option value="Eritrea">Eritrea</option>
+    <option value="Esuatini">Esuatini</option>
+    <option value="Etiopía">Etiopía</option>
+    <option value="Filipinas">Filipinas</option>
+    <option value="Fiyi">Fiyi</option>
+    <option value="Gabón">Gabón</option>
+    <option value="Gambia">Gambia</option>
+    <option value="Ghana">Ghana</option>
+    <option value="Guinea">Guinea</option>
+    <option value="Guinea-Bisáu">Guinea-Bisáu</option>
+    <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
+    <option value="Guyana">Guyana</option>
+    <option value="Haití">Haití</option>
+    <option value="India">India</option>
+    <option value="Indonesia">Indonesia</option>
+    <option value="Irak">Irak</option>
+    <option value="Irán">Irán</option>
+    <option value="Jamaica">Jamaica</option>
+    <option value="Jordania">Jordania</option>
+    <option value="Kazajistán">Kazajistán</option>
+    <option value="Kenia">Kenia</option>
+    <option value="Kirguistán">Kirguistán</option>
+    <option value="Kuwait">Kuwait</option>
+    <option value="Laos">Laos</option>
+    <option value="Lesoto">Lesoto</option>
+    <option value="Líbano">Líbano</option>
+    <option value="Liberia">Liberia</option>
+    <option value="Libia">Libia</option>
+    <option value="Madagascar">Madagascar</option>
+    <option value="Malaui">Malaui</option>
+    <option value="Maldivas">Maldivas</option>
+    <option value="Malí">Malí</option>
+    <option value="Marruecos">Marruecos</option>
+    <option value="Mauritania">Mauritania</option>
+    <option value="Mongolia">Mongolia</option>
+    <option value="Mozambique">Mozambique</option>
+    <option value="Myanmar/Birmania">Myanmar/Birmania</option>
+    <option value="Namibia">Namibia</option>
+    <option value="Nepal">Nepal</option>
+    <option value="Níger">Níger</option>
+    <option value="Nigeria">Nigeria</option>
+    <option value="Omán">Omán</option>
+    <option value="Pakistán">Pakistán</option>
+    <option value="Papúa Nueva Guinea">Papúa Nueva Guinea</option>
+    <option value="República Centroafricana">República Centroafricana</option>
+    <option value="República Democrática del Congo">República Democrática del Congo</option>
+    <option value="República Dominicana">República Dominicana</option>
+    <option value="Ruanda">Ruanda</option>
+    <option value="Rusia">Rusia</option>
+    <option value="Santo Tomé y Príncipe">Santo Tomé y Príncipe</option>
+    <option value="Senegal">Senegal</option>
+    <option value="Sierra Leona">Sierra Leona</option>
+    <option value="Siria">Siria</option>
+    <option value="Somalia">Somalia</option>
+    <option value="Sri Lanka">Sri Lanka</option>
+    <option value="Sudáfrica">Sudáfrica</option>
+    <option value="Sudán">Sudán</option>
+    <option value="Sudán del Sur">Sudán del Sur</option>
+    <option value="Surinam">Surinam</option>
+    <option value="Tailandia">Tailandia</option>
+    <option value="Tanzania">Tanzania</option>
+    <option value="Tayikistán">Tayikistán</option>
+    <option value="Timor Oriental">Timor Oriental</option>
+    <option value="Togo">Togo</option>
+    <option value="Túnez">Túnez</option>
+    <option value="Turkmenistán">Turkmenistán</option>
+    <option value="Turquía">Turquía</option>
+    <option value="Uganda">Uganda</option>
+    <option value="Uzbekistán">Uzbekistán</option>
+    <option value="Venezuela">Venezuela</option>
+    <option value="Vietnam">Vietnam</option>
+    <option value="Yemen">Yemen</option>
+    <option value="Yibuti">Yibuti</option>
+    <option value="Zambia">Zambia</option>
+    <option value="Zimbabue">Zimbabue</option>
+</select>
+
+<div id="resultado" class="w-11/12 max-w-md mx-auto mt-6"></div>
+
+    <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+<script>
+    const paisesVisado = [
+        "Afganistán", "Albania", "Angola", "Arabia Saudí", "Argelia", "Armenia", "Azerbaiyán", "Bangladés", "Baréin",
+        "Belice", "Benín", "Bielorrusia", "Bolivia", "Botsuana", "Burkina Faso", "Burundi", "Bután", "Cabo Verde",
+        "Camboya", "Camerún", "Catar", "Chad", "China", "Comoras", "Congo", "Corea del Norte", "Costa de Marfil",
+        "Cuba", "Ecuador", "Egipto", "Emiratos Árabes Unidos", "Eritrea", "Esuatini", "Etiopía", "Filipinas", "Fiyi",
+        "Gabón", "Gambia", "Ghana", "Guinea", "Guinea-Bisáu", "Guinea Ecuatorial", "Guyana", "Haití", "India",
+        "Indonesia", "Irak", "Irán", "Jamaica", "Jordania", "Kazajistán", "Kenia", "Kirguistán", "Kuwait", "Laos",
+        "Lesoto", "Líbano", "Liberia", "Libia", "Madagascar", "Malaui", "Maldivas", "Malí", "Marruecos", "Mauritania",
+        "Mongolia", "Mozambique", "Myanmar/Birmania", "Namibia", "Nepal", "Níger", "Nigeria", "Omán", "Pakistán",
+        "Papúa Nueva Guinea", "República Centroafricana", "República Democrática del Congo", "República Dominicana",
+        "Ruanda", "Rusia", "Santo Tomé y Príncipe", "Senegal", "Sierra Leona", "Siria", "Somalia", "Sri Lanka",
+        "Sudáfrica", "Sudán", "Sudán del Sur", "Surinam", "Tailandia", "Tanzania", "Tayikistán", "Timor Oriental",
+        "Togo", "Túnez", "Turkmenistán", "Turquía", "Uganda", "Uzbekistán", "Venezuela", "Vietnam", "Yemen",
+        "Yibuti", "Zambia", "Zimbabue"
+    ];
+
+    function mostrarVisado() {
+        const pais = document.getElementById('paises').value;
+        const resultado = document.getElementById('resultado');
+
+        if (pais && paisesVisado.includes(pais)) {
+            resultado.innerHTML = `
+                <div class="p-4 rounded-lg bg-red-100 border border-red-400">
+                    <p class="text-center font-bold text-red-700">
+                        ${pais}
+                    </p>
+                    <p class="text-center mt-2 font-semibold text-red-700 font-bold text-red-600">
+                        NECESITA VISADO
+                    </p>
+                </div>
+            `;
+        } else {
+            resultado.innerHTML = "";
+        }
+    }
+</script>
+
+</body>
+</html>

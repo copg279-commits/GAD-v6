@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equivalencias de Licencias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flag-button-spain {
+        background: linear-gradient(to top, #c60b1e 0%, #c60b1e 33%, #ffc400 33%, #ffc400 66%, #c60b1e 66%, #c60b1e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+<header class="bg-blue-600 w-full flex justify-center items-center py-2">
+  <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+    <img 
+      src="logogad.png" 
+      alt="Logo GAD" 
+      class="w-full h-full object-cover block"
+    >
+  </div>
+</header>
+
+
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+        Equivalencias de PNC USA-ESPAÑA
+    </h1>
+
+    <p class="text-center mt-2 px-4">
+        Selecciona un estado de EE. UU. para ver las equivalencias de las categorías
+    </p>
+    <p class="text-center px-4">
+        de su licencia en España:
+    </p>
+
+    <select id="estados" onchange="mostrarCategorias()" 
+        class="block mx-auto mt-4 p-2 text-base w-11/12 max-w-md border border-gray-300 rounded-lg">
+        <option value="">-- Seleccionar estado --</option>
+        <option value="Alabama">Alabama</option>
+        <option value="Alaska">Alaska</option>
+        <option value="Arizona">Arizona</option>
+        <option value="Arkansas">Arkansas</option>
+        <option value="California">California</option>
+        <option value="Colorado">Colorado</option>
+        <option value="Columbia">Columbia</option>
+        <option value="Connecticut">Connecticut</option>
+        <option value="Delaware">Delaware</option>
+        <option value="Florida">Florida</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Hawai">Hawai</option>
+        <option value="Idaho">Idaho</option>
+        <option value="Illinois">Illinois</option>
+        <option value="Indiana">Indiana</option>
+        <option value="Iowa">Iowa</option>
+        <option value="Kansas">Kansas</option>
+        <option value="Kentucky">Kentucky</option>
+        <option value="Louisiana">Louisiana</option>
+        <option value="Maine">Maine</option>
+        <option value="Maryland">Maryland</option>
+        <option value="Massachusetts">Massachusetts</option>
+        <option value="Michigan">Michigan</option>
+        <option value="Minnesota">Minnesota</option>
+        <option value="Mississippi">Mississippi</option>
+        <option value="Missouri">Missouri</option>
+        <option value="Montana">Montana</option>
+        <option value="Nebraska">Nebraska</option>
+        <option value="Nevada">Nevada</option>
+        <option value="New Hampshire">New Hampshire</option>
+        <option value="New Jersey">New Jersey</option>
+        <option value="New Mexico">New Mexico</option>
+        <option value="New York">New York</option>
+        <option value="North Carolina">North Carolina</option>
+        <option value="North Dakota">North Dakota</option>
+        <option value="Ohio">Ohio</option>
+        <option value="Oklahoma">Oklahoma</option>
+        <option value="Oregon">Oregon</option>
+        <option value="Pennsylvania">Pennsylvania</option>
+        <option value="Rhode Island">Rhode Island</option>
+        <option value="South Carolina">South Carolina</option>
+        <option value="South Dakota">South Dakota</option>
+        <option value="Tennessee">Tennessee</option>
+        <option value="Texas">Texas</option>
+        <option value="Utah">Utah</option>
+        <option value="Vermont">Vermont</option>
+        <option value="Virginia">Virginia</option>
+        <option value="Washington">Washington</option>
+        <option value="West Virginia">West Virginia</option>
+        <option value="Wisconsin">Wisconsin</option>
+        <option value="Wyoming">Wyoming</option>
+    </select>
+
+    <div id="resultado" class="w-11/2 max-w-md mx-auto mt-6"></div>
+
+    <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+    <script>
+        const estados = {
+            "Alabama": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B\nM: -",
+            "Alaska": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B\nM1: -\nM2: -",
+            "Arizona": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B\nG: -\nM: -",
+            "Arkansas": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B\nH: -\nMD: -",
+            "California": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nM1: -\nM2: -",
+            "Colorado": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B\nM: -\nR: -",
+            "Columbia": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Connecticut": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Delaware": "CDL A: B+BE+C1+C1E+C+CE\nCDL B: B+BE+C1+C\nCDL C: B\nD: B",
+            "Florida": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B\nD: B\nE: B",
+            "Georgia": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B\nM: B",
+            "Hawai": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nClass 1: B\nClass 2: B",
+            "Idaho": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Illinois": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Indiana": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Iowa": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Kansas": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Kentucky": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Louisiana": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B\nD: B",
+            "Maine": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Maryland": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Massachusetts": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Michigan": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Minnesota": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Mississippi": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Missouri": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Montana": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B\nD: B",
+            "Nebraska": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Nevada": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "New Hampshire": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "New Jersey": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "New Mexico": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "New York": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "North Carolina": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "North Dakota": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Ohio": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Oklahoma": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Oregon": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Pennsylvania": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Rhode Island": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "South Carolina": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "South Dakota": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Tennessee": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Texas": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Utah": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Vermont": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Virginia": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Washington": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "West Virginia": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B",
+            "Wisconsin": "CDL-A: B+BE+C1+C1E+C+CE\nCDL-B: B+BE+C1+C\nCDL-C: B",
+            "Wyoming": "A: B+BE+C1+C1E+C+CE\nB: B+BE+C1+C\nC: B"
+        };
+
+        function mostrarCategorias() {
+            const estado = document.getElementById('estados').value;
+            const resultado = document.getElementById('resultado');
+
+            if (estado && estados[estado]) {
+                const categorias = estados[estado].split('\n').map(line => {
+                    const [local, espana] = line.split(':');
+                    return `<tr><td class='border px-3 py-2'>${local.trim()}</td><td class='border px-3 py-2'>${espana.trim()}</td></tr>`;
+                }).join('');
+
+                resultado.innerHTML = `
+                    <h2 class="text-green-600 text-center text-lg font-semibold mb-4">${estado}</h2>
+                    <table class="w-full border border-gray-300 text-left">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border px-3 py-2">LOCAL</th>
+                                <th class="border px-3 py-2">ESPAÑA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${categorias}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                resultado.innerHTML = "<p class='text-center text-red-500'>Por favor, selecciona un estado válido.</p>";
+            }
+        }
+    </script>
+
+</body>
+</html>

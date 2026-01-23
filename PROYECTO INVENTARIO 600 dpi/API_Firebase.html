@@ -1,0 +1,103 @@
+// ==============================================================================
+// 1. FUNCIÓN PRINCIPAL: Obtiene datos de Sheets y los envía a Firebase
+// ==============================================================================
+
+// NOTA IMPORTANTE: Este script usa variables globales declaradas en Código.gs:
+// SPREADSHEET_ID, SHEET_NAME, FIREBASE_URL, y FIREBASE_TOKEN.
+// No deben ser declaradas aquí para evitar el error "has already been declared".
+
+/**
+ * Función que se ejecuta automáticamente al final de listarArchivosYActualizarHoja().
+ * Lee los datos de la hoja de cálculo y actualiza la ruta '/documentos' en Firebase.
+ */
+function actualizarFirebaseDesdeSheets() {
+    
+    // Verificación de variables globales (Asegurarse de que existen)
+    if (typeof SPREADSHEET_ID === 'undefined' || typeof SHEET_NAME === 'undefined' || typeof FIREBASE_URL === 'undefined' || typeof FIREBASE_TOKEN === 'undefined') {
+        Logger.log("[FIREBASE] Error de Configuración: Las variables de configuración (IDs, URL o Token) no están definidas en Código.gs. Por favor, revísalo.");
+        return;
+    }
+
+
+    let ss;
+    try {
+        // Usa la variable SPREADSHEET_ID definida en Código.gs
+        ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    } catch (e) {
+        Logger.log(`[FIREBASE] Error crítico: No se pudo abrir la Hoja de Cálculo con ID ${SPREADSHEET_ID}.`);
+        return;
+    }
+    
+    // Usa la variable SHEET_NAME definida en Código.gs
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+        // En este punto, si falla, es que el nombre de la pestaña es incorrecto
+        Logger.log(`[FIREBASE] Error: La pestaña '${SHEET_NAME}' no existe en la Hoja de Cálculo. ¡Verifica el nombre exacto!`);
+        return;
+    }
+    
+    // Obtener todos los datos de la hoja (excluyendo la fila de encabezado)
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+        Logger.log('[FIREBASE] No hay datos para subir (solo encabezado).');
+        return;
+    }
+    
+    // Rango: desde la fila 2 hasta la última fila, y todas las columnas
+    const range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
+    const values = range.getValues();
+    
+    const documents = {};
+    
+    // Iterar sobre los datos y crear un objeto JSON
+    values.forEach(row => {
+        // Asegúrate de que las filas tienen 7 columnas esperadas
+        if (row.length < 7) {
+            Logger.log('[FIREBASE] Advertencia: Fila con datos insuficientes, omitida.');
+            return;
+        }
+        
+        const [pais, tipo_documento, nombre_documento, fecha, categoria, enlace_drive, id_archivo_drive] = row;
+        
+        // Usar el ID de archivo de Drive como clave única en Firebase
+        documents[id_archivo_drive] = {
+            pais,
+            tipo_documento,
+            nombre_documento,
+            fecha: fecha.toString(), 
+            categoria,
+            enlace_drive,
+        };
+    });
+    
+    if (Object.keys(documents).length === 0) {
+        Logger.log('[FIREBASE] No se encontraron documentos válidos para subir.');
+        return;
+    }
+    
+    // Enviar los datos a Firebase
+    const firebaseService = getFirebaseService(); // Asume que getFirebaseService está en otro archivo
+    const url = FIREBASE_URL + '/documentos.json';
+    
+    try {
+        const response = UrlFetchApp.fetch(url, {
+            method: 'put', 
+            contentType: 'application/json',
+            payload: JSON.stringify(documents),
+            headers: {
+                Authorization: 'Bearer ' + firebaseService.getAccessToken(),
+            },
+            muteHttpExceptions: true, 
+        });
+
+        if (response.getResponseCode() !== 200) {
+            Logger.log('[FIREBASE] Error al subir datos. Código: ' + response.getResponseCode());
+            Logger.log('[FIREBASE] Respuesta: ' + response.getContentText());
+        } else {
+            Logger.log(`[FIREBASE] Éxito: ${Object.keys(documents).length} documentos sincronizados correctamente.`);
+        }
+
+    } catch (e) {
+        Logger.log('[FIREBASE] Error de conexión o autenticación: ' + e.toString());
+    }
+}

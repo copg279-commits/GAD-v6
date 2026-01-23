@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación Licencia Venezuela + IA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  
+  <script>
+    // Configurar worker de PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  </script>
+
+  <style>
+    /* Estilos visuales */
+    .delete-icon { cursor: pointer; transition: transform 0.2s; color: #ef4444; }
+    .delete-icon:hover { transform: scale(1.1); }
+    .listado-container { max-height: 300px; overflow-y: auto; }
+    .cpi-table-container { max-height: 400px; overflow-y: auto; }
+    
+    /* Drop Zone y Animaciones */
+    .drop-zone {
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        border-radius: 0.5rem;
+        position: relative;
+    }
+    .drop-zone.drag-active {
+        background-color: rgba(34, 197, 94, 0.15) !important; 
+        border-color: #22c55e !important;
+        border-style: dashed;
+        transform: scale(1.02);
+        z-index: 50;
+    }
+    .loading-overlay {
+        position: fixed; inset: 0; background: rgba(255,255,255,0.9); 
+        z-index: 50; display: flex; flex-direction: column; 
+        align-items: center; justify-content: center;
+    }
+    .spinner {
+        width: 50px; height: 50px; border: 5px solid #e5e7eb; 
+        border-top: 5px solid #2563eb; border-radius: 50%; 
+        animation: spin 1s linear infinite; margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    #aiResultBox { animation: slideDown 0.5s ease-out; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .alert-pulse { animation: alertPulse 2s infinite; }
+    @keyframes alertPulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16 relative">
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <h3 class="text-blue-600 font-bold text-lg animate-pulse">Procesando Documento (IA)...</h3>
+      <p id="loadingText" class="text-gray-500 text-sm mt-2">Analizando imagen/PDF...</p>
+  </div>
+
+  <div class="absolute top-2 right-2 z-40">
+      <button onclick="toggleSettings()" class="bg-gray-800 text-white text-xs px-3 py-1 rounded shadow hover:bg-gray-700 flex items-center gap-1">
+          ⚙️ Configurar IA
+      </button>
+  </div>
+
+  <div id="settingsPanel" class="hidden absolute top-10 right-2 w-72 bg-gray-800 border border-gray-600 shadow-xl rounded p-3 z-40 text-white">
+      <div class="text-xs text-gray-400 mb-2">Proveedor: Google Gemini</div>
+      <label class="block text-xs font-bold text-gray-300 mb-1">API Key:</label>
+      <input type="password" id="apiKeyInput" class="w-full bg-gray-900 text-white text-xs border border-gray-700 p-1 rounded mb-2" placeholder="Pegar API Key aquí...">
+      <label class="block text-xs font-bold text-gray-300 mb-1">Modelo:</label>
+      <input type="text" id="modelInput" class="w-full bg-gray-900 text-white text-xs border border-gray-700 p-1 rounded mb-3" placeholder="gemini-1.5-flash">
+      <button onclick="saveSettings()" class="w-full bg-blue-600 text-white text-xs py-1.5 rounded hover:bg-blue-700 font-bold">GUARDAR CONFIGURACIÓN</button>
+  </div>
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Verificación Licencia Venezuela
+  </h1>
+  <h2 class="text-gray-700 text-center mt-2 px-4 text-sm">
+    Arrastra el PDF/Imagen de la licencia o escribe el Nº
+  </h2>
+  
+  <div id="mainDropZone" class="drop-zone w-11/12 max-w-md mx-auto mt-4 p-2 bg-white rounded shadow-sm">
+    <div class="w-full pointer-events-none select-none">
+      <img src="logovenezuela.png" alt="Logo Venezuela" class="w-full">
+    </div>
+
+    <input 
+      type="number" 
+      id="numero" 
+      placeholder="Ingresa el Nro De Verificación manualmente" 
+      class="block mx-auto mt-4 p-3 text-base w-full border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+    />
+  </div>
+
+  <button 
+    onclick="buscarFecha()" 
+    class="block mx-auto mt-4 w-11/12 max-w-md bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition shadow-lg"
+  >
+    Consultar Manualmente
+  </button>
+
+  <div id="output" class="mt-6 text-gray-700 text-center w-11/12 max-w-md mx-auto"></div>
+
+  <div id="aiResultBox" class="hidden mt-4 w-11/12 max-w-md mx-auto bg-white border-2 rounded-lg p-0 text-center shadow-xl overflow-hidden">
+      <div id="aiHeader" class="bg-gray-100 p-3 border-b">
+          <h3 class="font-bold text-lg" id="aiTitle">🔍 Análisis Completado</h3>
+      </div>
+      <div class="p-4">
+          <div class="grid grid-cols-2 gap-2 text-sm text-gray-800 text-left mb-4">
+              <div class="bg-gray-50 p-2 rounded border">
+                  <span class="text-xs text-gray-500 block uppercase">Nro De Verificación</span>
+                  <span id="aiNumero" class="font-mono font-bold text-black text-lg break-all"></span>
+              </div>
+              <div class="bg-gray-50 p-2 rounded border">
+                  <span class="text-xs text-gray-500 block uppercase">F. Expedición</span>
+                  <span id="aiFecha" class="font-mono font-bold text-black text-lg"></span>
+              </div>
+          </div>
+
+          <div id="aiValidationMsg" class="mb-4 text-sm p-2 rounded border"></div>
+          
+          <div id="aiActions"></div>
+          
+          <button onclick="document.getElementById('aiResultBox').classList.add('hidden')" class="w-full mt-3 text-gray-400 text-xs underline">
+              Cerrar panel
+          </button>
+      </div>
+  </div>
+  
+  <div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Gestión de Datos</h3>
+    <button id="mostrarFormularioBtn" class="w-full bg-green-600 text-white py-2 rounded-md shadow hover:bg-green-700 text-sm">
+      Introduzca nuevo Nro de Verificación
+    </button>
+    <button id="mostrarListadoBtn" class="w-full bg-blue-500 text-white py-2 rounded-md shadow hover:bg-blue-600 mt-2 text-sm">
+      Consultar Lista Completa
+    </button>
+    
+    <div id="formularioNuevosDatos" class="mt-4 hidden text-left">
+      <div class="mb-4">
+        <label for="nuevoNumero" class="block text-sm font-bold text-gray-700 mb-1">Nro De Verificación:</label>
+        <input type="number" id="nuevoNumero" placeholder="Ej: 210205080686" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="mb-4">
+        <label for="nuevaFecha" class="block text-sm font-bold text-gray-700 mb-1">Fecha de Expedición:</label>
+        <input type="date" id="nuevaFecha" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="guardarNuevoNumero()" class="w-1/2 bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">Guardar</button>
+        <button onclick="limpiarCampos()" class="w-1/2 bg-gray-400 text-white py-2 rounded-md shadow hover:bg-gray-500">Limpiar</button>
+      </div>
+      <div id="mensajeGuardado" class="mt-4 text-sm font-medium text-center"></div>
+    </div>
+
+    <div id="cpiDataTable" class="mt-4 hidden">
+        <h3 class="text-lg font-semibold mb-4 text-center">Listado Completo</h3>
+        <div class="cpi-table-container">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Nro Verificación</th>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
+                        <th scope="col" class="px-6 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody id="cpiList"></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+  </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script>
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const licenciasNuevasRef = database.ref('licencias_venezuela_nuevas');
+
+    let datosCompletos = [];
+    
+    // --- 1. CONFIGURACIÓN IA ---
+    let geminiApiKey = localStorage.getItem('ai_api_key') || '';
+    let geminiModelName = localStorage.getItem('gemini_model_name') || 'gemini-1.5-flash';
+
+    function toggleSettings() {
+        document.getElementById('settingsPanel').classList.toggle('hidden');
+        document.getElementById('apiKeyInput').value = geminiApiKey;
+        document.getElementById('modelInput').value = geminiModelName;
+    }
+
+    function saveSettings() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        const model = document.getElementById('modelInput').value.trim();
+        if(key && model) {
+            geminiApiKey = key;
+            geminiModelName = model;
+            localStorage.setItem('ai_api_key', key);
+            localStorage.setItem('gemini_model_name', model);
+            alert("Configuración guardada.");
+            toggleSettings();
+        } else {
+            alert("Rellena todos los campos.");
+        }
+    }
+
+    // --- 2. PROCESAMIENTO IA (OCR) ---
+    async function callGemini(base64Image) {
+        if (!geminiApiKey) {
+            alert("⚠️ Falta la API Key de Google Gemini. Configúrala arriba a la derecha.");
+            return null;
+        }
+
+        // --- PROMPT MODIFICADO PARA VENEZUELA (Nro De Verificación) ---
+        const PROMPT = `Analiza la imagen de este documento de licencia de conducir de Venezuela.
+        Céntrate exclusivamente en la PARTE FRONTAL (anverso) donde aparece la fotografía del titular.
+        Identifica y extrae con precisión:
+        
+        1. "numero": El "Nro De Verificación". Este número se encuentra ubicado explícitamente en la parte frontal, justo DEBAJO del código QR cuadrado. Es una secuencia larga de solo dígitos. NO extraigas números del reverso.
+        2. "fecha": La "F.Expedición" (Fecha de Expedición) que aparece en la lista de datos personales en el anverso.
+        
+        Devuelve SOLO un JSON con el siguiente formato exacto: {"numero": "...", "fecha": "DD/MM/AAAA"}`;
+        // ------------------------------------------------------------
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: PROMPT },
+                            { inline_data: { mime_type: "image/jpeg", data: base64Image } }
+                        ]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            
+            let rawText = data.candidates[0].content.parts[0].text;
+            rawText = rawText.replace(/```json|```/g, '').trim();
+            return JSON.parse(rawText);
+
+        } catch (error) {
+            console.error("Error AI:", error);
+            alert(`Error al analizar con IA: ` + error.message);
+            return null;
+        }
+    }
+
+    // --- 3. MANEJO DE ARCHIVOS (PDF O IMAGEN) ---
+    async function processFile(file) {
+        const overlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        overlay.classList.remove('hidden');
+        
+        try {
+            let base64Image = "";
+
+            if (file.type === "application/pdf") {
+                loadingText.textContent = "Convirtiendo PDF a imagen...";
+                base64Image = await convertPdfToImage(file);
+            } else if (file.type.startsWith("image/")) {
+                loadingText.textContent = "Procesando imagen...";
+                base64Image = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                throw new Error("Formato no soportado. Usa PDF o Imagen (JPG/PNG).");
+            }
+
+            loadingText.textContent = "Consultando a la IA (buscando Nro De Verificación)...";
+            const result = await callGemini(base64Image);
+            
+            overlay.classList.add('hidden');
+
+            if (result) {
+                // Limpieza de datos
+                const numLimpio = result.numero.replace(/\D/g, ''); 
+                const fechaLimpia = formatoFechaIA(result.fecha);
+                
+                if (!numLimpio) {
+                     alert("La IA no pudo encontrar el 'Nro De Verificación' debajo del QR.");
+                     return;
+                }
+
+                // Mostrar en input manual también
+                document.getElementById('numero').value = numLimpio;
+                buscarFecha(); // Ejecutar cálculo visual estándar
+                
+                // Mostrar Panel IA
+                mostrarResultadoIA(numLimpio, fechaLimpia);
+            }
+
+        } catch (error) {
+            overlay.classList.add('hidden');
+            alert(error.message);
+        }
+    }
+
+    // Función para convertir la primera página del PDF a imagen
+    async function convertPdfToImage(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const page = await pdf.getPage(1); // Primera página
+        // Usamos una escala mayor (ej. 2.5) para asegurar buena resolución del QR y el texto pequeño
+        const viewport = page.getViewport({ scale: 2.5 }); 
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+    }
+
+    function formatoFechaIA(fechaStr) {
+        if (!fechaStr) return "";
+        return fechaStr.replace(/\./g, '/').replace(/-/g, '/');
+    }
+
+    function mostrarResultadoIA(numero, fecha) {
+        const aiBox = document.getElementById('aiResultBox');
+        const aiHeader = document.getElementById('aiHeader');
+        const aiTitle = document.getElementById('aiTitle');
+        const aiNum = document.getElementById('aiNumero');
+        const aiDate = document.getElementById('aiFecha');
+        const aiMsg = document.getElementById('aiValidationMsg');
+        const aiActions = document.getElementById('aiActions');
+
+        aiNum.textContent = numero;
+        aiDate.textContent = fecha;
+        aiBox.classList.remove('hidden');
+
+        // Verificación lógica
+        const chequeo = verificarCongruencia(parseInt(numero), fecha);
+
+        if (chequeo.esFraude) {
+            // ROJO: Alerta de fraude
+            aiBox.className = "mt-4 w-11/12 max-w-md mx-auto bg-white border-2 rounded-lg shadow-xl overflow-hidden border-red-500 alert-pulse";
+            aiHeader.className = "bg-red-600 p-3 border-b text-white";
+            aiTitle.textContent = "⚠️ POSIBLE DOCUMENTO FALSO";
+            aiMsg.className = "bg-red-50 text-red-800 p-3 rounded font-bold border border-red-200 text-left";
+            aiMsg.innerHTML = chequeo.mensaje;
+            aiActions.innerHTML = ""; 
+        } else if (chequeo.existe) {
+            // AZUL: Ya existe
+            aiBox.className = "mt-4 w-11/12 max-w-md mx-auto bg-white border-2 rounded-lg shadow-xl overflow-hidden border-blue-500";
+            aiHeader.className = "bg-blue-100 p-3 border-b text-blue-800";
+            aiTitle.textContent = "ℹ️ Documento ya registrado";
+            aiMsg.className = "bg-blue-50 text-blue-800 p-3 rounded border border-blue-200 text-left";
+            aiMsg.innerHTML = "Este 'Nro De Verificación' ya existe exactamente en la base de datos.";
+            aiActions.innerHTML = "";
+        } else {
+            // VERDE: Correcto y nuevo
+            aiBox.className = "mt-4 w-11/12 max-w-md mx-auto bg-white border-2 rounded-lg shadow-xl overflow-hidden border-green-500";
+            aiHeader.className = "bg-green-100 p-3 border-b text-green-700";
+            aiTitle.textContent = "✅ Documento Coherente";
+            aiMsg.className = "bg-green-50 text-green-800 p-3 rounded border border-green-200 text-left";
+            aiMsg.innerHTML = "La numeración y fecha siguen la progresión aritmética lógica de Venezuela.";
+
+            // Guardar datos temporales para añadir
+            window.tempAiData = { numero: parseInt(numero), fecha: fecha };
+
+            aiActions.innerHTML = `
+                <button onclick="guardarDesdeAI()" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 transition flex justify-center items-center gap-2 shadow-lg transform active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+                    AÑADIR A BASE DE DATOS
+                </button>
+            `;
+        }
+    }
+
+    function verificarCongruencia(nuevoNumero, nuevaFechaStr) {
+        // Parsear fecha DD/MM/AAAA a objeto Date
+        if (!nuevaFechaStr || nuevaFechaStr.length < 8) return { esFraude: false, existe: false, mensaje: "Fecha no válida detectada." };
+
+        const [d, m, y] = nuevaFechaStr.split('/').map(Number);
+        const fechaNueva = new Date(y, m - 1, d);
+
+        const exacto = datosCompletos.find(d => d.numero === nuevoNumero);
+        if (exacto) return { esFraude: false, existe: true, mensaje: "" };
+
+        // Ordenar datos numéricamente
+        const datosOrdenados = [...datosCompletos].sort((a, b) => a.numero - b.numero);
+        const antes = datosOrdenados.filter(d => d.numero <= nuevoNumero).pop();
+        const despues = datosOrdenados.find(d => d.numero > nuevoNumero);
+        
+        const parseDate = (dateStr) => {
+            const [dd, mm, yy] = dateStr.split('/');
+            return new Date(yy, mm - 1, dd);
+        };
+
+        let mensajeError = "";
+        let esFraude = false;
+
+        if (antes) {
+            const fechaAntes = parseDate(antes.fecha);
+            if (fechaNueva < fechaAntes) {
+                esFraude = true;
+                mensajeError += `⛔ <strong>INCONGRUENCIA:</strong><br>El Nº ${nuevoNumero} es posterior al Nº ${antes.numero}, pero su fecha (${nuevaFechaStr}) es ANTERIOR a la registrada (${antes.fecha}).<br><br>`;
+            }
+        }
+
+        if (despues) {
+            const fechaDespues = parseDate(despues.fecha);
+            if (fechaNueva > fechaDespues) {
+                esFraude = true;
+                mensajeError += `⛔ <strong>INCONGRUENCIA:</strong><br>El Nº ${nuevoNumero} es anterior al Nº ${despues.numero}, pero su fecha (${nuevaFechaStr}) es POSTERIOR a la registrada (${despues.fecha}).`;
+            }
+        }
+
+        return { esFraude: esFraude, existe: false, mensaje: esFraude ? mensajeError : "" };
+    }
+
+    function guardarDesdeAI() {
+        if (!window.tempAiData) return;
+        const { numero, fecha } = window.tempAiData;
+
+        // Usamos el número como clave principal en Firebase para Venezuela
+        licenciasNuevasRef.child(String(numero)).set({ numero: numero, fecha: fecha })
+            .then(() => {
+                alert(`✅ Nro De Verificación ${numero} guardado con éxito.`);
+                document.getElementById('aiResultBox').classList.add('hidden');
+                window.tempAiData = null;
+            })
+            .catch(error => {
+                alert('Error al guardar: ' + error.message);
+            });
+    }
+
+    // --- 4. EVENTOS DRAG & DROP ---
+    const dropZone = document.getElementById('mainDropZone');
+    
+    // Evitar defaults
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+    // Estilos visuales al arrastrar
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-active'), false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-active'), false);
+    });
+
+    // Manejar drop
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files[0]) processFile(files[0]);
+    }, false);
+
+    // Pegar imagen (Ctrl+V)
+    window.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let item of items) {
+            if (item.type.indexOf("image") === 0) {
+                processFile(item.getAsFile());
+                return;
+            }
+        }
+    });
+
+
+    // --- 5. LÓGICA ORIGINAL (Firebase, Tablas, etc.) ---
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarDatosDesdeFirebase();
+    });
+
+    function cargarDatosDesdeFirebase() {
+      licenciasNuevasRef.on('value', snapshot => {
+        datosCompletos = [];
+        snapshot.forEach(childSnapshot => {
+          const nuevoDato = childSnapshot.val();
+          const key = childSnapshot.key;
+          if (nuevoDato.numero && nuevoDato.fecha) {
+              datosCompletos.push({
+                numero: parseInt(nuevoDato.numero),
+                fecha: nuevoDato.fecha,
+                key: key
+              });
+          }
+        });
+        datosCompletos.sort((a, b) => a.numero - b.numero);
+        renderizarTablaCpi();
+      });
+    }
+
+    const mostrarFormularioBtn = document.getElementById('mostrarFormularioBtn');
+    const formularioNuevosDatos = document.getElementById('formularioNuevosDatos');
+    const nuevoNumeroInput = document.getElementById('nuevoNumero');
+    const nuevaFechaInput = document.getElementById('nuevaFecha');
+    const mensajeGuardadoDiv = document.getElementById('mensajeGuardado');
+    const mostrarListadoBtn = document.getElementById('mostrarListadoBtn');
+    const cpiDataTable = document.getElementById('cpiDataTable');
+    const cpiListDiv = document.getElementById('cpiList');
+
+    mostrarFormularioBtn.addEventListener('click', () => {
+        formularioNuevosDatos.classList.toggle('hidden');
+        cpiDataTable.classList.add('hidden');
+        limpiarCampos();
+    });
+
+    mostrarListadoBtn.addEventListener('click', () => {
+        cpiDataTable.classList.toggle('hidden');
+        formularioNuevosDatos.classList.add('hidden');
+        limpiarCampos();
+    });
+
+    function limpiarCampos() {
+        nuevoNumeroInput.value = '';
+        nuevaFechaInput.value = '';
+        mensajeGuardadoDiv.textContent = '';
+        mensajeGuardadoDiv.style.color = '';
+    }
+
+    function guardarNuevoNumero() {
+        const nuevoNumero = parseInt(nuevoNumeroInput.value);
+        const nuevaFecha = nuevaFechaInput.value;
+
+        if (isNaN(nuevoNumero) || !nuevaFecha) {
+            mensajeGuardadoDiv.textContent = 'Datos inválidos.';
+            mensajeGuardadoDiv.style.color = 'orange';
+            return;
+        }
+
+        // Verificar congruencia antes de guardar manualmente también
+        const chequeo = verificarCongruencia(nuevoNumero, nuevaFecha.split('-').reverse().join('/'));
+        
+        if (chequeo.existe) {
+             mensajeGuardadoDiv.innerHTML = `YA EXISTE ESTE NÚMERO.`;
+             mensajeGuardadoDiv.style.color = 'red';
+             return;
+        }
+
+        if (chequeo.esFraude) {
+            mensajeGuardadoDiv.innerHTML = `<p class='text-red-500 font-bold'>${chequeo.mensaje}</p>`;
+            return;
+        }
+
+        const [year, month, day] = nuevaFecha.split('-');
+        const fechaFormateada = `${day}/${month}/${year}`;
+
+        licenciasNuevasRef.child(String(nuevoNumero)).set({ numero: nuevoNumero, fecha: fechaFormateada })
+            .then(() => {
+                mensajeGuardadoDiv.textContent = 'Guardado con éxito.';
+                mensajeGuardadoDiv.style.color = 'green';
+                setTimeout(() => {
+                    limpiarCampos();
+                    formularioNuevosDatos.classList.add('hidden');
+                }, 2000);
+            })
+            .catch(error => {
+                mensajeGuardadoDiv.textContent = 'Error: ' + error.message;
+                mensajeGuardadoDiv.style.color = 'red';
+            });
+    }
+
+    function renderizarTablaCpi() {
+      cpiListDiv.innerHTML = '';
+      
+      const datosOrdenados = [...datosCompletos].sort((a, b) => {
+          const parseDate = (dateStr) => {
+            if(!dateStr) return new Date(0);
+            const [d, m, y] = dateStr.split('/');
+            return new Date(`${y}-${m}-${d}`);
+          };
+          
+          const fechaA = parseDate(a.fecha);
+          const fechaB = parseDate(b.fecha);
+
+          if (fechaA.getTime() === fechaB.getTime()) {
+              return b.numero - a.numero; 
+          }
+          return fechaB - fechaA; 
+      });
+      
+      datosOrdenados.forEach(dato => {
+        const fila = document.createElement('tr');
+        fila.classList.add('bg-white', 'border-b', 'hover:bg-gray-50');
+
+        const celdaNumero = document.createElement('td');
+        celdaNumero.classList.add('px-6', 'py-4', 'font-medium', 'text-gray-900', 'whitespace-nowrap');
+        celdaNumero.textContent = dato.numero;
+
+        const celdaFecha = document.createElement('td');
+        celdaFecha.classList.add('px-6', 'py-4');
+        celdaFecha.textContent = dato.fecha;
+
+        const celdaAccion = document.createElement('td');
+        celdaAccion.classList.add('px-6', 'py-4', 'text-right');
+        const deleteIcon = document.createElement('span');
+        deleteIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 delete-icon inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                </svg>`;
+        deleteIcon.onclick = () => confirmarEliminarCpi(dato.key, dato.numero);
+        celdaAccion.appendChild(deleteIcon);
+
+        fila.appendChild(celdaNumero);
+        fila.appendChild(celdaFecha);
+        fila.appendChild(celdaAccion);
+        cpiListDiv.appendChild(fila);
+      });
+    }
+
+    function confirmarEliminarCpi(key, numero) {
+      if (confirm(`¿Eliminar registro ${numero}?`)) {
+        licenciasNuevasRef.child(key).remove();
+      }
+    }
+
+    function buscarFecha() {
+      const numeroInput = document.getElementById("numero");
+      const numero = parseInt(numeroInput.value);
+      const output = document.getElementById("output");
+
+      if (isNaN(numero)) {
+        output.innerHTML = "<p class='text-red-500 font-semibold'>Ingresa un Nro De Verificación válido.</p>";
+        return;
+      }
+      
+      const exacto = datosCompletos.find(d => d.numero === numero);
+      if (exacto) {
+        output.innerHTML = `<div class="bg-green-50 p-4 rounded border border-green-200"><p class='text-green-800 font-bold'>✅ REGISTRO EXACTO ENCONTRADO</p><p>Nro: ${exacto.numero}</p><p class='font-bold'>Fecha de Expedición: ${exacto.fecha}</p></div>`;
+        return;
+      }
+      
+      const antes = datosCompletos.filter(d => d.numero <= numero).pop();
+      const despues = datosCompletos.find(d => d.numero > numero);
+
+      if (!antes) {
+        output.innerHTML = "<p class='text-red-500 font-bold'>NÚMERO SIN REFERENCIA PREVIA EN BD</p>";
+        return;
+      }
+
+      if (!despues) {
+        output.innerHTML = `<div class="bg-orange-50 p-4 rounded border border-orange-200"><p class='text-orange-800 font-bold'>⚠️ NÚMERO POSTERIOR AL ÚLTIMO REGISTRO</p><p>Último conocido: ${antes.numero} (${antes.fecha})</p></div>`;
+        return;
+      }
+
+      // Cálculo de estimación
+      const prop = (numero - antes.numero) / (despues.numero - antes.numero);
+      const [day1, month1, year1] = antes.fecha.split("/");
+      const fecha1 = new Date(`${year1}-${month1}-${day1}`);
+      const [day2, month2, year2] = despues.fecha.split("/");
+      const fecha2 = new Date(`${year2}-${month2}-${day2}`);
+      
+      if (fecha1.getTime() > fecha2.getTime()) {
+          output.innerHTML = "<p class='text-red-500 font-bold'>¡ERROR CRÍTICO EN BD! FECHAS INCOHERENTES (Revisar listado)</p>";
+          return;
+      }
+
+      const fechaEstimada = new Date(fecha1.getTime() + prop * (fecha2.getTime() - fecha1.getTime()));
+      
+      output.innerHTML = `
+        <div class="bg-blue-50 p-4 rounded border border-blue-200">
+            <p class='text-blue-800 font-bold mb-2'>ESTIMACIÓN ARITMÉTICA (Nro Verificación)</p>
+            <p class="text-sm text-gray-600">Rango: <strong>${antes.fecha}</strong> (${antes.numero}) y <strong>${despues.fecha}</strong> (${despues.numero})</p>
+            <p class='text-green-600 font-bold text-xl mt-2'>
+              Fecha Estimada: ${fechaEstimada.toLocaleDateString("es-ES", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </p>
+        </div>
+      `;
+    }
+
+    document.getElementById("numero").addEventListener("keypress", function (event) {
+      if (event.key === "Enter") buscarFecha();
+    });
+  </script>
+</body>
+</html>

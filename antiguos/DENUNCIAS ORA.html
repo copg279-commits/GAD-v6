@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de denuncias ORA - GAD</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* --- INICIO DE LA MODIFICACIÓN (Encabezado) --- */
+        .title-panel-blue {
+            background-color: #3b82f6;
+            display: grid; /* Cambiado a grid */
+            grid-template-columns: auto 1fr auto; /* 3 columnas */
+            align-items: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+        .title-panel-blue h1 {
+            color: white;
+            margin: 0;
+            padding: 0;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center; /* Centrar el H1 */
+            text-align: center;
+        }
+        .title-panel-blue .header-logo-container {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+        /* Justificar logos a los lados */
+        .title-panel-blue .header-logo-container:first-child {
+            justify-self: start;
+        }
+        .title-panel-blue .header-logo-container:last-child {
+            justify-self: end;
+        }
+        .title-panel-blue .header-logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+
+        /* ESTILOS DEL PIE DE PÁGINA (Reutilizados) */
+        footer {
+            background-color: #e0e0e0;
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            margin-top: auto;
+            box-sizing: border-box;
+        }
+        footer p {
+            margin: 5px 0;
+            font-size: 1em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* ESTILOS BASE Y PANELES (Reutilizados) */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .app-container {
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-weight: 700;
+        }
+        h2 { font-size: 1.5em; }
+        h3 { font-size: 1.2em; }
+
+        /* Controles y Botones (Reutilizados) */
+        button {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease-in-out;
+            margin-right: 8px;
+            margin-bottom: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: white;
+            font-size: 0.9em;
+        }
+        button i { font-size: 1em; }
+        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-primary:hover { box-shadow: 0 4px 10px rgba(41, 128, 185, 0.4); }
+        .btn-delete { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-delete:hover { box-shadow: 0 4px 10px rgba(192, 57, 43, 0.4); }
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-success:hover { box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4); }
+        .btn-warning { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-warning:hover { box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4); }
+        .btn-info { background: linear-gradient(135deg, #5bc0de, #31b0d5); }
+        .btn-info:hover { box-shadow: 0 4px 10px rgba(49, 176, 213, 0.4); }
+        
+        .btn-danger { background: linear-gradient(135deg, #ff8c00, #dc143c); } /* Naranja-Rojo Vívido */
+        .btn-danger:hover { box-shadow: 0 4px 10px rgba(220, 20, 60, 0.4); }
+
+
+        /* Estilos generales de inputs (Reutilizados) */
+        input[type="text"], input[type="number"], input[type="url"], input[type="date"], select {
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 8px 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.075);
+            font-size: 0.95em;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Zona para arrastrar y soltar archivos */
+        #drop-zone {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #555;
+            background-color: #f8f9fa;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+        #drop-zone.dragover {
+            background-color: #e0f2f7;
+            border-color: #0288d1;
+        }
+        #drop-zone i {
+            font-size: 3em;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        /* Layout del grid de búsqueda y filtros */
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .search-controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            align-items: end;
+            flex-grow: 1;
+            max-width: 500px;
+        }
+        .search-controls label {
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .search-controls .align-bottom {
+            align-self: end;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        /* LISTADO (Reutilizado) */
+        .results-container {
+            overflow-x: auto;
+            padding-bottom: 10px;
+            max-width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fdfdfd;
+        }
+        .results-header, .doc-row {
+            display: grid;
+            gap: 15px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            min-width: 600px;
+            transition: background-color 0.3s ease;
+        }
+        .results-header {
+            font-weight: bold;
+            background: #e9f2f7;
+            border-bottom: 2px solid #3498db;
+            border-radius: 8px 8px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            color: #2c3e50;
+        }
+        .doc-row:nth-child(even) { background: #f9f9f9; }
+        .doc-row:hover { background: #eef4f9; }
+        .doc-row div {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            align-self: center;
+        }
+
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Checkbox y Colores) --- */
+        .doc-row .checkbox-cell {
+            text-align: center;
+            align-self: center;
+        }
+        .doc-row.highlight-yellow {
+            background-color: #fffde7; 
+        }
+        .doc-row.highlight-yellow:hover {
+            background-color: #fff9c4; 
+        }
+        .doc-row.highlight-green {
+            background-color: #e8f5e9;
+        }
+        .doc-row.highlight-green:hover {
+            background-color: #c8e6c9;
+        }
+        .doc-row.highlight-blue {
+            background-color: #e3f2fd; /* Light blue */
+        }
+        .doc-row.highlight-blue:hover {
+            background-color: #bbdefb; /* Lighter blue */
+        }
+        /* --- AÑADIDO: Color Rojo Intenso --- */
+        .doc-row.highlight-red {
+            background-color: #ffcdd2; 
+        }
+        .doc-row.highlight-red:hover {
+            background-color: #ef9a9a; 
+        }
+        
+        /* Estilos para la celda REVISADO cuando tiene fecha */
+        .revisado-cell {
+            text-align: center;
+            align-self: center;
+        }
+        .revisado-cell.date-set {
+            font-weight: bold;
+            color: #0d47a1; /* Azul oscuro */
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        
+        /* --- INICIO DE LA MODIFICACIÓN (Colores Texto Matrícula) --- */
+        .doc-row .cell-matricula.group-color-1 { color: #D32F2F; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-2 { color: #1976D2; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-3 { color: #388E3C; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-4 { color: #F57C00; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-5 { color: #7B1FA2; font-weight: bold; }
+        .doc-row .cell-matricula.group-color-6 { color: #5D4037; font-weight: bold; }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+        
+        
+        /* Mensajes de estado (Reutilizado) */
+        #status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+        }
+        #status-message.success {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            border: 1px solid #c8e6c9;
+        }
+        #status-message.error {
+            background-color: #fef2f2;
+            color: #c0392b;
+            border: 1px solid #f44336;
+        }
+        #status-message.loading {
+            background-color: #e0f2f7;
+            color: #0288d1;
+            border: 1px solid #b3e5fc;
+        }
+        #status-message.info {
+            background-color: #e0f2f7;
+            color: #0288d1;
+            border: 1px solid #b3e5fc;
+        }
+        
+        /* Spinner (Reutilizado) */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alertas (Reutilizado) */
+        .modern-alert {
+            text-align: center;
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px;
+            background-color: #f0f4f7;
+            border: 1px solid #dcdcdc;
+            color: #555;
+            font-size: 0.9em; 
+        }
+         .modern-alert h4 { font-size: 1.1em; margin-top: 5px; margin-bottom: 5px; }
+         .modern-alert p { margin-bottom: 0; }
+        .modern-alert-error {
+            background-color: #fef2f2;
+            border-color: #f44336;
+        }
+         
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Leyenda) --- */
+        #legend-panel {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        #legend-panel p {
+            margin: 2px 0;
+        }
+        /* Estilos para los colores de la leyenda */
+        .legend-blue {
+            color: #0d47a1; /* Azul oscuro */
+            font-weight: bold;
+        }
+        .legend-yellow {
+            color: #f57f17; /* Naranja/amarillo oscuro */
+            font-weight: bold;
+        }
+        .legend-green {
+            color: #1b5e20; /* Verde oscuro */
+            font-weight: bold;
+        }
+        /* --- AÑADIDO: Color Rojo Intenso --- */
+        .legend-red {
+            color: #c62828; 
+            font-weight: bold;
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+        
+        /* --- INICIO DE LA MODIFICACIÓN (CSS Modal Notificación) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+        }
+        .modal-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            width: 90%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+        .modal-header {
+            background: #f1f1f1;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        .modal-content {
+            padding: 20px;
+            display: grid;
+            gap: 15px;
+            max-height: 60vh; /* Para evitar que sea muy alto en pantallas pequeñas */
+            overflow-y: auto; /* Scroll si hay muchos campos */
+        }
+        .modal-content label {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: -10px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f9f9f9;
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        /* --- FIN DE LA MODIFICACIÓN --- */
+
+         
+         /* Media queries (Reutilizados) */
+         @media (max-width: 767px) {
+             /* --- INICIO DE LA MODIFICACIÓN (Media Query Encabezado) --- */
+             .title-panel-blue {
+                grid-template-columns: auto 1fr auto;
+                padding: 15px;
+             }
+             .title-panel-blue .header-logo-container {
+                 width: 60px; 
+                 height: 60px;
+             }
+             .title-panel-blue h1 {
+                 font-size: 1.4em; 
+                 gap: 5px;
+             }
+             /* --- FIN DE LA MODIFICACIÓN --- */
+             
+             .controls-container {
+                 flex-direction: column;
+                 align-items: stretch;
+             }
+             .search-controls {
+                 grid-template-columns: 1fr;
+                 max-width: 100%;
+             }
+             .filter-controls {
+                 justify-content: center;
+             }
+         }
+         @media (max-width: 480px) {
+             .title-panel-blue {
+                 padding: 15px;
+             }
+             .title-panel-blue .header-logo-container {
+                 width: 50px;
+                 height: 50px;
+             }
+             .title-panel-blue h1 {
+                 font-size: 1.2em;
+             }
+             .panel { padding: 15px; }
+             button { font-size: 0.85em; padding: 8px 12px; }
+             h2 { font-size: 1.3em; }
+             h3 { font-size: 1.1em; }
+         }
+
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="app-container">
+
+            <div class="title-panel-blue">
+                <div class="header-logo-container">
+                    <img src="logoora.png" alt="Logo ORA">
+                </div>
+                <h1><i class="fas fa-file-invoice-dollar"></i> Listado de denuncias ORA</h1>
+                <div class="header-logo-container">
+                    <img src="logogad.png" alt="Logo GAD">
+                </div>
+            </div>
+            <div class="panel">
+                <h2><i class="fas fa-upload"></i> Cargar Archivo Excel</h2>
+                <p>Arrastra y suelta un archivo Excel (.xls, .xlsx) en la zona o haz clic para seleccionarlo. <strong>Esto AÑADIRÁ los datos del archivo a los ya existentes.</strong></p>
+                
+                <div id="drop-zone">
+                    <i class="fas fa-file-excel"></i>
+                    <p>Arrastra tu archivo aquí o haz clic para seleccionar</p>
+                </div>
+                <input type="file" id="file-input" accept=".xls, .xlsx" style="display: none;">
+                
+                <div id="status-message"></div>
+
+                <h2 style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;"><i class="fas fa-search"></i> Buscar Denuncias</h2>
+                
+                <div class="controls-container">
+                    <div class="search-controls">
+                        <div>
+                            <label for="search-matricula">MATRÍCULA A BUSCAR (Exacta):</label>
+                            <input type="text" id="search-matricula" placeholder="Introduce la matrícula...">
+                        </div>
+                        <div class="align-bottom">
+                            <button id="search-btn" class="btn-success" style="width: 100%;"><i class="fas fa-search"></i> Buscar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <button id="sort-matricula-btn" class="btn-primary"><i class="fas fa-sort-alpha-down"></i> Matrícula (A-Z)</button>
+                        <button id="sort-fecha-asc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Antigua)</button>
+                        <button id="sort-fecha-desc-btn" class="btn-info"><i class="fas fa-calendar-alt"></i> Fecha (Reciente)</button>
+                        <button id="show-all-btn" class="btn-warning"><i class="fas fa-list"></i> Mostrar Todos</button>
+                        <button id="find-duplicates-btn" class="btn-danger"><i class="fas fa-copy"></i> Reincidentes</button>
+                        <button id="crear-alerta-btn" class="btn-info"><i class="fas fa-exclamation-triangle"></i> Crear Alerta Eurocop</button>
+                        <button id="delete-all-btn" class="btn-delete"><i class="fas fa-trash-alt"></i> Borrar Todo</button>
+                    </div>
+                    </div>
+                
+                <h3 style="margin-top: 30px;">Resultados <span id="results-count">(0)</span></h3>
+                
+                <div id="legend-panel">
+                  <p>Activa la casilla <span class="legend-blue">Revisado</span> si ya se ha hecho comprobación.</p>
+                  <p>Activa la casilla <span class="legend-yellow">Eurocop</span> si tenemos datos.</p>
+                  <p>Activa la casilla <span class="legend-red">Alerta</span> cuando hayas puesto alerta en eurocop a un vehículo reincidente.</p>
+                  <p>Activa la casilla <span class="legend-green">Notificado</span> si hemos enviado datos a Sanciones.</p>
+                </div>
+                <div class="results-container">
+                    <div id="results-header" class="results-header" style="display: none;">
+                        </div>
+                    <div id="search-results">
+                        <div class="modern-alert">
+                            <i class="fas fa-list-alt fa-2x"></i>
+                            <h4 style="color: #3498db; margin-top: 10px;">Sin Datos</h4>
+                            <p>Carga un archivo Excel o pulsa "Mostrar Todos" para ver las denuncias.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    
+    <div id="notification-modal-overlay" class="modal-overlay"></div>
+    <div id="notification-modal" class="modal-container">
+        <div class="modal-header">
+            <h2><i class="fas fa-paper-plane"></i> Notificar Datos Eurocop</h2>
+        </div>
+        <div class="modal-content">
+            <label for="modal-nombre">Nombre:</label>
+            <input type="text" id="modal-nombre" placeholder="Nombre completo...">
+            
+            <label for="modal-doi">DOI:</label>
+            <input type="text" id="modal-doi" placeholder="Nº de identificación NIE, DNI, otros">
+            
+            <label for="modal-direccion">Dirección:</label>
+            <input type="text" id="modal-direccion" placeholder="Dirección...">
+            
+            <label for="modal-localidad">Localidad:</label>
+            <input type="text" id="modal-localidad" placeholder="Localidad...">
+
+            <label for="modal-fecha-nacimiento">Fecha de Nacimiento:</label>
+            <input type="date" id="modal-fecha-nacimiento">
+            
+            <label for="modal-telefono">Teléfono:</label>
+            <input type="text" id="modal-telefono" placeholder="Teléfono...">
+        </div>
+        <div class="modal-buttons">
+            <button id="modal-cancel-btn" class="btn-warning"><i class="fas fa-times"></i> Cancelar</button>
+            <button id="modal-accept-btn" class="btn-success"><i class="fas fa-copy"></i> Aceptar y Copiar</button>
+        </div>
+    </div>
+    <footer>
+        <p>GRUPO DE ANÁLISIS DOCUMENTAL</p>
+        <p>POLICÍA LOCAL DE ALICANTE</p>
+        <p>© GAD - Todos los derechos reservados</p>
+    </footer>
+
+
+    <script>
+        // **********************************************
+        //      ✅ [ CONFIGURACIÓN DE FIREBASE ]
+        // **********************************************
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.appspot.com",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+        };
+
+        let app = null;
+        let database = null;
+
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log("✅ Firebase inicializado correctamente.");
+        } catch (error) {
+            console.error("❌ ERROR CRÍTICO DE FIREBASE:", error.message);
+            alert("❌ Error al inicializar Firebase. Revisa tus credenciales.");
+        }
+
+        // --- INICIO DE LA NUEVA LÓGICA ---
+
+        const DENUNCIAS_ORA_REF = 'denuncias_ORA';
+        
+        // --- INICIO DE LA MODIFICACIÓN (JS - Config Checkboxes y Orden) ---
+        // Nuevo orden de columnas
+        const HEADER_DISPLAY_NAMES = {
+            'matricula': 'MATRÍCULA',
+            'fecha_de_creacion': 'FECHA DENUNCIA', 
+            'marca': 'MARCA',
+            'modelo': 'MODELO',
+            'revisado': 'REVISADO', 
+            'eurocop': 'EUROCOP',      
+            'alerta': 'ALERTA', // <-- AÑADIDO
+            'notificado': 'NOTIFICADO'
+        };
+        // --- FIN DE LA MODIFICACIÓN ---
+
+        const CANONICAL_KEYS_LIST = Object.keys(HEADER_DISPLAY_NAMES);
+        
+        let allDenuncias = []; // Almacén en memoria para los datos
+
+        // Elementos del DOM
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const statusMessage = document.getElementById('status-message');
+        
+        const searchInput = document.getElementById('search-matricula');
+        const searchBtn = document.getElementById('search-btn');
+        
+        const sortMatriculaBtn = document.getElementById('sort-matricula-btn');
+        const sortFechaAscBtn = document.getElementById('sort-fecha-asc-btn');
+        const sortFechaDescBtn = document.getElementById('sort-fecha-desc-btn');
+        const showAllBtn = document.getElementById('show-all-btn');
+        const deleteAllBtn = document.getElementById('delete-all-btn');
+        
+        const findDuplicatesBtn = document.getElementById('find-duplicates-btn');
+        const crearAlertaBtn = document.getElementById('crear-alerta-btn'); // <-- AÑADIDO
+        
+        const resultsHeader = document.getElementById('results-header');
+        const searchResultsDiv = document.getElementById('search-results');
+        const resultsCount = document.getElementById('results-count');
+
+        // --- INICIO MODIFICACIÓN: Variables para el Modal y persistencia ---
+        let currentNotificadoCheckbox = null;
+        let currentNotificadoDataObject = null;
+        // --- FIN MODIFICACIÓN ---
+
+        
+        /**
+         * Muestra un mensaje de estado (carga, éxito, error)
+         */
+        function showStatus(message, type = 'loading') {
+            statusMessage.textContent = message;
+            statusMessage.className = type;
+            statusMessage.style.display = 'block';
+
+            if (type === 'loading') {
+                statusMessage.innerHTML = `<span class="loader"></span> ${message}`;
+            }
+        }
+
+        // --- LÓGICA DE CARGA DE ARCHIVO ---
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        /**
+         * Limpia las claves de objeto
+         */
+        function sanitizeKey(key) {
+            if (!key) return '';
+            return key
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") 
+                .replace(/[.$#\[\]\/]/g, '_') 
+                .replace(/\s/g, '_');
+        }
+        
+        /**
+         * Resuelve variaciones de claves a una clave canónica.
+         */
+        function getCanonicalKey(sanitizedKey) {
+            if (sanitizedKey === 'matricula') return 'matricula';
+
+            if (sanitizedKey === 'fecha_de_creacion' || 
+                sanitizedKey === 'fecha_creacion' || 
+                sanitizedKey === 'fechacreacion' || 
+                sanitizedKey === 'fecha') {
+                return 'fecha_de_creacion';
+            }
+
+            if (sanitizedKey === 'marca') return 'marca';
+            if (sanitizedKey === 'modelo') return 'modelo';
+            
+            if (sanitizedKey === 'eurocop') return 'eurocop';
+            if (sanitizedKey === 'notificado') return 'notificado';
+            if (sanitizedKey === 'revisado') return 'revisado';
+            if (sanitizedKey === 'alerta') return 'alerta'; // <-- AÑADIDO
+
+            return null;
+        }
+
+
+        /**
+         * Procesa el archivo Excel seleccionado
+         */
+        function handleFile(file) {
+            if (!file || !/\.(xlsx|xls)$/i.test(file.name)) {
+                showStatus("Error: El archivo debe ser un .xls o .xlsx", 'error');
+                return;
+            }
+
+            showStatus("Procesando archivo Excel...", 'loading');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (jsonData.length === 0) {
+                        throw new Error("El archivo Excel está vacío o no tiene datos.");
+                    }
+
+                    // 1. PROCESAR DATOS Y CONVERTIR FECHAS
+                    const sanitizedJsonData = jsonData.map(row => {
+                        const newRow = {};
+                        Object.keys(row).forEach(excelKey => {
+                            const sanitizedExcelKey = sanitizeKey(excelKey);
+                            const canonicalKey = getCanonicalKey(sanitizedExcelKey);
+                            
+                            if (canonicalKey) {
+                                // Claves de fecha (se guardan como ISO)
+                                if (canonicalKey === 'fecha_de_creacion' || canonicalKey === 'revisado') {
+                                    let value = row[excelKey];
+                                    if (value instanceof Date) {
+                                        newRow[canonicalKey] = value.toISOString();
+                                    } else if (typeof value === 'number' && value > 10000) {
+                                        let converted = new Date(Math.round((value - 25569) * 86400 * 1000));
+                                        newRow[canonicalKey] = converted.toISOString();
+                                    } else if (typeof value === 'string' && value.includes('/')) {
+                                        let [fecha, hora] = value.split(' ');
+                                        let [d, m, y] = fecha.split('/');
+                                        let [hh, mm] = hora ? hora.split(':') : [0, 0];
+                                        if (y && m && d) {
+                                            let fixed = new Date(Date.UTC(y, m - 1, d, hh || 0, mm || 0));
+                                            newRow[canonicalKey] = fixed.toISOString();
+                                        } else {
+                                             newRow[canonicalKey] = value ?? null;
+                                        }
+                                    } else if (typeof value === 'string' && value.includes('-')) {
+                                        // Aceptar fechas ISO o similares
+                                        let parsed = new Date(value);
+                                        if (!isNaN(parsed.getTime())) {
+                                            newRow[canonicalKey] = parsed.toISOString();
+                                        } else {
+                                            newRow[canonicalKey] = value ?? null;
+                                        }
+                                    }
+                                    else {
+                                        newRow[canonicalKey] = value ?? null;
+                                    }
+                                } else {
+                                    newRow[canonicalKey] = row[excelKey];
+                                }
+                            }
+                        });
+                        return newRow;
+                    });
+                    
+                    const intermediateData = sanitizedJsonData.filter(row => Object.keys(row).length > 0);
+                    console.log(`Datos leídos del Excel (antes de filtrar): ${intermediateData.length} registros.`);
+
+
+                    // 2. FILTRAR MATRÍCULAS ESPAÑOLAS (1234ABC)
+                    const spanishPlateRegex = /^\d{4}[A-Z]{3}$/i;
+                    let spanishPlatesCount = 0;
+                    const matriculaKey = 'matricula'; 
+
+                    const finalData = intermediateData.filter(row => {
+                        const plateValue = row[matriculaKey]; 
+                        if (plateValue) {
+                            const plate = String(plateValue).trim().replace(/\s/g, '');
+                            if (spanishPlateRegex.test(plate)) {
+                                spanishPlatesCount++; 
+                                return false; 
+                            }
+                        }
+                        return true; 
+                    });
+
+                    console.log(`Datos después de filtrar: ${finalData.length} registros.`);
+
+                    if (spanishPlatesCount > 0) {
+                        const message = `Se han detectado y eliminado ${spanishPlatesCount} matrículas con formato español (1234ABC). No se guardarán en la base de datos.`;
+                        console.warn(message);
+                        alert(message);
+                    }
+                    
+                    if (finalData.length === 0) {
+                         if (intermediateData.length > 0 && spanishPlatesCount > 0) {
+                            throw new Error("El archivo no contiene matrículas válidas (todas las encontradas tenían formato español 1234ABC y han sido filtradas).");
+                        } else {
+                            throw new Error("El archivo no contiene ninguna de las columnas requeridas (matrícula, fecha de creación, marca, modelo, etc) o está vacío.");
+                        }
+                    }
+                    
+                    addAndSaveToFirebase(finalData);
+
+                } catch (error) {
+                    console.error("Error al leer el archivo Excel:", error);
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        /**
+         * Añade y guarda los datos JSON en Firebase, ACUMULÁNDOLOS
+         */
+        async function addAndSaveToFirebase(newData) {
+            if (!database) {
+                showStatus("Error: Firebase no está inicializado.", 'error');
+                return;
+            }
+            
+            showStatus("Cargando datos existentes de Firebase...", 'loading');
+            
+            try {
+                const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
+                const existingData = snapshot.val() || [];
+                const existingArray = Array.isArray(existingData) ? existingData : Object.values(existingData);
+
+                const combinedData = [...existingArray, ...newData];
+                
+                showStatus(`Guardando ${newData.length} nuevos registros... (Total: ${combinedData.length})`, 'loading');
+                
+                await database.ref(DENUNCIAS_ORA_REF).set(combinedData);
+
+                showStatus(`¡Éxito! Se han añadido ${newData.length} registros. (Total: ${combinedData.length})`, 'success');
+                
+                loadAndDisplayData();
+
+            } catch (error) {
+                console.error("Error al guardar en Firebase:", error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // --- LÓGICA DE BÚSQUEDA Y VISUALIZACIÓN ---
+
+        /**
+         * Carga los datos de Firebase al almacén en memoria y los muestra
+         * --- INICIO MODIFICACIÓN: Orden por defecto (Fecha Descendente) ---
+         */
+        async function loadAndDisplayData() {
+            if (!database) return;
+            
+            showStatus("Cargando datos desde Firebase...", 'loading');
+            
+            try {
+                const snapshot = await database.ref(DENUNCIAS_ORA_REF).once('value');
+                const data = snapshot.val();
+
+                if (!data) {
+                    allDenuncias = [];
+                    showStatus("No hay datos en Firebase. Carga un archivo Excel.", 'error');
+                } else {
+                    allDenuncias = Array.isArray(data) ? data : Object.values(data);
+                    showStatus(`Datos cargados (${allDenuncias.length} registros).`, 'success');
+                }
+                
+                // --- APLICAR ORDEN POR DEFECTO ---
+                const fechaKey = 'fecha_de_creacion';
+                const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                    const dateA = parseDate(a[fechaKey]) || new Date(0);
+                    const dateB = parseDate(b[fechaKey]) || new Date(0);
+                    return dateB - dateA; // Descendente
+                });
+                // Actualizar allDenuncias para que tenga el orden por defecto
+                allDenuncias = sortedByDefault;
+                displayResults(allDenuncias);
+                // --- FIN MODIFICACIÓN ---
+
+            } catch (error) {
+                 console.error("Error al cargar datos:", error);
+                 showStatus(`Error: ${error.message}`, 'error');
+                 displayResults([]);
+            }
+        }
+        // --- FIN MODIFICACIÓN ---
+        
+        /**
+         * Formateador de valores para la tabla
+         */
+        function formatDisplayValue(value, key) {
+            if (value === null || typeof value === 'undefined') {
+                return 'N/A';
+            }
+            
+            if (key === 'fecha_de_creacion') {
+                let date;
+                if (value instanceof Date) {
+                    date = value;
+                } 
+                else if (typeof value === 'string' && (value.includes('T') || value.includes('-'))) {
+                    date = new Date(value);
+                }
+                else if (typeof value === 'number' && value > 10000) {
+                     date = new Date(Math.round((value - 25569) * 86400 * 1000));
+                }
+
+                if (date instanceof Date && !isNaN(date.getTime())) {
+                    try {
+                        const y = date.getUTCFullYear();
+                        const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+                        const d = String(date.getUTCDate()).padStart(2, '0');
+                        const h = String(date.getUTCHours()).padStart(2, '0');
+                        const min = String(date.getUTCMinutes()).padStart(2, '0');
+                        
+                        if (y < 1970 || y > 2100) return value; 
+
+                        return `${d}/${m}/${y} ${h}:${min}`;
+                    } catch (e) {
+                        return value;
+                    }
+                }
+            }
+            
+            // Para 'revisado', se formatea en formatRevisadoDate
+            if (key === 'revisado') {
+                return formatRevisadoDate(value);
+            }
+            
+            return value;
+        }
+
+        /**
+         * Muestra los resultados (un array de denuncias) en la tabla
+         * --- INICIO DE LA MODIFICACIÓN (Identificador por Índice) ---
+         */
+        function displayResults(results, isDuplicateSearch = false) {
+             searchResultsDiv.innerHTML = '';
+             resultsHeader.innerHTML = '';
+             resultsHeader.style.display = 'none';
+             resultsCount.textContent = `(${results.length})`;
+            
+            if (results.length === 0) {
+                searchResultsDiv.innerHTML = `<div class="modern-alert modern-alert-error"><h4>Sin Resultados</h4><p>No se encontraron denuncias que coincidan con los criterios.</p></div>`;
+                return;
+            }
+
+            const headers = CANONICAL_KEYS_LIST; // 8 columnas, nuevo orden
+            
+            // Layout: 8 columnas (Mat, Fec, Mar, Mod, Rev, Eur, Ale, Not)
+            const gridLayout = '1.5fr 2fr 1.5fr 1.5fr 1fr 0.8fr 0.8fr 0.8fr';
+
+            // 1. Generar cabecera
+            resultsHeader.innerHTML = headers.map(h => `<div>${HEADER_DISPLAY_NAMES[h] || h.toUpperCase()}</div>`).join('');
+            resultsHeader.style.gridTemplateColumns = gridLayout;
+            resultsHeader.style.display = 'grid';
+
+            // --- Lógica para colorear y enumerar matrículas reincidentes ---
+            const matriculaKey = 'matricula';
+            const colorClasses = ['group-color-1', 'group-color-2', 'group-color-3', 'group-color-4', 'group-color-5', 'group-color-6'];
+            let lastColorIndex = -1;
+            let currentColorIndex = 0;
+            let currentMatricula = null;
+            let matriculaCounter = 0; 
+            // --- Fin lógica reincidentes ---
+
+            // 2. Generar filas
+            results.forEach(item => { // 'item' es la referencia al objeto en 'allDenuncias'
+                const row = document.createElement('div');
+                row.classList.add('doc-row');
+
+                // --- INICIO MODIFICACIÓN: Añadir data-original-index para persistencia ---
+                // Buscamos el índice del 'item' (que es una referencia) en el array maestro 'allDenuncias'
+                const originalIndex = allDenuncias.indexOf(item);
+                if (originalIndex !== -1) {
+                    row.dataset.originalIndex = originalIndex;
+                }
+                // --- FIN MODIFICACIÓN ---
+
+
+                // --- Determinar color y número de matrícula para reincidentes ---
+                let matriculaColorClass = '';
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase(); // Obtener matrícula actual
+
+                if (isDuplicateSearch) {
+                    if (matricula !== currentMatricula) {
+                        // Es una nueva matrícula
+                        currentMatricula = matricula;
+                        matriculaCounter = 1; // <-- REINICIAR contador a 1
+                        
+                        // Lógica de color (sin cambios)
+                        let newColorIndex = Math.floor(Math.random() * colorClasses.length);
+                        while (newColorIndex === lastColorIndex && colorClasses.length > 1) { 
+                            newColorIndex = Math.floor(Math.random() * colorClasses.length);
+                        }
+                        lastColorIndex = newColorIndex;
+                        currentColorIndex = newColorIndex;
+                    } else {
+                        // Es la misma matrícula, incrementar contador
+                        matriculaCounter++; // <-- INCREMENTAR contador
+                    }
+                    matriculaColorClass = colorClasses[currentColorIndex];
+                }
+                // --- Fin determinación color/número ---
+
+
+                let rowHTML = '';
+                headers.forEach(h => {
+                    // --- INICIO MODIFICACIÓN: Añadida 'alerta' a la lógica de checkboxes ---
+                    if (h === 'eurocop' || h === 'notificado' || h === 'alerta') {
+                        // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
+                        const isChecked = item[h] === true; 
+                        let checkboxClass = '';
+                        if (h === 'eurocop') checkboxClass = 'check-eurocop';
+                        else if (h === 'notificado') checkboxClass = 'check-notificado';
+                        else if (h === 'alerta') checkboxClass = 'check-alerta'; // <-- AÑADIDO
+                        
+                        rowHTML += `<div class="checkbox-cell"><input type="checkbox" class="${checkboxClass}" ${isChecked ? 'checked' : ''}></div>`;
+                    
+                    } else if (h === 'revisado') {
+                    // --- FIN MODIFICACIÓN ---
+                        // --- MODIFICACIÓN: Leer estado desde item para persistencia ---
+                        const revisadoDate = item[h]; // ISO string from data
+                        const formattedDate = formatRevisadoDate(revisadoDate);
+                        
+                        if (formattedDate) {
+                            rowHTML += `<div class="revisado-cell date-set" data-state="date">${formattedDate}</div>`;
+                        } else {
+                            rowHTML += `<div class="revisado-cell" data-state="check"><input type="checkbox" class="check-revisado"></div>`;
+                        }
+                    
+                    } else {
+                        // --- Modificación para añadir clase de color y número a matrícula ---
+                        const value = item[h];
+                        let cellClasses = '';
+                        let displayValue = formatDisplayValue(value, h); // Valor formateado
+
+                        if (h === 'matricula') {
+                            cellClasses = 'cell-matricula ' + matriculaColorClass; // Añade la clase de color
+                            if (isDuplicateSearch) {
+                                // AÑADIR NÚMERO
+                                displayValue = `${displayValue} (${matriculaCounter})`; 
+                            }
+                        }
+                        rowHTML += `<div class="${cellClasses}">${displayValue}</div>`;
+                        // --- Fin Modificación ---
+                    }
+                });
+                row.innerHTML = rowHTML;
+                row.style.gridTemplateColumns = gridLayout;
+                searchResultsDiv.appendChild(row);
+
+                // Aplicar color de fondo inicial
+                updateRowColor(row);
+            });
+            // --- FIN DE LA MODIFICACIÓN (displayResults) ---
+        }
+        
+        // --- EVENT LISTENERS PARA BOTONES ---
+        
+        /**
+         * Función reutilizable para buscar/filtrar
+         */
+        function performSearch() {
+            const searchQuery = searchInput.value.trim().toUpperCase();
+            
+            if (!searchQuery) {
+                // --- MODIFICACIÓN: Si la búsqueda está vacía, mostrar orden por defecto ---
+                const fechaKey = 'fecha_de_creacion';
+                const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                    const dateA = parseDate(a[fechaKey]) || new Date(0);
+                    const dateB = parseDate(b[fechaKey]) || new Date(0);
+                    return dateB - dateA; // Descendente
+                });
+                displayResults(sortedByDefault);
+                // --- FIN MODIFICACIÓN ---
+                return;
+            }
+            const matriculaKey = 'matricula';
+            const results = allDenuncias.filter(item => {
+                return item && item[matriculaKey] && 
+                       String(item[matriculaKey]).toUpperCase().includes(searchQuery);
+            });
+            displayResults(results); // Llama normal
+        }
+
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('input', performSearch);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); 
+                performSearch();
+            }
+        });
+        
+        showAllBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            // --- MODIFICACIÓN: Al mostrar todos, volver al orden por defecto (fecha desc) ---
+            const fechaKey = 'fecha_de_creacion';
+            const sortedByDefault = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return dateB - dateA; // Descendente
+            });
+            displayResults(sortedByDefault);
+            // --- FIN MODIFICACIÓN ---
+        });
+
+        sortMatriculaBtn.addEventListener('click', () => {
+            const matriculaKey = 'matricula'; 
+            if (!allDenuncias[0] || typeof allDenuncias[0][matriculaKey] === 'undefined') {
+                alert("No se puede ordenar: la columna 'matrícula' no existe.");
+                return;
+            }
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const matA = String(a[matriculaKey] || '').trim().toUpperCase();
+                const matB = String(b[matriculaKey] || '').trim().toUpperCase();
+                return matA.localeCompare(matB);
+            });
+            displayResults(sorted); // Llama normal
+        });
+        
+        
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) { return dateStr; }
+            if (String(dateStr).includes('/')) {
+                const parts = String(dateStr).split(' ');
+                const dateParts = parts[0].split('/');
+                if (dateParts.length === 3) {
+                    if (parts.length > 1) {
+                        const timeParts = parts[1].split(':');
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0] || 0, timeParts[1] || 0);
+                    } else {
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+                    }
+                }
+            }
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) { return date; }
+            if (typeof dateStr === 'number' && dateStr > 10000) {
+                return new Date(Math.round((dateStr - 25569) * 86400 * 1000));
+            }
+            return null;
+        }
+
+        sortFechaAscBtn.addEventListener('click', () => {
+            const fechaKey = 'fecha_de_creacion'; 
+            if (!allDenuncias[0] || typeof allDenuncias[0][fechaKey] === 'undefined') {
+                alert("No se puede ordenar: la columna 'fecha de creación' no existe.");
+                return;
+            }
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return dateA - dateB;
+            });
+            displayResults(sorted); // Llama normal
+        });
+        
+        sortFechaDescBtn.addEventListener('click', () => {
+             const fechaKey = 'fecha_de_creacion';
+             if (!allDenuncias[0] || typeof allDenuncias[0][fechaKey] === 'undefined') {
+                alert("No se puede ordenar: la columna 'fecha de creación' no existe.");
+            }
+            const sorted = [...allDenuncias].sort((a, b) => {
+                const dateA = parseDate(a[fechaKey]) || new Date(0);
+                const dateB = parseDate(b[fechaKey]) || new Date(0);
+                return dateB - dateA;
+            });
+            displayResults(sorted); // Llama normal
+        });
+        
+        /**
+         * Borra todos los datos del nodo DENUNCIAS_ORA_REF previa confirmación
+         */
+        async function deleteAllData() {
+            const confirmation = window.prompt(
+                'Esto borrará PERMANENTEMENTE todos los datos de denuncias ORA. \n\nSi estás seguro, escribe "BORRAR" y pulsa Aceptar.'
+            );
+            
+            if (confirmation !== 'BORRAR') {
+                showStatus("Borrado cancelado.", 'info'); 
+                return;
+            }
+            if (!database) {
+                showStatus("Error: Firebase no está inicializado.", 'error');
+                return;
+            }
+            showStatus("Borrando todos los datos de Firebase...", 'loading');
+            try {
+                await database.ref(DENUNCIAS_ORA_REF).remove();
+                showStatus("¡Éxito! Todos los datos han sido borrados.", 'success');
+                allDenuncias = [];
+                displayResults([]);
+            } catch (error) {
+                console.error("Error al borrar datos:", error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // --- INICIO DE LA MODIFICACIÓN (JS - Nuevas Funciones) ---
+
+        /**
+         * Formatea una fecha ISO (o de Excel) a DD-MM-AAAA
+         */
+        function formatRevisadoDate(dateValue) {
+            if (!dateValue) return '';
+            try {
+                // parseDate puede manejar ISO, números de Excel, fechas /
+                let date = parseDate(dateValue); 
+                
+                if (date && !isNaN(date.getTime())) {
+                    const d = String(date.getDate()).padStart(2, '0');
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const y = date.getFullYear();
+                    return `${d}-${m}-${y}`;
+                }
+                return ''; // Retorna vacío si la fecha no es válida
+            } catch (e) {
+                return '';
+            }
+        }
+
+        /**
+         * Aplica el color a una fila según la precedencia de los checkboxes/estado
+         * --- INICIO MODIFICACIÓN: Añadida Precedencia de Rojo (Alerta) ---
+         */
+        function updateRowColor(row) {
+            if (!row) return;
+
+            // Encontrar los elementos
+            const eurocopCheck = row.querySelector('.check-eurocop');
+            const notificadoCheck = row.querySelector('.check-notificado');
+            const alertaCheck = row.querySelector('.check-alerta'); // <-- AÑADIDO
+            
+            // Para 'revisado', miramos si la celda tiene la fecha puesta
+            const revisadoCell = row.querySelector('.revisado-cell');
+            const isRevisado = (revisadoCell && revisadoCell.classList.contains('date-set'));
+
+            // 1. Limpiar colores antiguos
+            row.classList.remove('highlight-yellow', 'highlight-green', 'highlight-blue', 'highlight-red');
+
+            // 2. Aplicar nuevas reglas (Precedencia: Verde > Rojo > Amarillo > Azul)
+            if (notificadoCheck && notificadoCheck.checked) {
+                row.classList.add('highlight-green');
+            } else if (alertaCheck && alertaCheck.checked) { // <-- AÑADIDO
+                row.classList.add('highlight-red');
+            } else if (eurocopCheck && eurocopCheck.checked) {
+                row.classList.add('highlight-yellow');
+            } else if (isRevisado) { 
+                row.classList.add('highlight-blue');
+            }
+        }
+        // --- FIN MODIFICACIÓN ---
+
+        /**
+         * Busca y muestra solo las matrículas reincidentes
+         * --- INICIO DE LA MODIFICACIÓN (Ordenación secundaria por fecha) ---
+         */
+        function findAndDisplayDuplicates() {
+            if (!allDenuncias.length) {
+                showStatus("No hay datos cargados para buscar reincidentes.", "info");
+                return;
+            }
+
+            showStatus("Buscando reincidentes...", "loading");
+
+            const matriculaCounts = new Map();
+            const matriculaKey = 'matricula';
+
+            // 1. Contar todas las matrículas
+            for (const item of allDenuncias) {
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
+                if (matricula) {
+                    matriculaCounts.set(matricula, (matriculaCounts.get(matricula) || 0) + 1);
+                }
+            }
+
+            // 2. Crear un Set de las matrículas que aparecen más de una vez
+            const duplicateMatriculas = new Set();
+            for (const [matricula, count] of matriculaCounts.entries()) {
+                if (count > 1) {
+                    duplicateMatriculas.add(matricula);
+                }
+            }
+
+            if (duplicateMatriculas.size === 0) {
+                showStatus("No se encontraron matrículas reincidentes.", "info");
+                displayResults([], false); // Tabla vacía, sin formato especial
+                return;
+            }
+
+            // 3. Filtrar el array original para quedarnos solo con las duplicadas
+            const duplicatesList = allDenuncias.filter(item => {
+                const matricula = String(item[matriculaKey] || '').trim().toUpperCase();
+                return duplicateMatriculas.has(matricula);
+            });
+
+            // 4. Ordenar la lista de duplicados: 1º por matrícula, 2º por FECHA DESCENDENTE
+            const sortedDuplicates = duplicatesList.sort((a, b) => {
+                const matA = String(a[matriculaKey] || '').trim().toUpperCase();
+                const matB = String(b[matriculaKey] || '').trim().toUpperCase();
+                
+                const matriculaComparison = matA.localeCompare(matB);
+                
+                if (matriculaComparison !== 0) {
+                    return matriculaComparison; // Different matrícula, sort by that
+                }
+                
+                // Same matrícula, sort by date descending
+                const dateA = parseDate(a['fecha_de_creacion']) || new Date(0);
+                const dateB = parseDate(b['fecha_de_creacion']) || new Date(0);
+                return dateB - dateA; // Descending (Reciente a Antigua)
+            });
+
+            showStatus(`Se encontraron ${sortedDuplicates.length} registros de ${duplicateMatriculas.size} matrículas reincidentes.`, "success");
+            // 5. Llamar a displayResults con la bandera isDuplicateSearch = true
+            displayResults(sortedDuplicates, true);
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
+        
+        // --- INICIO DE LA MODIFICACIÓN (Nueva función Crear Alerta Eurocop) ---
+        /**
+         * Genera y copia un texto de alerta para vehículos reincidentes
+         */
+        function crearAlertaEurocop() {
+            
+            // --- INICIO MODIFICACIÓN: Se eliminan todas las comprobaciones ---
+
+            // 1. Generar el texto de la alerta
+            const alertText = 'Este vehículo es de interés para el negociado de sanciones del Ayuntamiento de Alicante. Se trata de un vehículo reincidente en infracciones de estacionamiento ORA. Es necesario tratar de obtener un domicilio para notificaciones, número de identificación DNI o NIE, e identificar plenamente al conductor. Realizar incidencia en Eurocop con seguimiento al GAD para su tramitación. Si el vehículo fuera inmovilizado por cualquier causa debe quedar "A disposición del GAD"';
+
+            // 2. Copiar al portapapeles
+            navigator.clipboard.writeText(alertText)
+                .then(() => {
+                    alert("¡Texto de Alerta Eurocop copiado al portapapeles!");
+                })
+                .catch(err => {
+                    console.error('Error al copiar alerta:', err);
+                    alert('Error al copiar el texto de la alerta.');
+                });
+            // --- FIN MODIFICACIÓN ---
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
+
+        // Carga inicial de datos al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAndDisplayData();
+            
+            // Listeners de los botones
+            deleteAllBtn.addEventListener('click', deleteAllData);
+            findDuplicatesBtn.addEventListener('click', findAndDisplayDuplicates); 
+            crearAlertaBtn.addEventListener('click', crearAlertaEurocop); // <-- AÑADIDO
+
+            // --- INICIO MODIFICACIÓN: Listener de 'change' para persistencia (Eurocop/Alerta/Notificado) ---
+            searchResultsDiv.addEventListener('change', (e) => {
+                const row = e.target.closest('.doc-row');
+                // --- CORRECCIÓN: Usar data-original-index ---
+                if (!row || typeof row.dataset.originalIndex === 'undefined') return;
+                const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
+                
+                const dataObject = allDenuncias[dataIndex];
+                if (!dataObject) return;
+                // --- FIN CORRECCIÓN ---
+
+                if (e.target.type === 'checkbox' && e.target.classList.contains('check-eurocop')) {
+                    // --- EUROCOP ---
+                    dataObject.eurocop = e.target.checked;
+                    updateRowColor(row);
+                
+                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-alerta')) {
+                    // --- ALERTA (con cascada) ---
+                    
+                    const isChecked = e.target.checked;
+                    const matriculaKey = 'matricula';
+                    const matriculaToUpdate = String(dataObject[matriculaKey] || '').trim().toUpperCase();
+
+                    if (matriculaToUpdate) {
+                        // 1. Actualizar todos los datos en la memoria (allDenuncias)
+                        allDenuncias.forEach(item => {
+                            if (String(item[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
+                                item.alerta = isChecked;
+                            }
+                        });
+
+                        // 2. Actualizar todas las filas visibles en la tabla
+                        const visibleRows = searchResultsDiv.querySelectorAll('.doc-row');
+                        visibleRows.forEach(visibleRow => {
+                            const rowIndex = visibleRow.dataset.originalIndex;
+                            if (rowIndex) {
+                                const rowData = allDenuncias[parseInt(rowIndex, 10)];
+                                if (String(rowData[matriculaKey] || '').trim().toUpperCase() === matriculaToUpdate) {
+                                    // Sincronizar el checkbox
+                                    const alertaCheck = visibleRow.querySelector('.check-alerta');
+                                    if (alertaCheck) {
+                                        alertaCheck.checked = isChecked;
+                                    }
+                                    // Actualizar el color de la fila
+                                    updateRowColor(visibleRow);
+                                }
+                            }
+                        });
+                    } else {
+                        // Si no hay matrícula, al menos actualiza la fila actual
+                        dataObject.alerta = isChecked;
+                        updateRowColor(row);
+                    }
+                
+                } else if (e.target.type === 'checkbox' && e.target.classList.contains('check-notificado')) {
+                    // --- NOTIFICADO (CON NUEVA LÓGICA DE MODAL) ---
+                    
+                    if (e.target.checked) {
+                        // ---- Si se está MARCANDO la casilla ----
+                        // 1. Prevenir el chequeo inmediato
+                        e.preventDefault(); 
+                        
+                        // 2. Store state and show modal
+                        currentNotificadoCheckbox = e.target;
+                        currentNotificadoDataObject = dataObject;
+
+                        // 3. Clear form and show
+                        document.getElementById('modal-nombre').value = '';
+                        // --- INICIO MODIFICACIÓN: Limpiar nuevos campos ---
+                        document.getElementById('modal-doi').value = '';
+                        document.getElementById('modal-direccion').value = '';
+                        document.getElementById('modal-localidad').value = '';
+                        // --- FIN MODIFICACIÓN ---
+                        document.getElementById('modal-fecha-nacimiento').value = '';
+                        document.getElementById('modal-telefono').value = '';
+                        
+                        document.getElementById('notification-modal').style.display = 'block';
+                        document.getElementById('notification-modal-overlay').style.display = 'block';
+                        document.getElementById('modal-nombre').focus(); // Focus on the first field
+                
+                    } else {
+                        // El usuario está *desmarcando* la casilla
+                        dataObject.notificado = false;
+                        updateRowColor(row);
+                    }
+                }
+            });
+            // --- FIN MODIFICACIÓN ---
+            
+            // --- INICIO DE LA MODIFICACIÓN (Lógica de clic en Fecha y Persistencia 'Revisado') ---
+            searchResultsDiv.addEventListener('click', (e) => {
+                const target = e.target;
+                const cell = target.closest('.revisado-cell');
+                if (!cell) return; // Salir si no es clic en celda 'revisado'
+
+                const row = cell.closest('.doc-row');
+                // --- CORRECCIÓN: Usar data-original-index ---
+                if (!row || typeof row.dataset.originalIndex === 'undefined') return;
+                const dataIndex = parseInt(row.dataset.originalIndex, 10);
+                if (isNaN(dataIndex) || dataIndex < 0 || dataIndex >= allDenuncias.length) return;
+                
+                const dataObject = allDenuncias[dataIndex];
+                if (!dataObject) return;
+                // --- FIN CORRECCIÓN ---
+
+                
+                // Caso 1: Clic en el checkbox 'revisado'
+                if (target.classList.contains('check-revisado')) {
+                    const today = new Date();
+                    const isoDate = today.toISOString();
+                    const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+                    
+                    // Actualizar HTML
+                    cell.innerHTML = formattedDate;
+                    cell.classList.add('date-set');
+                    cell.dataset.state = 'date';
+                    
+                    // Guardar en datos
+                    dataObject.revisado = isoDate;
+                    
+                    // Actualizar color
+                    updateRowColor(row);
+                }
+                
+                // Caso 2: Clic en la celda de fecha 'revisado' (para actualizarla o resetearla)
+                else if (target.classList.contains('revisado-cell') && target.classList.contains('date-set')) {
+                    
+                    // --- MODIFICACIÓN: Texto del Pop-up ---
+                    const confirmation = window.confirm(
+                        "Si has vuelto a revisar Eurocop pulsa Aceptar.\n\nSi quieres desactivar la revisión pulsa Cancelar."
+                    );
+                    
+                    if (confirmation) {
+                        // SÍ: Actualizar la fecha
+                        const today = new Date();
+                        const isoDate = today.toISOString();
+                        const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+                        
+                        // Actualizar HTML
+                        cell.innerHTML = formattedDate; 
+                        
+                        // Guardar en datos
+                        dataObject.revisado = isoDate;
+                        
+                    } else {
+                        // NO: Volver a la casilla de verificación
+                        
+                        // Actualizar HTML
+                        cell.innerHTML = '<input type="checkbox" class="check-revisado">';
+                        cell.classList.remove('date-set');
+                        cell.dataset.state = 'check';
+                        
+                        // Guardar en datos
+                        dataObject.revisado = null; 
+                        
+                        // Quitar el color azul (si procede)
+                        updateRowColor(row);
+                    }
+                }
+            });
+            // --- FIN DE LA MODIFICACIÓN ---
+            
+            // --- INICIO DE LA MODIFICACIÓN (Listeners para el nuevo Modal) ---
+            const notificationModal = document.getElementById('notification-modal');
+            const notificationOverlay = document.getElementById('notification-modal-overlay');
+            const modalAcceptBtn = document.getElementById('modal-accept-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            
+            // Función para cerrar el modal
+            function closeModal() {
+                notificationModal.style.display = 'none';
+                notificationOverlay.style.display = 'none';
+                // Limpiar estado
+                currentNotificadoCheckbox = null;
+                currentNotificadoDataObject = null;
+            }
+
+            modalCancelBtn.addEventListener('click', closeModal);
+            notificationOverlay.addEventListener('click', closeModal);
+
+            // Lógica al Aceptar el modal
+            modalAcceptBtn.addEventListener('click', () => {
+                if (!currentNotificadoDataObject || !currentNotificadoCheckbox) return;
+
+                // 1. Get data from modal form
+                const nombre = document.getElementById('modal-nombre').value;
+                // --- INICIO MODIFICACIÓN: Obtener nuevos campos ---
+                const doi = document.getElementById('modal-doi').value;
+                const direccion = document.getElementById('modal-direccion').value;
+                const localidad = document.getElementById('modal-localidad').value;
+                // --- FIN MODIFICACIÓN ---
+                const fechaNac = document.getElementById('modal-fecha-nacimiento').value;
+                const telefono = document.getElementById('modal-telefono').value;
+
+                // 2. Build the text to copy
+                // --- INICIO MODIFICACIÓN: Actualizar texto a copiar ---
+                const textToCopy = `
+Grupo de Análisis Documental (GAD) Policía Local de Alicante
+Le informamos de que disponemos de los siguientes datos en relación a este vehículo
+---
+DENUNCIA ORA:
+- Matrícula: ${currentNotificadoDataObject.matricula || 'N/A'}
+- Fecha: ${formatDisplayValue(currentNotificadoDataObject.fecha_de_creacion, 'fecha_de_creacion') || 'N/A'}
+- Marca: ${currentNotificadoDataObject.marca || 'N/A'}
+- Modelo: ${currentNotificadoDataObject.modelo || 'N/A'}
+---
+DATOS PERSONALES:
+- Nombre: ${nombre || 'N/A'}
+- DOI: ${doi || 'N/A'}
+- Dirección: ${direccion || 'N/A'}
+- Localidad: ${localidad || 'N/A'}
+- F. Nacimiento: ${fechaNac || 'N/A'}
+- Teléfono: ${telefono || 'N/A'}
+                `.trim().replace(/^\s+/gm, ''); // Limpia saltos de línea al inicio
+                // --- FIN MODIFICACIÓN ---
+
+                // 3. Copy to clipboard
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        // 4. Update data object
+                        currentNotificadoDataObject.notificado = true;
+                        
+                        // 5. Update UI (check the box, set color)
+                        currentNotificadoCheckbox.checked = true;
+                        const row = currentNotificadoCheckbox.closest('.doc-row');
+                        updateRowColor(row);
+                        
+                        // 6. Hide modal & clean up
+                        closeModal();
+                        
+                        // 7. Notify user
+                        alert('¡Notificación copiada al portapapeles! La fila se ha marcado como Notificada.');
+                    })
+                    .catch(err => {
+                        console.error('Error al copiar:', err);
+                        alert('Error al copiar al portapapeles. La fila no se ha marcado.');
+                        closeModal();
+                    });
+            });
+            // --- FIN DE LA MODIFICACIÓN ---
+        });
+
+    </script>
+</body>
+</html>

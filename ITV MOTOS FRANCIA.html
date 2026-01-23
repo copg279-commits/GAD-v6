@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculador ITV Motos Francia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flag {
+            /* Eliminamos 'position: absolute' aquí para que fluya con el texto */
+            display: inline-block; /* Permite que el div de la bandera se alinee con el texto */
+            vertical-align: middle; /* Alinea la bandera verticalmente con el texto */
+            margin-left: 10px; /* Pequeño margen entre el texto y la bandera */
+            width: 40px;
+            height: 25px;
+            background-size: cover;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .flag-francia {
+            background: linear-gradient(to right, #003399 0%, #003399 33%, #fff 33%, #fff 66%, #d00 66%, #d00 100%);
+        }
+        .result-text-container {
+            min-height: 5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <h1 class="text-black text-center mt-6 text-xl font-bold px-4 flex items-center justify-center">
+        Calculador ITV Motos Francia
+        <div class="flag flag-francia"></div>
+    </h1>
+    
+    <div class="mt-4 p-4 bg-white shadow rounded-lg w-11/12 max-w-md mx-auto relative">
+        <p class="text-center mb-2">
+            Calcula la primera ITV de una motocicleta francesa:
+        </p>
+        <p class="text-center mb-2 font-bold">
+            Introduce fecha 1ª matriculación:
+        </p>
+        <input 
+            type="date" 
+            id="fechaMatriculacionMotoFrancia" 
+            class="w-full p-3 text-base border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+            onclick="calcularItvMotosFrancia()" 
+            class="block mx-auto mt-4 w-full bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition"
+        >
+            Calcular 1ª ITV Moto Francia
+        </button>
+        <div id="resultado" class="mt-4 text-center font-bold result-text-container">
+            <p class="text-gray-500">
+                El resultado aparecerá aquí.
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-8 flex justify-center">
+        <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+    <script>
+        function calcularItvMotosFrancia() {
+            const inputFecha = document.getElementById('fechaMatriculacionMotoFrancia').value;
+            const resultadoDiv = document.getElementById('resultado');
+
+            if (!inputFecha) {
+                resultadoDiv.innerHTML = "<p style='color: red;'>Por favor, introduce una fecha de matriculación.</p>";
+                return;
+            }
+
+            const fechaMatriculacion = new Date(inputFecha);
+            const anioMatriculacion = fechaMatriculacion.getFullYear();
+            const fechaActual = new Date();
+            
+            let fechaLimiteItv;
+
+            if (anioMatriculacion < 2017) {
+                fechaLimiteItv = new Date('2024-12-31');
+            } else if (anioMatriculacion >= 2017 && anioMatriculacion <= 2019) {
+                fechaLimiteItv = new Date(anioMatriculacion + 8, fechaMatriculacion.getMonth(), fechaMatriculacion.getDate());
+                // Ajuste para añadir 4 meses, si la fecha original ya era después de mayo
+                if (fechaMatriculacion.getMonth() > 4) { // Si la matriculación es después de mayo (mes 4 es mayo)
+                    fechaLimiteItv.setMonth(fechaLimiteItv.getMonth() + 4);
+                } else { // Si es de enero a mayo, la primera ITV será en los 4 meses siguientes al final del año 8
+                    fechaLimiteItv = new Date(anioMatriculacion + 8, 4, 1); // 1 de mayo del 8º año
+                }
+            } else if (anioMatriculacion >= 2020 && anioMatriculacion <= 2021) {
+                fechaLimiteItv = new Date(anioMatriculacion + 6, fechaMatriculacion.getMonth(), fechaMatriculacion.getDate());
+                 // Ajuste para añadir 4 meses, si la fecha original ya era después de mayo
+                if (fechaMatriculacion.getMonth() > 4) { // Si la matriculación es después de mayo (mes 4 es mayo)
+                    fechaLimiteItv.setMonth(fechaLimiteItv.getMonth() + 4);
+                } else { // Si es de enero a mayo, la primera ITV será en los 4 meses siguientes al final del año 6
+                    fechaLimiteItv = new Date(anioMatriculacion + 6, 4, 1); // 1 de mayo del 6º año
+                }
+            } else { // a partir de 2022
+                fechaLimiteItv = new Date(anioMatriculacion + 5, fechaMatriculacion.getMonth(), fechaMatriculacion.getDate());
+            }
+            
+            // Si el día y el mes de la fecha límite superan el 31 de diciembre del año límite,
+            // se ajusta al último día de ese año.
+            if (fechaLimiteItv.getFullYear() < anioMatriculacion + 5 && anioMatriculacion >= 2022) {
+                fechaLimiteItv.setFullYear(anioMatriculacion + 5);
+                fechaLimiteItv.setMonth(11); // Diciembre
+                fechaLimiteItv.setDate(31);
+            }
+            
+            const fechaFormateada = fechaLimiteItv.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            if (fechaLimiteItv < fechaActual) {
+                resultadoDiv.innerHTML = `<p style="color: red;">ITV caducada el <span style="font-weight: bold;">${fechaFormateada}</span>.</p>`;
+            } else {
+                resultadoDiv.innerHTML = `<p>La primera ITV de la motocicleta francesa deberá pasarse antes del <span style="color: green; font-weight: bold;">${fechaFormateada}</span>.</p>`;
+            }
+        }
+        
+        // Habilitar la tecla Intro en el campo de input de fecha
+        document.getElementById("fechaMatriculacionMotoFrancia").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                calcularItvMotosFrancia();
+            }
+        });
+    </script>
+</body>
+</html>

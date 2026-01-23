@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador GAD - Gestión Avanzada</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --success-color: #10b981;
+            --primary-color: #1e40af;
+        }
+
+        body { background-color: var(--bg-color); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid #ccc;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .card.muy-grave { border-left-color: var(--danger-color); }
+        .card.grave { border-left-color: var(--warning-color); }
+        .card.leve { border-left-color: var(--success-color); }
+
+        .card-header {
+            padding: 10px 15px;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .article-tag { font-weight: 800; color: #1e40af; font-size: 0.95rem; }
+
+        .card-actions { display: flex; gap: 10px; align-items: center; }
+        .icon-btn { cursor: pointer; transition: transform 0.2s; font-size: 1.1rem; }
+        .wa-icon { color: #25D366; }
+        .tg-icon { color: #0088cc; }
+        .edit-icon { color: #4b5563; }
+
+        .card-body { padding: 16px; flex-grow: 1; }
+        .normativa-text { font-size: 0.75rem; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; font-weight: bold; letter-spacing: 0.5px; }
+        .description-text { font-size: 1rem; color: #1f2937; margin-bottom: 12px; line-height: 1.5; }
+
+        .details-box {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+        }
+        
+        .details-row-inline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .label-detail { color: #6b7280; font-weight: 600; }
+        
+        .money-total { color: #dc2626 !important; font-weight: 800 !important; } 
+        .money-reduced { color: #059669 !important; font-weight: 800 !important; } 
+        .money-sep { color: #9ca3af; margin: 0 2px; }
+        .points-val { color: #dc2626; font-weight: 800; margin-left: 2px; }
+        
+        .resp-container {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 8px;
+            margin-top: 8px;
+            white-space: normal;
+            word-break: normal;
+            line-height: 1.4;
+        }
+        .responsable-val { color: #1e40af; font-weight: 700; }
+
+        #infractionCounter {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed #a78bfa;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #7c3aed;
+            background-color: #f5f3ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        .drop-zone.dragover { background-color: #ede9fe; border-color: #6d28d9; transform: scale(1.02); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-4 shadow-md">
+        <div class="w-32 h-32 rounded-full overflow-hidden shadow-lg bg-white">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block" onerror="this.src='https://via.placeholder.com/150/0000FF/FFFFFF?text=GAD'">
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 flex-grow">
+        <h1 class="text-center mt-6 text-2xl font-bold text-gray-800 uppercase tracking-wide">Codificado Infracciones GAD</h1>
+
+        <div class="max-w-5xl mx-auto mt-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div class="w-full md:w-1/3">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Filtrar Normativa</label>
+                    <select id="normativaFilter" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="todas">Todas las normativas</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-2/3">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Buscador</label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Ej: alcoholemia, velocidad, art 12..." class="w-full p-3 border border-gray-300 rounded-lg pl-10 focus:outline-none focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-4 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mt-4 border-t pt-4">
+                <div id="infractionCounter">Cargando...</div>
+                <div class="flex flex-wrap justify-center md:justify-end gap-2 w-full md:w-auto">
+                    <button id="btnOpenImport" class="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-semibold shadow transition text-sm">Importar</button>
+                    <button id="btnUndo" onclick="undoLastImport()" class="hidden px-3 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 font-semibold shadow transition text-sm">Deshacer Última</button>
+                    <button onclick="repairFirebaseClean()" class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 font-semibold shadow transition text-sm">Reparar Firebase</button>
+                    <button onclick="cleanDuplicates()" class="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-semibold shadow transition text-sm">Limpiar Duplicados</button>
+                    <button onclick="deleteAllInfracciones()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold shadow text-sm">Borrar Todo</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsContainer" class="results-grid max-w-7xl mx-auto">
+            <div class="col-span-full text-center py-10">Conectando...</div>
+        </div>
+        <div id="noResults" class="hidden text-center py-10"><p class="text-gray-500 text-lg">No se encontraron resultados.</p></div>
+    </div>
+
+    <div id="importModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 p-4 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+            <div class="bg-purple-700 p-4 rounded-t-xl text-white font-bold flex justify-between shrink-0">
+                <span>Importar JSON</span>
+                <button id="btnCloseImport" class="hover:text-gray-200"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div id="dropZone" class="drop-zone"><i class="fas fa-cloud-upload-alt text-3xl mb-2"></i><br><span class="font-bold">Arrastra JSON aquí</span><br><input type="file" id="fileInput" class="hidden" accept=".json"></div>
+                <textarea id="jsonPasteArea" rows="8" class="w-full p-2 border mt-4 rounded text-sm font-mono" placeholder='Pega aquí tu código JSON...'></textarea>
+                <button id="btnConfirmImport" class="w-full py-3 bg-purple-600 text-white rounded font-bold mt-4 shadow-lg hover:bg-purple-700 transition-colors">Procesar Importación</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-screen">
+            <div class="bg-blue-600 p-4 rounded-t-xl flex justify-between items-center text-white">
+                <h2 id="modalTitle" class="font-bold text-lg">Edición</h2>
+                <button onclick="closeEditModal()"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="editForm" class="p-6 space-y-3">
+                <input type="hidden" id="editPath">
+                <div><label class="block text-xs font-bold text-gray-600">Normativa</label><input type="text" id="editNormativa" class="w-full p-2 border rounded"></div>
+                <div class="flex gap-2">
+                    <div class="w-1/3"><label class="block text-xs font-bold text-gray-600">Art.</label><input type="text" id="editArticulo" class="w-full p-2 border rounded"></div>
+                    <div class="w-1/3"><label class="block text-xs font-bold text-gray-600">Ap.</label><input type="text" id="editApartado" class="w-full p-2 border rounded"></div>
+                    <div class="w-1/3"><label class="block text-xs font-bold text-gray-600">Op.</label><input type="text" id="editOpcion" class="w-full p-2 border rounded"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-gray-600">Hecho</label><textarea id="editDescripcion" rows="3" class="w-full p-2 border rounded"></textarea></div>
+                <div class="flex gap-2">
+                    <div class="w-1/3"><label class="block text-xs font-bold text-gray-600">Total (€)</label><input type="number" id="editImporte" class="w-full p-2 border rounded"></div>
+                    <div class="w-1/3"><label class="block text-xs font-bold text-gray-600">Red. (€)</label><input type="number" id="editImporteReducido" class="w-full p-2 border rounded"></div>
+                    <div class="w-1/3"><label class="block text-xs font-bold text-gray-600">Ptos</label><input type="number" id="editPuntos" class="w-full p-2 border rounded"></div>
+                </div>
+                <div><label class="block text-xs font-bold text-gray-600">Resp.</label><input type="text" id="editResponsable" class="w-full p-2 border rounded"></div>
+                <div><label class="block text-xs font-bold text-gray-600">Calif.</label><select id="editCalificacion" class="w-full p-2 border rounded"><option value="Leve">Leve</option><option value="Grave">Grave</option><option value="Muy grave">Muy grave</option></select></div>
+            </form>
+            <div class="p-4 border-t flex justify-between gap-3">
+                <button id="btnDeleteSpecific" onclick="deleteInfractionFromEdit()" class="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 font-bold transition">Eliminar</button>
+                <div class="flex gap-2"><button onclick="closeEditModal()" class="px-4 py-2 bg-gray-300 rounded font-bold">Cerrar</button><button onclick="saveEdit()" class="px-4 py-2 bg-blue-600 text-white rounded font-bold">Guardar</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBu5ALRVJ5aDzuU9YIAQD_9KMgR6ZwttpU", 
+            authDomain: "gad-alicante-v1.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v1",
+            storageBucket: "gad-alicante-v1.appspot.com",
+            messagingSenderId: "545835357966",
+            appId: "1:545835357966:web:6351ec6c0d3c8e69eb695f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const rootRef = db.ref('infracciones_todas');
+
+        let allInfracciones = [];
+        let lastBatchPaths = []; 
+
+        function normalizeLawName(name) {
+            if (!name) return "Varios";
+            const n = name.replace(/_/g, ' ').toLowerCase().trim();
+            if (n.includes("seguro") || n.includes("responsabilidad civil") || n === "soa") return "SOA";
+            if (n.includes("trafico") || n.includes("tráfico") || n.includes("seguridad vial") || n.includes("lsv") || n.includes("circulacion")) {
+                if (!n.includes("reglamento") && !n.includes("reglam.")) return "Ley de Seguridad Vial";
+            }
+            if (n === "cir" || (n.includes("reglamento") && n.includes("circulacion"))) return "Reglamento General de Circulación";
+            if (n.includes("reglamento") && n.includes("conductores")) return "Reglamento General de Conductores";
+            if (n.includes("reglamento") && n.includes("vehiculos")) return "Reglamento General de Vehículos";
+            return name;
+        }
+
+        function areAlmostSame(text1, text2) {
+            const clean = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+            const s1 = clean(text1); const s2 = clean(text2);
+            if (s1 === s2) return true;
+            if (Math.abs(s1.length - s2.length) > Math.max(s1.length, s2.length) * 0.02) return false;
+            let matches = 0; const len = Math.min(s1.length, s2.length);
+            for (let i = 0; i < len; i++) { if (s1[i] === s2[i]) matches++; }
+            return (matches / Math.max(s1.length, s2.length)) >= 0.98;
+        }
+
+        function generateUniqueSignature(item) {
+            const clean = (str) => String(str || "").toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            const textHash = clean(item.descripcion).split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+            return `${clean(item.articulo)}_${clean(item.apartado)}_${clean(item.opcion)}_${Math.abs(textHash)}`;
+        }
+
+        function flattenData(node, parentPath = "infracciones_todas", list = []) {
+            if (!node) return list;
+            const isInfraction = node.articulo || node.normativa || node.texto_hecho_infringido || node.multa || node.importe_multa;
+            if (isInfraction) {
+                let item = normalizeInfraction(node);
+                item.fullPath = parentPath;
+                list.push(item);
+            } else {
+                Object.keys(node).forEach(key => { if (typeof node[key] === 'object') flattenData(node[key], `${parentPath}/${key}`, list); });
+            }
+            return list;
+        }
+
+        function normalizeInfraction(data) {
+            return {
+                normativa: normalizeLawName(data.normativa || data.norma || data.ley),
+                articulo: (data.articulo || data.art || "").toString(),
+                apartado: (data.apartado || data.ap || "").toString(),
+                opcion: (data.opcion || data.op || "").toString(),
+                descripcion: data.texto_hecho_infringido || data.textoInfraccion || data.hecho || data.descripcion || "",
+                calificacion: (data.calificacion || data.tipoFalta || "Leve").includes("muy grave") ? "Muy grave" : ((data.calificacion || data.tipoFalta || "Leve").includes("grave") ? "Grave" : "Leve"),
+                importe_total: parseFloat(data.multa_total || data.multa || data.importe_multa || data.importe_total || 0),
+                importe_reducido: parseFloat(data.importe_reducido || data.importeReducido || 0),
+                puntos: parseInt(data.puntos || data.pto || 0),
+                responsable: data.responsable || data.responsables || "Conductor"
+            };
+        }
+
+        rootRef.on('value', (snapshot) => {
+            allInfracciones = flattenData(snapshot.val());
+            populateFilter(allInfracciones); 
+            filterData(); 
+        });
+
+        // --- REPARACIÓN ATÓMICA DEFINITIVA ---
+        function repairFirebaseClean() {
+            if (!confirm("⚠️ REPARACIÓN TOTAL\n\nEste proceso descargará todos tus datos, eliminará los nodos basura y guiones bajos, y unificará las infracciones duplicadas al 98%.\n\n¿Deseas continuar?")) return;
+
+            rootRef.once('value').then(snapshot => {
+                const raw = snapshot.val();
+                if (!raw) return alert("Base de datos vacía.");
+
+                const cleanObject = {}; // Aquí construiremos la nueva DB limpia
+                const flatList = flattenData(raw);
+                let processed = 0;
+
+                flatList.forEach(item => {
+                    const norm = item.normativa; // Ya normalizada por flattenData
+                    const art = `Art_${item.articulo}`;
+                    const sig = `Fact_${generateUniqueSignature(item)}`;
+
+                    // Evitar duplicados del 98% durante la reconstrucción
+                    if (!cleanObject[norm]) cleanObject[norm] = {};
+                    if (!cleanObject[norm][art]) cleanObject[norm][art] = {};
+
+                    const isDup = Object.values(cleanObject[norm][art]).some(existing => areAlmostSame(existing.descripcion, item.descripcion));
+                    
+                    if (!isDup) {
+                        cleanObject[norm][art][sig] = item;
+                        processed++;
+                    }
+                });
+
+                // REEMPLAZO TOTAL: Usamos .set() para sobrescribir el desorden por lo limpio
+                return rootRef.set(cleanObject).then(() => processed);
+            }).then((count) => {
+                alert(`✅ REPARACIÓN EXITOSA\nSe han unificado y limpiado ${count} registros.`);
+                window.location.reload();
+            }).catch(err => alert("Error: " + err.message));
+        }
+
+        function renderCards(data, total, isSearching) {
+            const container = document.getElementById('resultsContainer');
+            const counter = document.getElementById('infractionCounter');
+            container.innerHTML = '';
+            counter.textContent = isSearching ? `Mostrando: ${data.length} / Total: ${total}` : `Total: ${total} Infracciones`;
+            data.forEach(item => {
+                let severity = item.calificacion.toLowerCase().includes('muy grave') ? 'muy-grave' : (item.calificacion.toLowerCase().includes('grave') ? 'grave' : 'leve');
+                const card = document.createElement('div');
+                card.className = `card ${severity}`;
+                card.innerHTML = `
+                    <div class="card-header"><span class="article-tag">Art. ${item.articulo} ${item.apartado ? 'Ap. '+item.apartado : ''} | Op. ${item.opcion}</span>
+                    <div class="card-actions"><a href="https://wa.me/?text=${encodeURIComponent(item.descripcion)}" target="_blank" class="icon-btn wa-icon"><i class="fab fa-whatsapp"></i></a>
+                    <button onclick='handleTelegramClick(${JSON.stringify(item.descripcion)})' class="icon-btn tg-icon"><i class="fab fa-telegram-plane"></i></button>
+                    <div class="w-px h-4 bg-gray-300 mx-1"></div><button onclick='openEditModal(${JSON.stringify(item)})' class="icon-btn edit-icon"><i class="fas fa-edit"></i></button></div></div>
+                    <div class="card-body"><span class="normativa-text">${item.normativa}</span><div class="description-text">${item.descripcion}</div>
+                    <div class="details-box"><div class="details-row-inline"><span class="label-detail">Multa:</span><span class="money-total">${item.importe_total}€</span><span class="money-sep">/</span><span class="money-reduced">${item.importe_reducido}€</span><span class="label-detail ml-4">Ptos:</span><span class="points-val">${item.puntos}</span></div>
+                    <div class="details-row-inline mt-1"><span class="label-detail">Calif:</span><span class="font-bold">${item.calificacion}</span></div>
+                    <div class="resp-container"><span class="label-detail">Resp:</span><span class="responsable-val">${item.responsable}</span></div></div></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function processDataBatch(inputData) {
+            let arrayData = Array.isArray(inputData) ? inputData : flattenData(inputData, "import");
+            const updates = {}; const initialCount = allInfracciones.length;
+            let added = 0; let skipped = 0; const currentBatchPaths = [];
+
+            arrayData.forEach(raw => {
+                const item = normalizeInfraction(raw);
+                const isDuplicate = allInfracciones.some(existing => existing.articulo === item.articulo && areAlmostSame(existing.descripcion, item.descripcion));
+                if (isDuplicate) { skipped++; } 
+                else {
+                    const sig = generateUniqueSignature(item);
+                    const path = `${item.normativa}/Art_${item.articulo}/Fact_${sig}`;
+                    updates[path] = item; currentBatchPaths.push(path); added++;
+                }
+            });
+
+            if (added > 0) {
+                rootRef.update(updates).then(() => {
+                    lastBatchPaths = currentBatchPaths; document.getElementById('btnUndo').classList.remove('hidden');
+                    alert(`✅ IMPORTACIÓN COMPLETADA\nNuevas: ${added} | Omitidas: ${skipped}\nTotal Global: ${initialCount + added}`);
+                    document.getElementById('importModal').classList.add('hidden');
+                });
+            } else alert(`NADA QUE AÑADIR\nLas infracciones ya existen (>98%).`);
+        }
+
+        function undoLastImport() {
+            if (confirm(`¿Borrar los últimos ${lastBatchPaths.length} registros?`)) {
+                const undo = {}; lastBatchPaths.forEach(p => undo[p] = null);
+                rootRef.update(undo).then(() => { alert("Deshecho."); lastBatchPaths = []; document.getElementById('btnUndo').classList.add('hidden'); });
+            }
+        }
+
+        function cleanDuplicates() {
+            if(!confirm("¿Limpiar duplicados del 98%?")) return;
+            const updates = {}; const seen = [];
+            allInfracciones.forEach(item => {
+                const dup = seen.find(s => s.articulo === item.articulo && areAlmostSame(s.descripcion, item.descripcion));
+                if (dup) updates[item.fullPath.replace('infracciones_todas/','')] = null;
+                else seen.push(item);
+            });
+            rootRef.update(updates).then(() => alert("Limpieza lista."));
+        }
+
+        function deleteAllInfracciones() { if(confirm("⚠️ ¿BORRAR TODO?") && prompt("Escribe BORRAR:") === "BORRAR") rootRef.remove(); }
+        function handleTelegramClick(text) { navigator.clipboard.writeText(text).then(() => { Toastify({ text: "Copiado", duration: 2000, style: { background: "#0088cc" } }).showToast(); window.open(`tg://msg?text=`); }); }
+
+        function openEditModal(item = null) {
+            document.getElementById('editModal').classList.remove('hidden'); document.getElementById('editModal').classList.add('flex');
+            const del = document.getElementById('btnDeleteSpecific');
+            if(item) {
+                document.getElementById('editPath').value = item.fullPath; document.getElementById('editNormativa').value = item.normativa;
+                document.getElementById('editArticulo').value = item.articulo; document.getElementById('editApartado').value = item.apartado;
+                document.getElementById('editOpcion').value = item.opcion; document.getElementById('editDescripcion').value = item.descripcion;
+                document.getElementById('editImporte').value = item.importe_total; document.getElementById('editImporteReducido').value = item.importe_reducido;
+                document.getElementById('editPuntos').value = item.puntos; document.getElementById('editResponsable').value = item.responsable;
+                document.getElementById('editCalificacion').value = item.calificacion; del.classList.remove('hidden');
+            } else { document.getElementById('editForm').reset(); del.classList.add('hidden'); }
+        }
+        function deleteInfractionFromEdit() { if(confirm("⚠️ ¿Eliminar?")) db.ref(document.getElementById('editPath').value).remove().then(closeEditModal); }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); document.getElementById('editModal').classList.remove('flex'); }
+
+        function saveEdit() {
+            const data = normalizeInfraction({
+                normativa: document.getElementById('editNormativa').value, articulo: document.getElementById('editArticulo').value, 
+                apartado: document.getElementById('editApartado').value, opcion: document.getElementById('editOpcion').value,
+                hecho: document.getElementById('editDescripcion').value, multa: parseFloat(document.getElementById('editImporte').value),
+                importe_reducido: parseFloat(document.getElementById('editImporteReducido').value), puntos: parseInt(document.getElementById('editPuntos').value),
+                responsable: document.getElementById('editResponsable').value, calificacion: document.getElementById('editCalificacion').value,
+            });
+            const path = document.getElementById('editPath').value;
+            if (path === "" || !path.includes('/')) {
+                const sig = generateUniqueSignature(data);
+                rootRef.child(`${data.normativa}/Art_${data.articulo}/Fact_${sig}`).set(data).then(closeEditModal);
+            } else db.ref(path).update(data).then(closeEditModal);
+        }
+
+        function filterData() {
+            const text = document.getElementById('searchInput').value.toLowerCase();
+            const selNorm = document.getElementById('normativaFilter').value;
+            const filtered = allInfracciones.filter(i => (selNorm === 'todas' || i.normativa === selNorm) && `${i.descripcion} ${i.articulo} ${i.responsable}`.toLowerCase().includes(text));
+            renderCards(filtered, allInfracciones.filter(i => selNorm === 'todas' || i.normativa === selNorm).length, text !== "");
+        }
+
+        function populateFilter(data) {
+            const sel = document.getElementById('normativaFilter'); const current = sel.value;
+            const normas = [...new Set(data.map(i => i.normativa))].sort();
+            sel.innerHTML = '<option value="todas">Todas las normativas</option>';
+            normas.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`); sel.value = current;
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        document.getElementById('normativaFilter').addEventListener('change', filterData);
+        document.getElementById('btnOpenImport').onclick = () => { document.getElementById('jsonPasteArea').value = ''; importModal.classList.remove('hidden'); importModal.classList.add('flex'); };
+        document.getElementById('btnCloseImport').onclick = () => { importModal.classList.add('hidden'); importModal.classList.remove('flex'); };
+        document.getElementById('btnConfirmImport').onclick = () => { try { processDataBatch(JSON.parse(document.getElementById('jsonPasteArea').value)); } catch(e) { alert("Error JSON."); } };
+    </script>
+</body>
+</html>

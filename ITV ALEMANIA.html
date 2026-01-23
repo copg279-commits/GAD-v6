@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación de Pegatina TÜV Alemania</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .listado-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    /* Estilo para el contenedor del logo y el texto del año */
+    .logo-container {
+      position: relative;
+      display: inline-block;
+      width: 96px; /* Ancho del logo */
+      height: auto;
+      margin: 10px auto;
+    }
+    .logo-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .logo-container .year-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 900; /* Negrita intensa */
+      color: black;
+      font-size: 1rem; /* Tamaño de fuente reducido para un ajuste perfecto */
+      line-height: 1; /* Asegura un buen centrado vertical */
+      font-family: 'Arial Black', 'Helvetica', sans-serif; /* Fuente similar a la de la pegatina */
+    }
+    .arrow {
+        cursor: pointer;
+        display: inline-block;
+        font-size: 2rem;
+        user-select: none;
+        padding: 0 10px;
+        color: #3B82F6; /* blue-500 */
+    }
+    .arrow:hover {
+        color: #2563EB; /* blue-600 */
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-800 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Verificación de Pegatina TÜV Alemania
+  </h1>
+  <h2 class="text-gray-700 text-center mt-2 px-4">
+    Consulta el color de la pegatina por año
+  </h2>
+  
+  <div class="w-11/12 max-w-md mx-auto mt-4 flex justify-center">
+    <img src="logoitvalemania.png" alt="Logo ITV Alemania" class="w-full h-auto">
+  </div>
+
+  <div class="bg-white shadow-md rounded-lg p-6 mt-6 text-center w-11/12 max-w-md mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Consultar por Año</h3>
+    <input 
+      type="number" 
+      id="inputAnio" 
+      placeholder="Ej: 2025" 
+      class="block mx-auto p-3 text-base w-full border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <button 
+      onclick="consultarPorAnio()" 
+      class="block mx-auto mt-4 w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition"
+    >
+      Consultar Color
+    </button>
+    <div id="outputColor" class="mt-4 text-gray-700 text-center w-full mx-auto font-bold"></div>
+  </div>
+  
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    const coloresAnios = {
+      2023: { color: "Rosa", hex: "#e75480" },
+      2024: { color: "Verde", hex: "#008000" },
+      2025: { color: "Naranja", hex: "#ffa500" },
+      2026: { color: "Azul", hex: "#0000ff" },
+      2027: { color: "Amarillo", hex: "#ffff00" },
+      2028: { color: "Rojo", hex: "#ff0000" }
+    };
+    
+    let currentAnio = new Date().getFullYear();
+
+    function consultarPorAnio() {
+      const inputAnio = document.getElementById("inputAnio").value;
+      
+      if (!inputAnio || isNaN(inputAnio)) {
+        document.getElementById("outputColor").innerHTML = "<p class='text-red-500'>Por favor, introduce un año válido.</p>";
+        return;
+      }
+      
+      currentAnio = parseInt(inputAnio);
+      renderResult(currentAnio);
+    }
+    
+    function changeAnio(step) {
+        currentAnio += step;
+        renderResult(currentAnio);
+    }
+
+    function renderResult(anio) {
+      const outputColor = document.getElementById("outputColor");
+      outputColor.innerHTML = "";
+
+      const inicioCiclo = 2023;
+      const longitudCiclo = 6;
+      const anioMinimoBusqueda = 2000;
+      
+      if (anio < anioMinimoBusqueda) {
+        outputColor.innerHTML = `<p class='text-red-500'>La búsqueda no puede ser anterior al año ${anioMinimoBusqueda}.</p>`;
+        return;
+      }
+      
+      let anioAjustado = (anio - inicioCiclo) % longitudCiclo;
+      if (anioAjustado < 0) {
+        anioAjustado += longitudCiclo;
+      }
+
+      const anioBase = inicioCiclo + anioAjustado;
+      const datos = coloresAnios[anioBase];
+      const anioCorto = String(anio).slice(-2);
+
+      if (datos) {
+        outputColor.innerHTML = `
+          <div class="flex items-center justify-center">
+            <span class="arrow" onclick="changeAnio(-1)">&lt;</span>
+            <div class="flex-1 text-center">
+                <p class="text-green-600 mb-2">El color para el año ${anio} es: <strong>${datos.color.toUpperCase()}</strong></p>
+                <div class="logo-container">
+                    <img src="logo${datos.color.toLowerCase()}.png" alt="Logo de color ${datos.color}">
+                    <span class="year-text">${anioCorto}</span>
+                </div>
+            </div>
+            <span class="arrow" onclick="changeAnio(1)">&gt;</span>
+          </div>
+        `;
+      } else {
+        outputColor.innerHTML = "<p class='text-red-500'>No se encontró información para ese año.</p>";
+      }
+    }
+
+    // Habilitar la tecla Intro en el campo de input
+    document.getElementById("inputAnio").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        consultarPorAnio();
+      }
+    });
+
+    // Cargar automáticamente el año actual al abrir la página
+    window.onload = function() {
+        renderResult(currentAnio);
+    };
+  </script>
+</body>
+</html>

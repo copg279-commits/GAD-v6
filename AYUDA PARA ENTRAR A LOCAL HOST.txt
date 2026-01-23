@@ -1,0 +1,22 @@
+Abre la carpeta donde tienes todos tus archivos (index.html, etc.).
+
+Haz clic arriba del todo, en la barra de direcciones (donde pone la ruta de la carpeta).
+
+Borra lo que haya, escribe cmd y pulsa ENTER. (Se abrirá la ventana negra).
+
+En la ventana negra, pega esto y pulsa ENTER:
+
+
+python -m http.server 8000
+Abre tu navegador (Chrome/Edge) y entra en: 👉 http://localhost:8000
+
+(Y recuerda: Loguéate siempre desde el index.html primero).
+
+CÓMO DESACTIVARLO (Salir)
+Tienes dos formas, ambas sirven:
+
+La fácil: Simplemente cierra la ventana negra (la del cmd). Al cerrarla, el servidor se apaga al instante y la web dejará de funcionar en local.
+
+La "pro": Si quieres pararlo sin cerrar la ventana, pulsa las teclas CTRL + C a la vez dentro de la ventana negra.
+
+¡Así de simple! Abres ventana negra para trabajar, la cierras cuando termines.

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estimador de Nacimiento por DNI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .listado-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .delete-icon {
+        cursor: pointer;
+        transition: transform 0.2s;
+        color: #ef4444; /* Rojo para la papelera */
+    }
+    .delete-icon:hover {
+        transform: scale(1.1);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+
+  <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+    <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+      <img
+        src="logogad.png"
+        alt="Logo GAD"
+        class="w-full h-full object-cover block"
+      >
+    </div>
+  </header>
+
+  <h1 class="text-black text-center mt-6 text-xl font-bold px-4">
+    Estimador de Nacimiento por DNI o Nº de Licencia
+  </h1>
+
+  <p class="text-center mt-2 px-4">
+    Ingresa un número de <span class="text-red-600 font-bold">DNI argentino</span> (nacional)
+  </p>
+
+  <input
+    type="number"
+    id="dniInput"
+    placeholder="Ej: 35273789"
+    class="block mx-auto mt-4 p-2 text-base w-11/12 max-w-md border border-gray-300 rounded-lg text-center"
+  >
+
+  <button
+    onclick="calcularNacimiento()"
+    class="block mx-auto mt-4 w-11/12 max-w-md bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md"
+  >
+    Calcular fecha nacimiento
+  </button>
+
+  <div id="resultado" class="w-11/12 max-w-md mx-auto mt-6 font-bold text-lg text-center"></div>
+
+  <div class="bg-white shadow-md rounded-lg p-6 mt-4 text-center w-11/12 max-w-md mx-auto">
+    <h3 class="text-lg font-semibold mb-4">Añadir nuevos datos</h3>
+    <div class="flex flex-col space-y-2">
+      <button id="mostrarFormularioBtn" class="w-full bg-green-600 text-white py-2 rounded-md shadow hover:bg-green-700">
+        Introduzca nuevo DNI
+      </button>
+      <button id="toggleDniListBtn" class="w-full bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">
+        Consultar lista completa
+      </button>
+    </div>
+    <div id="formularioNuevosDatos" class="mt-4 hidden">
+        <div class="mb-4">
+            <label for="nuevoDNI" class="block text-sm font-bold text-gray-700 mb-1">Número de DNI:</label>
+            <input type="number" id="nuevoDNI" placeholder="Ej: 50000001" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="mb-4">
+            <label for="nuevaFecha" class="block text-sm font-bold text-gray-700 mb-1">Fecha de nacimiento:</label>
+            <input type="date" id="nuevaFecha" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="guardarNuevoDNI()" class="w-1/2 bg-blue-600 text-white py-2 rounded-md shadow hover:bg-blue-700">
+                Guardar
+            </button>
+            <button onclick="limpiarCampos()" class="w-1/2 bg-gray-400 text-white py-2 rounded-md shadow hover:bg-gray-500">
+                Limpiar campos
+            </button>
+        </div>
+        <div id="mensajeGuardado" class="mt-4 text-sm font-medium"></div>
+    </div>
+    <div id="dniDataTable" class="mt-4 hidden">
+        <h3 class="text-lg font-semibold mb-4 text-center">Listado Completo</h3>
+        <div class="listado-container">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Número de DNI</th>
+                        <th scope="col" class="px-6 py-3">Fecha de Nacimiento</th>
+                        <th scope="col" class="px-6 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody id="dniList">
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
+  <div class="mt-8 flex justify-center">
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-200">
+        MENÚ PRINCIPAL
+    </button>
+  </div>
+
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4", // Clave API correcta
+      authDomain: "gad-alicante-v3.firebaseapp.com", // Dominio correcto
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3", // Nuevo ID
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const dniRef = database.ref('dni_argentina');
+
+    let datosCompletos = [];
+
+    dniRef.on('value', (snapshot) => {
+        datosCompletos = [];
+        snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            datosCompletos.push({
+                key: childSnapshot.key,
+                dni: parseInt(data.dni),
+                fecha: new Date(data.fecha)
+            });
+        });
+        renderizarTablaDni();
+    });
+
+    const mostrarFormularioBtn = document.getElementById('mostrarFormularioBtn');
+    const formularioNuevosDatos = document.getElementById('formularioNuevosDatos');
+    const nuevoDNIInput = document.getElementById('nuevoDNI');
+    const nuevaFechaInput = document.getElementById('nuevaFecha');
+    const mensajeGuardadoDiv = document.getElementById('mensajeGuardado');
+    const dniListDiv = document.getElementById('dniList');
+    const dniDataTable = document.getElementById('dniDataTable');
+    const toggleDniListBtn = document.getElementById('toggleDniListBtn');
+
+    mostrarFormularioBtn.addEventListener('click', () => {
+        formularioNuevosDatos.classList.toggle('hidden');
+        dniDataTable.classList.add('hidden');
+        limpiarCampos();
+    });
+    
+    toggleDniListBtn.addEventListener('click', () => {
+        dniDataTable.classList.toggle('hidden');
+        formularioNuevosDatos.classList.add('hidden');
+        if (!dniDataTable.classList.contains('hidden')) {
+            renderizarTablaDni();
+        }
+    });
+
+    function limpiarCampos() {
+        nuevoDNIInput.value = '';
+        nuevaFechaInput.value = '';
+        mensajeGuardadoDiv.textContent = '';
+        mensajeGuardadoDiv.style.color = '';
+    }
+
+    function guardarNuevoDNI() {
+      const nuevoDNI = parseInt(nuevoDNIInput.value);
+      const nuevaFechaStr = nuevaFechaInput.value;
+
+      if (isNaN(nuevoDNI) || !nuevaFechaStr) {
+        mensajeGuardadoDiv.textContent = 'Por favor, introduce un número de DNI y una fecha válidos.';
+        mensajeGuardadoDiv.style.color = 'orange';
+        return;
+      }
+      
+      const nuevaFecha = new Date(nuevaFechaStr);
+
+      const datosOrdenadosPorDni = datosCompletos.sort((a, b) => a.dni - b.dni);
+      
+      const datoAnterior = datosOrdenadosPorDni.filter(dato => dato.dni < nuevoDNI).pop();
+      const datoPosterior = datosOrdenadosPorDni.find(dato => dato.dni > nuevoDNI);
+
+      // Verificación de la progresión
+      if (datoAnterior && nuevaFecha < datoAnterior.fecha) {
+        mensajeGuardadoDiv.innerHTML = `<span style="color: red; font-weight: bold;">ERROR: DNI demasiado alto para esa fecha.<br>!!! POSIBLE DOCUMENTO FALSO !!!</span>`;
+        return;
+      }
+      if (datoPosterior && nuevaFecha > datoPosterior.fecha) {
+        mensajeGuardadoDiv.innerHTML = `<span style="color: red; font-weight: bold;">ERROR: DNI demasiado bajo para esa fecha.<br>!!! POSIBLE DOCUMENTO FALSO !!!</span>`;
+        return;
+      }
+
+      const nuevoDato = {
+        dni: nuevoDNI,
+        fecha: nuevaFechaStr
+      };
+
+      dniRef.push(nuevoDato)
+        .then(() => {
+          mensajeGuardadoDiv.textContent = '¡Datos guardados con éxito en Firebase!';
+          mensajeGuardadoDiv.style.color = 'green';
+          limpiarCampos();
+          formularioNuevosDatos.classList.add('hidden');
+        })
+        .catch(error => {
+          mensajeGuardadoDiv.textContent = 'Error al guardar en Firebase: ' + error.message;
+          mensajeGuardadoDiv.style.color = 'red';
+        });
+    }
+
+    function renderizarTablaDni() {
+      dniListDiv.innerHTML = '';
+      
+      const datosOrdenados = datosCompletos.sort((a, b) => b.dni - a.dni);
+      
+      datosOrdenados.forEach(dato => {
+        const fila = document.createElement('tr');
+        fila.classList.add('bg-white', 'border-b', 'hover:bg-gray-50');
+
+        const celdaDni = document.createElement('td');
+        celdaDni.classList.add('px-6', 'py-4', 'font-medium', 'text-gray-900', 'whitespace-nowrap');
+        celdaDni.textContent = dato.dni;
+
+        const celdaFecha = document.createElement('td');
+        celdaFecha.classList.add('px-6', 'py-4');
+        // MODIFICACIÓN: Formato de fecha dd/mm/aaaa
+        const dia = String(dato.fecha.getDate()).padStart(2, '0');
+        const mes = String(dato.fecha.getMonth() + 1).padStart(2, '0');
+        const anio = dato.fecha.getFullYear();
+        const fechaFormateada = `${dia}/${mes}/${anio}`;
+        celdaFecha.textContent = fechaFormateada;
+
+        const celdaAccion = document.createElement('td');
+        celdaAccion.classList.add('px-6', 'py-4', 'text-right');
+        
+        // Solo mostrar el icono de eliminar para los datos que tienen key de Firebase
+        if (dato.key) {
+          const deleteIcon = document.createElement('span');
+          deleteIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 delete-icon inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                  </svg>`;
+          deleteIcon.onclick = () => confirmarEliminarDNI(dato.key, dato.dni);
+          celdaAccion.appendChild(deleteIcon);
+        }
+
+        fila.appendChild(celdaDni);
+        fila.appendChild(celdaFecha);
+        fila.appendChild(celdaAccion);
+        dniListDiv.appendChild(fila);
+      });
+    }
+
+    function confirmarEliminarDNI(key, dni) {
+      if (confirm(`¿Estás seguro de que quieres eliminar el registro con el DNI ${dni}?`)) {
+        eliminarDNI(key);
+      }
+    }
+
+    function eliminarDNI(key) {
+      dniRef.child(key).remove()
+        .then(() => {
+          console.log("Registro eliminado con éxito.");
+        })
+        .catch((error) => {
+          console.error("Error al eliminar el registro:", error);
+        });
+    }
+    
+    function buscarEnBase(dniNum) {
+      const datos = datosCompletos.sort((a, b) => a.dni - b.dni);
+      const exacto = datos.find(d => d.dni === dniNum);
+      if (exacto) {
+        return {
+          nacimientoEstimado: `Fecha exacta: ${exacto.fecha.toLocaleDateString("es-ES")}`,
+          edadEstimada: new Date().getFullYear() - exacto.fecha.getFullYear()
+        };
+      }
+
+      const antes = datos.filter(d => d.dni <= dniNum).pop();
+      const despues = datos.find(d => d.dni > dniNum);
+
+      if (!antes) {
+        return { nacimientoEstimado: "El número es demasiado bajo.", edadEstimada: null };
+      }
+      if (!despues) {
+        return { nacimientoEstimado: `<span style="color: red; font-weight: bold;">NO TENEMOS DATOS TAN RECIENTES</span><br>SI BIEN DEBE SER POSTERIOR A:<br>${antes.fecha.toLocaleDateString("es-ES")}`, edadEstimada: null };
+      }
+
+      const proporcion = (dniNum - antes.dni) / (despues.dni - antes.dni);
+      const interpolado = antes.fecha.getTime() + proporcion * (despues.fecha.getTime() - antes.fecha.getTime());
+      
+      const fechaEstimada = new Date(interpolado);
+      const edadEstimada = new Date().getFullYear() - fechaEstimada.getFullYear();
+      
+      return {
+        nacimientoEstimado: `Año: ${fechaEstimada.getFullYear()}, Mes: ${fechaEstimada.getMonth() + 1}`,
+        edadEstimada: edadEstimada
+      };
+    }
+
+    function calcularNacimiento() {
+      const dni = document.getElementById("dniInput").value;
+      const resultado = document.getElementById("resultado");
+      
+      const dniNum = parseInt(dni, 10);
+
+      if (isNaN(dniNum) || dniNum <= 0) {
+        resultado.textContent = "Por favor, ingresa un número de DNI válido.";
+        return;
+      }
+      
+      const { nacimientoEstimado, edadEstimada } = buscarEnBase(dniNum);
+
+      if (nacimientoEstimado) {
+        resultado.innerHTML = `
+          <p><strong>DNI Nº:</strong> ${dniNum}</p>
+          <p><strong>Fecha estimada de Nacimiento:</strong> ${nacimientoEstimado}</p>
+          ${edadEstimada !== null ? `<p><strong>Edad estimada:</strong> ${edadEstimada} años</p>` : ''}
+          <p class="text-red-600 mt-2">Este cálculo es una estimación. Puede variar por diversos factores.</p>
+        `;
+      } else {
+        resultado.textContent = "Número de DNI fuera de rango para la estimación. No hay suficientes datos de referencia.";
+      }
+    }
+    
+    document.getElementById("dniInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            calcularNacimiento();
+        }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tareas Pendientes GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100svh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+        .grid-container {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0.5rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease-in-out;
+            flex-direction: row;
+        }
+        @media (max-width: 639px) {
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .task-status-container {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            .task-status-btn, .edit-btn {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .task-text-container {
+                width: 100%;
+            }
+            .task-text {
+                width: 100%;
+                word-break: break-word;
+            }
+        }
+        .task-item.pendiente .task-text {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .task-item.en-tramite .task-text {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        .task-item.finalizada .task-text {
+            color: #22c55e;
+            font-weight: bold;
+            text-decoration: line-through;
+        }
+        .task-text {
+            flex-grow: 1;
+        }
+        .task-status-container {
+            display: flex;
+            align-items: stretch;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .task-status-btn, .edit-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        /* 🎨 BOTONES INACTIVOS - Colores muy claros */
+        .task-status-btn.inactive {
+            opacity: 0.4;
+            filter: saturate(40%);
+        }
+        .btn-pendiente.inactive {
+            background-color: #fecaca;
+            color: #b91c1c;
+        }
+        .btn-tramite.inactive {
+            background-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+        .btn-finalizada.inactive {
+            background-color: #bbf7d0;
+            color: #15803d;
+        }
+
+        /* 🌈 BOTONES ACTIVOS - Colores vibrantes con efectos */
+        .task-status-btn.active {
+            border-color: #000;
+            opacity: 1;
+            filter: saturate(120%);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            transform: scale(1.05);
+        }
+        .btn-pendiente.active {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-tramite.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-finalizada.active {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .add-task-form {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .edit-btn {
+            background-color: #d1d5db;
+            color: black;
+            font-weight: bold;
+        }
+        /* Contenedor para el texto de la tarea */
+        .task-text-container {
+            display: flex;
+            flex-grow: 1;
+            flex-shrink: 1;
+        }
+
+        .task-text {
+            word-break: break-word;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col pb-16">
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="w-40 h-40 rounded-full overflow-hidden shadow-lg">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+    <h1 class="text-black text-center mt-2 text-xl font-bold px-4">
+        Tareas Pendientes
+    </h1>
+    <div class="main-content-wrapper px-2 sm:px-4 lg:px-16">
+        <div class="grid-container">
+            <form id="add-task-form" class="add-task-form">
+                <input type="text" id="new-task-input" placeholder="Añadir nueva tarea..." required
+                       class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                <button type="submit"
+                        class="p-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition">
+                    Añadir
+                </button>
+            </form>
+            <div id="task-list" class="flex flex-col gap-2">
+                </div>
+            <button id="main-menu-btn"
+                    class="mt-2 p-2.5 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-500 text-base lg:text-xl">
+                MENÚ PRINCIPAL
+            </button>
+        </div>
+    </div>
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+    <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBu5ALRVJ5aDzuU9YIAQD_9KMgR6ZwttpU",
+  authDomain: "gad-alicante-v1.firebaseapp.com",
+  databaseURL: "https://gad-alicante-v1-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gad-alicante-v1",
+  storageBucket: "gad-alicante-v1.firebasestorage.app",
+  messagingSenderId: "545835357966",
+  appId: "1:545835357966:web:6351ec6c0d3c8e69eb695f",
+  measurementId: "G-QG8KDLCWQS"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const tasksRef = db.ref('tareas');
+        const taskList = document.getElementById('task-list');
+        const addTaskForm = document.getElementById('add-task-form');
+        const newTaskInput = document.getElementById('new-task-input');
+        const mainMenuBtn = document.getElementById('main-menu-btn');
+
+        // Crea los botones de filtro
+        const showAllBtn = document.createElement('button');
+        showAllBtn.id = 'show-all-btn';
+        showAllBtn.textContent = 'Mostrar todas las tareas';
+        showAllBtn.className = 'mt-2 p-2.5 bg-gray-400 text-white font-bold rounded-lg shadow-md transition hover:bg-gray-500 text-base lg:text-xl';
+        
+        const hideCompletedBtn = document.createElement('button');
+        hideCompletedBtn.id = 'hide-completed-btn';
+        hideCompletedBtn.textContent = 'Ocultar tareas finalizadas';
+        hideCompletedBtn.className = 'mt-2 p-2.5 bg-green-500 text-white font-bold rounded-lg shadow-md transition hover:bg-green-600 text-base lg:text-xl';
+        
+        // Inserta los botones de filtro en el grid-container, antes del botón de menú
+        const gridContainer = document.querySelector('.grid-container');
+        gridContainer.insertBefore(showAllBtn, mainMenuBtn);
+        gridContainer.insertBefore(hideCompletedBtn, mainMenuBtn);
+
+        let currentFilter = 'show-all';
+        
+        const renderTask = (snapshot) => {
+            taskList.innerHTML = '';
+            const tasks = [];
+            snapshot.forEach(childSnapshot => {
+                tasks.push({
+                    id: childSnapshot.key,
+                    ...childSnapshot.val()
+                });
+            });
+
+            // Ordena las tareas por fecha de creación de forma descendente (más reciente primero)
+            tasks.sort((a, b) => b.createdAt - a.createdAt);
+
+            const filteredTasks = tasks.filter(task => {
+                if (currentFilter === 'hide-completed') {
+                    return task.status !== 'Finalizada';
+                }
+                return true;
+            });
+
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.className = `task-item ${task.status.toLowerCase().replace(' ', '-')}`;
+                taskItem.setAttribute('data-id', task.id);
+                
+                // Contenedor para el texto
+                const taskTextContainer = document.createElement('div');
+                taskTextContainer.className = 'task-text-container';
+                
+                const taskText = document.createElement('span');
+                taskText.className = 'task-text ml-2';
+                const formattedDate = new Date(task.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                taskText.textContent = `${formattedDate} - ${task.description}`;
+                
+                switch (task.status) {
+                    case 'Pendiente':
+                        taskText.style.color = '#ef4444';
+                        taskText.style.fontWeight = 'bold';
+                        taskText.style.textDecoration = 'none';
+                        break;
+                    case 'En trámite':
+                        taskText.style.color = '#3b82f6';
+                        taskText.style.fontWeight = 'bold';
+                        taskText.style.textDecoration = 'none';
+                        break;
+                    case 'Finalizada':
+                        taskText.style.color = '#22c55e';
+                        taskText.style.fontWeight = 'bold';
+                        taskText.style.textDecoration = 'line-through';
+                        break;
+                }
+                
+                taskTextContainer.appendChild(taskText);
+                taskItem.appendChild(taskTextContainer);
+                
+                const statusContainer = document.createElement('div');
+                statusContainer.className = 'task-status-container';
+                
+                const editButton = document.createElement('button');
+                editButton.className = 'edit-btn';
+                editButton.textContent = '✏️';
+                editButton.title = 'Editar tarea';
+                editButton.addEventListener('click', () => {
+                    const currentText = task.description;
+                    const input = document.createElement('textarea');
+                    input.value = currentText;
+                    input.className = 'flex-grow p-1 border border-gray-400 rounded-md w-full resize-y';
+                    input.rows = 2;
+                    
+                    const saveChanges = () => {
+                        const newText = input.value.trim();
+                        if (newText && newText !== currentText) {
+                            tasksRef.child(task.id).update({ description: newText });
+                        }
+                        taskTextContainer.replaceChild(taskText, input);
+                    };
+                    
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            saveChanges();
+                        }
+                    });
+                    
+                    input.addEventListener('blur', saveChanges);
+                    taskTextContainer.replaceChild(input, taskText);
+                    input.focus();
+                });
+                statusContainer.appendChild(editButton);
+
+                // Botón de eliminar
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'p-2.5 bg-yellow-300 text-white font-bold rounded-lg shadow-md transition hover:bg-red-600';
+                deleteButton.textContent = '🗑️';
+                deleteButton.title = 'Eliminar tarea';
+                deleteButton.addEventListener('click', () => {
+                    if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                        tasksRef.child(task.id).remove()
+                            .then(() => {
+                                console.log("Tarea eliminada correctamente.");
+                            })
+                            .catch((error) => {
+                                console.error("Error al eliminar la tarea: ", error);
+                            });
+                    }
+                });
+                statusContainer.appendChild(deleteButton);
+                
+                const statuses = [
+                    { name: 'Pendiente', colorClass: 'btn-pendiente' },
+                    { name: 'En trámite', colorClass: 'btn-tramite' },
+                    { name: 'Finalizada', colorClass: 'btn-finalizada' }
+                ];
+                
+                statuses.forEach(status => {
+                    const button = document.createElement('button');
+                    button.className = `task-status-btn ${status.colorClass} inactive`;
+                    if (task.status === status.name) {
+                        button.classList.remove('inactive');
+                        button.classList.add('active');
+                    }
+                    button.textContent = status.name;
+                    button.addEventListener('click', () => {
+                        tasksRef.child(task.id).update({ status: status.name });
+                        const allStatusButtons = statusContainer.querySelectorAll('.task-status-btn');
+                        allStatusButtons.forEach(btn => {
+                            btn.classList.remove('active');
+                            btn.classList.add('inactive');
+                        });
+                        button.classList.remove('inactive');
+                        button.classList.add('active');
+                    });
+                    statusContainer.appendChild(button);
+                });
+                
+                taskItem.appendChild(statusContainer);
+                taskList.appendChild(taskItem);
+            });
+        };
+
+        // Escucha los cambios en Firebase y re-renderiza la lista
+        tasksRef.on('value', renderTask);
+
+        addTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const description = newTaskInput.value.trim();
+            if (description) {
+                try {
+                    await tasksRef.push({
+                        description: description,
+                        status: 'Pendiente',
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    newTaskInput.value = '';
+                } catch (error) {
+                    console.error("Error al añadir la tarea: ", error);
+                }
+            }
+        });
+
+        // Event listeners para los botones de filtrado
+        showAllBtn.addEventListener('click', () => {
+            currentFilter = 'show-all';
+            tasksRef.once('value', renderTask);
+        });
+        
+        hideCompletedBtn.addEventListener('click', () => {
+            currentFilter = 'hide-completed';
+            tasksRef.once('value', renderTask);
+        });
+        
+        mainMenuBtn.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

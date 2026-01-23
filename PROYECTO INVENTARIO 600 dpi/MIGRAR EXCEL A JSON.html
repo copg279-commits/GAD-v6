@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Documentos - GAD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        /* [ ESTILOS BASE Y PANELES ] */
+        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; margin: 0; padding: 15px; color: #333; line-height: 1.6; }
+        .app-container { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .panel { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); border: 1px solid #e0e0e0; }
+        h1, h2, h3 { color: #2c3e50; padding-bottom: 10px; margin-top: 0; font-weight: 700; }
+        
+        /* Controles y Botones */
+        button { border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: 700; transition: all 0.2s ease-in-out; margin-right: 8px; display: inline-flex; align-items: center; gap: 5px; }
+        button i { font-size: 1em; } 
+        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+
+        /* Estilos específicos de la importación */
+        #import-status-message { font-weight: bold; padding: 10px; border-radius: 5px; margin-top: 15px; display: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-bar { height: 15px; background-color: #e9ecef; border-radius: 5px; overflow: hidden; margin-top: 10px; display: none; }
+        .progress { height: 100%; width: 0%; background-color: #28a745; transition: width 0.3s; }
+        #json-output-area { border-top: 2px solid #ddd; padding-top: 20px; }
+        #json-output { border: 1px solid #ccc; padding: 10px; font-family: monospace; font-size: 0.8em; resize: vertical; box-sizing: border-box; }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="panel" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <h1><i class="fas fa-archive"></i> Inventario de Documentos - GAD</h1>
+            <button id="open-modal-btn" class="btn-success" style="padding: 12px 25px;"><i class="fas fa-plus-circle"></i> AÑADIR NUEVO DOCUMENTO</button>
+        </div>
+
+        <div class="panel">
+            <h2>🔍 Búsqueda de Documentos</h2>
+            </div>
+
+        <div class="panel">
+            <h3><i class="fas fa-file-upload"></i> Importar Inventario (.csv)</h3>
+            <p>Seleccione un archivo **CSV** para **cargar directamente** o **generar el JSON**.</p>
+            
+            <div style="margin-bottom: 15px; margin-top: 15px;">
+                <input type="file" id="excel-file-input" accept=".csv">
+            </div>
+
+            <button id="start-import-btn" class="btn-success" disabled><i class="fas fa-database"></i> 1. Carga Directa (Firebase)</button>
+            <button id="generate-json-btn" class="btn-warning" disabled><i class="fas fa-code"></i> 2. Generar JSON para Copiar</button>
+            
+            <div id="import-status-container" style="margin-top: 15px;">
+                <p id="import-status-message"></p>
+                <div id="import-progress-bar" class="progress-bar">
+                    <div class="progress" id="import-progress"></div>
+                </div>
+            </div>
+            
+            <div id="json-output-area" style="display: none; margin-top: 20px;">
+                <h4>JSON de Documentos (Estructura: `{"documentos": {...}}`)</h4>
+                <textarea id="json-output" style="width: 100%; height: 300px;"></textarea>
+                <button onclick="copyJsonToClipboard()" class="btn-primary" style="margin-top: 10px;"><i class="fas fa-copy"></i> Copiar JSON al Portapapeles</button>
+                <p style="font-size: 0.9em; color: #555; margin-top: 10px;">**Instrucción:** Vaya a su Consola de Firebase > Realtime Database > (⋮) > Importar JSON, y pegue este contenido.</p>
+            </div>
+        </div>
+        </div>
+
+    <script>
+        // **********************************************
+        //             [ CONFIGURACIÓN Y VARIABLES GLOBALES ]
+        // **********************************************
+        const firebaseConfig = {
+            // REEMPLAZAR CON SUS PROPIAS CREDENCIALES DE FIREBASE
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasestorage.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+        };
+        
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const DOCS_REF = 'documentos/'; 
+        
+        // Variables de la interfaz
+        const fileInput = document.getElementById('excel-file-input');
+        const importBtn = document.getElementById('start-import-btn');
+        const generateJsonBtn = document.getElementById('generate-json-btn');
+        const statusMsg = document.getElementById('import-status-message');
+        const progressBarContainer = document.getElementById('import-progress-bar');
+        const progressBar = document.getElementById('import-progress');
+        const jsonOutputArea = document.getElementById('json-output-area');
+        const jsonOutputTextarea = document.getElementById('json-output');
+
+        let GLOBAL_PARSED_DATA = null;
+        
+        // **********************************************
+        //           [ FUNCIONES DE UTILIDAD ]
+        // **********************************************
+
+        function generateFirebasePushID() {
+            const PUSH_CHARS = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+            let now = new Date().getTime();
+            let id = new Array(8);
+            for (let i = 7; i >= 0; i--) {
+                id[i] = PUSH_CHARS.charAt(now % 64);
+                now = Math.floor(now / 64);
+            }
+            id = id.join('');
+            for (let i = 0; i < 12; i++) {
+                id += PUSH_CHARS.charAt(Math.floor(Math.random() * 64));
+            }
+            return id;
+        }
+
+        function copyJsonToClipboard() {
+            jsonOutputTextarea.select();
+            document.execCommand('copy');
+            alert('JSON copiado al portapapeles. ¡Ya puede pegarlo en la consola de Firebase!');
+        }
+
+        // **********************************************
+        //           [ LÓGICA DE IMPORTACIÓN Y JSON ]
+        // **********************************************
+
+        function startImport() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            // 1. Configurar interfaz
+            importBtn.disabled = true;
+            generateJsonBtn.disabled = true;
+            jsonOutputArea.style.display = 'none';
+            statusMsg.textContent = 'Analizando archivo CSV robustamente...';
+            statusMsg.style.display = 'block';
+            statusMsg.style.backgroundColor = '#e9f7ff';
+            statusMsg.style.color = '#007bff';
+            progressBarContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            GLOBAL_PARSED_DATA = null;
+
+            // 2. Usar Papa Parse
+            Papa.parse(file, {
+                header: false,         
+                skipEmptyLines: true,  
+                delimiter: ",",        // <--- LÍNEA CRÍTICA: RESTAURADA A COMA (,)
+                encoding: 'UTF-8',     
+                complete: (results) => {
+                    let dataLines = results.data;
+                    
+                    // Eliminar la cabecera (Fila 1) y filtrar líneas vacías.
+                    if (dataLines.length > 0) {
+                         dataLines = dataLines.slice(1).filter(row => 
+                            row.length >= 5 && row.some(cell => cell && cell.toString().trim() !== '')
+                         );
+                    }
+
+                    if (dataLines.length === 0) {
+                         statusMsg.textContent = '❌ Archivo vacío o ilegible. VERIFIQUE EL DELIMITADOR en la línea 694.';
+                         statusMsg.style.backgroundColor = '#f8d7da'; 
+                         statusMsg.style.color = '#721c24';
+                         importBtn.disabled = false;
+                         return;
+                    }
+                    
+                    GLOBAL_PARSED_DATA = dataLines;
+
+                    statusMsg.textContent = `✅ ${dataLines.length} registros encontrados. Seleccione una acción.`;
+                    importBtn.disabled = false;
+                    generateJsonBtn.disabled = false;
+                },
+                error: (error) => {
+                    statusMsg.textContent = `❌ Error en el parseo: ${error.message}.`;
+                    statusMsg.style.backgroundColor = '#f8d7da'; 
+                    statusMsg.style.color = '#721c24';
+                    importBtn.disabled = false;
+                }
+            });
+        }
+        
+        function generateJson() {
+            if (!GLOBAL_PARSED_DATA) { return; }
+
+            const firebasePayload = {};
+            
+            GLOBAL_PARSED_DATA.forEach((row) => {
+                // Mapeo: [0]=PAIS, [1]=NOMBRE, [2]=FECHA, [3]=TIPO, [4]=ENLACE
+                
+                if (row[0].toString().trim() === "" || row[3].toString().trim() === "") return;
+
+                let dateKey = 'N/A';
+                if (row[2] && row[2].toString().match(/^\d{4}-\d{2}(-\d{2})?$/)) {
+                    dateKey = row[2].toString().substring(0, 7); // AAAA-MM
+                }
+                
+                const tipoDocumento = row[3].toString().trim().toUpperCase();
+                const categoria = (dateKey !== 'N/A' && tipoDocumento !== 'FÍSICO') ? 'ESCANER 2400' : 'FÍSICO';
+
+                const recordKey = generateFirebasePushID(); 
+                
+                firebasePayload[recordKey] = {
+                    Pais: row[0].toString().trim().toUpperCase(),
+                    TipoDocumento: tipoDocumento,
+                    NombreDocumento: row[1].toString().trim(),
+                    Fecha: dateKey,
+                    Categoria: categoria,
+                    Enlace: row[4].toString().trim() || 'N/A',
+                    Timestamp: new Date().getTime() 
+                };
+            });
+
+            const finalJson = JSON.stringify({ "documentos": firebasePayload }, null, 2);
+            
+            jsonOutputTextarea.value = finalJson;
+            jsonOutputArea.style.display = 'block';
+            
+            statusMsg.textContent = `✅ JSON generado con ${Object.keys(firebasePayload).length} documentos. ¡Listo para copiar!`;
+            statusMsg.style.backgroundColor = '#d4edda'; 
+            statusMsg.style.color = '#155724';
+        }
+        
+        function processChunkedImport(linesToProcess, index = 0, totalImported = 0) {
+            const CHUNK_SIZE = 50; 
+            const DELAY_MS = 10; 
+
+            importBtn.disabled = true;
+            generateJsonBtn.disabled = true;
+
+            if (index >= linesToProcess.length) {
+                statusMsg.textContent = `✅ Migración Finalizada. Se importaron ${totalImported} documentos nuevos.`;
+                statusMsg.style.backgroundColor = '#d4edda'; 
+                statusMsg.style.color = '#155724';
+                importBtn.disabled = false;
+                generateJsonBtn.disabled = false;
+                return;
+            }
+
+            const chunk = linesToProcess.slice(index, index + CHUNK_SIZE);
+            const updates = {}; 
+            let importedInChunk = 0;
+
+            chunk.forEach(parts => {
+                if (parts[0].toString().trim() === "" || parts[3].toString().trim() === "") return; 
+
+                let dateKey = 'N/A';
+                if (parts[2].toString().match(/^\d{4}-\d{2}(-\d{2})?$/)) {
+                    dateKey = parts[2].toString().substring(0, 7);
+                }
+                
+                const tipoDocumento = parts[3].toString().trim().toUpperCase();
+                const enlace = parts[4].toString().trim();
+                const categoria = (dateKey !== 'N/A' && tipoDocumento !== 'FÍSICO') ? 'ESCANER 2400' : 'FÍSICO';
+
+                const docData = {
+                    Pais: parts[0].toString().trim().toUpperCase(),
+                    TipoDocumento: tipoDocumento,
+                    NombreDocumento: parts[1].toString().trim(),
+                    Fecha: dateKey, 
+                    Categoria: categoria, 
+                    Enlace: enlace || 'N/A',
+                    Timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                const newKey = database.ref(DOCS_REF).push().key;
+                updates[newKey] = docData;
+                importedInChunk++;
+            });
+            
+            database.ref(DOCS_REF).update(updates)
+                .then(() => {
+                    totalImported += importedInChunk;
+                    const totalProcessed = index + chunk.length;
+                    const progress = (totalProcessed / linesToProcess.length) * 100;
+                    
+                    statusMsg.textContent = `Procesando: ${totalProcessed} de ${linesToProcess.length} registros... (${totalImported} insertados)`;
+                    progressBar.style.width = `${progress}%`;
+                    progressBarContainer.style.display = 'block';
+
+                    setTimeout(() => {
+                        processChunkedImport(linesToProcess, index + CHUNK_SIZE, totalImported);
+                    }, DELAY_MS);
+                })
+                .catch(error => {
+                    statusMsg.textContent = `❌ Error en el chunk de importación: ${error.message}`;
+                    statusMsg.style.backgroundColor = '#f8d7da'; 
+                    statusMsg.style.color = '#721c24';
+                    importBtn.disabled = false;
+                    generateJsonBtn.disabled = false;
+                });
+        }
+
+
+        // **********************************************
+        //               [ INICIALIZACIÓN Y EVENTOS ]
+        // **********************************************
+        
+        // Función de ejemplo de carga de datos (debe ser implementada)
+        function loadAllDocuments() { 
+            // Carga de documentos inicial... 
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            loadAllDocuments(); 
+            
+            // Eventos del panel de Importación
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    startImport();
+                } else {
+                    importBtn.disabled = true;
+                    generateJsonBtn.disabled = true;
+                }
+            });
+
+            // Evento para la carga directa a Firebase
+            importBtn.addEventListener('click', () => {
+                if (GLOBAL_PARSED_DATA) {
+                    processChunkedImport(GLOBAL_PARSED_DATA);
+                }
+            });
+            
+            // Evento para la generación de JSON
+            generateJsonBtn.addEventListener('click', generateJson);
+            
+        });
+    </script>
+</body>
+</html>

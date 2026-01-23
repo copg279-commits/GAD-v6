@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Explorador de Clave API de Firebase</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { color: #2c3e50; text-align: center; }
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #ecf0f1;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            background: #d6eaf8;
+            border-color: #2980b9;
+        }
+        .upload-area.dragover {
+            background: #2ecc71;
+            border-color: #27ae60;
+        }
+        button { 
+            padding: 12px 25px; 
+            margin: 10px 5px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #3498db;
+            color: white;
+        }
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        #resultados { 
+            margin-top: 30px; 
+            padding: 20px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .archivo {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .archivo-con {
+            background: #e8f5e8;
+            border-left-color: #27ae60;
+        }
+        .archivo-sin {
+            background: #f5e8e8;
+            border-left-color: #e74c3c;
+        }
+        .key-line {
+            font-family: 'Courier New', monospace;
+            background: #2c3e50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-top: 5px;
+            display: inline-block;
+            word-break: break-all;
+        }
+        .estadisticas {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .stat {
+            padding: 12px 18px;
+            border-radius: 5px;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+        }
+        .verde { background: #d4edda; color: #155724; }
+        .rojo { background: #f8d7da; color: #721c24; }
+        .azul { background: #d1ecf1; color: #0c5460; }
+        .seccion {
+            margin: 25px 0;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            background: white;
+        }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; }
+        .progreso { text-align: center; padding: 20px; color: #3498db; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 EXPLORADOR DE API KEY DE FIREBASE</h1>
+        <p>Esta herramienta verifica si tus archivos HTML usan la clave API correcta:</p>
+        <div class="exito" style="margin-bottom: 20px;">
+            <strong>API Key Correcta a buscar:</strong> <code class="key-line" style="background: none; color: #155724; padding: 0;">AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4</code>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <h2>📁 Arrastra y suelta archivos HTML aquí</h2>
+            <p>O haz clic para seleccionar archivos</p>
+            <p><small>Selecciona múltiples archivos HTML (.html, .htm)</small></p>
+            <input type="file" id="archivosInput" multiple accept=".html,.htm" style="display: none;">
+        </div>
+
+        <button onclick="explorarArchivos()" id="explorarBtn" disabled>🔍 Explorar Archivos Seleccionados</button>
+        <button onclick="limpiarTodo()">🗑️ Limpiar Todo</button>
+        
+        <div id="contadorArchivos" style="margin: 10px 0; font-weight: bold;"></div>
+        
+        <div id="resultados">
+            <p>Selecciona los archivos HTML primero</p>
+        </div>
+    </div>
+
+    <script>
+        let archivosSeleccionados = [];
+
+        const targetApiKey = "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4"; // La clave correcta a buscar
+
+        // Elementos del DOM
+        const uploadArea = document.getElementById('uploadArea');
+        const archivosInput = document.getElementById('archivosInput');
+        const explorarBtn = document.getElementById('explorarBtn');
+        const contadorArchivos = document.getElementById('contadorArchivos');
+
+        // Event Listeners para la carga de archivos
+        uploadArea.addEventListener('click', () => { archivosInput.click(); });
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            manejarArchivos(e.dataTransfer.files);
+        });
+        archivosInput.addEventListener('change', (e) => { manejarArchivos(e.target.files); });
+
+        function manejarArchivos(files) {
+            const archivosHTML = Array.from(files).filter(archivo => 
+                archivo.name.toLowerCase().endsWith('.html') || 
+                archivo.name.toLowerCase().endsWith('.htm')
+            );
+            if (archivosHTML.length === 0) {
+                alert('❌ No se encontraron archivos HTML (.html o .htm) en la selección');
+                return;
+            }
+            archivosSeleccionados = archivosHTML;
+            explorarBtn.disabled = false;
+            contadorArchivos.innerHTML = `📁 Archivos seleccionados: ${archivosHTML.length} archivo(s) HTML`;
+            contadorArchivos.style.color = '#27ae60';
+            document.getElementById('resultados').innerHTML = 
+                `<p>✅ ${archivosHTML.length} archivo(s) HTML listos para analizar. Haz clic en "Explorar Archivos Seleccionados"</p>`;
+        }
+
+        function explorarArchivos() {
+            if (archivosSeleccionados.length === 0) return;
+
+            const resultados = document.getElementById('resultados');
+            resultados.innerHTML = '<div class="progreso">🔍 Analizando archivos...</div>';
+
+            let conCorrectKey = 0;
+            let sinCorrectKey = 0;
+            let listaConKey = '';
+            let listaSinKey = '';
+            let archivosProcesados = 0;
+
+            archivosSeleccionados.forEach(archivo => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    archivosProcesados++;
+                    const contenido = e.target.result;
+                    
+                    // Busca la línea 'apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4"'
+                    const regex = new RegExp(`apiKey:\\s*"${targetApiKey}"[^\r\n]*`, 'i');
+                    const tieneCorrectApiKey = regex.test(contenido);
+                    
+                    if (tieneCorrectApiKey) {
+                        conCorrectKey++;
+                        const match = contenido.match(regex);
+                        listaConKey += `<div class="archivo archivo-con">
+                            <strong>✅ ${archivo.name}</strong><br>
+                            <span class="key-line">${match[0].trim()}</span>
+                        </div>`;
+                    } else {
+                        sinCorrectKey++;
+                        // Intenta capturar la clave API incorrecta si existe, o el nombre del proyecto antiguo.
+                        const incorrectKeyRegex = /apiKey:\s*"[^"]*"/i;
+                        const oldProjectRegex = /projectId:\s*"gad-alicante-f0d56"/i;
+                        
+                        let detalleError = "No se encontró la API Key correcta.";
+                        let matchIncorrecto = contenido.match(incorrectKeyRegex);
+                        
+                        if (matchIncorrecto) {
+                             detalleError = matchIncorrecto[0].trim();
+                        } else {
+                             let matchOldProject = contenido.match(oldProjectRegex);
+                             if (matchOldProject) {
+                                 detalleError = "API Key no encontrada. Se detectó el proyecto antiguo: " + matchOldProject[0].trim();
+                             }
+                        }
+
+                        listaSinKey += `<div class="archivo archivo-sin">
+                            <strong>❌ ${archivo.name}</strong><br>
+                            <span class="key-line" style="background: #e74c3c;">${detalleError}</span>
+                        </div>`;
+                    }
+
+                    if (archivosProcesados === archivosSeleccionados.length) {
+                        mostrarResultadosFinales();
+                    }
+                };
+
+                reader.onerror = function() {
+                    archivosProcesados++;
+                    sinCorrectKey++;
+                    listaSinKey += `<div class="archivo archivo-sin"><strong>❌ ${archivo.name}</strong><br><span class="key-line" style="background: #e74c3c;">Error al leer el archivo.</span></div>`;
+                    if (archivosProcesados === archivosSeleccionados.length) {
+                        mostrarResultadosFinales();
+                    }
+                };
+
+                reader.readAsText(archivo);
+            });
+
+            function mostrarResultadosFinales() {
+                resultados.innerHTML = `
+                    <h3>📊 RESULTADO DEL ANÁLISIS DE API KEY</h3>
+                    <div class="estadisticas">
+                        <div class="stat verde">🟢 CON API KEY CORRECTA: ${conCorrectKey}</div>
+                        <div class="stat rojo">🔴 REQUIEREN CORRECCIÓN: ${sinCorrectKey}</div>
+                        <div class="stat azul">📁 TOTAL ANALIZADO: ${archivosSeleccionados.length}</div>
+                    </div>
+                    
+                    ${conCorrectKey > 0 ? `
+                    <div class="seccion">
+                        <h4>📄 ARCHIVOS CORRECTOS (${conCorrectKey}):</h4>
+                        ${listaConKey}
+                    </div>
+                    ` : '<div class="error">❌ No se encontró la API Key correcta en ningún archivo.</div>'}
+                    
+                    ${sinCorrectKey > 0 ? `
+                    <div class="seccion">
+                        <h4>📄 ARCHIVOS A CORREGIR (${sinCorrectKey}):</h4>
+                        <p><strong>Estos archivos NO contienen la API Key ${targetApiKey} y probablemente usan las credenciales antiguas.</strong></p>
+                        ${listaSinKey}
+                    </div>
+                    ` : '<div class="exito">🎉 ¡Todos los archivos analizados contienen la API Key correcta!</div>'}
+                `;
+            }
+        }
+
+        function limpiarTodo() {
+            archivosSeleccionados = [];
+            archivosInput.value = '';
+            explorarBtn.disabled = true;
+            contadorArchivos.innerHTML = '';
+            document.getElementById('resultados').innerHTML = '<p>Selecciona los archivos HTML primero</p>';
+        }
+
+        // Simula la llamada a las instrucciones
+        setTimeout(() => {
+            console.log("Instrucciones: Carga tus archivos HTML y haz clic en 'Explorar' para verificar la clave API.");
+        }, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Título de tu Página - GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .gad-logo-header {
+            width: 160px; /* Tamaño del logo del index.html */
+            height: 160px; /* Tamaño del logo del index.html */
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .back-to-menu-button {
+            background-color: #f59e0b; /* Amarillo */
+        }
+        .back-to-menu-button:hover {
+            background-color: #d97706;
+        }
+        .back-button-history {
+            background-color: #4b5563; /* Gris oscuro */
+        }
+        .back-button-history:hover {
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="gad-logo-header">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <main>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Vehículos GAD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos generales para el cuerpo */
+        body {
+            font-family: sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100svh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        .grid-container {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0.5rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            display: grid;
+        }
+
+        .menu-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition-property: all;
+            transition-duration: 300ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-button:hover {
+            filter: brightness(0.9);
+        }
+
+        @media (min-width: 1024px) {
+            .menu-button {
+                padding: 1.5rem;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<div class="main-content-wrapper px-2 sm:px-4 lg:px-16">
+    <h1 class="text-black text-center mt-2 text-xl font-bold px-4"> Menú de Herramientas GAD
+    </h1>
+    <div id="button-grid" class="grid grid-cols-2 gap-2 p-2 mt-1 grid-container">
+        <button onclick="window.location.href='index ITV.html'"
+                class="bg-blue-500 text-white menu-button">
+            ITV
+        </button>
+        <button onclick="window.location.href='SISTEMA DE SEGURO.html'"
+                class="bg-blue-500 text-white menu-button">
+            SISTEMA DE SEGURO
+        </button>
+        <button onclick="window.location.href='UCRANIA CALCULADORA 213 DÍAS.html'"
+                class="bg-blue-500 text-white menu-button">
+            UCRANIA CALCULADORA 213 DÍAS
+        </button>
+        <button onclick="window.location.href='CATEGORÍAS VEHÍCULOS.html'"
+                class="bg-blue-500 text-white menu-button">
+            CATEGORÍAS VEHÍCULOS
+        </button>
+    </div>
+    
+    <button onclick="window.location.href='index.html'"
+            class="w-11/12 max-w-md mt-2 p-2.5 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-500 text-base lg:text-xl">
+        MENÚ PRINCIPAL
+    </button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('button-grid');
+        const buttons = grid.querySelectorAll('.menu-button');
+        
+        // Verifica si el número de botones es impar
+        if (buttons.length % 2 !== 0) {
+            // Si es impar, el último botón ocupa las dos columnas
+            const lastButton = buttons[buttons.length - 1];
+            lastButton.classList.add('col-span-2');
+        }
+    });
+</script>
+
+</body>
+</html>
+
+        <div class="nav-buttons">
+            <a href="index.html" class="back-button back-to-menu-button">Volver a Menú Principal</a>
+            <button onclick="history.back()" class="back-button back-button-history">Atrás</button>
+        </div>
+    </main>
+
+    <footer class="mt-auto text-center py-6 bg-gray-200">
+        <div class="flex flex-col items-center">
+            <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+            <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+            <p>&copy; GAD - Todos los derechos reservados</p>
+        </div>
+    </footer>
+
+</body>
+</html>

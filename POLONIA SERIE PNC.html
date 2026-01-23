@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Licencia de Conducir de Polonia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos generales y consistentes */
+        body {
+            font-family: sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100svh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+        }
+        .main-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+        .card-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-top: 1rem;
+            max-width: 500px;
+        }
+        .table-container {
+            max-height: 500px; /* Aumenta la altura para más visibilidad */
+            overflow-y: auto;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <header class="bg-blue-600 w-full flex justify-center items-center py-2">
+        <div class="w-24 h-24 rounded-full overflow-hidden shadow-lg">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
+        </div>
+    </header>
+
+    <h1 class="text-black text-center mt-6 text-2xl font-bold px-4">
+        Verificación de Licencia de Conducir de Polonia
+    </h1>
+
+    <div class="main-content-wrapper px-4 sm:px-8 lg:px-12">
+        
+        <div class="card-container text-center">
+            <h2 class="text-xl font-bold mb-2">Nº SERIE REVERSO (Prefijos por Año)</h2>
+            <p class="text-sm text-gray-600 mb-4">Tabla de progresión de prefijos de números de serie.</p>
+            <div class="table-container">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Año de Expedición</th>
+                            <th scope="col" class="px-6 py-3">Prefijo Reverso Campo 13</th>
+                        </tr>
+                    </thead>
+                    <tbody id="referenceDataBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 mb-8 flex justify-center">
+        <button onclick="window.location.href='index.html'"
+                class="w-11/12 max-w-md p-4 bg-yellow-400 text-black font-bold rounded-lg shadow-md transition hover:bg-yellow-500 text-base lg:text-xl">
+            MENÚ PRINCIPAL
+        </button>
+    </div>
+    
+ <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+    <script>
+        const prefijosPolonia = {
+            1999: 'A', 2000: 'B', 2001: 'C', 2002: 'D', 2003: 'E', 2004: 'F', 2005: 'G',
+            2006: 'H', 2007: 'I', 2008: 'J', 2009: 'K', 2010: 'L', 2011: 'M', 2012: 'N',
+            2013: 'O', 2014: 'P', 2015: 'Q', 2016: 'R', 2017: 'S', 2018: ['T', 'U'],
+            2019: 'W', 2020: ['W', 'Y'], 2021: 'Z', 2022: 'AA', 2023: 'BA', 2024: 'CA', 2025: 'DA'
+        };
+
+        function renderReferenceTable() {
+            const tableBody = document.getElementById('referenceDataBody');
+            const sortedYears = Object.keys(prefijosPolonia).sort((a, b) => b - a);
+            let tableHTML = '';
+            sortedYears.forEach(year => {
+                const prefijo = prefijosPolonia[year];
+                const displayPrefijo = Array.isArray(prefijo) ? prefijo.join('-') : prefijo;
+                tableHTML += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4" style="font-weight: bold; color: #2563EB;">${year}</td>
+                        <td class="px-6 py-4" style="font-weight: bold; color: #16A34A;">${displayPrefijo}</td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = tableHTML;
+        }
+
+        window.onload = () => {
+            renderReferenceTable();
+        };
+    </script>
+</body>
+</html>

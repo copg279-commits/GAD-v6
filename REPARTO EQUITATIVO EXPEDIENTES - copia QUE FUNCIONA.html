@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel GAD Alicante - Gestión de Historial</title>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root { --blue-main: #1a73e8; --blue-dark: #0d47a1; --success: #28a745; --danger: #d93025; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; color: #333; margin: 0; }
+        .container { max-width: 1200px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; }
+        .help-btn { position: absolute; top: 20px; right: 20px; background: #5f6368; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .db-panel { background: #e8f0fe; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #c2d7fa; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .db-panel input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; flex-grow: 1; min-width: 200px; }
+        .btn-db { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .btn-save { background: var(--success); color: white; }
+        .btn-load { background: var(--blue-main); color: white; }
+        .btn-edit { background: #f9ab00; color: white; }
+        .btn-delete { background: var(--danger); color: white; }
+        .btn-db:hover { opacity: 0.8; }
+        .setup-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; margin-bottom: 20px; }
+        .ag-list input { width: 95%; padding: 8px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 5px; display: block; }
+        textarea { width: 100%; height: 120px; border: 1px solid #ccc; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 11px; }
+        button#process-btn { width: 100%; padding: 15px; background: var(--blue-main); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 12px; border: 1px solid #d1d9e0; overflow: hidden; transition: 0.3s; display: flex; flex-direction: column; }
+        .card-header { background: var(--blue-main); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .card-body { padding: 15px; flex-grow: 1; }
+        .task-segment { padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9em; border-left: 5px solid #ccc; }
+        .seg-others { background: #f0f4ff; border-left-color: var(--blue-main); }
+        .seg-france { background: #fff9e6; border-left-color: #ffb300; }
+        .status-bar { padding: 10px; background: #f1f3f4; border-top: 1px solid #eee; display: flex; align-items: center; gap: 8px; font-weight: bold; cursor: pointer; }
+        .card.done { opacity: 0.6; filter: grayscale(1); }
+        .card.done .card-header { background: #5f6368; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 25px; border-radius: 12px; width: 80%; max-width: 500px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="help-btn" onclick="document.getElementById('helpModal').style.display='block'">?</button>
+    <h1>GAD Alicante - Reparto de Tareas Expedientes</h1>
+
+    <div class="db-panel">
+        <strong>📁 Nodo: Ayuda Países</strong>
+        <input type="text" id="saveName" placeholder="Nombre (Ej: 2026 semestre 1)">
+        <button class="btn-db btn-save" onclick="guardarReparto()">Guardar</button>
+        <div style="border-left: 1px solid #c2d7fa; height: 30px; margin: 0 10px;"></div>
+        <select id="historyList" style="padding: 8px; border-radius: 5px; max-width: 200px;">
+            <option value="">Conectando con Firebase...</option>
+        </select>
+        <button class="btn-db btn-load" onclick="cargarReparto()">Cargar</button>
+        <button class="btn-db btn-edit" onclick="editarNombre()">Renombrar</button>
+        <button class="btn-db btn-delete" onclick="eliminarReparto()">Eliminar</button>
+    </div>
+
+    <div class="setup-grid">
+        <div class="ag-list">
+            <label><strong>Agentes:</strong></label>
+            <input type="text" value="Agente 1" class="ag-name"><input type="text" value="Agente 2" class="ag-name">
+            <input type="text" value="Agente 3" class="ag-name"><input type="text" value="Agente 4" class="ag-name">
+            <input type="text" value="Agente 5" class="ag-name">
+        </div>
+        <div>
+            <label><strong>Datos de PowerShell:</strong></label>
+            <textarea id="dataInput" placeholder="Pega aquí los datos..."></textarea>
+        </div>
+    </div>
+
+    <button id="process-btn" onclick="procesar(true)">Dividir Tareas y Procesar Nuevo</button>
+    <div id="results" class="results"></div>
+</div>
+
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span style="float:right; cursor:pointer;" onclick="document.getElementById('helpModal').style.display='none'">×</span>
+        <h2>Ayuda PowerShell</h2>
+        <p>1. Entra en la carpeta de los expedientes.</p>
+        <p>2. Ejecuta el comando:</p>
+        <code>Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName | clip</code>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+        authDomain: "gad-alicante-v3.firebaseapp.com",
+        databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gad-alicante-v3",
+        storageBucket: "gad-alicante-v3.firebasestorage.app",
+        messagingSenderId: "906986258369",
+        appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let currentData = null;
+    let inicializado = false;
+
+    // Escuchar el nodo "repartos" (dentro de Ayuda Países)
+    db.ref('repartos').on('value', (snapshot) => {
+        console.log("Datos recibidos de Firebase...");
+        const select = document.getElementById('historyList');
+        select.innerHTML = '<option value="">Consultar anteriores...</option>';
+        
+        let claves = [];
+        snapshot.forEach((child) => {
+            claves.push(child.key);
+            let option = document.createElement('option');
+            option.value = child.key; 
+            option.text = child.key;
+            select.appendChild(option);
+        });
+
+        // Lógica de carga automática del más reciente
+        if (!inicializado && claves.length > 0) {
+            const elMasReciente = claves[claves.length - 1];
+            console.log("Cargando automáticamente el más reciente: " + elMasReciente);
+            select.value = elMasReciente;
+            cargarReparto(); 
+            inicializado = true;
+        }
+    }, (error) => {
+        console.error("Error de Firebase:", error);
+        document.getElementById('historyList').innerHTML = '<option value="">Error de conexión</option>';
+    });
+
+    // Funciones lógicas (Mantenidas del original)
+    function corregir(t) { return t.replace(/ESPA\?A/gi, "ESPAÑA").replace(/cauci\?n/gi, "caución").replace(/gesti\?n/gi, "gestión").replace(/expedici\?n/gi, "expedición"); }
+    
+    function extraerInfo(ruta) {
+        const limpia = corregir(ruta);
+        const partes = limpia.split('\\');
+        let pais = "Varios", matricula = "S/M";
+        for(let i=0; i < partes.length; i++) {
+            if(partes[i].includes("SEMESTRE") || partes[i].includes("EXPEDIENTES")) {
+                pais = partes[i+2] || "Otros";
+                const folderMat = partes[i+3] || "";
+                if(folderMat) {
+                    let sinPais = folderMat.replace(pais, "").trim();
+                    let trozos = sinPais.split(/[ -]/); 
+                    matricula = trozos[0] || "S/M";
+                }
+                break;
+            }
+        }
+        return { pais, matricula };
+    }
+
+    function procesar(esNuevo, datosCargados = null) {
+        if(esNuevo) {
+            const raw = document.getElementById('dataInput').value.trim();
+            if(!raw) return alert("Pega los datos.");
+            const lineas = raw.split('\n').filter(l => l.trim() !== "");
+            const agentes = Array.from(document.querySelectorAll('.ag-name')).map(i => i.value);
+            const fr = [], ot = [];
+            lineas.forEach(l => {
+                const inf = extraerInfo(l);
+                if(inf.pais.toUpperCase().includes("FRANCIA")) fr.push(inf);
+                else ot.push(inf);
+            });
+            const dividir = (arr, n) => {
+                let res = [], size = Math.floor(arr.length/n), rem = arr.length%n, cur = 0;
+                for(let i=0; i<n; i++) {
+                    let s = size + (rem > 0 ? 1 : 0);
+                    res.push(arr.slice(cur, cur + s));
+                    cur += s; rem--;
+                }
+                return res;
+            };
+            currentData = { agentes, bloqueOtros: dividir(ot, 5), bloqueFrancia: dividir(fr, 5) };
+        } else { currentData = datosCargados; }
+        renderizar();
+    }
+
+    function renderizar() {
+        const resDiv = document.getElementById('results');
+        resDiv.innerHTML = "";
+        if(!currentData) return;
+        currentData.agentes.forEach((name, i) => {
+            const mOt = currentData.bloqueOtros[i] || [];
+            const mFr = currentData.bloqueFrancia[i] || [];
+            const cardId = `card-${i}`;
+            const card = document.createElement('div');
+            card.className = 'card'; card.id = cardId;
+            card.innerHTML = `
+                <div class="card-header"><span>${name}</span><span>${mOt.length + mFr.length} arch.</span></div>
+                <div class="card-body">
+                    ${mOt.length ? `<div class="task-segment seg-others"><strong>🌎 OTROS:</strong><br>Desde: ${mOt[0].pais} (${mOt[0].matricula})<br>Hasta: ${mOt[mOt.length-1].pais} (${mOt[mOt.length-1].matricula})</div>` : ''}
+                    ${mFr.length ? `<div class="task-segment seg-france"><strong>🇫🇷 FRANCIA:</strong><br>Desde: ${mFr[0].matricula}<br>Hasta: ${mFr[mFr.length-1].matricula}</div>` : ''}
+                </div>
+                <label class="status-bar"><input type="checkbox" onchange="document.getElementById('${cardId}').classList.toggle('done')"> Realizado</label>
+            `;
+            resDiv.appendChild(card);
+        });
+    }
+
+    function cargarReparto() {
+        const nombre = document.getElementById('historyList').value;
+        if(!nombre) return;
+        db.ref('repartos/' + nombre).once('value').then((snap) => {
+            if(snap.exists()) {
+                procesar(false, snap.val());
+                document.getElementById('saveName').value = nombre;
+            }
+        });
+    }
+
+    function guardarReparto() {
+        const nombre = document.getElementById('saveName').value.trim();
+        if(!nombre || !currentData) return alert("Escribe un nombre y procesa datos primero.");
+        db.ref('repartos/' + nombre).set(currentData).then(() => alert("Guardado en Ayuda Países."));
+    }
+
+    function eliminarReparto() {
+        const nombre = document.getElementById('historyList').value;
+        if(!nombre || !confirm(`¿Eliminar "${nombre}"?`)) return;
+        db.ref('repartos/' + nombre).remove().then(() => {
+            document.getElementById('results').innerHTML = "";
+            document.getElementById('saveName').value = "";
+        });
+    }
+
+    function editarNombre() {
+        const nombreAntiguo = document.getElementById('historyList').value;
+        if(!nombreAntiguo) return;
+        const nuevoNombre = prompt("Nuevo nombre:", nombreAntiguo);
+        if(nuevoNombre && nuevoNombre !== nombreAntiguo) {
+            db.ref('repartos/' + nombreAntiguo).once('value').then((snap) => {
+                db.ref('repartos/' + nuevoNombre.trim()).set(snap.val()).then(() => {
+                    db.ref('repartos/' + nombreAntiguo).remove();
+                });
+            });
+        }
+    }
+</script>
+</body>
+</html>

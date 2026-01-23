@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestión GAD - Sistema Final v26 (Alineación Perfecta)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-body: #f3f4f6;
+      --text-main: #1f2937;
+      --color-interv: #1e40af; 
+      --color-judic: #15803d;
+      
+      /* Estados Texto */
+      --st-condena: #16a34a;      
+      --st-tramite: #dc2626;      
+      --st-ordinario: #2563eb;    
+      --st-absolucion: #800080;   
+      --st-entregado: #8B4513; 
+      --st-disponible: #06b6d4; 
+      --st-judicializado: #15803d; 
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      margin: 0; padding: 0; 
+      overflow-y: scroll; 
+    }
+
+    /* HEADER */
+    header {
+      padding: 20px 0; 
+      color: white; 
+      text-align: center; 
+      transition: background-color 0.4s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+      position: sticky; 
+      top: 0; 
+      /* CORRECCIÓN: Z-index muy alto para tapar el contenido al hacer scroll */
+      z-index: 1000; 
+    }
+    header.mode-interv { background-color: var(--color-interv); }
+    header.mode-judic { background-color: var(--color-judic); }
+    
+    .logo-container { width: 100px; height: 100px; margin: 0 auto 5px auto; transition: transform 0.3s; }
+    .logo-container:hover { transform: scale(1.05); }
+    .logo-container img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+
+    /* PESTAÑAS */
+    .mode-selector {
+        display: flex; justify-content: center; gap: 0; margin: 25px auto 10px auto; max-width: 700px;
+        background: #e5e7eb; border-radius: 10px; padding: 5px;
+    }
+    .mode-tab {
+        flex: 1; padding: 14px; text-align: center; cursor: pointer; font-weight: 700;
+        border-radius: 8px; transition: all 0.3s ease; color: #6b7280; text-transform: uppercase;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .mode-tab:hover { background-color: rgba(255,255,255,0.5); }
+    .mode-tab.active-interv { background: var(--color-interv); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .mode-tab.active-judic { background: var(--color-judic); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+    /* MENÚ FLOTANTE */
+    .sticky-menu-bar {
+        position: sticky;
+        top: 155px; 
+        /* CORRECCIÓN: Z-index alto pero menor que el header */
+        z-index: 900;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(5px);
+    }
+
+    /* TABLA */
+    .results-container {
+        margin: 0 auto; max-width: 98%; background: white; padding: 20px;
+        border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.95rem; }
+    th { 
+        background: #f8fafc; padding: 16px; text-align: left; border-bottom: 3px solid #e2e8f0; 
+        color: #475569; white-space: nowrap; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; 
+    }
+    td { padding: 10px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tr:hover td { background-color: #f8fafc; }
+
+    /* FOTOS */
+    .thumbnail-img {
+        display: block;
+        max-width: 150px;      
+        max-height: 100px;     
+        width: auto;           
+        height: auto;          
+        border-radius: 4px; 
+        cursor: pointer; 
+        transition: transform 0.2s; 
+        margin: 0 auto;        
+        border: 1px solid #ddd;
+    }
+    .thumbnail-img:hover { 
+        /* CORRECCIÓN: Z-index máximo para que la foto ampliada tape el header si es necesario */
+        transform: scale(3.5); z-index: 2000; position: relative; 
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3); background: white;     
+    }
+
+    /* ASPA ROJA (Superpuesta) */
+    .thumb-container { position: relative; display: inline-block; }
+    .red-cross-overlay {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        pointer-events: none; 
+        /* CORRECCIÓN: Z-index bajo. Se queda pegado a la foto y el header (1000) lo tapará */
+        z-index: 10;
+        color: rgba(220, 38, 38, 0.85); font-size: 4rem; text-shadow: 0 0 5px white;
+    }
+
+    /* BOTONES ACCIÓN */
+    .action-buttons-wrapper { display: flex; gap: 8px; justify-content: flex-end; }
+    .action-btn {
+        width: 45px; height: 45px; border-radius: 10px; border: none; color: white; cursor: pointer; 
+        display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 1.3rem; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .action-btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+    .btn-view { background: #f59e0b; }
+    .btn-edit { background: #16a34a; }
+    .btn-del { background: #dc2626; }
+
+    /* ESTILOS DE ESTADO */
+    .st-condena { color: var(--st-condena); font-weight: 700; }
+    .st-tramite { color: var(--st-tramite); font-weight: 700; }
+    .st-ordinario { color: var(--st-ordinario); font-weight: 700; }
+    .st-absolucion { color: var(--st-absolucion); font-weight: 700; }
+    .st-judicializado { color: var(--st-judicializado); font-weight: 800; }
+    
+    .tag-disponible {
+        display: block; margin-top: 4px; font-size: 0.65rem; background-color: #cffafe;
+        color: #0891b2; border: 1px solid #22d3ee; padding: 2px 6px; border-radius: 4px;
+        font-weight: 800; text-align: center; width: fit-content; text-transform: uppercase;
+    }
+    .tag-peritado {
+        display: block; margin-top: 2px; font-size: 0.65rem; background-color: #f3e8ff;
+        color: #7e22ce; border: 1px solid #d8b4fe; padding: 2px 6px; border-radius: 4px;
+        font-weight: 800; text-align: center; width: fit-content; text-transform: uppercase;
+    }
+
+    .row-exit td { 
+        color: var(--st-entregado) !important; 
+        font-weight: 600;
+        text-decoration: none !important;
+    }
+
+    /* MODALES */
+    .modal-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
+        display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; 
+        /* CORRECCIÓN: Z-index muy superior a todo */
+        z-index: 3000; 
+        transition: opacity 0.3s; 
+    }
+    .modal-overlay.open { visibility: visible; opacity: 1; }
+    
+    .modal-compact { 
+        background: white; width: 95%; max-width: 1100px; border-radius: 12px; height: auto; max-height: 98vh; 
+        display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
+    }
+    .modal-header { padding: 12px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { overflow-y: auto; padding: 15px 25px; }
+
+    /* FORMULARIO COMPACTO GRID */
+    .form-grid-compact {
+        display: grid; grid-template-columns: repeat(4, 1fr); 
+        gap: 12px; 
+        align-items: end; 
+    }
+    .col-span-1 { grid-column: span 1; } .col-span-2 { grid-column: span 2; } .col-span-4 { grid-column: span 4; }
+    
+    .form-grid-compact label { font-size: 0.8rem; font-weight: 700; color: #4b5563; margin-bottom: 2px; display: block; }
+    
+    .form-grid-compact input, 
+    .form-grid-compact select, 
+    .form-grid-compact textarea { 
+        width: 100%; padding: 6px 10px; 
+        border: 1px solid #cbd5e1; border-radius: 6px; 
+        font-size: 0.9rem; height: 38px;
+    }
+    .form-grid-compact textarea { height: 60px; resize: none; background: #f9fafb; }
+
+    /* CLASES DE COLOR PARA INPUTS */
+    .input-blue { background-color: #eff6ff !important; color: #1e3a8a !important; font-weight: 700; border-color: #bfdbfe !important; }
+    .input-red { background-color: #fef2f2 !important; color: #991b1b !important; font-weight: 700; border-color: #fecaca !important; }
+    .input-soft-blue { background-color: #f0f9ff !important; color: #0c4a6e !important; font-weight: 600; border-color: #bae6fd !important; }
+
+    /* CHECKS ROW (Columna Izquierda Fila 3) */
+    .checks-container {
+        grid-column: span 2; /* Ocupa mitad izquierda */
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        padding: 8px; border: 1px solid #f3f4f6; border-radius: 8px; background: #fff;
+        height: 100%;
+    }
+    .check-badge {
+        display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 12px;
+        font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: transform 0.1s; border: 1px solid transparent;
+        white-space: nowrap;
+    }
+    .check-badge:hover { transform: scale(1.02); }
+    .check-badge input { width: 14px; height: 14px; margin: 0; }
+    
+    .badge-judicial { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .badge-disp { background: #cffafe; color: #155e75; border-color: #a5f3fc; }
+    .badge-perit { background: #f3e8ff; color: #6b21a8; border-color: #d8b4fe; }
+
+    /* Panel Judicial Integrado (Horizontal) */
+    #judicialPanel {
+        grid-column: span 4;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+        background: #f0fdf4; padding: 10px; border-radius: 6px; border: 1px solid #bbf7d0;
+    }
+
+    /* VISOR IMAGEN */
+    #viewImgArea { width: 100%; display: flex; justify-content: center; }
+    #viewImgArea img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+    
+    /* AYUDA EDITABLE */
+    .help-panel { background: #fff; border: 1px solid #e5e7eb; padding: 25px; margin-bottom: 25px; border-radius: 12px; border-left: 6px solid #3b82f6; display: none; }
+    .editing-border { border: 2px dashed #3b82f6; padding: 10px; background-color: #f0f9ff; cursor: text; }
+
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+  <header id="mainHeader" class="mode-interv">
+    <div class="logo-container"><img src="logogad.png" alt="GAD LOGO"></div>
+    <h1 class="text-3xl font-extrabold uppercase tracking-wider text-white drop-shadow-md" id="headerTitle">Documentos Intervenidos</h1>
+  </header>
+
+  <main class="container mx-auto px-4 pb-12 pt-6 flex-grow">
+    
+    <div class="mode-selector">
+        <div id="tabInterv" class="mode-tab active-interv" onclick="setMode('INTERVENIDOS')">
+            <i class="fas fa-folder-open text-xl"></i> INTERVENIDOS
+        </div>
+        <div id="tabJudic" class="mode-tab" onclick="setMode('JUDICIALIZADOS')">
+            <i class="fas fa-balance-scale text-xl"></i> JUDICIALIZADOS
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl shadow-md border border-gray-100 mb-8 flex flex-wrap items-center gap-5 justify-between sticky-menu-bar">
+        <div class="flex gap-3">
+            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg transform transition hover:-translate-y-0.5">
+                <i class="fas fa-plus-circle mr-2"></i> NUEVO
+            </button>
+            <button onclick="toggleHelp()" class="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg transform transition hover:-translate-y-0.5">
+                <i class="fas fa-question-circle mr-2"></i> AYUDA
+            </button>
+        </div>
+
+        <div class="flex-grow max-w-lg relative">
+            <i class="fas fa-search absolute left-4 top-4 text-gray-400 text-lg"></i>
+            <input type="text" id="searchInput" placeholder="Buscar atestado..." class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500">
+        </div>
+
+        <div id="filtersArea" class="flex items-center"></div>
+    </div>
+
+    <div id="helpPanel" class="help-panel">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="font-bold text-3xl text-gray-800"><i class="fas fa-info-circle text-blue-500 mr-2"></i> Guía de Uso</h3>
+            <div class="flex gap-2">
+                <button id="btnHelpEdit" onclick="toggleHelpEdit()" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded font-bold">
+                    <i class="fas fa-edit"></i> Editar Guía
+                </button>
+                <button onclick="toggleHelp()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+        </div>
+        
+        <div id="helpContent">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-extrabold text-blue-800 text-lg border-b-2 border-blue-100 pb-2 mb-3">PROCEDIMIENTOS RÁPIDOS</h4>
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <p><i class="fas fa-plus-circle text-blue-600"></i> <strong>Nuevo:</strong> Rellene los datos. El "DSV" es automático.</p>
+                            <p><i class="fas fa-gavel text-green-600"></i> <strong>Judicializar:</strong> Al editar, marque la casilla verde. El documento pasará a la pestaña "Judicializados".</p>
+                            <p><i class="fas fa-sign-out-alt text-red-500"></i> <strong>Salida:</strong> Cambie el estado a "Devuelto" o "Entregado". Se pondrá marrón y con aspa roja.</p>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 mb-2"><i class="fas fa-filter mr-2"></i> ¿DÓNDE ESTÁ EL FILTRO?</h4>
+                        <p class="text-sm text-gray-700 mb-2">Está arriba a la derecha, junto al buscador. Cambia según la pestaña:</p>
+                        <ul class="text-xs space-y-1 text-gray-600 list-disc pl-4">
+                            <li><strong>En Intervenidos:</strong> Filtra Activos vs Devueltos.</li>
+                            <li><strong>En Judicializados:</strong> Filtra por estados (Trámite, Condena, etc.).</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-blue-800 text-lg border-b-2 border-blue-100 pb-2 mb-3">LEYENDA DE ESTADOS</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-center gap-2 p-2 rounded bg-gray-50 border border-gray-100">
+                            <i class="fas fa-circle text-green-600 text-lg"></i> 
+                            <span><strong>Judicializado/Condena:</strong> Activo en juzgado.</span>
+                        </li>
+                        <li class="flex items-center gap-2 p-2 rounded bg-gray-50 border border-gray-100">
+                            <i class="fas fa-circle text-red-600 text-lg"></i> 
+                            <span><strong>En Trámite:</strong> Pendiente de resolución.</span>
+                        </li>
+                        <li class="flex items-center gap-2 p-2 rounded bg-gray-50 border border-gray-100">
+                            <i class="fas fa-circle" style="color: #8B4513;"></i>
+                            <span style="color: #8B4513;"><strong>Entregado/Devuelto:</strong> Color marrón. Ya no está en depósito.</span>
+                        </li>
+                        <li class="flex items-center gap-2 mt-4">
+                            <span class="bg-cyan-100 text-cyan-800 px-2 py-1 rounded font-bold border border-cyan-300 text-xs">DISPONIBLE</span>
+                            <span class="text-gray-600">Material didáctico.</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded font-bold border border-purple-300 text-xs">PERITADO</span>
+                            <span class="text-gray-600">Analizado por GAD.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-container">
+        <table id="dataTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="loading" class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i><p class="text-gray-500 text-lg">Cargando...</p></div>
+        <div id="noData" class="hidden text-center py-12"><i class="fas fa-folder-open text-4xl text-gray-300 mb-4"></i><p class="text-gray-400 text-lg">Sin resultados.</p></div>
+    </div>
+  </main>
+
+  <footer class="mt-auto text-center py-6 bg-gray-200">
+    <hr class="border-t border-gray-400 w-11/12 max-w-md mx-auto mb-4">
+    <p class="font-bold">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+    <p class="font-bold">POLICÍA LOCAL DE ALICANTE</p>
+    <p>&copy; GAD - Todos los derechos reservados</p>
+  </footer>
+
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-compact">
+        <div class="modal-header">
+            <h3 class="font-bold text-xl text-gray-800 flex items-center gap-2"><i class="fas fa-edit text-blue-600"></i> <span id="modalTitle">Editar</span></h3>
+            <button onclick="closeModal()" class="text-2xl text-gray-400 hover:text-red-500 transition">&times;</button>
+        </div>
+        <form id="docForm" class="modal-body">
+            <input type="hidden" id="recordKey">
+            <div class="form-grid-compact">
+                
+                <div class="col-span-1"><label>Fecha Suceso</label><input type="date" id="fechaSuceso" required></div>
+                <div class="col-span-1"><label>País</label><input type="text" id="pais" list="paisesList" placeholder="País" required><datalist id="paisesList"></datalist></div>
+                <div class="col-span-1"><label>Tipo</label>
+                    <select id="tipoDocumento" required>
+                        <option value="PNC">PNC</option><option value="PIC">PIC</option><option value="TIE">TIE</option>
+                        <option value="CI">CI</option><option value="PASAPORTE">PASAPORTE</option><option value="PCIRC">PCIRC</option>
+                        <option value="ITV">ITV</option><option value="SOA">SOA</option><option value="OTRO">OTRO</option>
+                    </select>
+                </div>
+                <div class="col-span-1"><label>Nº Atestado (DSV)</label><input type="text" id="atestadoNumero" required placeholder="Nº" class="input-blue"></div>
+
+                <div class="col-span-1"><label>Resultado</label>
+                    <select id="resultado" class="input-soft-blue">
+                        <option value="Intervenido">Intervenido</option>
+                        <option value="En Trámite">En Trámite</option>
+                        <option value="Entregado al Juzgado">Entregado a JUZGADO</option>
+                        <option value="Devuelto">Devuelto a TITULAR</option>
+                        <optgroup label="Resolución">
+                            <option value="Condena">Condena</option><option value="Absolución">Absolución</option><option value="Pasa a Ordinario">Ordinario</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="col-span-1"><label class="text-red-700">F. Devolución</label><input type="date" id="fechaDevolucion" class="input-red"></div>
+                <div class="col-span-2"><label>Enlace Imagen</label><input type="text" id="documentoUrl" placeholder="URL Imagen"></div>
+
+                <div class="checks-container">
+                    <label class="check-badge badge-judicial" title="Pasar a Judicializados">
+                        <input type="checkbox" id="checkJudicial" onchange="toggleJudicialPanel()"> JUDICIALIZAR
+                    </label>
+                    <label class="check-badge badge-disp">
+                        <input type="checkbox" id="checkDisponible"> DISPONIBLE
+                    </label>
+                    <label class="check-badge badge-perit">
+                        <input type="checkbox" id="checkPeritado"> PERITADO
+                    </label>
+                    <div style="width: 1px; height: 20px; background: #ddd; margin: 0 4px;"></div>
+                    <label class="text-sm font-bold text-gray-600 flex items-center gap-1">
+                         ¿Acta? <select id="tieneActaSelect" onchange="toggleActaUrl()" style="width: auto; height: 26px; padding: 0 5px; border-radius: 4px; border:1px solid #ccc"><option value="No">No</option><option value="Sí">Sí</option></select>
+                    </label>
+                </div>
+                <div class="col-span-2 flex items-center">
+                    <input type="text" id="actaUrl" placeholder="URL del Acta" class="bg-teal-50 border-teal-200 text-teal-800 hidden w-full">
+                    </div>
+
+                <div id="judicialPanel" class="hidden">
+                    <div class="col-span-1"><label>Juzgado</label><select id="juzgado"><option value="Se desconoce">Se desconoce</option></select></div>
+                    <div class="col-span-1"><label>Juicio Rápido</label><select id="juicioRapido"><option value="No">No</option><option value="Sí">Sí</option></select></div>
+                    <div class="col-span-2"><label>Enlace Sentencia</label><input type="text" id="sentenciaUrl" placeholder="URL Sentencia"></div>
+                </div>
+
+                <div class="col-span-4"><label>Observaciones</label><textarea id="observaciones"></textarea></div>
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-4 pt-3 border-t border-gray-100">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 rounded text-gray-700 bg-gray-100 font-bold hover:bg-gray-200">Cancelar</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 shadow">GUARDAR</button>
+            </div>
+        </form>
+    </div>
+  </div>
+
+  <div id="viewModal" class="modal-overlay">
+      <div class="modal-compact" style="max-width: 1200px;">
+          <div class="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-xl">
+              <strong class="text-2xl text-gray-800"><i class="fas fa-eye text-blue-500 mr-2"></i> Detalle</strong>
+              <button onclick="document.getElementById('viewModal').classList.remove('open')" class="text-4xl text-gray-400">&times;</button>
+          </div>
+          <div class="modal-body flex flex-col md:flex-row gap-8">
+              <div class="md:w-3/5 flex flex-col items-center">
+                  <div id="viewImgArea"></div>
+              </div>
+              <div class="md:w-2/5 flex flex-col gap-4">
+                  <div class="border-b pb-4 mb-2"><span class="text-xs text-gray-500 font-bold uppercase block mb-1">Atestado</span><span id="v_atestado" class="text-3xl font-extrabold text-blue-900 break-words"></span></div>
+                  <div class="grid grid-cols-2 gap-6">
+                      <div><span class="text-xs text-gray-500 font-bold uppercase block">Fecha</span><span id="v_fecha" class="font-medium text-lg"></span></div>
+                      <div><span class="text-xs text-gray-500 font-bold uppercase block">País</span><span id="v_pais" class="font-medium text-lg"></span></div>
+                      <div><span class="text-xs text-gray-500 font-bold uppercase block">Tipo</span><span id="v_tipo" class="font-medium text-lg"></span></div>
+                      <div><span class="text-xs text-gray-500 font-bold uppercase block">Estado</span><span id="v_estado" class="font-bold text-xl"></span></div>
+                  </div>
+                  
+                  <div id="v_date_exit"></div>
+
+                  <div id="v_jud_info" class="bg-green-50 p-4 rounded-lg border border-green-100 hidden mt-2">
+                      <div class="text-xs font-bold text-green-800 mb-2 uppercase"><i class="fas fa-balance-scale mr-2"></i> Judicial</div>
+                      <div class="text-sm text-gray-800"><span class="font-bold">Juzgado:</span> <span id="v_juzgado"></span> | <span class="font-bold">JR:</span> <span id="v_jr"></span></div>
+                      <div id="v_sent_btn" class="mt-3"></div>
+                  </div>
+                  <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex-grow mt-2"><span class="text-xs text-gray-500 font-bold uppercase block mb-1">Observaciones</span><p id="v_obs" class="text-sm text-gray-800 whitespace-pre-wrap"></p></div>
+                  <div class="flex justify-end gap-3 mt-4" id="v_links"></div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+    };
+    
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const mainRef = db.ref('documentos_intervenidos');
+    const systemRef = db.ref('configuracion_global/ayuda'); // NODO AYUDA
+
+    let appMode = 'INTERVENIDOS'; 
+    let allData = [];
+    let intFilter = 'all'; 
+    let judFilter = 'ALL';
+    let isEditingHelp = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const jSelect = document.getElementById('juzgado');
+        for(let i=1; i<=15; i++) jSelect.innerHTML += `<option value="Instrucción ${i}">Instrucción ${i}</option>`;
+        for(let i=1; i<=10; i++) jSelect.innerHTML += `<option value="Penal ${i}">Penal ${i}</option>`;
+
+        db.ref('paises').on('value', s => {
+            document.getElementById('paisesList').innerHTML = (s.val()||[]).map(p=>`<option value="${p}"></option>`).join('');
+        });
+
+        mainRef.on('value', snapshot => {
+            allData = [];
+            snapshot.forEach(child => {
+                allData.push({ ...child.val(), key: child.key });
+            });
+            render();
+            document.getElementById('loading').classList.add('hidden');
+        });
+
+        systemRef.on('value', snap => {
+            const val = snap.val();
+            if(val) document.getElementById('helpContent').innerHTML = val;
+        });
+
+        document.getElementById('searchInput').addEventListener('input', render);
+        
+        document.getElementById('resultado').addEventListener('change', function() {
+            const val = this.value;
+            const dateInput = document.getElementById('fechaDevolucion');
+            if ((val === 'Devuelto' || val === 'Entregado al Juzgado') && !dateInput.value) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+        });
+
+        updateFilters();
+    });
+
+    window.toggleHelpEdit = function() {
+        const content = document.getElementById('helpContent');
+        const btn = document.getElementById('btnHelpEdit');
+        
+        if(!isEditingHelp) {
+            content.contentEditable = "true";
+            content.classList.add('editing-border');
+            content.focus();
+            btn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+            btn.classList.remove('bg-gray-200');
+            btn.classList.add('bg-green-200', 'text-green-800');
+            isEditingHelp = true;
+        } else {
+            content.contentEditable = "false";
+            content.classList.remove('editing-border');
+            btn.innerHTML = '<i class="fas fa-edit"></i> Editar Guía';
+            btn.classList.add('bg-gray-200');
+            btn.classList.remove('bg-green-200', 'text-green-800');
+            
+            systemRef.set(content.innerHTML).then(() => {
+                alert("Guía de ayuda actualizada.");
+            }).catch(e => alert("Error al guardar: " + e.message));
+            
+            isEditingHelp = false;
+        }
+    };
+
+    window.setMode = function(mode) {
+        appMode = mode;
+        const header = document.getElementById('mainHeader');
+        const title = document.getElementById('headerTitle');
+        document.getElementById('tabInterv').className = `mode-tab ${mode === 'INTERVENIDOS' ? 'active-interv' : ''}`;
+        document.getElementById('tabJudic').className = `mode-tab ${mode === 'JUDICIALIZADOS' ? 'active-judic' : ''}`;
+        
+        if (mode === 'INTERVENIDOS') {
+            header.className = 'mode-interv'; title.textContent = 'DOCUMENTOS INTERVENIDOS';
+        } else {
+            header.className = 'mode-judic'; title.textContent = 'DOCUMENTOS JUDICIALIZADOS';
+        }
+        updateFilters();
+        render();
+    };
+
+    function updateFilters() {
+        const area = document.getElementById('filtersArea');
+        if (appMode === 'INTERVENIDOS') {
+            area.innerHTML = `
+                <select onchange="setIntFilter(this.value)" class="pl-4 pr-8 py-2 rounded-lg border border-blue-200 text-blue-900 font-bold bg-blue-50 focus:ring focus:ring-blue-200 shadow-sm">
+                    <option value="all" selected>Ver Todos</option>
+                    <option value="active">Activos (En depósito)</option>
+                    <option value="returned">Devueltos (Propietario)</option>
+                    <option value="available">Disponibles (Formación)</option>
+                </select>
+            `;
+        } else {
+            area.innerHTML = `
+                <select onchange="setJudFilter(this.value)" class="pl-4 pr-8 py-2 rounded-lg border border-green-200 text-green-900 font-bold bg-green-50 focus:ring focus:ring-green-200 shadow-sm">
+                    <option value="ALL" selected>Ver Todos Judicial</option>
+                    <option value="En Trámite">En Trámite</option>
+                    <option value="Entregado al Juzgado">Entregados al Juzgado</option>
+                    <option value="Condena">Condena</option>
+                    <option value="Pasa a Ordinario">Ordinario</option>
+                    <option value="Absolución">Absolución</option>
+                    <option value="Disponible">Disponibles-Formación</option>
+                    <option value="Peritado">Peritados</option>
+                </select>
+            `;
+        }
+    }
+
+    window.setIntFilter = (val) => { intFilter = val; render(); };
+    window.setJudFilter = (val) => { judFilter = val; render(); };
+
+    function render() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const tbody = document.getElementById('tableBody');
+        const thead = document.getElementById('tableHead');
+        tbody.innerHTML = '';
+
+        if (appMode === 'INTERVENIDOS') {
+            thead.innerHTML = `<tr><th class="w-24">Fecha</th><th>País</th><th>Doc</th><th>Nº Atestado</th><th>Estado</th><th class="text-center">Img</th><th class="text-right">Acciones</th></tr>`;
+        } else {
+            thead.innerHTML = `<tr><th class="w-24">Fecha</th><th>País</th><th>Atestado</th><th>Juzgado</th><th class="text-center">J.R</th><th class="text-center">Sentencia</th><th>Resultado</th><th class="text-center">Img</th><th class="text-right">Acciones</th></tr>`;
+        }
+
+        const filtered = allData.filter(item => {
+            const txt = (item.atestadoNumero || '') + (item.pais || '') + (item.tipoDocumento || '');
+            if (!txt.toLowerCase().includes(search)) return false;
+
+            const isAvailable = item.esDisponible === true;
+            const isReturned = item.fechaDevolucion || item.resultado === 'Devuelto' || item.resultado === 'Entregado al Juzgado';
+
+            if (appMode === 'INTERVENIDOS') {
+                if (intFilter === 'all') return true;
+                if (intFilter === 'active' && (isReturned || isAvailable)) return false;
+                if (intFilter === 'returned' && !isReturned) return false;
+                if (intFilter === 'available' && !isAvailable) return false;
+            } else {
+                const hasJudData = (item.juzgado && item.juzgado !== 'Se desconoce') || (item.sentenciaUrl && item.sentenciaUrl.length > 5);
+                if (!item.esJudicializado && !hasJudData) return false;
+                
+                if (judFilter !== 'ALL') {
+                    if (judFilter === 'Disponible') return isAvailable;
+                    if (judFilter === 'Peritado') return item.esPeritado === true;
+                    if (judFilter !== 'Disponible' && judFilter !== 'Peritado' && item.resultado !== judFilter) return false;
+                }
+            }
+            return true;
+        });
+
+        filtered.sort((a,b) => new Date(b.fechaSuceso) - new Date(a.fechaSuceso));
+        if (filtered.length === 0) document.getElementById('noData').classList.remove('hidden');
+        else document.getElementById('noData').classList.add('hidden');
+
+        filtered.forEach(item => {
+            const tr = document.createElement('tr');
+            let isExit = false;
+            if (item.resultado === 'Entregado al Juzgado' || item.resultado === 'Devuelto') {
+                isExit = true;
+                tr.classList.add('row-exit'); 
+            }
+
+            let stClass = '';
+            if(item.resultado==='Condena') stClass='st-condena';
+            if(item.resultado==='En Trámite') stClass='st-tramite';
+            if(item.resultado==='Pasa a Ordinario') stClass='st-ordinario';
+            if(item.resultado==='Absolución') stClass='st-absolucion';
+            if(item.resultado==='Judicializado') stClass='st-judicializado';
+            
+            let stHtml = `<span class="${stClass}">${item.resultado}</span>`;
+            if (item.esPeritado) stHtml += `<div class="tag-peritado">PERITADO</div>`;
+            if (item.esDisponible) stHtml += `<div class="tag-disponible">DISPONIBLE FORMACIÓN</div>`;
+
+            const atDisplay = (item.atestadoNumero||'').toUpperCase().startsWith('DSV') ? item.atestadoNumero : `DSV ${item.atestadoNumero||''}`;
+            
+            let imgCellContent = '<div class="text-center text-gray-300">-</div>';
+            if (item.documentoUrl) {
+                let crossHtml = isExit ? `<div class="red-cross-overlay"><i class="fas fa-times"></i></div>` : '';
+                imgCellContent = `<div class="thumb-container"><img src="${item.documentoUrl}" class="thumbnail-img" onclick="view('${item.key}')" title="Ver">${crossHtml}</div>`;
+            }
+
+            if (appMode === 'INTERVENIDOS') {
+                const docStyle = item.esJudicializado ? 'bg-green-100 text-green-800 border-green-300 font-bold' : 'bg-gray-100 text-gray-600 border-gray-200';
+                tr.innerHTML = `
+                    <td>${fmt(item.fechaSuceso)}</td><td class="font-medium">${item.pais}</td>
+                    <td><span class="${docStyle} px-2 py-1 rounded text-xs border">${item.tipoDocumento}</span></td>
+                    <td class="font-bold text-blue-900">${atDisplay}</td>
+                    <td>${stHtml}</td><td class="text-center no-strike">${imgCellContent}</td>
+                    <td class="text-right no-strike"><div class="action-buttons-wrapper">
+                        <button onclick="view('${item.key}')" class="action-btn btn-view"><i class="fas fa-eye"></i></button>
+                        <button onclick="edit('${item.key}')" class="action-btn btn-edit"><i class="fas fa-pencil-alt"></i></button>
+                        <button onclick="del('${item.key}')" class="action-btn btn-del"><i class="fas fa-trash-alt"></i></button>
+                    </div></td>`;
+            } else {
+                const sent = item.sentenciaUrl ? `<a href="${item.sentenciaUrl}" target="_blank" class="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 hover:bg-green-200">SENTENCIA</a>` : '<span class="text-gray-300 text-xs italic">Pendiente</span>';
+                tr.innerHTML = `
+                    <td>${fmt(item.fechaSuceso)}</td><td class="font-medium">${item.pais} <span class="text-xs text-gray-400">(${item.tipoDocumento})</span></td>
+                    <td class="font-bold text-green-900">${atDisplay}</td><td>${item.juzgado}</td><td class="text-center">${item.juicioRapido}</td>
+                    <td class="text-center no-strike">${sent}</td><td>${stHtml}</td><td class="text-center no-strike">${imgCellContent}</td>
+                    <td class="text-right no-strike"><div class="action-buttons-wrapper">
+                        <button onclick="view('${item.key}')" class="action-btn btn-view"><i class="fas fa-eye"></i></button>
+                        <button onclick="edit('${item.key}')" class="action-btn btn-edit"><i class="fas fa-pencil-alt"></i></button>
+                    </div></td>`;
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    // CRUD
+    window.openModal = function() {
+        document.getElementById('docForm').reset();
+        document.getElementById('recordKey').value = '';
+        document.getElementById('modalTitle').textContent = 'Nuevo Documento';
+        document.getElementById('atestadoNumero').value = "DSV ";
+        document.getElementById('checkJudicial').checked = false; toggleJudicialPanel();
+        document.getElementById('tieneActaSelect').value = 'No'; toggleActaUrl();
+        document.getElementById('editModal').classList.add('open');
+    };
+
+    window.edit = function(key) {
+        const item = allData.find(d => d.key === key);
+        if (!item) return;
+        document.getElementById('recordKey').value = key;
+        document.getElementById('fechaSuceso').value = item.fechaSuceso;
+        document.getElementById('pais').value = item.pais;
+        document.getElementById('tipoDocumento').value = item.tipoDocumento || 'PNC';
+        let atVal = item.atestadoNumero || '';
+        if(!atVal.toUpperCase().startsWith('DSV')) atVal = 'DSV ' + atVal;
+        document.getElementById('atestadoNumero').value = atVal;
+        
+        document.getElementById('resultado').value = item.resultado;
+        document.getElementById('checkDisponible').checked = item.esDisponible || false; 
+        document.getElementById('checkPeritado').checked = item.esPeritado || false;
+        
+        document.getElementById('fechaDevolucion').value = item.fechaDevolucion || '';
+
+        document.getElementById('documentoUrl').value = item.documentoUrl || '';
+        document.getElementById('observaciones').value = item.observaciones || '';
+        
+        const tieneActa = (item.tieneActa===true||item.tieneActa==='Sí')?'Sí':'No';
+        document.getElementById('tieneActaSelect').value = tieneActa; 
+        document.getElementById('actaUrl').value = item.actaUrl || '';
+        toggleActaUrl();
+
+        document.getElementById('checkJudicial').checked = item.esJudicializado || false;
+        document.getElementById('juzgado').value = item.juzgado || 'Se desconoce';
+        document.getElementById('juicioRapido').value = item.juicioRapido || 'No';
+        document.getElementById('sentenciaUrl').value = item.sentenciaUrl || '';
+        toggleJudicialPanel();
+        document.getElementById('modalTitle').textContent = 'Editar: ' + item.atestadoNumero;
+        document.getElementById('editModal').classList.add('open');
+    };
+
+    document.getElementById('docForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const key = document.getElementById('recordKey').value;
+        let atestado = document.getElementById('atestadoNumero').value.trim();
+        if (!atestado.toUpperCase().startsWith('DSV')) atestado = "DSV " + atestado;
+        const safeKey = atestado.replace(/[\/.\s]/g, '-').toUpperCase();
+        
+        const manualDate = document.getElementById('fechaDevolucion').value;
+
+        const formData = {
+            fechaSuceso: document.getElementById('fechaSuceso').value,
+            pais: document.getElementById('pais').value,
+            tipoDocumento: document.getElementById('tipoDocumento').value,
+            atestadoNumero: atestado,
+            resultado: document.getElementById('resultado').value,
+            esDisponible: document.getElementById('checkDisponible').checked, 
+            esPeritado: document.getElementById('checkPeritado').checked,
+            observaciones: document.getElementById('observaciones').value,
+            documentoUrl: document.getElementById('documentoUrl').value,
+            tieneActa: document.getElementById('tieneActaSelect').value === 'Sí',
+            actaUrl: document.getElementById('actaUrl').value,
+            esJudicializado: document.getElementById('checkJudicial').checked,
+            juzgado: document.getElementById('juzgado').value,
+            juicioRapido: document.getElementById('juicioRapido').value,
+            sentenciaUrl: document.getElementById('sentenciaUrl').value,
+            fechaDevolucion: manualDate || null,
+            updatedAt: new Date().toISOString()
+        };
+
+        try {
+            if (key && key !== safeKey) await mainRef.child(key).remove();
+            await mainRef.child(safeKey).update(formData);
+            closeModal();
+        } catch (error) { alert("Error: " + error.message); }
+    });
+
+    window.del = async function(key) { if (confirm('¿Borrar definitivamente?')) await mainRef.child(key).remove(); };
+    
+    window.view = function(key) {
+        const item = allData.find(d => d.key === key);
+        if (!item) return;
+        document.getElementById('v_atestado').textContent = item.atestadoNumero;
+        document.getElementById('v_fecha').textContent = fmt(item.fechaSuceso);
+        document.getElementById('v_pais').textContent = item.pais;
+        document.getElementById('v_tipo').textContent = item.tipoDocumento;
+        
+        let stText = item.resultado;
+        if(item.esPeritado) stText += " (PERITADO)";
+        if(item.esDisponible) stText += " (DISPONIBLE FORMACIÓN)";
+        
+        document.getElementById('v_estado').textContent = stText;
+        
+        const dateBox = document.getElementById('v_date_exit');
+        dateBox.innerHTML = '';
+        if (item.resultado === 'Devuelto' && item.fechaDevolucion) {
+            dateBox.innerHTML = `<div class="bg-red-50 p-3 rounded border border-red-200 text-red-800 font-bold mb-2 text-center"><i class="fas fa-sign-out-alt mr-2"></i> Fecha Devolución: ${fmt(item.fechaDevolucion)}</div>`;
+        } else if (item.resultado === 'Entregado al Juzgado' && item.fechaDevolucion) {
+            dateBox.innerHTML = `<div class="bg-orange-50 p-3 rounded border border-orange-200 text-orange-800 font-bold mb-2 text-center"><i class="fas fa-university mr-2"></i> Fecha Entrega Juzgado: ${fmt(item.fechaDevolucion)}</div>`;
+        }
+
+        const imgContainer = document.getElementById('viewImgArea');
+        if (item.documentoUrl) imgContainer.innerHTML = `<a href="${item.documentoUrl}" target="_blank"><img src="${item.documentoUrl}"></a>`;
+        else imgContainer.innerHTML = '<span class="text-gray-400">Sin Imagen</span>';
+        
+        if (item.esJudicializado) {
+            document.getElementById('v_jud_info').classList.remove('hidden');
+            document.getElementById('v_juzgado').textContent = item.juzgado;
+            document.getElementById('v_jr').textContent = item.juicioRapido;
+            if (item.sentenciaUrl) document.getElementById('v_sent_btn').innerHTML = `<a href="${item.sentenciaUrl}" target="_blank" class="block w-full text-center bg-green-600 text-white py-2 rounded font-bold">VER SENTENCIA</a>`;
+            else document.getElementById('v_sent_btn').innerHTML = '';
+        } else document.getElementById('v_jud_info').classList.add('hidden');
+
+        document.getElementById('v_obs').textContent = item.observaciones || 'Sin observaciones.';
+        
+        const linkArea = document.getElementById('v_links');
+        linkArea.innerHTML = '';
+        if (item.documentoUrl) linkArea.innerHTML += `<a href="${item.documentoUrl}" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700">VER DOCUMENTO</a>`;
+        
+        if ((item.tieneActa===true || item.tieneActa==='Sí') && item.actaUrl) {
+            linkArea.innerHTML += `<a href="${item.actaUrl}" target="_blank" class="px-4 py-2 bg-teal-600 text-white rounded font-bold hover:bg-teal-700">VER ACTA</a>`;
+        }
+        
+        document.getElementById('viewModal').classList.add('open');
+    };
+
+    window.toggleJudicialPanel = function() { const c=document.getElementById('checkJudicial'); const p=document.getElementById('judicialPanel'); if(c.checked)p.classList.remove('hidden'); else p.classList.add('hidden'); };
+    window.toggleActaUrl = function() { 
+        const s=document.getElementById('tieneActaSelect'); 
+        const d=document.getElementById('actaUrl'); 
+        if(s.value==='Sí') d.classList.remove('hidden'); 
+        else d.classList.add('hidden'); 
+    };
+    
+    window.toggleHelp = function() { const p=document.getElementById('helpPanel'); p.style.display=(p.style.display==='block')?'none':'block'; };
+    window.closeModal = function() { document.getElementById('editModal').classList.remove('open'); };
+    function fmt(s) { if(!s)return''; const[y,m,d]=s.split('-'); return `${d}/${m}/${y}`; }
+
+  </script>
+</body>
+</html>
