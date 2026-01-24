@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAD MANAGER V16.4 - CONTAINER EDITOR</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        body { 
+            background-color: #0f172a; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            height: 100vh; 
+            overflow: hidden; 
+            color: #e2e8f0;
+        }
+        
+        /* ESTILOS DE TARJETAS */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .acta-card {
+            background: rgba(51, 65, 85, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        .acta-card:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(6, 182, 212, 0.5);
+            transform: translateY(-2px);
+            cursor: pointer;
+        }
+
+        .acta-card-ia {
+            background: rgba(6, 78, 59, 0.25);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            box-shadow: 0 0 15px -5px rgba(16, 185, 129, 0.1);
+            transition: all 0.2s;
+        }
+        .acta-card-ia:hover {
+            background: rgba(6, 78, 59, 0.5);
+            border-color: rgba(52, 211, 153, 0.6);
+            box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+            cursor: pointer;
+        }
+
+        /* HEADER EDITABLE */
+        .editable-mode .editable-header:hover {
+            background: rgba(255,255,255,0.05);
+            cursor: move; 
+        }
+
+        /* Drag Visuals */
+        .dragging-over {
+            border-top: 2px solid #22d3ee !important; 
+            opacity: 0.8;
+        }
+
+        /* NEON TEXT */
+        @keyframes pulse-blue {
+            0% { text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+            100% { text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        }
+        .neon-text { animation: pulse-blue 3s infinite; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body>
+    <div id="root" class="h-full flex flex-col"></div>
+
+    <script type="text/babel">
+        // --- FIREBASE SETUP ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDl4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasestorage.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+        const DB_TEMPLATES_PATH = 'actas'; 
+        const DB_SETTINGS_PATH = 'gad_settings_v15'; 
+
+        // --- ICONS ---
+        const Icons = {
+            doc: <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+            camera: <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />,
+            alert: <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
+            user: <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
+            warning: <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+            passport: <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />,
+            money: <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+            clock: <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        };
+        const SVG = ({ i, c }) => <svg className={c} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">{Icons[i] || Icons.doc}</svg>;
+
+        const RenderName = ({ name }) => {
+            if (!name) return null;
+            const parts = name.split(/(IA)/g);
+            return <span>{parts.map((p, i) => p === "IA" ? <span key={i} className="text-blue-500 font-extrabold neon-text mx-0.5">IA</span> : <span key={i}>{p}</span>)}</span>;
+        };
+
+        const App = () => {
+            const [templates, setTemplates] = React.useState([]);
+            const [logo, setLogo] = React.useState('logogad.png'); 
+            const [viewMode, setViewMode] = React.useState('dashboard'); 
+            const [isLoading, setIsLoading] = React.useState(true);
+            const [isEditMode, setIsEditMode] = React.useState(false); 
+
+            const [layout, setLayout] = React.useState([]);
+            const [catTitles, setCatTitles] = React.useState({});
+            const [editingTitle, setEditingTitle] = React.useState(null); 
+            const [tempTitle, setTempTitle] = React.useState("");
+            
+            const [dragOverCardId, setDragOverCardId] = React.useState(null);
+
+            const [showModal, setShowModal] = React.useState(false);
+            const [editItem, setEditItem] = React.useState(null); 
+            const [formData, setFormData] = React.useState({ name: '', keyword: '', file: '', category: 'gestion', icon: 'doc', usageCount: 0 });
+
+            const defaultCats = {
+                tributaria: "INFRACCIONES TRIBUTARIAS",
+                sala: "SALA DE CONTROL 092",
+                extranjeria: "EXTRANJERÍA / DOCUMENTACIÓN",
+                gestion: "GESTIÓN / OTROS"
+            };
+            
+            const defaultLayout = [
+                { id: 'col1', sections: ['tributaria'] },
+                { id: 'col2', sections: ['sala'] },
+                { id: 'col3', sections: ['extranjeria'] },
+                { id: 'col4', sections: ['gestion'] }
+            ];
+
+            React.useEffect(() => {
+                const loadData = async () => {
+                    const snap = await db.ref(DB_TEMPLATES_PATH).once('value');
+                    const settingsSnap = await db.ref(DB_SETTINGS_PATH).once('value');
+                    const logoSnap = await db.ref('selector_gad/logo').once('value');
+                    
+                    if (snap.exists()) {
+                        let data = Object.values(snap.val());
+                        setTemplates(data.map((t, idx) => ({ ...t, category: t.category || 'gestion' })));
+                    }
+                    
+                    if (settingsSnap.exists()) {
+                        const s = settingsSnap.val();
+                        setCatTitles(s.titles || defaultCats);
+                        setLayout(s.layout || defaultLayout);
+                    } else {
+                        setCatTitles(defaultCats);
+                        setLayout(defaultLayout);
+                    }
+                    if (logoSnap.exists()) setLogo(logoSnap.val());
+                    setIsLoading(false);
+                };
+                loadData();
+            }, []);
+
+            const saveSettings = (newLayout, newTitles) => {
+                const l = newLayout || layout;
+                const t = newTitles || catTitles;
+                setLayout(l);
+                setCatTitles(t);
+                db.ref(DB_SETTINGS_PATH).set({ layout: l, titles: t });
+            };
+
+            // --- DRAG & DROP LOGIC ---
+            const handleSectionDragStart = (e, catKey, fromColId) => {
+                if(!isEditMode) return;
+                e.dataTransfer.setData("type", "SECTION");
+                e.dataTransfer.setData("catKey", catKey);
+                e.dataTransfer.setData("fromColId", fromColId);
+                e.stopPropagation();
+            };
+
+            const handleColumnDrop = (e, targetColId) => {
+                if(!isEditMode) return;
+                if (e.dataTransfer.getData("type") === "SECTION") {
+                    e.preventDefault(); e.stopPropagation();
+                    const catKey = e.dataTransfer.getData("catKey");
+                    const fromColId = e.dataTransfer.getData("fromColId");
+                    if (fromColId === targetColId) return;
+
+                    let newLayout = JSON.parse(JSON.stringify(layout));
+                    const sourceCol = newLayout.find(c => c.id === fromColId);
+                    sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
+                    
+                    const targetCol = newLayout.find(c => c.id === targetColId);
+                    if (!targetCol.sections.includes(catKey)) targetCol.sections.push(catKey);
+                    
+                    newLayout = newLayout.filter(c => c.sections.length > 0);
+                    saveSettings(newLayout);
+                }
+            };
+
+            const handleNewColumnDrop = (e) => {
+                if(!isEditMode) return;
+                if (e.dataTransfer.getData("type") === "SECTION") {
+                    e.preventDefault();
+                    const catKey = e.dataTransfer.getData("catKey");
+                    const fromColId = e.dataTransfer.getData("fromColId");
+                    
+                    let newLayout = JSON.parse(JSON.stringify(layout));
+                    const sourceCol = newLayout.find(c => c.id === fromColId);
+                    sourceCol.sections = sourceCol.sections.filter(s => s !== catKey);
+                    
+                    newLayout.push({ id: 'col-' + Date.now(), sections: [catKey] });
+                    newLayout = newLayout.filter(c => c.sections.length > 0);
+                    saveSettings(newLayout);
+                }
+            };
+
+            const handleItemDragStart = (e, id) => {
+                if(!isEditMode) return;
+                e.stopPropagation();
+                e.dataTransfer.setData("type", "ITEM");
+                e.dataTransfer.setData("id", id);
+                e.dataTransfer.effectAllowed = "move";
+            };
+
+            const handleCardDragOver = (e, cardId) => {
+                if(!isEditMode) return;
+                e.preventDefault(); 
+                e.stopPropagation();
+                setDragOverCardId(cardId); 
+            };
+
+            const handleCardDragLeave = (e) => {
+            };
+
+            const handleCardDrop = (e, targetCardId, targetCategory) => {
+                if(!isEditMode) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOverCardId(null);
+
+                if (e.dataTransfer.getData("type") === "ITEM") {
+                    const draggedId = parseInt(e.dataTransfer.getData("id"));
+                    if(draggedId === targetCardId) return;
+
+                    const newTemplates = [...templates];
+                    const draggedIndex = newTemplates.findIndex(t => t.id === draggedId);
+                    const targetIndex = newTemplates.findIndex(t => t.id === targetCardId);
+
+                    if(draggedIndex === -1 || targetIndex === -1) return;
+
+                    const [draggedItem] = newTemplates.splice(draggedIndex, 1);
+                    draggedItem.category = targetCategory;
+
+                    const newTargetIndex = newTemplates.findIndex(t => t.id === targetCardId);
+                    newTemplates.splice(newTargetIndex, 0, draggedItem);
+
+                    setTemplates(newTemplates);
+                    db.ref(DB_TEMPLATES_PATH).set(newTemplates);
+                }
+            };
+
+            const handleContainerDrop = (e, targetCategory) => {
+                if(!isEditMode) return;
+                if (e.dataTransfer.getData("type") === "ITEM") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragOverCardId(null);
+
+                    const id = parseInt(e.dataTransfer.getData("id"));
+                    let newTemplates = [...templates];
+                    const idx = newTemplates.findIndex(t => t.id === id);
+                    if(idx > -1) {
+                        const [item] = newTemplates.splice(idx, 1);
+                        item.category = targetCategory;
+                        newTemplates.push(item);
+                        setTemplates(newTemplates);
+                        db.ref(DB_TEMPLATES_PATH).set(newTemplates);
+                    }
+                }
+            };
+
+            // --- FUNCIONES GESTION SECCIONES ---
+            const handleAddSection = (colId) => {
+                const newKey = 'cat_' + Date.now();
+                const newTitle = "NUEVO CONTENEDOR";
+                
+                const newTitles = { ...catTitles, [newKey]: newTitle };
+                const newLayout = layout.map(col => {
+                    if (col.id === colId) {
+                        return { ...col, sections: [...col.sections, newKey] };
+                    }
+                    return col;
+                });
+
+                saveSettings(newLayout, newTitles);
+                // Auto inicio edición nombre
+                setEditingTitle(newKey);
+                setTempTitle(newTitle);
+            };
+
+            const handleDeleteSection = (sectionKey, colId) => {
+                const itemsInCat = templates.filter(t => t.category === sectionKey);
+                if(itemsInCat.length > 0) {
+                    alert("⚠️ No puedes borrar un contenedor que tiene actas dentro.\nMueve las actas a otro sitio primero.");
+                    return;
+                }
+                if(confirm("¿Estás seguro de eliminar este contenedor vacío?")) {
+                    const newLayout = layout.map(col => {
+                        if(col.id === colId) {
+                            return { ...col, sections: col.sections.filter(s => s !== sectionKey) };
+                        }
+                        return col;
+                    });
+                    // Limpieza de layout columnas vacias
+                    const finalLayout = newLayout.filter(c => c.sections.length > 0);
+                    saveSettings(finalLayout);
+                }
+            };
+
+            // --- RESTO FUNCIONES ---
+            const startEditTitle = (key, currentVal) => {
+                if(!isEditMode) return;
+                setEditingTitle(key);
+                setTempTitle(currentVal);
+            };
+            const saveTitle = () => {
+                if (tempTitle.trim()) {
+                    const newTitles = { ...catTitles, [editingTitle]: tempTitle };
+                    saveSettings(null, newTitles);
+                }
+                setEditingTitle(null);
+            };
+
+            const updateUsage = (id, file) => {
+                if(isEditMode) return;
+                const newT = templates.map(t => t.id === id ? { ...t, usageCount: (t.usageCount || 0) + 1 } : t);
+                setTemplates(newT);
+                db.ref(DB_TEMPLATES_PATH).set(newT);
+                window.open(file, '_blank');
+            };
+
+            const handleResetCounters = () => {
+                if(confirm("⚠️ ¿Estás seguro de que quieres poner TODOS los contadores a 0?\n\nLa lista Top 10 se reiniciará.")) {
+                    const newT = templates.map(t => ({ ...t, usageCount: 0 }));
+                    setTemplates(newT);
+                    db.ref(DB_TEMPLATES_PATH).set(newT);
+                }
+            };
+
+            const openModal = (item = null) => {
+                setEditItem(item);
+                setFormData(item ? { ...item } : { name: '', keyword: '', file: '', category: 'gestion', icon: 'doc', usageCount: 0 });
+                setShowModal(true);
+            };
+            
+            const handleSaveForm = () => {
+                let newT = editItem ? templates.map(t => t.id === editItem.id ? { ...t, ...formData } : t) : [...templates, { ...formData, id: Date.now() }];
+                setTemplates(newT);
+                db.ref(DB_TEMPLATES_PATH).set(newT);
+                setShowModal(false);
+            };
+            const handleDelete = () => {
+                if(confirm("¿Borrar acta?")) {
+                    const newT = templates.filter(t => t.id !== editItem.id);
+                    setTemplates(newT);
+                    db.ref(DB_TEMPLATES_PATH).set(newT);
+                    setShowModal(false);
+                }
+            };
+
+            if (isLoading) return <div className="h-screen flex items-center justify-center text-cyan-500">Cargando Sistema V16...</div>;
+
+            const topUsed = [...templates].sort((a,b) => (b.usageCount || 0) - (a.usageCount || 0)).slice(0, 10);
+
+            return (
+                <div className={`flex flex-col h-full bg-[#0f172a] text-slate-200 overflow-hidden ${isEditMode ? 'editable-mode' : ''}`}>
+                    
+                    <header className="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-lg z-20 shrink-0 h-24">
+                        <div className="flex items-center gap-6">
+                            <div className={`h-20 w-20 relative group ${isEditMode ? 'cursor-pointer hover:scale-105' : ''} transition-transform`}>
+                                <img src={logo} className="h-full w-full object-contain drop-shadow-lg" />
+                                {isEditMode && <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
+                                    if(e.target.files[0]) {
+                                        const r = new FileReader();
+                                        r.onload = (ev) => { setLogo(ev.target.result); db.ref('selector_gad/logo').set(ev.target.result); };
+                                        r.readAsDataURL(e.target.files[0]);
+                                    }
+                                }}/>}
+                            </div>
+                            <div className="hidden md:block">
+                                <h1 className="text-3xl font-black tracking-widest text-white drop-shadow-md">SELECTOR DE ACTAS</h1>
+                                <p className="text-xs text-cyan-500 font-bold uppercase tracking-[0.2em]">Grupo de Análisis Documental</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                            <button onClick={() => setIsEditMode(!isEditMode)} className={`px-4 py-2 rounded-lg font-black text-xs flex items-center gap-2 shadow-lg border transition-all ${isEditMode ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'}`}>
+                                <span>{isEditMode ? '🔓 MODO EDICIÓN' : '🔒 BLOQUEADO'}</span>
+                            </button>
+                            
+                            {isEditMode && (
+                                <div className="flex gap-2">
+                                    <button onClick={handleResetCounters} className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2">
+                                        <span>♻️</span> RESET 0
+                                    </button>
+                                    <button onClick={() => openModal()} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2">
+                                        <span>+</span> NUEVA ACTA
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
+                                <button onClick={() => setViewMode('dashboard')} className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 ${viewMode==='dashboard'?'bg-cyan-600 text-white shadow':'text-slate-400'}`}>🗂️ CLASIFICACIÓN</button>
+                                <button onClick={() => setViewMode('list')} className={`px-4 py-2 rounded font-bold text-xs flex items-center gap-2 ${viewMode==='list'?'bg-cyan-600 text-white shadow':'text-slate-400'}`}>📝 LISTADO</button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
+                        <aside className="w-full md:w-64 bg-slate-900/80 border-r border-slate-800 flex flex-col shrink-0 z-10">
+                            <div className="p-4 border-b border-slate-800 bg-slate-900"><h2 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><span className="text-yellow-500 text-base">★</span> Top 10 Frecuentes</h2></div>
+                            <div className="p-3 space-y-2 overflow-y-auto flex-1">
+                                {topUsed.map((t, i) => (
+                                    <div key={t.id} onClick={() => updateUsage(t.id, t.file)} className="group flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700 cursor-pointer transition-all">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${i===0?'bg-yellow-500 text-yellow-900':'bg-slate-700 text-slate-400 group-hover:bg-cyan-500 group-hover:text-white'}`}>{i+1}</div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-black text-cyan-400 truncate uppercase tracking-wider mb-0.5">{t.keyword.replace("NEW ⚠️", "")}</p>
+                                            <p className="text-[10px] text-slate-500 truncate group-hover:text-slate-300"><RenderName name={t.name} /></p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </aside>
+
+                        <main className="flex-1 bg-slate-900 relative overflow-hidden" 
+                             onDragOver={(e) => isEditMode && e.preventDefault()} 
+                             onDrop={handleNewColumnDrop}>
+                            
+                            {viewMode === 'dashboard' && (
+                                <div className="h-full overflow-x-auto overflow-y-hidden p-4 md:p-6">
+                                    <div className="flex flex-col md:flex-row gap-4 h-full md:min-w-max pb-4">
+                                        {layout.map((col, colIdx) => {
+                                            return (
+                                                <div key={col.id} 
+                                                     onDragOver={(e) => isEditMode && e.preventDefault()} 
+                                                     onDrop={(e) => handleColumnDrop(e, col.id)}
+                                                     className={`flex flex-col w-full md:w-80 h-full rounded-xl transition-colors ${isEditMode ? 'border-2 border-dashed border-slate-700 bg-slate-800/20' : ''}`}>
+                                                    
+                                                    <div className="flex-1 overflow-y-auto space-y-4 p-1">
+                                                        {col.sections.map(sectionKey => {
+                                                            const items = templates.filter(t => t.category === sectionKey);
+                                                            return (
+                                                                <div key={sectionKey} 
+                                                                     onDragOver={(e) => isEditMode && e.preventDefault()}
+                                                                     onDrop={(e) => handleContainerDrop(e, sectionKey)}
+                                                                     className="flex flex-col bg-slate-800/40 border border-slate-600 rounded-xl overflow-hidden shrink-0">
+                                                                    
+                                                                    <div 
+                                                                        draggable={isEditMode}
+                                                                        onDragStart={(e) => handleSectionDragStart(e, sectionKey, col.id)}
+                                                                        className={`p-3 bg-slate-900 border-b border-slate-700 flex justify-between items-center group/header editable-header ${isEditMode ? 'cursor-move' : ''}`}>
+                                                                        
+                                                                        {sectionKey === editingTitle ? (
+                                                                            <input autoFocus value={tempTitle} onChange={e => setTempTitle(e.target.value)} onBlur={saveTitle} onKeyDown={e => e.key === 'Enter' && saveTitle()} className="bg-transparent border-b border-cyan-500 outline-none w-full text-white font-bold" />
+                                                                        ) : (
+                                                                            <h3 className="font-black text-sm tracking-wider text-slate-300 uppercase truncate" onDoubleClick={() => startEditTitle(sectionKey, catTitles[sectionKey])}>
+                                                                                {catTitles[sectionKey] || sectionKey}
+                                                                            </h3>
+                                                                        )}
+
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="bg-slate-800 text-slate-500 text-[9px] px-1.5 py-0.5 rounded font-bold">{items.length}</span>
+                                                                            {isEditMode && (
+                                                                                <div className="flex items-center gap-1 ml-2">
+                                                                                    <button onClick={() => startEditTitle(sectionKey, catTitles[sectionKey])} className="text-slate-600 hover:text-cyan-400" title="Editar Título">✏️</button>
+                                                                                    <button onClick={() => handleDeleteSection(sectionKey, col.id)} className="text-slate-600 hover:text-red-400" title="Borrar Contenedor">🗑️</button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className={`p-2 space-y-2 min-h-[60px] ${isEditMode ? 'bg-slate-800/30' : ''}`}>
+                                                                        {items.map(t => (
+                                                                            <div key={t.id} 
+                                                                                 draggable={isEditMode} 
+                                                                                 onDragStart={(e) => handleItemDragStart(e, t.id)}
+                                                                                 onDragOver={(e) => handleCardDragOver(e, t.id)}
+                                                                                 onDragLeave={handleCardDragLeave}
+                                                                                 onDrop={(e) => handleCardDrop(e, t.id, sectionKey)}
+                                                                                 className={`${t.name.includes("IA") ? "acta-card-ia" : "acta-card"} p-3 rounded-lg relative group select-none ${dragOverCardId === t.id ? 'dragging-over' : ''}`}>
+                                                                                
+                                                                                {isEditMode && <button onClick={(e) => {e.stopPropagation(); openModal(t);}} className="absolute top-2 right-2 text-slate-400 hover:text-white bg-slate-900 p-1 rounded z-20">✏️</button>}
+                                                                                <div className="flex items-start gap-3" onClick={() => updateUsage(t.id, t.file)}>
+                                                                                    <div className="p-2 rounded bg-slate-900 text-cyan-500 shrink-0"><SVG i={t.icon} c="w-4 h-4" /></div>
+                                                                                    <div className="min-w-0 pr-4">
+                                                                                        <p className="text-xs font-bold text-slate-200 leading-snug group-hover:text-cyan-400">
+                                                                                            <RenderName name={t.name.replace("PLANTILLA ", "").replace("IA PLANTILLA", "IA")} />
+                                                                                        </p>
+                                                                                        <p className="text-[9px] text-slate-500 mt-0.5 uppercase font-semibold tracking-wide truncate">{t.keyword.replace("NEW ⚠️", "")}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                        {items.length === 0 && isEditMode && <div className="text-center py-4 text-slate-600 text-[10px] border border-dashed border-slate-700 rounded">Vacío (Arrastra aquí)</div>}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        
+                                                        {/* BOTÓN NUEVO CONTENEDOR EN CADA COLUMNA */}
+                                                        {isEditMode && (
+                                                            <button 
+                                                                onClick={() => handleAddSection(col.id)} 
+                                                                className="w-full py-3 border-2 border-dashed border-slate-700 rounded-xl text-slate-500 font-bold text-xs hover:border-cyan-500 hover:text-cyan-500 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 opacity-60 hover:opacity-100">
+                                                                <span>+</span> NUEVO CONTENEDOR
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        
+                                        {isEditMode && (
+                                            <div className="w-16 border-2 border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-700 text-[10px] font-bold text-center p-2 hover:border-slate-600 transition-colors">
+                                                + COL
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {viewMode === 'list' && (
+                                <div className="h-full overflow-y-auto p-8">
+                                    <div className="max-w-5xl mx-auto glass-panel rounded-2xl overflow-hidden">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-800 text-slate-400 text-[10px] uppercase font-bold sticky top-0">
+                                                <tr><th className="p-4">#</th><th className="p-4">Acta</th><th className="p-4">Categoría</th><th className="p-4 text-center">Acción</th></tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-700/50">
+                                                {templates.map((t, idx) => (
+                                                    <tr key={t.id} className="hover:bg-slate-700/30">
+                                                        <td className="p-4 text-center font-mono text-slate-500 text-xs">#{idx+1}</td>
+                                                        <td className="p-4"><div className="flex items-center gap-3"><span className="text-sm font-bold text-slate-200"><RenderName name={t.name} /></span><span className="text-[10px] text-slate-500 uppercase">{t.keyword}</span></div></td>
+                                                        <td className="p-4 text-xs uppercase font-bold text-slate-500">{catTitles[t.category] || t.category}</td>
+                                                        <td className="p-4 text-center"><button onClick={() => updateUsage(t.id, t.file)} className="bg-cyan-600 text-white px-4 py-1.5 rounded text-xs font-bold">ABRIR</button></td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+
+                    {showModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+                            <div className="bg-slate-800 w-full max-w-lg rounded-2xl border border-slate-600 shadow-2xl overflow-hidden">
+                                <div className="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-900">
+                                    <h3 className="text-white font-bold">{editItem ? 'Editar' : 'Nueva'}</h3>
+                                    <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white">✕</button>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded p-2 text-white outline-none" placeholder="Nombre" />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="bg-slate-700 border border-slate-600 rounded p-2 text-white">
+                                            {Object.keys(catTitles).map(k => <option key={k} value={k}>{catTitles[k]}</option>)}
+                                        </select>
+                                        <select value={formData.icon} onChange={e => setFormData({...formData, icon: e.target.value})} className="bg-slate-700 border border-slate-600 rounded p-2 text-white">
+                                            {Object.keys(Icons).map(k => <option key={k} value={k}>{k.toUpperCase()}</option>)}
+                                        </select>
+                                    </div>
+                                    <input type="text" value={formData.file} onChange={e => setFormData({...formData, file: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded p-2 text-white outline-none font-mono text-xs" placeholder="archivo.html" />
+                                    <input type="text" value={formData.keyword} onChange={e => setFormData({...formData, keyword: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded p-2 text-white outline-none" placeholder="Palabra Clave" />
+                                </div>
+                                <div className="p-5 border-t border-slate-700 bg-slate-900 flex justify-between">
+                                    {editItem ? <button onClick={handleDelete} className="text-red-400 text-xs font-bold">🗑️ ELIMINAR</button> : <div/>}
+                                    <button onClick={handleSaveForm} className="px-6 py-2 bg-cyan-600 text-white rounded-lg font-bold">GUARDAR</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
