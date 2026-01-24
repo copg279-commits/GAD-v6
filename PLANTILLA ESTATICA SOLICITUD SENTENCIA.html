@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Testimonio de Sentencia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* VARIABLES CSS PARA CONTROLAR EL ESPACIADO DINÁMICAMENTE */
+        :root {
+            --para-spacing: 1em; /* Espaciado por defecto */
+        }
+
+        /* ESTILOS DE PANTALLA */
+        body { 
+            background-color: #374151; /* Fondo gris oscuro */
+            min-height: 100vh; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        /* HOJA A4 */
+        .page-a4 {
+            width: 210mm; 
+            min-height: 297mm; 
+            background: white; 
+            padding: 15mm 20mm 15mm 20mm; 
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            outline: none;
+        }
+
+        /* TEXTO GENERAL CON VARIABLE DE ESPACIADO */
+        .text-body p {
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            text-align: justify;
+            margin-bottom: var(--para-spacing); 
+        }
+        .text-body div {
+             margin-bottom: var(--para-spacing);
+        }
+
+        /* CABECERA Y FIRMA (Mantenidos) */
+        .header-inst { font-weight: 800; font-size: 13px; text-transform: uppercase; line-height: 1.2; }
+        .header-dept { font-weight: 700; font-size: 12px; margin-top: 6px; }
+        .header-info { font-size: 11px; margin-top: 4px; line-height: 1.3; }
+        .header-link { color: #1d4ed8; text-decoration: underline; }
+        .logo-img { width: 96px; height: 96px; object-fit: contain; display: block; }
+        .logo-placeholder { width: 96px; height: 96px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999; text-align: center; }
+        .doc-title { font-size: 16pt; font-weight: bold; color: #1e3a8a; text-align: center; margin-bottom: 20px; text-decoration: underline; }
+        .signature-section { margin-top: auto; padding-top: 20px; text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: -30px; }
+
+        /* --- CONTROLES Y HERRAMIENTAS FIJAS (Derecha) --- */
+        .fixed-controls-container {
+            position: fixed;
+            top: 20px;
+            right: 20px; /* Posicionado en el marco gris derecho */
+            z-index: 1000;
+            display: flex;
+            flex-direction: column; /* Apila verticalmente */
+            gap: 15px;
+        }
+
+        /* Botón IMPRIMIR (Azul) */
+        .print-btn-main {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: none;
+            background-color: #2563eb; 
+            color: white;
+            transition: background 0.2s;
+        }
+        .print-btn-main:hover { background-color: #1d4ed8; }
+
+        /* BARRA DE HERRAMIENTAS ESTÁTICA */
+        .editor-toolbar {
+            width: 200px; /* Ancho fijo para las herramientas */
+            background-color: #4b5563; /* Gris más oscuro y neutro */
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tool-btn {
+            background: #6b7280; /* Gris más claro para botones */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tool-btn:hover { background: #9ca3af; }
+        
+        /* Input de color */
+        .color-picker-wrapper { position: relative; }
+        .color-input { opacity: 0; position: absolute; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; }
+        .spacing-controls { display: flex; justify-content: space-between; }
+        .spacing-btn { background: #6b7280; padding: 5px 10px; border-radius: 4px; transition: background 0.2s; }
+        .spacing-btn:hover { background: #9ca3af; }
+
+
+        /* IMPRESIÓN */
+        @media print {
+            @page { margin: 0; size: A4; }
+            body { background: none; margin: 0; padding: 0; display: block; }
+            .fixed-controls-container { display: none !important; } /* OCULTAR TODO LO DE INTERFAZ */
+            .page-a4 { 
+                width: 100%; min-height: 100vh; box-shadow: none; margin: 0; 
+                padding: 15mm 20mm 15mm 20mm; border: none; 
+            }
+            img { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="fixed-controls-container">
+        
+        <button class="print-btn-main" onclick="window.print()">
+            🖨️ IMPRIMIR
+        </button>
+
+        <div class="editor-toolbar">
+            
+            <div class="flex justify-center items-center mb-2" contenteditable="false">
+                <span class="font-bold text-gray-300">HERRAMIENTAS DE EDICIÓN</span>
+            </div>
+
+            <button class="tool-btn" onclick="document.execCommand('bold',false,null)">
+                <span><b style="font-size: 1.1em;">B</b> Negrita</span>
+                <span>Ctrl+B</span>
+            </button>
+
+            <div class="tool-btn color-picker-wrapper">
+                <span><span style="color: #f87171; font-weight: bold;">A</span> Color Texto</span>
+                <input type="color" class="color-input" onchange="document.execCommand('foreColor',false,this.value)" value="#ff0000">
+            </div>
+
+            <div class="text-xs uppercase font-bold text-gray-300 mt-2 mb-1">Espaciado entre párrafos</div>
+            <div class="spacing-controls" contenteditable="false">
+                <button class="spacing-btn tool-btn" onclick="adjustSpacing(-0.2)" title="Reducir espacio">
+                    ➖ Reducir
+                </button>
+                <button class="spacing-btn tool-btn" onclick="adjustSpacing(0.2)" title="Aumentar espacio">
+                    ➕ Aumentar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="page-a4" contenteditable="true" id="documentPage">
+        
+        <div class="flex justify-between items-center mb-8 border-b-2 border-gray-800 pb-4" contenteditable="false">
+            <div>
+                <img src="judicial.png" alt="Escudo Judicial" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="logo-placeholder" style="display:none">Falta<br>judicial.png</div>
+            </div>
+
+            <div class="flex-1 px-2 text-center">
+                <div class="header-inst">EXCMO. AYUNTAMIENTO DE ALICANTE</div>
+                <div class="header-inst text-blue-900">POLICÍA LOCAL</div>
+                <div class="header-dept">Grupo de Análisis Documental</div>
+                <div class="header-dept">Unidad Judicial de Tráfico</div>
+                <div class="header-info">Av. Julián Besteiro 15</div>
+                <div class="header-info">Email: <span class="header-link">policia.gad@alicante.es</span></div>
+                <div class="header-info font-bold">TEL: +34629111387 - Central PL 965107200</div>
+            </div>
+
+            <div>
+                <img src="gad.png" alt="Escudo GAD" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="logo-placeholder" style="display:none">Falta<br>gad.png</div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col text-body">
+            
+            <div class="doc-title text-blue-900">
+                Solicitud de Testimonio de Sentencia
+            </div>
+
+            <div class="font-bold text-lg mb-2">
+                AL JUZGADO DE INSTRUCCIÓN NÚMERO 1 DE ALICANTE
+            </div>
+
+            <div class="mb-4">
+                <div class="font-bold">ASUNTO :</div>
+                <div class="font-bold">Solicitud de testimonio de sentencia en el marco de investigación penal.</div>
+            </div>
+
+            <p>
+                El Grupo de Análisis Documental de la Unidad Judicial de la Policía Local de Alicante, con domicilio en Calle Julián Besteiro 15, a través del funcionario abajo firmante, con TIP G XXX, comparece y EXPONE:
+            </p>
+
+            <p>
+                Que en relación con el procedimiento [PAB] N° 000560/2024 y las diligencias urgentes [DUR] N° 003055/2024, se solicita con la debida formalidad y con la finalidad de esclarecer hechos que son objeto de una investigación propia, se nos facilite testimonio de la sentencia dictada en las referidas actuaciones.
+            </p>
+
+            <p>
+                Esta solicitud se fundamenta en los siguientes HECHOS:
+            </p>
+
+            <p>
+                Que esta unidad policial se encuentra inmersa en la investigación de un presunto delito contra la seguridad vial, que además podría estar relacionado con un delito de falsedad documental.
+            </p>
+
+            <p>
+                Que la obtención de la sentencia dictada por este Juzgado de INSTRUCCIÓN NÚMERO 1 es de vital importancia para nuestra investigación. El contenido de dicha resolución nos permitirá comprender el contexto en el que se enjuició al Sr. [NOMBRE Y APELLIDOS DEL INVESTIGADO] y determinar el posible uso de documentación fraudulenta para influir en el resultado del procedimiento judicial.
+            </p>
+
+            <div class="font-bold text-lg mt-4">
+                SOLICITA:
+            </div>
+
+            <p>
+                Que teniendo por presentado este escrito, se sirva a admitirlo y, en su virtud, se proceda a la expedición y entrega a esta unidad de un TESTIMONIO DE LA SENTENCIA a la mayor brevedad posible.
+            </p>
+
+        </div>
+
+        <div class="signature-section">
+            <div class="flex justify-between items-end border-b border-dotted border-gray-400 pb-2">
+                <span>Fdo TIP G-XXX</span>
+                <span>EN ALICANTE, a  dia  de mes de año</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Lógica para el espaciado
+        let currentSpacing = 1.0; 
+        const rootElement = document.documentElement;
+
+        function adjustSpacing(amount) {
+            currentSpacing += amount;
+            if(currentSpacing < 0.1) currentSpacing = 0.1; 
+            if(currentSpacing > 3.0) currentSpacing = 3.0;
+            rootElement.style.setProperty('--para-spacing', currentSpacing.toFixed(1) + 'em');
+        }
+    </script>
+</body>
+</html>

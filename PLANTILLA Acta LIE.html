@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA LIE EDITABLE</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* ESTILOS BÁSICOS */
+        * { box-sizing: border-box; }
+        body { background-color: #374151; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        
+        /* HOJA A4 */
+        .page-a4 {
+            width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 10mm;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        /* REJILLA Y CELDAS */
+        .form-container { border: 2px solid black; width: 100%; display: flex; flex-direction: column; }
+        
+        .acta-row { 
+            display: flex; width: 100%; border-bottom: 1px solid black; 
+        }
+        .acta-row:last-child { border-bottom: none; }
+
+        .field-container { 
+            position: relative; display: flex; flex-direction: column; padding: 2px 5px; min-width: 0; border-right: 1px solid black; overflow: hidden;
+        }
+        .field-container.is-last { border-right: none; flex-grow: 1 !important; width: auto !important; }
+
+        /* TEXTOS */
+        .label { font-size: 10px; font-weight: bold; margin-bottom: 1px; white-space: nowrap; overflow: hidden; color: #000; }
+        
+        /* La clase input-data define el estilo base, pero el tamaño se controla inline por JS */
+        .input-data { width: 100%; font-family: 'Courier New', monospace; font-weight: bold; outline: none; background: transparent; border: none; padding: 0; color: #000; }
+        
+        .section-bar { background-color: #d1d5db; border-top: 1px solid black; border-bottom: 1px solid black; font-weight: bold; text-align: center; font-size: 11px; padding: 3px; text-transform: uppercase; width: 100%; margin-top: -1px; z-index: 2; position: relative; }
+        .legal-text { font-size: 9px; text-align: justify; line-height: 1.15; color: #000; margin-top: 10px; }
+        .legal-text p { margin-bottom: 6px; }
+
+        /* MODO EDICIÓN */
+        .editing .field-container { 
+            background: rgba(59, 130, 246, 0.05); 
+            box-shadow: inset 0 0 0 1px #3b82f6; 
+            cursor: default;
+        }
+        .editing { user-select: none; } 
+        .editing .input-data { pointer-events: none; opacity: 0.5; }
+        
+        .resizer { 
+            position: absolute; right: -5px; top: 0; bottom: 0; width: 10px; 
+            cursor: col-resize; z-index: 50; display: flex; justify-content: center; align-items: center;
+        }
+        .resizer::after { content: ''; width: 1px; height: 100%; background: #3b82f6; display: none; }
+        .editing .resizer:hover::after { display: block; }
+
+        .edit-controls { 
+            position: absolute; top: 0; right: 0; display: none; 
+            background: white; border: 1px solid #ccc; z-index: 60; 
+        }
+        .editing .field-container:hover .edit-controls { display: flex; }
+
+        /* IMPRESIÓN */
+        @media print {
+            @page { size: A4 portrait; margin: 0; }
+            body * { visibility: hidden; }
+            body { margin: 0; padding: 0; overflow: hidden !important; background: white; height: 100%; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { position: absolute; left: 0; top: 0; width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .form-container { border: 2px solid black !important; }
+            .acta-row { border-bottom: 1px solid black !important; }
+            .field-container { border-right: 1px solid black !important; }
+            .field-container.is-last { border-right: none !important; }
+            .section-bar { background-color: #d1d5db !important; border-top: 1px solid black !important; border-bottom: 1px solid black !important; }
+            .no-print, .edit-controls, .resizer { display: none !important; }
+            .editing .field-container { background: transparent !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- TEXTOS FIJOS ---
+        const LEGAL_TEXTS = [
+            "Se le INFORMA que la circulación o utilización por territorio español de un vehículo de matrícula extranjera por parte de un residente en dicho territorio determina la obligación de matricular el medio de transporte en España, todo ello con independencia de si el conductor es o no titular del vehículo y resultando indiferente el número de días que el vehículo ha circulado por territorio español.",
+            "Habiéndose constatado un posible incumplimiento de la Ley 38/1992, de 28 de diciembre, de Impuestos Especiales, que regula el Impuesto Especial sobre Determinados Medios de Transporte (IEDMT), en caso de que Vd. sea residente en España se le concede un plazo de CINCO DÍAS hábiles para autoliquidar y pagar el IEDMT (modelo 576), presentar la solicitud de exención o no sujeción a dicho Impuesto (modelos 05 y 06), o bien presentar aval solidario de entidad de crédito o sociedad de garantía recíproca o certificado de seguro de caución que garantice el pago del IEDMT.",
+            "Puede realizar todas la gestiones relativas a los modelos 576, 05 y 06, así como encontrar información adicional, en la Sede Electrónica de la AEAT (https://sede.agenciatributaria.gob.es) en la siguiente ruta: Vehículos y embarcaciones / Primera matriculación de medios de transporte / Gestiones destacadas",
+            "En caso de precisarlo, en dicha Sede Electrónica podrá solicitar cita, telefónica (\"Le Llamamos\") o presencial en oficinas de la AEAT, para que un funcionario de la Agencia Tributaria le informe y asista en la presentación de los modelos indicados. Para que la asistencia telefónica sea personalizada deberá contar con un medio de autenticación digital con el que acreditar su identidad (cl@ve o certificado electrónico), en otro caso podrá solicitar cita presencial en oficinas.",
+            "Si el vehículo se encuentra matriculado fuera de la Unión Europea, en el enlace anterior encontrará toda la información y trámites necesarios para regularizar su situación aduanera.",
+            "Una vez presentada y pagada la autoliquidación podrá poner este hecho en conocimiento de la Agencia Tributaria mediante la remisión de un escrito a través de la misma ruta mencionada de la Sede Electrónica de la AEAT, en el modelo 576 o modelo 06, según corresponda, dentro del apartado \"Aportación de documentación complementaria\".",
+            "Se le ADVIERTE que, transcurrido ese plazo sin acreditar la regularización de la situación administrativa y tributaria del vehículo, se podrá acordar la inmovilización del medio de transporte, sin perjuicio de las posibles sanciones en que pudiera incurrir por el incumplimiento de la normativa tributaria.",
+            "Y para que así conste se firma la presente"
+        ];
+        const FOOTER_NOTE = "*La residencia debe quedar suficientemente acreditada. En caso de regentar establecimiento añadir datos del mismo en oficio adjunto. Adjuntar fotografía o fotocopia de la ficha técnica del vehículo y toda aquella documentación que sea justificante de la residencia del usuario del vehículo.";
+
+        // --- ESTRUCTURA INICIAL ---
+        // AÑADIDO: Propiedad isDate: true en los campos de fecha
+        const initialTemplate = [
+            { 
+                type: 'row', 
+                id: 'r1', 
+                fields: [
+                    {id:'fecha', label:'Fecha:', width:15, isDate: true}, 
+                    {id:'hora', label:'Hora:', width:10}, 
+                    {id:'agente1', label:'Agente 1:', width:25}, 
+                    {id:'agente2', label:'Agente 2:', width:25},
+                    {id:'expediente', label:'Expediente eurocop :', width:25}
+                ] 
+            },
+            { type: 'row', id: 'r2', fields: [{id:'lugar', label:'Lugar:', width:100}] },
+            { type: 'section', title: 'CONDUCTOR' },
+            { type: 'row', id: 'r3', fields: [{id:'c_nom', label:'Nombre', width:30}, {id:'c_ape', label:'Apellidos', width:45}, {id:'c_doc', label:'Documento', width:25}] },
+            { type: 'row', id: 'r4', fields: [{id:'c_nac', label:'Nacionalidad', width:33}, {id:'c_fna', label:'Fecha nacimiento', width:33, isDate: true}, {id:'c_tel', label:'Teléfono', width:34}] },
+            { type: 'row', id: 'r5', fields: [{id:'c_dom', label:'Domicilio', width:50}, {id:'c_mun', label:'Municipio', width:25}, {id:'c_res', label:'Residente desde*', width:25}] },
+            { type: 'section', title: 'TITULAR' },
+            { type: 'row', id: 'r6', fields: [{id:'t_nom', label:'Nombre', width:30}, {id:'t_ape', label:'Apellidos', width:45}, {id:'t_doc', label:'Documento', width:25}] },
+            { type: 'row', id: 'r7', fields: [{id:'t_nac', label:'Nacionalidad', width:33}, {id:'t_fna', label:'Fecha nacimiento', width:33, isDate: true}, {id:'t_tel', label:'Teléfono', width:34}] },
+            { type: 'row', id: 'r8', fields: [{id:'t_dom', label:'Domicilio', width:50}, {id:'t_mun', label:'Municipio', width:25}, {id:'t_res', label:'Residente desde*', width:25}] },
+            { type: 'section', title: 'VEHÍCULO' },
+            { type: 'row', id: 'r9', fields: [{id:'v_mod', label:'Marca y Modelo', width:40}, {id:'v_mat', label:'Matrícula', width:30}, {id:'v_vin', label:'Vin', width:30}] },
+            { type: 'row', id: 'r10', fields: [{id:'v_cla', label:'Clase', width:25}, {id:'v_pai', label:'País', width:25}, {id:'v_1ma', label:'1ª Matriculación', width:25, isDate: true}, {id:'v_col', label:'Color', width:25}] }
+        ];
+
+        // --- COMPONENTE INPUT AUTO-AJUSTABLE ---
+        const AutoResizingInput = ({ value, onChange, disabled, widthDependency, isDate }) => {
+            const inputRef = React.useRef(null);
+            const [fontSize, setFontSize] = React.useState(13);
+
+            // Función para medir texto
+            const getTextWidth = (text, font) => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                context.font = font;
+                return context.measureText(text).width;
+            };
+
+            // Lógica de formateo de fecha
+            const handleChange = (e) => {
+                let newVal = e.target.value;
+
+                if (isDate) {
+                    // Si es fecha, eliminamos todo lo que no sea número
+                    // (Esto también convierte guiones o espacios en nada temporalmente para reformatear)
+                    const digits = newVal.replace(/\D/g, '').slice(0, 8); // Máximo 8 dígitos
+
+                    if (digits.length >= 5) {
+                        newVal = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+                    } else if (digits.length >= 3) {
+                        newVal = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+                    } else {
+                        newVal = digits;
+                    }
+                }
+
+                onChange({ target: { value: newVal } });
+            };
+
+            React.useLayoutEffect(() => {
+                const input = inputRef.current;
+                if (!input || !value) {
+                    setFontSize(13); 
+                    return;
+                }
+
+                const availableWidth = input.clientWidth;
+                const textWidthAt13 = getTextWidth(value, "bold 13px 'Courier New', monospace");
+
+                if (textWidthAt13 <= availableWidth) {
+                    setFontSize(13);
+                } else {
+                    const ratio = availableWidth / textWidthAt13;
+                    const newSize = Math.floor(13 * ratio);
+                    setFontSize(Math.max(8, newSize));
+                }
+            }, [value, widthDependency]);
+
+            return (
+                <input
+                    ref={inputRef}
+                    className="input-data"
+                    value={value || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    autoComplete="off"
+                    style={{ fontSize: `${fontSize}px` }}
+                />
+            );
+        };
+
+        const App = () => {
+            const [template, setTemplate] = React.useState(initialTemplate);
+            const [formData, setFormData] = React.useState({});
+            const [actas, setActas] = React.useState({});
+            const [isEditMode, setIsEditMode] = React.useState(false);
+            const [logos, setLogos] = React.useState({ left: 'AYUNTAMIENTO.png', right: 'POLICIA.png' });
+            
+            // Estado para arrastrar columnas
+            const [dragState, setDragState] = React.useState(null);
+
+            React.useEffect(() => {
+                const stored = JSON.parse(localStorage.getItem('mis_actas_manual') || "{}");
+                setActas(stored);
+                const l = JSON.parse(localStorage.getItem('mis_logos_manual'));
+                if(l) setLogos(l);
+                autoFillData();
+            }, []);
+
+            const autoFillData = () => {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const formattedDate = `${day}/${month}/${year}`;
+
+                setFormData(prev => {
+                    if (Object.keys(prev).length === 0) {
+                        return {
+                            ...prev,
+                            fecha: formattedDate, 
+                            hora: now.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}),
+                            agente1: (now.getHours() < 14) ? "G-118" : "G-279",
+                            agente2: (now.getHours() < 14) ? "G-448" : "G-496",
+                            lugar: "Calle JULIÁN BESTEIRO 15"
+                        };
+                    }
+                    return prev;
+                });
+            };
+
+            // LÓGICA DE REDIMENSIONAMIENTO
+            React.useEffect(() => {
+                const handleMouseMove = (e) => {
+                    if (!dragState) return;
+                    e.preventDefault(); 
+                    const row = document.getElementById(`row-${dragState.rIdx}`);
+                    if (!row) return;
+                    const deltaPixels = e.clientX - dragState.startX;
+                    const deltaPercent = (deltaPixels / row.offsetWidth) * 100;
+                    const newWidth = Math.max(5, dragState.startW + deltaPercent);
+                    setTemplate(prev => {
+                        const newT = [...prev];
+                        newT[dragState.rIdx].fields[dragState.fIdx].width = newWidth;
+                        return newT;
+                    });
+                };
+                const handleMouseUp = () => setDragState(null);
+
+                if (dragState) {
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                }
+                return () => {
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                };
+            }, [dragState]);
+
+            const startResize = (e, rIdx, fIdx, w) => {
+                e.preventDefault(); e.stopPropagation();
+                setDragState({rIdx, fIdx, startX: e.clientX, startW: w});
+            };
+
+            const duplicateField = (r, f) => { const t=[...template]; const o=t[r].fields[f]; t[r].fields.splice(f+1,0,{...o, id:Date.now(), label:o.label+' (C)', width:15, isDate: o.isDate}); o.width-=15; setTemplate(t); };
+            const deleteField = (r, f) => { const t=[...template]; const w=t[r].fields[f].width; t[r].fields.splice(f,1); if(t[r].fields[0]) t[r].fields[0].width+=w; setTemplate(t); };
+            
+            const saveActa = () => { 
+                const defaultName = formData['expediente'] || formData['v_mat'] || "Acta "+Date.now();
+                const id=prompt("Nombre para guardar:", defaultName); 
+                if(!id) return; 
+                const n={...actas, [id]:{id, nombre:id, fecha:new Date(), data:formData, template}}; 
+                setActas(n); 
+                localStorage.setItem('mis_actas_manual',JSON.stringify(n)); 
+            };
+
+            const loadActa = (id) => { const a=actas[id]; if(a){ setFormData(a.data); if(a.template) setTemplate(a.template); } };
+            const deleteActa = (e,id) => { e.stopPropagation(); const n={...actas}; delete n[id]; setActas(n); localStorage.setItem('mis_actas_manual',JSON.stringify(n)); };
+
+            return (
+                <div className="flex h-screen">
+                    {/* BARRA LATERAL */}
+                    <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
+                        <h2 className="text-lg font-bold text-blue-400">📂 Archivo</h2>
+                        <button onClick={()=>{setFormData({});setTemplate(initialTemplate);autoFillData()}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ACTA</button>
+                        <div className="flex-1 space-y-1 overflow-y-auto">
+                            {Object.keys(actas).length === 0 && <p className="text-gray-500 text-xs text-center italic">Sin actas guardadas</p>}
+                            {Object.values(actas).map(a=>(
+                                <div key={a.id} onClick={()=>loadActa(a.id)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded flex justify-between cursor-pointer text-xs border border-gray-700 items-center">
+                                    <span className="truncate flex-1">{a.nombre}</span>
+                                    <span onClick={(e)=>deleteActa(e,a.id)} className="text-red-400 font-bold px-2 hover:bg-red-900/50 rounded ml-2">x</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* ZONA PRINCIPAL */}
+                    <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
+                        <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
+                            <div className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                                <span>ACTA LIE EDITABLE</span>
+                                {isEditMode && <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded border border-yellow-300">DISEÑO</span>}
+                            </div>
+                            
+                            <div className="flex gap-2 items-center">
+                                <button onClick={()=>setIsEditMode(!isEditMode)} className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${isEditMode ? 'bg-yellow-500 text-black shadow-inner' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}>
+                                    {isEditMode ? '🔒 Terminar' : '🛠️ Editar'}
+                                </button>
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                                <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 shadow-sm font-medium">Guardar</button>
+                                <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1.5 rounded text-sm hover:bg-gray-900 shadow-sm font-medium">🖨️ Imprimir</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-gray-500">
+                            <div className={`page-a4 ${isEditMode?'editing':''}`}>
+                                {/* CABECERA LOGOS */}
+                                <div className="flex justify-between items-center mb-2 h-24 shrink-0 select-none">
+                                    <div className="w-24 h-24 flex items-center justify-center relative cursor-pointer hover:bg-gray-50 transition-colors group">
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">LOGO 1</span> : <img src={logos.left} className="w-full h-full object-contain"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=(ev)=>{setLogos(p=>({...p,left:ev.target.result}));localStorage.setItem('mis_logos_manual',JSON.stringify({...logos,left:ev.target.result}));};r.readAsDataURL(f)}}}/>
+                                    </div>
+                                    <div className="text-center font-bold text-sm flex-1 mx-4" contentEditable={isEditMode} suppressContentEditableWarning>
+                                        EXCMO. AYUNTAMIENTO DE ALICANTE<br/>POLICÍA LOCAL ALICANTE
+                                    </div>
+                                    <div className="w-24 h-24 flex items-center justify-center relative cursor-pointer hover:bg-gray-50 transition-colors group">
+                                        {!logos.right ? <span className="text-[9px] text-gray-400">LOGO 2</span> : <img src={logos.right} className="w-full h-full object-contain"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=(ev)=>{setLogos(p=>({...p,right:ev.target.result}));localStorage.setItem('mis_logos_manual',JSON.stringify({...logos,right:ev.target.result}));};r.readAsDataURL(f)}}}/>
+                                    </div>
+                                </div>
+
+                                <div className="text-center font-bold underline mb-4 text-sm uppercase" contentEditable={isEditMode} suppressContentEditableWarning>
+                                    ACTA POR INFRACCIÓN A LA LEY 38/92 DE IMPUESTOS ESPECIALES
+                                </div>
+
+                                <div className="form-container">
+                                    {template.map((item, rIdx) => {
+                                        if(item.type === 'section') {
+                                            return <div key={rIdx} className="section-bar" contentEditable={isEditMode} suppressContentEditableWarning>{item.title}</div>;
+                                        }
+                                        if(item.type === 'row') {
+                                            return (
+                                                <div key={item.id} id={`row-${rIdx}`} className="acta-row">
+                                                    {item.fields.map((f, fIdx) => {
+                                                        const isLast = fIdx === item.fields.length - 1;
+                                                        return (
+                                                            <div key={f.id} className={`field-container ${isLast ? 'is-last' : ''}`} style={{ width: isLast ? 'auto' : `${f.width}%` }}>
+                                                                <div className="label" contentEditable={isEditMode} suppressContentEditableWarning>{f.label}</div>
+                                                                
+                                                                {/* USO DE COMPONENTE AUTO-AJUSTABLE */}
+                                                                <AutoResizingInput 
+                                                                    value={formData[f.id]} 
+                                                                    onChange={(e)=>setFormData({...formData, [f.id]:e.target.value})} 
+                                                                    disabled={isEditMode}
+                                                                    widthDependency={f.width} 
+                                                                    isDate={f.isDate}
+                                                                />
+
+                                                                {isEditMode && (
+                                                                    <>
+                                                                        <div className="edit-controls">
+                                                                            <button onClick={()=>duplicateField(rIdx,fIdx)} className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 hover:bg-blue-200 border-r border-blue-200">+</button>
+                                                                            <button onClick={()=>deleteField(rIdx,fIdx)} className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 hover:bg-red-200">x</button>
+                                                                        </div>
+                                                                        {!isLast && <div className="resizer" onMouseDown={(e)=>startResize(e, rIdx, fIdx, f.width)}></div>}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+
+                                <div className="legal-text">
+                                    {LEGAL_TEXTS.map((t,i)=><p key={i} contentEditable={isEditMode} suppressContentEditableWarning>{t}</p>)}
+                                </div>
+
+                                <div className="mt-4 flex justify-between text-xs font-bold pt-2 select-none">
+                                    <div className="w-1/3 text-center"><div className="mb-6" contentEditable={isEditMode} suppressContentEditableWarning>Fdo.- El conductor</div></div>
+                                    <div className="w-1/3 text-center"><div className="mb-6">Fdo. El Agente {formData.agente1}</div></div>
+                                    <div className="w-1/3 text-center"><div className="mb-6">Fdo. El Agente {formData.agente2}</div></div>
+                                </div>
+                                <div className="text-[8px] text-gray-600 text-justify border-t border-gray-400 pt-1 mt-auto" contentEditable={isEditMode} suppressContentEditableWarning>{FOOTER_NOTE}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

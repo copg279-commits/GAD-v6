@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA DE CITACIÓN</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* ESTILOS BÁSICOS */
+        * { box-sizing: border-box; }
+        body { background-color: #374151; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        
+        /* HOJA A4 */
+        .page-a4 {
+            width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 10mm;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        /* REJILLA Y CELDAS */
+        .form-container { border: 2px solid black; width: 100%; display: flex; flex-direction: column; }
+        
+        .acta-row { 
+            display: flex; width: 100%; border-bottom: 1px solid black; 
+        }
+        .acta-row:last-child { border-bottom: none; }
+
+        .field-container { 
+            position: relative; display: flex; flex-direction: column; padding: 3px 6px; min-width: 0; border-right: 1px solid black; overflow: hidden; justify-content: center;
+        }
+        .field-container.is-last { border-right: none; flex-grow: 1 !important; width: auto !important; }
+
+        /* TEXTOS - ESTILOS COPIADOS DE LA PLANTILLA EXTRANJERÍA (Ajuste de .label y .input-data) */
+        
+        /* Datos Fijos (Labels) */
+        .label { 
+            font-size: 12px; 
+            font-weight: 800; 
+            margin-bottom: 2px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            color: #000; 
+        }
+        
+        /* Datos Variables (.input-data) - APLICANDO ESTILO EXTRANJERÍA */
+        .input-data { 
+            width: 100%; 
+            font-family: 'Courier New' !important; /* COPIADO: Courier New */
+            font-weight: bold; /* COPIADO: Bold (Negrita) */
+            font-size: 15px; 
+            outline: none; 
+            background: transparent; 
+            border: none; 
+            padding: 0; 
+            color: #000; /* Color por defecto */
+        }
+        
+        /* Modificación para el color condicional: SOLO visible en pantalla (NO print) */
+        .input-data.default-red { color: red !important; }
+        .input-data.modified-black { color: #000 !important; }
+
+        
+        .section-bar { background-color: #e5e7eb; border-top: 1px solid black; border-bottom: 1px solid black; font-weight: bold; text-align: left; font-size: 12px; padding: 6px 8px; width: 100%; margin-top: -1px; z-index: 2; position: relative; font-style: italic; }
+        
+        /* TEXTOS LEGALES */
+        .legal-text { font-size: 12px; text-align: justify; line-height: 1.3; color: #000; margin-top: 15px; }
+        .legal-text p { margin-bottom: 8px; }
+        
+        /* CHECKBOX CUSTOM - MEJORAS DE ALINEACIÓN */
+        .custom-checkbox {
+            width: 20px; 
+            height: 20px; 
+            border: 1.5px solid black; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            font-family: sans-serif; 
+            font-weight: bold; 
+            font-size: 16px; 
+            line-height: 1;
+            flex-shrink: 0; /* Asegura que la caja no se encoja */
+            margin-right: 8px; /* Espacio entre caja y texto */
+        }
+        .custom-checkbox:hover { background-color: #f3f4f6; }
+        
+        /* Contenedor de cada opción: AHORA ALINEANDO AL CENTRO verticalmente */
+        .checkbox-option {
+            display: flex;
+            align-items: flex-start; /* Cambio de 'center' a 'flex-start' para texto que envuelve */
+            gap: 8px;
+            line-height: 1.3; 
+        }
+
+
+        /* QR POSICIONADO - AJUSTE DE MARGEN SUPERIOR Y DERECHO */
+        .qr-section { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; /* ALINEAR ARRIBA para que el QR esté al nivel de las primeras casillas */
+            margin-top: 10px; /* Separación de la tabla de arriba */
+            padding-bottom: 10px; 
+        }
+        /* Ajuste de margen derecho para desplazar el QR y bajarlo ligeramente */
+        .qr-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            width: 120px;
+            margin-right: 5px; /* Desplazar a la derecha */
+            margin-top: 10px; /* Baja el QR para que no quede tan pegado arriba */
+        }
+        .qr-img { width: 100px; height: 100px; object-fit: contain; }
+
+
+        /* MODO EDICIÓN */
+        .editing .field-container { background: rgba(59, 130, 246, 0.05); box-shadow: inset 0 0 0 1px #3b82f6; cursor: default; }
+        .editing { user-select: none; } 
+        .editing .input-data { pointer-events: none; opacity: 0.5; }
+        
+        .resizer { position: absolute; right: -5px; top: 0; bottom: 0; width: 10px; cursor: col-resize; z-index: 50; display: flex; justify-content: center; align-items: center; }
+        .resizer::after { content: ''; width: 1px; height: 100%; background: #3b82f6; display: none; }
+        .editing .resizer:hover::after { display: block; }
+
+        .edit-controls { position: absolute; top: 0; right: 0; display: none; background: white; border: 1px solid #ccc; z-index: 60; }
+        .editing .field-container:hover .edit-controls { display: flex; }
+
+        /* HEADER */
+        .header-text { font-size: 11px; line-height: 1.3; text-align: center; color: #000; }
+        .header-title { font-weight: bold; font-size: 13px; margin-bottom: 2px; }
+
+        /* IMPRESIÓN */
+        @media print {
+            @page { size: A4 portrait; margin: 0; }
+            body * { visibility: hidden; }
+            body { margin: 0; padding: 0; overflow: hidden !important; background: white; height: 100%; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { position: absolute; left: 0; top: 0; width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .form-container { border: 2px solid black !important; }
+            .acta-row { border-bottom: 1px solid black !important; }
+            .field-container { border-right: 1px solid black !important; }
+            .section-bar { background-color: #e5e7eb !important; border-top: 1px solid black !important; border-bottom: 1px solid black !important; }
+            .custom-checkbox { border: 1.5px solid black !important; -webkit-print-color-adjust: exact; }
+            .no-print, .edit-controls, .resizer { display: none !important; }
+            .editing .field-container { background: transparent !important; box-shadow: none !important; }
+            
+            /* SOLUCIÓN AL PROBLEMA: Forzar el color NEGRO en la impresión */
+            .input-data { 
+                color: #000 !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- CONSTANTES ---
+        const SHIFT_MORNING = { a1: "G-118", a2: "G-448" };
+        const SHIFT_AFTERNOON = { a1: "G-279", a2: "G-496" };
+        const DEFAULT_CITA_HORA_VALUE = "10:00"; // Valor de la hora por defecto
+
+        const initialTemplate = [
+            { type: 'row', id: 'r1', fields: [{id:'agente1', label:'Agente 1:', width:50}, {id:'agente2', label:'Agente 2:', width:50}] },
+            { type: 'row', id: 'r2', fields: [{id:'lugar', label:'Cita emitida por:', width:100}] }, 
+            { type: 'row', id: 'r3', fields: [{id:'fecha', label:'Fecha:', width:25}, {id:'hora', label:'Hora:', width:25}, {id:'vehiculo', label:'Información adicional:', width:50}] },
+            { type: 'section', title: 'Por medio de la presente y a requerimiento del Grupo de Análisis Documental G.A.D de la Policía Local de Alicante, se notifica a:' },
+            { type: 'row', id: 'r4', fields: [{id:'p_nom', label:'Nombre y Apellidos', width:60}, {id:'p_doc', label:'PSP / NIE / CI / PC nº', width:40}] },
+            
+            // FILA MODIFICADA CON PADRE/MADRE
+            { type: 'row', id: 'r5', fields: [
+                {id:'p_nac_lugar', label:'Nacido/a en', width:35}, 
+                {id:'p_nac_fecha', label:'el', width:20}, 
+                {id:'p_padre', label:'Nombre Padre', width:22.5}, 
+                {id:'p_madre', label:'Nombre Madre', width:22.5}  
+            ] },
+            
+            { type: 'row', id: 'r6', fields: [{id:'p_dom', label:'Domiciliado/a en la Calle', width:60}, {id:'p_mun', label:'en (Municipio/Provincia)', width:40}] },
+            { type: 'row', id: 'r7', fields: [{id:'p_tel', label:'Teléfono de contacto', width:35}, {id:'p_email', label:'Correo electrónico', width:65}] },
+            { type: 'section', title: 'Que debe personarse en las dependencias de Comisaría de Policía Nacional en la calle Isabel la Católica 25 de Alicante (Unidad T.I.V):' },
+            { type: 'row', id: 'r8', fields: [{id:'cita_fecha', label:'El próximo día', width:50}, {id:'cita_hora', label:'a las', width:50}] }
+        ];
+
+        // --- INPUT AUTO-AJUSTABLE ---
+        // Se añade `isDefaultHora` para la nueva lógica de color
+        const AutoResizingInput = ({ id, value, onChange, disabled, widthDependency, isDefaultDate, isDefaultHora }) => {
+            const inputRef = React.useRef(null);
+            const [fontSize, setFontSize] = React.useState(15); 
+
+            const getTextWidth = (text, font) => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                context.font = font;
+                return context.measureText(text).width;
+            };
+
+            React.useLayoutEffect(() => {
+                const input = inputRef.current;
+                if (!input || !value) { setFontSize(15); return; }
+                const availableWidth = input.clientWidth;
+                const textWidthAtBase = getTextWidth(value, "bold 15px 'Courier New', monospace");
+                if (textWidthAtBase <= availableWidth) {
+                    setFontSize(15);
+                } else {
+                    const ratio = availableWidth / textWidthAtBase;
+                    const newSize = Math.floor(15 * ratio);
+                    setFontSize(Math.max(10, newSize)); 
+                }
+            }, [value, widthDependency]);
+
+            // Lógica del color:
+            // Si es la fecha de cita O la hora de cita, y su valor es el predeterminado, se pone rojo.
+            let isRed = false;
+            if (id === 'cita_fecha') {
+                isRed = isDefaultDate;
+            } else if (id === 'cita_hora') {
+                isRed = isDefaultHora;
+            }
+            
+            const colorClass = isRed ? 'default-red' : 'modified-black';
+
+            return (
+                <input 
+                    ref={inputRef} 
+                    className={`input-data ${colorClass}`} 
+                    value={value || ''} 
+                    onChange={onChange} 
+                    disabled={disabled} 
+                    autoComplete="off" 
+                    style={{ fontSize: `${fontSize}px` }} 
+                />
+            );
+        };
+
+        const App = () => {
+            const dateFields = ['fecha', 'p_nac_fecha', 'cita_fecha'];
+            const timeFields = ['hora', 'cita_hora'];
+            
+            const [template, setTemplate] = React.useState(initialTemplate);
+            const [formData, setFormData] = React.useState({});
+            const [actas, setActas] = React.useState({});
+            const [isEditMode, setIsEditMode] = React.useState(false);
+            const [defaultCitaFecha, setDefaultCitaFecha] = React.useState(''); 
+            // Estado para hora por defecto
+            const [defaultCitaHora, setDefaultCitaHora] = React.useState(DEFAULT_CITA_HORA_VALUE); 
+
+            // Nuevos estados para las casillas de infracción
+            const [checkIrregular, setCheckIrregular] = React.useState(false);
+            const [checkEntrada, setCheckEntrada] = React.useState(false);
+            const [checkOtros, setCheckOtros] = React.useState(false);
+
+
+            const [logos, setLogos] = React.useState({ 
+                left: 'judicial.png', 
+                right: 'logogad.png', 
+                qr: 'ubicacionTIV.png' 
+            });
+            const [dragState, setDragState] = React.useState(null);
+
+            React.useEffect(() => {
+                const stored = JSON.parse(localStorage.getItem('mis_actas_tiv_v4') || "{}");
+                setActas(stored);
+                const l = JSON.parse(localStorage.getItem('mis_logos_tiv_v4'));
+                if(l) setLogos(l);
+                autoFillData();
+            }, []);
+            
+            // Función para calcular el día hábil siguiente
+            const getNextBusinessDay = (date) => {
+                let nextDate = new Date(date);
+                nextDate.setDate(date.getDate() + 1);
+
+                while (nextDate.getDay() === 0 || nextDate.getDay() === 6) { // 0 = Domingo, 6 = Sábado
+                    nextDate.setDate(nextDate.getDate() + 1);
+                }
+                const day = String(nextDate.getDate()).padStart(2, '0');
+                const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+                const year = nextDate.getFullYear();
+                
+                return `${day}/${month}/${year}`;
+            };
+
+
+            const autoFillData = () => {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                
+                // Formato HH:MM
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+
+                let agente1 = "", agente2 = "";
+
+                if (currentHour >= 6 && currentHour < 14) {
+                    agente1 = SHIFT_MORNING.a1; agente2 = SHIFT_MORNING.a2;
+                } else if (currentHour >= 14 && currentHour < 22) {
+                    agente1 = SHIFT_AFTERNOON.a1; agente2 = SHIFT_AFTERNOON.a2;
+                } else {
+                    agente1 = "G-"; agente2 = "G-";
+                }
+                
+                // Calculamos la fecha de la cita por defecto (día hábil siguiente)
+                const defaultCita = getNextBusinessDay(now);
+                setDefaultCitaFecha(defaultCita); // Almacenar el valor por defecto
+
+                // No es necesario modificar defaultCitaHora, ya es "10:00"
+
+                setFormData(prev => {
+                    if (Object.keys(prev).length === 0) {
+                        return {
+                            ...prev,
+                            fecha: `${day}/${month}/${year}`, 
+                            hora: currentTime, // Usar HH:MM
+                            lugar: "Grupo de Análisis Documental (GAD) - Policía Local de Alicante - Unidad Judicial",
+                            agente1: agente1, agente2: agente2,
+                            cita_fecha: defaultCita, // Usar la fecha calculada
+                            cita_hora: DEFAULT_CITA_HORA_VALUE, // Usar la constante
+                            p_nac_fecha: "",
+                            p_padre: "", // Inicializar nuevo campo Padre
+                            p_madre: "", // Inicializar nuevo campo Madre
+                        };
+                    }
+                    return prev;
+                });
+            };
+
+            // FUNCIÓN DE MANEJO DE CAMBIOS CON FORMATEO
+            const handleFormChange = (id, value) => {
+                let newValue = value;
+
+                if (dateFields.includes(id)) {
+                    // Formateo para CAMPOS DE FECHA (DD/MM/AAAA)
+                    
+                    // 1. Limpiar la entrada: remover barras, guiones y espacios.
+                    const cleanValue = value.replace(/[^0-9]/g, ''); 
+
+                    // 2. Aplicar el formato si hay 8 dígitos.
+                    if (cleanValue.length >= 8) {
+                        newValue = `${cleanValue.substring(0, 2)}/${cleanValue.substring(2, 4)}/${cleanValue.substring(4, 8)}`;
+                    } 
+                    // Si se están escribiendo menos de 8 dígitos con caracteres no numéricos
+                    else if (cleanValue.length < 8) {
+                        // Mantener la entrada original, permitiendo que el usuario escriba '/' o '-'
+                        newValue = value.replace(/[^0-9/-]/g, ''); 
+                    }
+                    // Si hay más de 8 dígitos, solo permitir la entrada de 10 caracteres (DD/MM/AAAA)
+                    if (newValue.length > 10) {
+                        newValue = newValue.slice(0, 10);
+                    }
+                } else if (timeFields.includes(id)) {
+                    // Formateo para CAMPOS DE HORA (HH:MM o HH:MM:SS)
+
+                    // 1. Limpiar la entrada: remover dos puntos y no números.
+                    const cleanValue = value.replace(/[^0-9]/g, ''); 
+                    
+                    if (cleanValue.length === 4) {
+                        // Formato HH:MM
+                        newValue = `${cleanValue.substring(0, 2)}:${cleanValue.substring(2, 4)}`;
+                    } else if (cleanValue.length >= 6) {
+                        // Formato HH:MM:SS
+                        newValue = `${cleanValue.substring(0, 2)}:${cleanValue.substring(2, 4)}:${cleanValue.substring(4, 6)}`;
+                    }
+                    // Si se están escribiendo menos de 4 o 6 dígitos con caracteres no numéricos
+                    else if (cleanValue.length < 4) {
+                        // Mantener la entrada original, permitiendo que el usuario escriba ':'
+                        newValue = value.replace(/[^0-9:]/g, ''); 
+                    } 
+                    // Si hay más, limitar la entrada a 8 caracteres (HH:MM:SS)
+                    if (newValue.length > 8) {
+                        newValue = newValue.slice(0, 8);
+                    }
+                }
+                
+                setFormData(prev => ({ ...prev, [id]: newValue }));
+            };
+
+
+            // Función para alternar las nuevas casillas de infracción
+            const toggleInfractionCheckbox = (field) => {
+                if (field === 'check_irregular') setCheckIrregular(prev => !prev);
+                if (field === 'check_entrada') setCheckEntrada(prev => !prev);
+                if (field === 'check_otros') setCheckOtros(prev => !prev);
+            };
+
+            React.useEffect(() => {
+                const handleMouseMove = (e) => {
+                    if (!dragState) return;
+                    e.preventDefault(); 
+                    const row = document.getElementById(`row-${dragState.rIdx}`);
+                    if (!row) return;
+                    const deltaPixels = e.clientX - dragState.startX;
+                    const deltaPercent = (deltaPixels / row.offsetWidth) * 100;
+                    const newWidth = Math.max(5, dragState.startW + deltaPercent);
+                    setTemplate(prev => {
+                        const newT = [...prev]; newT[dragState.rIdx].fields[dragState.fIdx].width = newWidth; return newT;
+                    });
+                };
+                const handleMouseUp = () => setDragState(null);
+                if (dragState) { document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp); }
+                return () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
+            }, [dragState]);
+
+            const startResize = (e, rIdx, fIdx, w) => { e.preventDefault(); e.stopPropagation(); setDragState({rIdx, fIdx, startX: e.clientX, startW: w}); };
+            const duplicateField = (r, f) => { const t=[...template]; const o=t[r].fields[f]; t[r].fields.splice(f+1,0,{...o, id:Date.now(), label:o.label+' (C)', width:15}); o.width-=15; setTemplate(t); };
+            const deleteField = (r, f) => { const t=[...template]; const w=t[r].fields[f].width; t[r].fields.splice(f,1); if(t[r].fields[0]) t[r].fields[0].width+=w; setTemplate(t); };
+            
+            const saveActa = () => { 
+                const defaultName = formData['p_nom'] || "Acta "+Date.now();
+                const id=prompt("Nombre para guardar:", defaultName); 
+                if(!id) return; 
+                const n={...actas, [id]:{id, nombre:id, fecha:new Date(), data:formData, template, checkIrregular, checkEntrada, checkOtros}}; 
+                setActas(n); 
+                localStorage.setItem('mis_actas_tiv_v4',JSON.stringify(n)); 
+            };
+            const loadActa = (id) => { 
+                const a=actas[id]; 
+                if(a){ 
+                    setFormData(a.data); 
+                    if(a.template) setTemplate(a.template);
+                    // Cargar estados de casillas
+                    setCheckIrregular(a.checkIrregular || false);
+                    setCheckEntrada(a.checkEntrada || false);
+                    setCheckOtros(a.checkOtros || false);
+                } 
+            };
+            const deleteActa = (e,id) => { e.stopPropagation(); const n={...actas}; delete n[id]; setActas(n); localStorage.setItem('mis_actas_tiv_v4',JSON.stringify(n)); };
+
+            const handleLogoUpload = (e, key) => {
+                const f = e.target.files[0];
+                if(f){
+                    const r = new FileReader();
+                    r.onload = (ev) => {
+                        const newLogos = {...logos, [key]: ev.target.result};
+                        setLogos(newLogos);
+                        localStorage.setItem('mis_logos_tiv_v4', JSON.stringify(newLogos));
+                    };
+                    r.readAsDataURL(f);
+                }
+            };
+
+            return (
+                <div className="flex h-screen">
+                    {/* SIDEBAR */}
+                    <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
+                        <h2 className="text-lg font-bold text-blue-400">📂 Archivo TIV</h2>
+                        <button onClick={()=>{setFormData({});setTemplate(initialTemplate);autoFillData()}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ACTA</button>
+                        <div className="flex-1 space-y-1 overflow-y-auto">
+                            {Object.keys(actas).length === 0 && <p className="text-gray-500 text-xs text-center italic">Sin actas</p>}
+                            {Object.values(actas).map(a=>(
+                                <div key={a.id} onClick={()=>loadActa(a.id)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded flex justify-between cursor-pointer text-xs border border-gray-700 items-center">
+                                    <span className="truncate flex-1">{a.nombre}</span>
+                                    <span onClick={(e)=>deleteActa(e,a.id)} className="text-red-400 font-bold px-2 hover:bg-red-900/50 rounded ml-2">x</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* MAIN */}
+                    <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
+                        <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
+                            <div className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                                <span>ACTA DE CITACIÓN A EXTRANJERÍA</span>
+                                {isEditMode && <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded border border-yellow-300">DISEÑO</span>}
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <button onClick={()=>setIsEditMode(!isEditMode)} className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${isEditMode ? 'bg-yellow-500 text-black shadow-inner' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}>{isEditMode ? '🔒 Terminar' : '🛠️ Editar'}</button>
+                                <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 shadow-sm font-medium">Guardar</button>
+                                <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1.5 rounded text-sm hover:bg-gray-900 shadow-sm font-medium">🖨️ Imprimir</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-gray-500">
+                            <div className={`page-a4 ${isEditMode?'editing':''}`}>
+                                
+                                {/* CABECERA */}
+                                <div className="flex justify-between items-start mb-4 relative">
+                                    <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">judicial.png</span> : <img src={logos.left} className="w-full h-full object-contain" alt="judicial"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
+                                    </div>
+
+                                    <div className="flex-1 px-2 text-center" contentEditable={isEditMode} suppressContentEditableWarning>
+                                        <div className="header-title">EXCMO. AYUNTAMIENTO DE ALICANTE</div>
+                                        <div className="header-title">POLICÍA LOCAL</div>
+                                        <div className="header-text mt-3 font-bold">Grupo de Análisis Documental</div>
+                                        <div className="header-text font-bold">Unidad Judicial de Tráfico</div>
+                                        <div className="header-text mt-1">Av. Julián Besteiro 15</div>
+                                        <div className="header-text text-blue-800 underline">Email: policia.gad@alicante.es</div>
+                                        <div className="header-text">TEL: +34629111387 - Central PL 965107200</div>
+                                    </div>
+
+                                    <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
+                                        {!logos.right ? <span className="text-[9px] text-gray-400">logogad.png</span> : <img src={logos.right} className="w-full h-full object-contain" alt="logogad"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'right')}/>
+                                    </div>
+                                </div>
+
+                                {/* TÍTULO: SIN SUBRAYADO, MÁS GRANDE */}
+                                <div className="text-center font-bold mb-4 text-[16px] uppercase bg-gray-100 py-2 border border-black" contentEditable={isEditMode} suppressContentEditableWarning>
+                                    ACTA DE CITACIÓN EN BRIGADA EXTRANJERÍA - COMISARÍA PROVINCIAL DE ALICANTE
+                                </div>
+
+                                {/* FORMULARIO */}
+                                <div className="form-container">
+                                    {template.map((item, rIdx) => {
+                                        if(item.type === 'section') return <div key={rIdx} className="section-bar" contentEditable={isEditMode} suppressContentEditableWarning>{item.title}</div>;
+                                        if(item.type === 'row') {
+                                            return (
+                                                <div key={item.id} id={`row-${rIdx}`} className="acta-row">
+                                                    {item.fields.map((f, fIdx) => {
+                                                        const isLast = fIdx === item.fields.length - 1;
+                                                        
+                                                        // Lógica de color condicional
+                                                        let isDefaultValue = false;
+                                                        if (f.id === 'cita_fecha') {
+                                                            isDefaultValue = formData[f.id] === defaultCitaFecha;
+                                                        } else if (f.id === 'cita_hora') {
+                                                            isDefaultValue = formData[f.id] === defaultCitaHora;
+                                                        }
+
+                                                        return (
+                                                            <div key={f.id} className={`field-container ${isLast ? 'is-last' : ''}`} style={{ width: isLast ? 'auto' : `${f.width}%` }}>
+                                                                <div className="label" contentEditable={isEditMode} suppressContentEditableWarning>{f.label}</div>
+                                                                <AutoResizingInput 
+                                                                    id={f.id}
+                                                                    value={formData[f.id]} 
+                                                                    onChange={(e)=>handleFormChange(f.id, e.target.value)}
+                                                                    disabled={isEditMode} 
+                                                                    widthDependency={f.width} 
+                                                                    isDefaultDate={f.id === 'cita_fecha' && formData[f.id] === defaultCitaFecha}
+                                                                    isDefaultHora={f.id === 'cita_hora' && formData[f.id] === defaultCitaHora}
+                                                                />
+                                                                {isEditMode && (
+                                                                    <>
+                                                                        <div className="edit-controls">
+                                                                            <button onClick={()=>duplicateField(rIdx,fIdx)} className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 hover:bg-blue-200 border-r border-blue-200">+</button>
+                                                                            <button onClick={()=>deleteField(rIdx,fIdx)} className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 hover:bg-red-200">x</button>
+                                                                        </div>
+                                                                        {!isLast && <div className="resizer" onMouseDown={(e)=>startResize(e, rIdx, fIdx, f.width)}></div>}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+
+                                {/* SECCIÓN INFRACTION BOXES Y QR */}
+                                <div className="qr-section">
+                                    <div className="legal-text flex-1 pr-4">
+                                        {/* NUEVO TEXTO DE INFRACCIÓN */}
+                                        <p className="font-bold">El motivo de presunta infracción cometida por el/la arriba filiado/a consiste en:</p>
+                                        <div className="ml-4 space-y-3">
+                                            
+                                            {/* Casilla 1: Irregularidad territorial */}
+                                            <div className="checkbox-option" onClick={() => toggleInfractionCheckbox('check_irregular')}>
+                                                <div className="custom-checkbox">
+                                                    {checkIrregular ? 'X' : ''}
+                                                </div>
+                                                <span>Encontrarse irregularmente en territorio español (L.O. 4/2000, art.53,1a)</span>
+                                            </div>
+                                            
+                                            {/* Casilla 2: No declaración de entrada */}
+                                            <div className="checkbox-option" onClick={() => toggleInfractionCheckbox('check_entrada')}>
+                                                <div className="custom-checkbox">
+                                                    {checkEntrada ? 'X' : ''}
+                                                </div>
+                                                <span>Encontrarse irregularmente en territorio español por no realizar la declaración de entrada exigida en el art.13 del R.D. 557/2011.</span>
+                                            </div>
+
+                                            {/* Casilla 3: Otros */}
+                                            <div className="checkbox-option" onClick={() => toggleInfractionCheckbox('check_otros')}>
+                                                <div className="custom-checkbox">
+                                                    {checkOtros ? 'X' : ''}
+                                                </div>
+                                                <span>Otros</span>
+                                            </div>
+
+                                        </div>
+                                        <p className="font-bold mt-4">
+                                            Deberá acudir provisto de toda la documentación personal que posea y/o aquellos otros medios que estime oportunos para su identificación
+                                        </p>
+                                    </div>
+
+                                    {/* QR UBICACIÓN - AJUSTADO CON MARGEN SUPERIOR Y DERECHO */}
+                                    <div className="qr-container group relative cursor-pointer"> 
+                                        {!logos.qr ? (
+                                            <div className="w-24 h-24 border border-dashed border-gray-400 flex items-center justify-center text-[10px] text-gray-500 text-center p-1">ubicaciónTIV.png</div>
+                                        ) : (
+                                            <img src={logos.qr} className="qr-img" alt="QR Ubicación" />
+                                        )}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'qr')}/>
+                                        <div className="font-bold text-sm mt-1">UBICACIÓN</div>
+                                    </div>
+                                </div>
+
+                                {/* PIE DE PÁGINA: TEXTO ENCIMA, LINEA, ESPACIO FIRMA DEBAJO */}
+                                <div className="mt-auto mb-6 flex justify-between text-xs font-bold pt-4 select-none">
+                                    {/* Columna Implicado */}
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo.- Implicado</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-28"></div> {/* Espacio amplio para firmar debajo */}
+                                    </div>
+                                    
+                                    {/* Columna Agente 1 */}
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo. Agente {formData.agente1}</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-28"></div>
+                                    </div>
+
+                                    {/* Columna Agente 2 */}
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo. Agente {formData.agente2}</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-28"></div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

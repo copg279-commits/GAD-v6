@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFICIO JPT - V5 FINAL</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* --- ESTILOS BASE --- */
+        * { box-sizing: border-box; }
+        body { background-color: #374151; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        
+        /* HOJA A4 */
+        .page-a4 {
+            width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 10mm;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        /* REJILLA DINÁMICA */
+        .form-container { 
+            border: 2px solid black; 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            font-size: 11px; 
+            flex-shrink: 0; 
+        }
+        
+        .acta-row { 
+            display: flex; 
+            width: 100%; 
+            border-bottom: 1px solid black; 
+            position: relative;
+        }
+        .acta-row:last-child { border-bottom: none; }
+
+        .field-container { 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 2px 5px; 
+            min-width: 0; 
+            border-right: 1px solid black; 
+            justify-content: center;
+            overflow: hidden;
+        }
+        .field-container.is-last { border-right: none; flex-grow: 1 !important; width: auto !important; }
+
+        /* BARRA DE SECCIÓN (GRIS) */
+        .section-bar { 
+            background-color: #e5e7eb; 
+            border-bottom: 1px solid black; 
+            font-weight: 800; 
+            text-align: left; 
+            font-size: 11px; 
+            padding: 4px 8px; 
+            width: 100%; 
+            position: relative; 
+            font-style: italic; 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+        }
+
+        /* TEXTOS */
+        .label { 
+            font-size: 10px; 
+            font-weight: 800; 
+            margin-bottom: 1px; 
+            color: #000; 
+            white-space: pre-wrap;
+            outline: none;
+        }
+        
+        .input-data { 
+            width: 100%; 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold; 
+            font-size: 13px;
+            outline: none; 
+            background: transparent; 
+            border: none; 
+            padding: 0; 
+            color: #000; 
+        }
+        
+        /* TEXTOS LEGALES */
+        .legal-text { 
+            font-size: 13.5px; 
+            text-align: justify; 
+            line-height: 1.6; 
+            color: #000; 
+            margin-top: 10px; 
+            margin-bottom: 10px; 
+            outline: none; 
+        }
+        .legal-text p { margin-bottom: 10px; }
+        .legal-bold { font-weight: bold; }
+        
+        /* CLASE ESPECIAL PARA EMPUJAR EL PIE HACIA ABAJO */
+        .fill-space {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+        }
+
+        /* HEADER */
+        .header-text { font-size: 10px; line-height: 1.2; text-align: center; color: #000; outline: none; }
+        .header-title { font-weight: bold; font-size: 12px; margin-bottom: 2px; outline: none; }
+
+        /* MODO EDICIÓN */
+        .editing .field-container { background: rgba(59, 130, 246, 0.05); }
+        .editing .section-bar { background: #dbeafe; cursor: text; }
+        .editing .editable-block { border: 1px dashed blue; background-color: #eff6ff; cursor: text; }
+        
+        /* RESIZERS */
+        .resizer { 
+            position: absolute; 
+            right: -5px; 
+            top: 0; 
+            bottom: 0; 
+            width: 10px; 
+            cursor: col-resize; 
+            z-index: 50; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .resizer::after { content: ''; width: 2px; height: 100%; background: #3b82f6; display: none; }
+        .editing .resizer:hover::after { display: block; }
+
+        /* IMPRESIÓN */
+        @media print {
+            @page { size: A4 portrait; margin: 0; }
+            body * { visibility: hidden; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { position: absolute; left: 0; top: 0; width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print, .resizer { display: none !important; }
+            .input-data { color: #000 !important; }
+            .editing .editable-block { border: none; background: transparent; }
+            .section-bar { background-color: #e5e7eb !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // =================================================================================
+        // FUNCIONALIDAD DE AUTO-FORMATO DE FECHA (DD/MM/YYYY)
+        // Se aplica a cualquier campo con ID que comience por 'fecha_'
+        // =================================================================================
+        const formatToDate = (value) => {
+            // 1. Reemplaza guiones por barras para estandarizar
+            let cleaned = value.replace(/-/g, '/');
+
+            // 2. Extrae solo los dígitos
+            let numbers = cleaned.replace(/\D/g, '');
+
+            // Limita a 8 dígitos (DDMMYYYY)
+            numbers = numbers.substring(0, 8);
+
+            // 3. Inserta las barras automáticamente (DD/MM/YYYY)
+            if (numbers.length > 2 && numbers.length <= 4) {
+                return `${numbers.substring(0, 2)}/${numbers.substring(2)}`;
+            } else if (numbers.length > 4) {
+                return `${numbers.substring(0, 2)}/${numbers.substring(2, 4)}/${numbers.substring(4)}`;
+            }
+            
+            return numbers;
+        };
+
+        const EditableBlock = ({ html, tagName = "div", className, isEditMode, onChange }) => {
+            const ContentTag = tagName;
+            return (
+                <ContentTag
+                    className={`editable-block ${className || ''}`}
+                    contentEditable={isEditMode}
+                    suppressContentEditableWarning={true}
+                    dangerouslySetInnerHTML={{ __html: html }}
+                    onBlur={(e) => onChange && onChange(e.target.innerHTML)}
+                />
+            );
+        };
+
+        const EditableLabel = ({ text, onChange, isEditMode }) => {
+            return (
+                <div className="editable-block label" contentEditable={isEditMode} suppressContentEditableWarning={true} onBlur={(e) => onChange(e.target.innerText)}>
+                    {text}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const storageKey = 'oficio_jpt_gad_v5';
+            const logoKey = 'logos_jpt_gad_v5';
+
+            const initialTexts = {
+                header_info: `<div class="header-title">EXCMO. AYUNTAMIENTO DE ALICANTE</div>
+                              <div class="header-title">POLICÍA LOCAL</div>
+                              <div class="header-text mt-2 font-bold">Grupo de Análisis Documental</div>
+                              <div class="header-text font-bold">Unidad Judicial de Tráfico</div>
+                              <div class="header-text mt-1">Av. Julián Besteiro 15</div>
+                              <div class="header-text text-blue-800 underline">Email: policia.gad@alicante.es</div>
+                              <div class="header-text">TEL: +34629111387 - Central PL 965107200</div>`,
+                
+                title: "OFICIO INFORMANDO SOBRE NOTIFICACIÓN DE DENUNCIA PASADOS 20 DÍAS DE LA INFRACCIÓN",
+                
+                body1: `<p>Se comunica a esa Jefatura Provincial de Tráfico que, por parte de agentes adscritos al Grupo de Análisis Documental de la Policía Local de Alicante, se ha procedido en el día de la fecha a la <span class="legal-bold">notificación efectiva</span> del Boletín de Denuncia referenciado más arriba.</p>
+                        <p>Dicha infracción fue cometida con una anterioridad superior a 20 días naturales. No obstante, al tratarse de un infractor que <span class="legal-bold">no acredita residencia legal en territorio español</span> (Art. 87.5 LSV) y debiendo procederse al cobro de la sanción para permitir la marcha del vehículo, se ha instruido al interesado para que realice el pago a través del portal de la DGT.</p>
+                        <p>A fin de evitar indefensión y permitir que el interesado pueda beneficiarse de la bonificación del 50% por pronto pago a la que tiene derecho tras esta notificación personal, se le ha indicado que consigne en la pasarela de pago la <span class="legal-bold">FECHA DE HOY (fecha de notificación)</span> y no la fecha original de la infracción, dado que el sistema informático rechazaría el descuento por estar fuera de plazo.</p>`,
+
+                body2: `<p>Se extiende la presente diligencia para conocimiento de la Jefatura Provincial de Tráfico de Alicante, justificando así la discrepancia de fechas en el pago telemático y confirmando la actuación de los agentes conforme a lo establecido en la Ley de Seguridad Vial.</p>`,
+
+                sigAgente: "EL AGENTE NOTIFICADOR:",
+            };
+
+            const initialTemplate = [
+                { type: 'section', id: 's0', title: 'DATOS DEL BOLETÍN DE DENUNCIA' },
+                { type: 'row', id: 'r0', fields: [
+                    {id: 'fecha_oficio', label: 'Fecha:', width: 20}, 
+                    {id: 'jpt_n', label: 'BOLETÍN JPT N.º:', width: 40}, 
+                    {id: 'matricula', label: 'Matrícula:', width: 40}
+                ]},
+                { type: 'row', id: 'r1', fields: [{id: 'fecha_infraccion', label: 'Fecha de la denuncia:', width: 50}, {id: 'fecha_notificacion', label: 'Fecha de la notificación:', width: 50}] },
+                
+                { type: 'section', id: 's1', title: 'DATOS DEL INFRACTOR / NOTIFICADO' },
+                { type: 'row', id: 'r2', fields: [
+                    {id: 'doc_identidad', label: 'Documento de Identidad', width: 25}, 
+                    {id: 'nombre_apellidos', label: 'Nombre y Apellidos', width: 50}, 
+                    {id: 'fecha_nacimiento', label: 'Fecha Nacimiento', width: 25}
+                ] }
+            ];
+
+            const [template, setTemplate] = React.useState(initialTemplate);
+            const [texts, setTexts] = React.useState(initialTexts);
+            const [formData, setFormData] = React.useState({});
+            const [actas, setActas] = React.useState({});
+            const [isEditMode, setIsEditMode] = React.useState(false);
+            const [dragState, setDragState] = React.useState(null);
+            const [logos, setLogos] = React.useState({ left: 'judicial.png', right: 'logogad.png' });
+
+            React.useEffect(() => {
+                const stored = JSON.parse(localStorage.getItem(storageKey) || "{}");
+                setActas(stored);
+                const l = JSON.parse(localStorage.getItem(logoKey));
+                if(l) setLogos(l);
+                autoFillData();
+            }, []);
+
+            const autoFillData = () => {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hour = now.getHours();
+                let agente = (hour >= 6 && hour < 14) ? "G-118" : "G-279";
+                const todayStr = `${day}/${month}/${year}`;
+
+                setFormData(prev => {
+                    if (Object.keys(prev).length === 0) {
+                        return {
+                            fecha_oficio: todayStr,
+                            jpt_n: "",
+                            matricula: "",
+                            fecha_infraccion: "", 
+                            fecha_notificacion: todayStr,
+                            doc_identidad: "",
+                            nombre_apellidos: "",
+                            fecha_nacimiento: "",
+                            agente: agente,
+                        };
+                    }
+                    return prev;
+                });
+            };
+
+            // Lógica Edición y Redimensionado
+            React.useEffect(() => {
+                const handleMouseMove = (e) => {
+                    if (!dragState) return; e.preventDefault();
+                    const row = document.getElementById(`row-${dragState.rIdx}`);
+                    if (!row) return;
+                    const deltaPixels = e.clientX - dragState.startX;
+                    const deltaPercent = (deltaPixels / row.offsetWidth) * 100;
+                    const newWidth = Math.max(5, dragState.startW + deltaPercent);
+                    setTemplate(prev => {
+                        const newT = [...prev]; newT[dragState.rIdx].fields[dragState.fIdx].width = newWidth;
+                        return newT;
+                    });
+                };
+                const handleMouseUp = () => setDragState(null);
+                if (dragState) { document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp); }
+                return () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
+            }, [dragState]);
+
+            const startResize = (e, rIdx, fIdx, w) => { e.preventDefault(); e.stopPropagation(); setDragState({rIdx, fIdx, startX: e.clientX, startW: w}); };
+            const updateLabel = (rIdx, fIdx, newText) => { setTemplate(prev => { const newT = [...prev]; newT[rIdx].fields[fIdx].label = newText; return newT; }); };
+            const updateText = (key, newHtml) => { setTexts(prev => ({...prev, [key]: newHtml})); };
+            const updateSectionTitle = (rIdx, newTitle) => { setTemplate(prev => { const newT = [...prev]; newT[rIdx].title = newTitle; return newT; }); };
+            
+            const handleChange = (id, value) => { 
+                let newValue = value;
+                // Aplicar auto-formato si el ID es de fecha
+                if (id.startsWith('fecha_')) {
+                    newValue = formatToDate(value);
+                }
+                setFormData(prev => ({ ...prev, [id]: newValue })); 
+            };
+            
+            const saveActa = () => { 
+                const id = prompt("Nombre:", `Oficio JPT ${formData.jpt_n || Date.now()}`); 
+                if(!id) return; 
+                const n = {...actas, [id]: {id, data: formData, template, texts}}; 
+                setActas(n); 
+                localStorage.setItem(storageKey, JSON.stringify(n)); 
+            };
+            const loadActa = (id) => { const a = actas[id]; if(a) { setFormData(a.data); if(a.template) setTemplate(a.template); if(a.texts) setTexts(a.texts); } };
+            const handleLogoUpload = (e, key) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = (ev) => { const newLogos = {...logos, [key]: ev.target.result}; setLogos(newLogos); localStorage.setItem(logoKey, JSON.stringify(newLogos)); }; r.readAsDataURL(f); } };
+
+            const renderFieldContent = (field) => {
+                const centerClass = ['doc_identidad', 'nombre_apellidos', 'fecha_nacimiento'].includes(field.id) ? 'text-center' : '';
+                return <input className={`input-data ${centerClass}`} value={formData[field.id] || ''} onChange={(e)=>handleChange(field.id, e.target.value)} />;
+            };
+
+            return (
+                <div className="flex h-screen">
+                    <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
+                        <h2 className="text-lg font-bold text-blue-400">📂 Oficios JPT</h2>
+                        <button onClick={()=>{setFormData({}); setTemplate(initialTemplate); autoFillData()}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVO OFICIO</button>
+                        <div className="flex-1 space-y-1">
+                            {Object.keys(actas).map(k => (
+                                <div key={k} onClick={()=>loadActa(k)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded cursor-pointer text-xs border border-gray-700 truncate">{k}</div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
+                        <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
+                            <div className="font-bold text-gray-700 text-sm flex gap-2"><span>NOTIFICACIÓN DE DENUNCIA PASADOS 20 DÍAS DE LA INFRACCIÓN - NO RESIDENTE</span>{isEditMode && <span className="bg-yellow-100 text-yellow-800 px-2 rounded border border-yellow-300">DISEÑO</span>}</div>
+                            <div className="flex gap-2">
+                                <button onClick={()=>setIsEditMode(!isEditMode)} className="bg-gray-100 text-gray-600 px-3 py-1 rounded text-sm border">Editar</button>
+                                <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1 rounded text-sm font-bold">Guardar</button>
+                                <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1 rounded text-sm font-bold">Imprimir</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-gray-500">
+                            <div className={`page-a4 ${isEditMode?'editing':''}`}>
+                                
+                                <div className="flex justify-between items-start mb-2 relative">
+                                    <div className="w-24 h-24 relative cursor-pointer hover:bg-gray-50 group flex items-center justify-center">
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">judicial.png</span> : <img src={logos.left} className="w-full h-full object-contain"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
+                                    </div>
+                                    <div className="flex-1 px-2 text-center">
+                                        <EditableBlock html={texts.header_info} isEditMode={isEditMode} onChange={(val)=>updateText('header_info', val)} />
+                                    </div>
+                                    <div className="w-24 h-24 relative cursor-pointer hover:bg-gray-50 group flex items-center justify-center">
+                                        {!logos.right ? <span className="text-[9px] text-gray-400">logogad.png</span> : <img src={logos.right} className="w-full h-full object-contain"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'right')}/>
+                                    </div>
+                                </div>
+
+                                <EditableBlock tagName="div" className="text-center font-bold text-sm uppercase bg-gray-100 py-1 border-2 border-black border-solid mb-3" html={texts.title} isEditMode={isEditMode} onChange={(val) => updateText('title', val)} />
+
+                                <div className="form-container mb-2 flex-shrink-0">
+                                    {template.map((row, rIdx) => {
+                                        if (row.type === 'section') {
+                                            return <div key={row.id} className="section-bar" contentEditable={isEditMode} suppressContentEditableWarning onBlur={(e) => updateSectionTitle(rIdx, e.target.innerText)}>{row.title}</div>;
+                                        }
+                                        return (
+                                            <div key={row.id} id={`row-${rIdx}`} className="acta-row">
+                                                {row.fields.map((f, fIdx) => {
+                                                    const isLast = fIdx === row.fields.length - 1;
+                                                    return (
+                                                        <div key={f.id} className={`field-container ${isLast ? 'is-last' : ''}`} style={{width: isLast ? 'auto' : `${f.width}%`}}>
+                                                            <EditableLabel text={f.label} isEditMode={isEditMode} onChange={(val)=>updateLabel(rIdx, fIdx, val)} />
+                                                            {renderFieldContent(f)}
+                                                            {isEditMode && !isLast && <div className="resizer" onMouseDown={(e)=>startResize(e, rIdx, fIdx, f.width)}></div>}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <EditableBlock tagName="div" className="legal-text" html={texts.body1} isEditMode={isEditMode} onChange={(val) => updateText('body1', val)} />
+                                
+                                <EditableBlock tagName="div" className="legal-text fill-space" html={texts.body2} isEditMode={isEditMode} onChange={(val) => updateText('body2', val)} />
+
+                                {/* ZONA INFERIOR FIRMA: AGENTE MANUSCRITO + ESPACIO AUMENTADO (h-52) */}
+                                <div className="mt-auto flex h-52 pt-4 relative flex-shrink-0 justify-center">
+                                    <div className="w-1/2 flex flex-col justify-between px-4 h-full pb-4">
+                                        <div className="text-[11px] font-bold text-center">
+                                            <EditableBlock tagName="span" html={texts.sigAgente} isEditMode={isEditMode} onChange={(val) => updateText('sigAgente', val)} /> {formData.agente}
+                                        </div>
+                                        <div className="border-t border-black pt-1 text-[11px] text-center mt-auto">
+                                            Fdo.
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA CITACIÓN TIV (IA INTEGRADA V2)</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* --- ESTILOS VISUALES (TIV) --- */
+        * { box-sizing: border-box; }
+        body { background-color: #374151; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        
+        .page-a4 {
+            width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 10mm;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .form-container { border: 2px solid black; width: 100%; display: flex; flex-direction: column; }
+        .acta-row { display: flex; width: 100%; border-bottom: 1px solid black; }
+        .acta-row:last-child { border-bottom: none; }
+        
+        .field-container { position: relative; display: flex; flex-direction: column; padding: 3px 6px; min-width: 0; border-right: 1px solid black; overflow: hidden; justify-content: center; }
+        .field-container.is-last { border-right: none; flex-grow: 1 !important; width: auto !important; }
+
+        .label { font-size: 12px; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; color: #000; }
+        
+        /* Inputs y Lógica de Color */
+        .input-data { width: 100%; font-family: 'Courier New', monospace; font-weight: bold; outline: none; background: transparent; border: none; padding: 0; color: #000; }
+        .input-data.default-red { color: red !important; }
+        .input-data.modified-black { color: #000 !important; }
+
+        .section-bar { background-color: #e5e7eb; border-top: 1px solid black; border-bottom: 1px solid black; font-weight: bold; text-align: left; font-size: 12px; padding: 6px 8px; width: 100%; margin-top: -1px; z-index: 2; position: relative; font-style: italic; display: flex; justify-content: space-between; align-items: center; }
+
+        .legal-text { font-size: 12px; text-align: justify; line-height: 1.3; color: #000; margin-top: 15px; }
+        .custom-checkbox { width: 20px; height: 20px; border: 1.5px solid black; display: flex; align-items: center; justify-content: center; cursor: pointer; font-family: sans-serif; font-weight: bold; font-size: 16px; line-height: 1; }
+        .custom-checkbox:hover { background-color: #f3f4f6; }
+
+        .qr-section { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; padding-bottom: 10px; }
+        .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 120px; }
+        .qr-img { width: 100px; height: 100px; object-fit: contain; }
+
+        .header-text { font-size: 11px; line-height: 1.3; text-align: center; color: #000; }
+        .header-title { font-weight: bold; font-size: 13px; margin-bottom: 2px; }
+
+        /* --- ESTILOS IA & FUNCIONALIDAD --- */
+        .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.96); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #e5e7eb; border-top: 5px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .editing .field-container { background: rgba(59, 130, 246, 0.05); box-shadow: inset 0 0 0 1px #3b82f6; cursor: default; user-select: none; }
+        .editing .input-data { pointer-events: none; opacity: 0.5; }
+        .resizer { position: absolute; right: -5px; top: 0; bottom: 0; width: 10px; cursor: col-resize; z-index: 50; display: flex; justify-content: center; align-items: center; }
+        .edit-controls { position: absolute; top: 0; right: 0; display: none; background: white; border: 1px solid #ccc; z-index: 60; }
+        .editing .field-container:hover .edit-controls { display: flex; }
+
+        /* ZONA IA (Solo Verde) */
+        .drop-zone-person { outline: 2px solid transparent; transition: all 0.2s; position: relative; }
+        .drop-zone-person:focus-within, .drop-zone-person.drag-active {
+            background-color: rgba(34, 197, 94, 0.05);
+            outline: 2px dashed #22c55e;
+            outline-offset: -2px;
+        }
+
+        .context-menu { position: fixed; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); z-index: 1000; padding: 5px 0; border-radius: 4px; font-size: 12px; min-width: 150px; }
+        .context-menu-item { padding: 8px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .context-menu-item:hover { background-color: #f3f4f6; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 0; }
+            body * { visibility: hidden; }
+            body { margin: 0; padding: 0; overflow: hidden !important; background: white; height: 100%; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { position: absolute; left: 0; top: 0; width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; box-shadow: none !important; border: none !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .form-container { border: 2px solid black !important; }
+            .acta-row { border-bottom: 1px solid black !important; }
+            .field-container { border-right: 1px solid black !important; }
+            .section-bar { background-color: #e5e7eb !important; border-top: 1px solid black !important; border-bottom: 1px solid black !important; }
+            .custom-checkbox { border: 1.5px solid black !important; }
+            .no-print, .edit-controls, .resizer, .loading-overlay, .context-menu, .paste-btn { display: none !important; }
+            .input-data { color: #000 !important; }
+            .drop-zone-person { background: transparent !important; outline: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- CONFIGURACIÓN TIV ---
+        const SHIFT_MORNING = { a1: "G-118", a2: "G-448" };
+        const SHIFT_AFTERNOON = { a1: "G-279", a2: "G-496" };
+        const DEFAULT_CITA_HORA_VALUE = "10:00";
+
+        const initialTemplate = [
+            { type: 'row', id: 'r1', fields: [{id:'agente1', label:'Agente 1:', width:50}, {id:'agente2', label:'Agente 2:', width:50}] },
+            { type: 'row', id: 'r2', fields: [{id:'lugar', label:'Cita emitida por:', width:100}] },
+            { type: 'row', id: 'r3', fields: [{id:'fecha', label:'Fecha:', width:25}, {id:'hora', label:'Hora:', width:25}, {id:'vehiculo', label:'Datos del Vehículo implicado:', width:50}] },
+            
+            // SECCIÓN IDENTIFICADO (ZONA IA)
+            { type: 'section', title: 'Por medio de la presente se notifica a:', zone: 'person' },
+            { type: 'row', id: 'r4', zone: 'person', fields: [{id:'p_nom', label:'Nombre y Apellidos', width:60}, {id:'p_doc', label:'PSP / NIE / CI / PC nº', width:40}] },
+            { type: 'row', id: 'r5', zone: 'person', fields: [
+                {id:'p_nac_lugar', label:'Nacido/a en', width:35}, 
+                {id:'p_nac_fecha', label:'el', width:20}, 
+                {id:'p_padre', label:'Nombre Padre', width:22.5}, 
+                {id:'p_madre', label:'Nombre Madre', width:22.5}  
+            ] },
+            { type: 'row', id: 'r6', zone: 'person', fields: [{id:'p_dom', label:'Domiciliado/a en la Calle', width:60}, {id:'p_mun', label:'en (Municipio/Provincia)', width:40}] },
+            { type: 'row', id: 'r7', zone: 'person', fields: [{id:'p_tel', label:'Teléfono de contacto', width:35}, {id:'p_email', label:'Correo electrónico', width:65}] },
+            
+            // CITA
+            { type: 'section', title: 'Que debe personarse en las dependencias de Comisaría de Policía Nacional en la calle Isabel la Católica 25 de Alicante (Unidad T.I.V):' },
+            { type: 'row', id: 'r8', fields: [{id:'cita_fecha', label:'El próximo día', width:50}, {id:'cita_hora', label:'a las', width:50}] }
+        ];
+
+        // --- COMPONENTES ---
+        const AutoResizingInput = ({ id, value, onChange, disabled, widthDependency, isDefaultDate, isDefaultHora }) => {
+            const inputRef = React.useRef(null);
+            const [fontSize, setFontSize] = React.useState(15); 
+
+            React.useLayoutEffect(() => {
+                const input = inputRef.current;
+                if (!input || !value) { setFontSize(15); return; }
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.font = "bold 15px 'Courier New', monospace";
+                const textWidth = ctx.measureText(value).width;
+                if (textWidth <= input.clientWidth) setFontSize(15);
+                else {
+                    const ratio = input.clientWidth / textWidth;
+                    setFontSize(Math.max(10, Math.floor(15 * ratio)));
+                }
+            }, [value, widthDependency]);
+
+            let isRed = false;
+            if (id === 'cita_fecha') isRed = isDefaultDate;
+            else if (id === 'cita_hora') isRed = isDefaultHora;
+            
+            return (
+                <input 
+                    ref={inputRef} className={`input-data ${isRed ? 'default-red' : 'modified-black'}`} 
+                    value={value || ''} onChange={onChange} disabled={disabled} autoComplete="off" 
+                    style={{ fontSize: `${fontSize}px` }} 
+                />
+            );
+        };
+
+        const App = () => {
+            const [template, setTemplate] = React.useState(initialTemplate);
+            const [formData, setFormData] = React.useState({});
+            const [actas, setActas] = React.useState({});
+            const [isEditMode, setIsEditMode] = React.useState(false);
+            
+            // LOGOS
+            const [logos, setLogos] = React.useState({ left: 'judicial.png', right: 'logogad.png', qr: 'ubicacionTIV.png' });
+            
+            // CONFIG IA
+            const [apiKey, setApiKey] = React.useState(localStorage.getItem('ai_api_key') || '');
+            const [geminiModelName, setGeminiModelName] = React.useState(localStorage.getItem('gemini_model_name') || 'gemini-2.5-flash');
+            const [showKeyInput, setShowKeyInput] = React.useState(false);
+            const [processing, setProcessing] = React.useState({active: false, msg: ''});
+            
+            // ESTADOS TIV
+            const [defaultCitaFecha, setDefaultCitaFecha] = React.useState(''); 
+            const [defaultCitaHora, setDefaultCitaHora] = React.useState(DEFAULT_CITA_HORA_VALUE);
+
+            // INTERACCIÓN
+            const [dragTarget, setDragTarget] = React.useState(null);
+            const [dragState, setDragState] = React.useState(null);
+            const [contextMenu, setContextMenu] = React.useState(null);
+
+            React.useEffect(() => {
+                const stored = JSON.parse(localStorage.getItem('mis_actas_tiv_ai') || "{}");
+                setActas(stored);
+                const l = JSON.parse(localStorage.getItem('mis_logos_tiv_v4'));
+                if(l) setLogos(l);
+                
+                if (!localStorage.getItem('ai_provider')) localStorage.setItem('ai_provider', 'gemini');
+                if (!localStorage.getItem('gemini_model_name')) localStorage.setItem('gemini_model_name', geminiModelName);
+
+                autoFillData();
+                const closeMenu = () => setContextMenu(null);
+                window.addEventListener('click', closeMenu);
+                return () => window.removeEventListener('click', closeMenu);
+            }, []);
+
+            const getNextBusinessDay = (date) => {
+                let nextDate = new Date(date);
+                nextDate.setDate(date.getDate() + 1);
+                while (nextDate.getDay() === 0 || nextDate.getDay() === 6) { nextDate.setDate(nextDate.getDate() + 1); }
+                return `${String(nextDate.getDate()).padStart(2,'0')}/${String(nextDate.getMonth()+1).padStart(2,'0')}/${nextDate.getFullYear()}`;
+            };
+
+            const autoFillData = () => {
+                const now = new Date();
+                const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                let a1 = "", a2 = "";
+                if (now.getHours() >= 6 && now.getHours() < 14) { a1 = SHIFT_MORNING.a1; a2 = SHIFT_MORNING.a2; }
+                else if (now.getHours() >= 14 && now.getHours() < 22) { a1 = SHIFT_AFTERNOON.a1; a2 = SHIFT_AFTERNOON.a2; }
+                
+                const nextDay = getNextBusinessDay(now);
+                setDefaultCitaFecha(nextDay);
+
+                setFormData(prev => {
+                    if (Object.keys(prev).length === 0) {
+                        return {
+                            ...prev,
+                            fecha: `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`, 
+                            hora: currentTime,
+                            lugar: "Grupo de Análisis Documental (GAD) - Policía Local de Alicante - Unidad Judicial",
+                            agente1: a1, agente2: a2,
+                            cita_fecha: nextDay,
+                            cita_hora: DEFAULT_CITA_HORA_VALUE,
+                            check_vehiculo: false, check_identidad: false
+                        };
+                    } return prev;
+                });
+            };
+
+            // --- LÓGICA IA ---
+            const callAI = async (base64Image) => {
+                // CORRECCIÓN APLICADA AQUÍ: Se ha añadido p_tel y p_email
+                const PROMPT = `Analiza este documento de identidad (DNI, NIE, Pasaporte, Licencia). Extrae SOLO los siguientes datos personales.
+                JSON keys exactas: { 
+                    "p_nom": "Nombre completo y Apellidos", 
+                    "p_doc": "Número de documento (DNI/NIE/Pasaporte)", 
+                    "p_nac_lugar": "Lugar de nacimiento", 
+                    "p_nac_fecha": "Fecha nacimiento (DD/MM/AAAA)", 
+                    "p_padre": "Nombre del Padre (si aparece)", 
+                    "p_madre": "Nombre de la Madre (si aparece)",
+                    "p_dom": "Dirección/Domicilio completo",
+                    "p_mun": "Municipio/Ciudad",
+                    "p_tel": "Teléfono (si aparece)",
+                    "p_email": "Email (si aparece)"
+                }. Formatea fechas a DD/MM/AAAA.`;
+
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${apiKey}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: "image/jpeg", data: base64Image } }] }] })
+                    });
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.message);
+                    const rawText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+                    const extractedData = JSON.parse(rawText);
+
+                    setFormData(prev => {
+                        const newData = { ...prev };
+                        Object.keys(extractedData).forEach(key => {
+                            const val = extractedData[key];
+                            if (val && String(val).trim().length > 0) newData[key] = val;
+                        });
+                        return newData;
+                    });
+                } catch (error) { alert(`Error Gemini: ` + error.message); }
+            };
+
+            const processImage = async (file) => {
+                if (!apiKey) { alert("¡FALTA LA CLAVE API! Configúrala en el menú lateral."); return; }
+                setProcessing({active: true, msg: `Analizando documento...`});
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const base64 = reader.result.toString().replace(/^data:(.*,)?/, '');
+                    try { await callAI(base64); } finally { setProcessing({active: false, msg: ''}); setDragTarget(null); }
+                };
+            };
+
+            const pasteFromClipboard = async () => {
+                try {
+                    const items = await navigator.clipboard.read();
+                    for (const item of items) {
+                        const type = item.types.find(t => t.startsWith('image/'));
+                        if (type) {
+                            const blob = await item.getType(type);
+                            const file = new File([blob], "clipboard.png", { type });
+                            processImage(file);
+                            return;
+                        }
+                    }
+                    alert("No hay imágenes en el portapapeles.");
+                } catch (err) { alert("Haz clic en la zona y pulsa Ctrl+V."); }
+            };
+
+            // HANDLERS DRAG & DROP
+            const handleDragOver = (e, zone) => { e.preventDefault(); e.stopPropagation(); if (dragTarget !== zone) setDragTarget(zone); };
+            const handleDrop = (e, zone) => { e.preventDefault(); e.stopPropagation(); setDragTarget(null); if (e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0]); };
+            const handleGlobalPaste = (e) => {
+                const activeEl = document.activeElement;
+                if (activeEl && activeEl.closest('.drop-zone-person')) {
+                    const items = e.clipboardData.items;
+                    for (let item of items) {
+                        if (item.type.indexOf("image") === 0) { processImage(item.getAsFile()); return; }
+                    }
+                }
+            };
+            const handleContextMenu = (e, zone) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, zone }); };
+
+            // HANDLERS FORMULARIO
+            const handleFormChange = (id, value) => {
+                // ... lógica de formateo de fecha/hora si se desea, o simple asignación
+                setFormData(prev => ({ ...prev, [id]: value }));
+            };
+            const toggleCheckbox = (field) => setFormData(prev => ({...prev, [field]: !prev[field]}));
+            const saveSettings = (key, model) => { setApiKey(key); setGeminiModelName(model); localStorage.setItem('ai_api_key', key); localStorage.setItem('gemini_model_name', model); };
+            const saveActa = () => { 
+                const id=prompt("Nombre:", formData.p_nom || "Acta "+Date.now()); 
+                if(id){ const n={...actas, [id]:{id, nombre:id, fecha:new Date(), data:formData, template}}; setActas(n); localStorage.setItem('mis_actas_tiv_ai',JSON.stringify(n)); }
+            };
+            const loadActa = (id) => { const a=actas[id]; if(a){ setFormData(a.data); if(a.template) setTemplate(a.template); } };
+            const deleteActa = (e,id) => { e.stopPropagation(); const n={...actas}; delete n[id]; setActas(n); localStorage.setItem('mis_actas_tiv_ai',JSON.stringify(n)); };
+            const handleLogoUpload = (e, key) => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = (ev) => { const newLogos = {...logos, [key]: ev.target.result}; setLogos(newLogos); localStorage.setItem('mis_logos_tiv_v4', JSON.stringify(newLogos)); }; r.readAsDataURL(f); } };
+
+            // RENDER ROW
+            const renderRow = (item, rIdx) => (
+                <div key={item.id} id={`row-${rIdx}`} className="acta-row">
+                    {item.fields.map((f, fIdx) => (
+                        <div key={f.id} className={`field-container ${fIdx === item.fields.length - 1 ? 'is-last' : ''}`} style={{ width: fIdx === item.fields.length - 1 ? 'auto' : `${f.width}%` }}>
+                            <div className="label" contentEditable={isEditMode} suppressContentEditableWarning>{f.label}</div>
+                            <AutoResizingInput 
+                                id={f.id} value={formData[f.id]} onChange={(e)=>handleFormChange(f.id, e.target.value)} disabled={isEditMode} widthDependency={f.width}
+                                isDefaultDate={f.id === 'cita_fecha' && formData[f.id] === defaultCitaFecha}
+                                isDefaultHora={f.id === 'cita_hora' && formData[f.id] === defaultCitaHora}
+                            />
+                        </div>
+                    ))}
+                </div>
+            );
+            
+            const SectionHeaderWithPaste = ({ title, zone }) => (
+                <div className="section-bar relative group" contentEditable={isEditMode} suppressContentEditableWarning>
+                    <span>{title}</span>
+                    <button onClick={(e) => { e.stopPropagation(); pasteFromClipboard(); }} className="paste-btn absolute right-2 top-0.5 bg-gray-600 hover:bg-gray-800 text-white text-[9px] px-2 py-0.5 rounded shadow flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="Pegar imagen">📋 PEGAR IA</button>
+                </div>
+            );
+
+            return (
+                <div className="flex h-screen" onPaste={handleGlobalPaste}>
+                    {contextMenu && <div className="context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}><div className="context-menu-item" onClick={() => pasteFromClipboard()}><span>📋</span> Pegar imagen (IA)</div></div>}
+
+                    {/* SIDEBAR */}
+                    <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
+                        <h2 className="text-lg font-bold text-green-400">📂 TIV + IA</h2>
+                        <button onClick={()=>{setFormData({});setTemplate(initialTemplate);autoFillData()}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ACTA</button>
+                        
+                        <div className="mt-2 border-t border-gray-700 pt-4">
+                            <button onClick={()=>setShowKeyInput(!showKeyInput)} className="text-xs text-yellow-400 hover:text-yellow-300 font-bold w-full text-left flex justify-between">⚙️ CONFIGURAR IA <span>{showKeyInput ? '▼' : '▶'}</span></button>
+                            {showKeyInput && <div className="mt-2 bg-gray-800 p-2 rounded border border-gray-600 space-y-2">
+                                <input type="password" value={apiKey} onChange={(e)=>saveSettings(e.target.value, geminiModelName)} className="w-full bg-gray-900 text-white text-xs p-1 rounded border border-gray-700" placeholder="API Key..." />
+                                <input type="text" value={geminiModelName} onChange={(e)=>saveSettings(apiKey, e.target.value)} className="w-full bg-gray-900 text-white text-xs p-1 rounded border border-gray-700" placeholder="gemini-1.5-pro" />
+                            </div>}
+                        </div>
+                        <div className="flex-1 space-y-1 overflow-y-auto mt-4">
+                            {Object.values(actas).map(a=>(
+                                <div key={a.id} onClick={()=>loadActa(a.id)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded flex justify-between cursor-pointer text-xs border border-gray-700 items-center">
+                                    <span className="truncate flex-1">{a.nombre}</span>
+                                    <span onClick={(e)=>deleteActa(e,a.id)} className="text-red-400 font-bold px-2 hover:bg-red-900/50 rounded ml-2">x</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* MAIN */}
+                    <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
+                        <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
+                            <div className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                                <span>ACTA CITACIÓN TIV (IA)</span>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded border ${apiKey ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}>{geminiModelName.toUpperCase()}</span>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                <button onClick={()=>setIsEditMode(!isEditMode)} className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${isEditMode ? 'bg-yellow-500 text-black shadow-inner' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}`}>{isEditMode ? '🔒 Terminar' : '🛠️ Editar'}</button>
+                                <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 shadow-sm font-medium">Guardar</button>
+                                <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1.5 rounded text-sm hover:bg-gray-900 shadow-sm font-medium">🖨️ Imprimir</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-gray-500">
+                            <div className={`page-a4 ${isEditMode?'editing':''}`} tabIndex="0">
+                                {processing.active && (<div className="loading-overlay"><div className="spinner"></div><h3 className="text-green-600 font-bold text-lg animate-pulse">{processing.msg}</h3></div>)}
+                                
+                                {/* CABECERA */}
+                                <div className="flex justify-between items-start mb-4 relative">
+                                    <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
+                                        {!logos.left ? <span className="text-[9px] text-gray-400">judicial.png</span> : <img src={logos.left} className="w-full h-full object-contain"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
+                                    </div>
+                                    <div className="flex-1 px-2 text-center" contentEditable={isEditMode} suppressContentEditableWarning>
+                                        <div className="header-title">EXCMO. AYUNTAMIENTO DE ALICANTE</div>
+                                        <div className="header-title">POLICÍA LOCAL</div>
+                                        <div className="header-text mt-3 font-bold">Grupo de Análisis Documental</div>
+                                        <div className="header-text font-bold">Unidad Judicial de Tráfico</div>
+                                        <div className="header-text mt-1">Av. Julián Besteiro 15</div>
+                                        <div className="header-text text-blue-800 underline">Email: policia.gad@alicante.es</div>
+                                        <div className="header-text">TEL: +34629111387 - Central PL 965107200</div>
+                                    </div>
+                                    <div className="w-28 h-28 flex items-start justify-center relative cursor-pointer hover:bg-gray-50 group">
+                                        {!logos.right ? <span className="text-[9px] text-gray-400">logogad.png</span> : <img src={logos.right} className="w-full h-full object-contain"/>}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'right')}/>
+                                    </div>
+                                </div>
+
+                                <div className="text-center font-bold mb-4 text-[16px] uppercase bg-gray-100 py-2 border border-black" contentEditable={isEditMode} suppressContentEditableWarning>
+                                    ACTA CITACIÓN A UNIDAD TIV DE POLICÍA NACIONAL
+                                </div>
+
+                                <div className="form-container">
+                                    {renderRow(template[0], 0)}
+                                    {renderRow(template[1], 1)}
+                                    {renderRow(template[2], 2)}
+
+                                    {/* ZONA IA: PERSONA (Verde) */}
+                                    <div 
+                                        className={`drop-zone-person ${dragTarget === 'person' ? 'drag-active' : ''}`}
+                                        onDragOver={(e) => handleDragOver(e, 'person')}
+                                        onDrop={(e) => handleDrop(e, 'person')}
+                                        onContextMenu={(e) => handleContextMenu(e, 'person')}
+                                    >
+                                        <SectionHeaderWithPaste title="Por medio de la presente se notifica a:" zone="person" />
+                                        {renderRow(template[4], 4)}
+                                        {renderRow(template[5], 5)}
+                                        {renderRow(template[6], 6)}
+                                        {renderRow(template[7], 7)}
+                                    </div>
+
+                                    {/* CITA */}
+                                    <div className="section-bar" contentEditable={isEditMode} suppressContentEditableWarning>{template[8].title}</div>
+                                    {renderRow(template[9], 9)}
+                                </div>
+
+                                <div className="qr-section">
+                                    <div className="legal-text flex-1 pr-4">
+                                        <p className="font-bold">Deberá aportar toda la documentación de la que disponga, relativa a:</p>
+                                        <div className="ml-4 space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="custom-checkbox" onClick={()=>toggleCheckbox('check_vehiculo')}>{formData.check_vehiculo ? 'X' : ''}</div>
+                                                <span>Documentación de su vehículo.</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="custom-checkbox" onClick={()=>toggleCheckbox('check_identidad')}>{formData.check_identidad ? 'X' : ''}</div>
+                                                <span>Documentación de identidad personal.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="qr-container group relative cursor-pointer" style={{marginRight: '60px', marginTop: '5mm'}}> 
+                                        {!logos.qr ? <div className="w-24 h-24 border border-dashed border-gray-400 flex items-center justify-center text-[10px] text-gray-500 text-center p-1">ubicaciónTIV.png</div> : <img src={logos.qr} className="qr-img" />}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'qr')}/>
+                                        <div className="font-bold text-sm mt-1">UBICACIÓN</div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto mb-6 flex justify-between text-xs font-bold pt-4 select-none">
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo.- Implicado</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-28"></div>
+                                    </div>
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo. Agente {formData.agente1}</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-28"></div>
+                                    </div>
+                                    <div className="w-1/3 mx-3 flex flex-col">
+                                        <div className="mb-1 text-center text-sm">Fdo. Agente {formData.agente2}</div>
+                                        <div className="border-b-2 border-black"></div>
+                                        <div className="h-28"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
