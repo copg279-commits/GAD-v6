@@ -7,219 +7,820 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0457C9">
     
-    <title>Inventario Documentos GAD</title>
+    <title>Inventario GAD Premium - Gestión Documental</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* TUS ESTILOS ORIGINALES INTACTOS */
+        /* ==========================================
+           1. VARIABLES DE DISEÑO (CSS)
+           Colores maestros de la aplicación
+        ========================================== */
         :root {
-            --primary-color: #0457C9;
-            --bg-color: #f4f6f9;
-            --text-color: #333;
-            --card-bg: #fff;
-            --eye-color: #28a745;
-            --danger-color: #dc3545;
-            --gad-gold: #f1c40f;
+            /* Colores Corporativos */
+            --primary-color: #0457C9;       /* Azul GAD Principal */
+            --primary-dark: #023e94;        /* Azul Oscuro para degradados */
+            
+            /* Fondos y Textos */
+            --bg-color: #f4f6f9;            /* Fondo gris muy claro */
+            --text-color: #333;             /* Color de texto principal */
+            --card-bg: #fff;                /* Fondo de tarjetas */
+            --text-muted: #6c757d;          /* Texto secundario */
+            
+            /* Botones de Acción */
+            --eye-color: #28a745;           /* Verde para botón Ver */
+            --folder-color: #f39c12;        /* Naranja para botón Carpeta */
+            --drive-color: #34a853;         /* Verde oficial Drive */
+            --danger-color: #dc3545;        /* Rojo para borrar/cerrar */
+            
+            /* Indicadores de Estado */
+            --gad-gold: #f1c40f;            /* Dorado (Nuevos) */
+            --info-blue: #0dcaf0;           /* Azul (Modificados) */
+            
+            /* Sombras (Efecto 3D) */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.15);
         }
 
-        * { box-sizing: border-box; }
+        /* Reset básico */
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
 
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--bg-color);
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column;
+            color: var(--text-color);
+            margin: 0; 
+            padding: 0;
+            display: flex; 
+            flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
+        /* ==========================================
+           2. CABECERA (HEADER PREMIUM)
+        ========================================== */
         header {
-            background-color: var(--primary-color);
-            height: 120px; padding: 0 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 1000;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            padding: 15px 30px;
+            box-shadow: var(--shadow-md);
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            position: sticky; 
+            top: 0; 
+            z-index: 1000;
+            flex-wrap: wrap; 
+            gap: 15px;
+            min-height: 130px;
         }
 
-        .header-left { flex: 1; text-align: left; white-space: nowrap; }
-        .header-title { color: white; font-size: 24px; font-weight: 700; margin: 0; }
-        .header-center { flex: 0 0 auto; display: flex; justify-content: center; align-items: center; height: 100%; }
-        .logo { height: 100px; width: auto; object-fit: contain; }
-        .header-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 25px; }
+        .header-left { 
+            flex: 1; 
+            min-width: 200px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
 
+        .header-title { 
+            color: white; 
+            font-size: 26px; 
+            font-weight: 900; 
+            margin: 0; 
+            letter-spacing: 0.5px; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        }
+
+        .header-subtitle { 
+            color: rgba(255,255,255,0.8); 
+            font-size: 13px; 
+            margin-top: 5px; 
+            font-weight: 400; 
+        }
+        
+        .header-center { 
+            flex: 0 0 auto; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        /* LOGO CON EFECTO ZOOM */
+        .logo { 
+            height: 95px; 
+            width: auto; 
+            object-fit: contain; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        
+        .logo:hover { 
+            transform: scale(1.05); 
+        }
+        
+        .header-right { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            justify-content: center; 
+            gap: 10px; 
+            min-width: 280px;
+        }
+
+        /* ==========================================
+           3. PANEL DE ESTADÍSTICAS (NUEVO DISEÑO)
+        ========================================== */
+        .stats-wrapper { 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+            background: rgba(255,255,255,0.1); 
+            padding: 8px 20px; 
+            border-radius: 12px; 
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat-box { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            position: relative; 
+            justify-content: center;
+        }
+
+        /* Línea separadora blanca */
+        .stat-box.divider-right::after {
+            content: ''; 
+            position: absolute; 
+            right: -10px; 
+            top: 15%; 
+            height: 70%;
+            width: 1px; 
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .stat-number { 
+            color: white; 
+            font-size: 24px; 
+            font-weight: 900; 
+            line-height: 1; 
+        }
+        
+        .stat-label { 
+            font-size: 10px; 
+            font-weight: 500; 
+            color: rgba(255,255,255,0.9); 
+            text-transform: uppercase; 
+            margin-top: 4px; 
+            letter-spacing: 0.5px; 
+            text-align: right;
+        }
+
+        /* NUEVO: REJILLA DE ACTIVIDAD (ICONOS DETALLADOS) */
+        .activity-grid {
+            display: flex;
+            gap: 15px; /* Espacio entre los contadores */
+            align-items: center;
+        }
+
+        .act-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 15px;
+            font-weight: 800;
+            color: white;
+            opacity: 1;
+        }
+
+        .act-item i { font-size: 13px; }
+        
+        /* Colores específicos para cada acción */
+        .act-item.new { color: var(--gad-gold); text-shadow: 0 0 10px rgba(241, 196, 15, 0.4); }
+        .act-item.mod { color: var(--info-blue); text-shadow: 0 0 10px rgba(13, 202, 240, 0.4); }
+        .act-item.del { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.4); }
+        .act-item.none { color: rgba(255,255,255,0.7); font-weight: 400; font-size: 12px; }
+
+        /* Badge de Fecha */
+        .last-update-badge {
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px;
+            background: rgba(0,0,0,0.2); 
+            padding: 5px 12px; 
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.9); 
+            font-size: 11px; 
+            font-weight: 400;
+        }
+
+        /* Botón Manual Ayuda */
         .btn-help-premium {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: white; padding: 8px 18px; border-radius: 30px;
-            cursor: pointer; font-size: 14px; font-weight: 600;
-            display: flex; align-items: center; gap: 10px;
-            transition: all 0.3s ease; text-transform: uppercase;
+            background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.2));
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: white; 
+            padding: 8px 20px; 
+            border-radius: 30px;
+            cursor: pointer; 
+            font-size: 12px; 
+            font-weight: 700;
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            transition: all 0.3s ease; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
         }
-        .btn-help-premium:hover { background: white; color: var(--primary-color); }
+        
+        .btn-help-premium:hover { 
+            background: white; 
+            color: var(--primary-color); 
+            box-shadow: 0 0 15px rgba(255,255,255,0.4); 
+        }
 
-        .stats-counter { color: white; font-size: 32px; font-weight: 900; line-height: 1; display: block; }
-        .stats-label { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.8); display: block; }
-        .stats-group { text-align: right; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px; }
-
-        .controls-container { background: white; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .search-wrapper { max-width: 1200px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
-        .search-input-container { position: relative; flex: 1; }
+        /* ==========================================
+           4. CONTROLES Y BUSCADOR
+        ========================================== */
+        .controls-container { 
+            background: white; 
+            padding: 25px 30px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+            margin-bottom: 30px; 
+            position: relative; 
+            z-index: 10;
+        }
+        
+        .search-wrapper { 
+            max-width: 1100px; 
+            margin: 0 auto; 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+        }
+        
+        .search-input-container { 
+            position: relative; 
+            flex: 1; 
+        }
         
         .search-input {
-            width: 100%; padding: 15px 20px 15px 50px; font-size: 16px;
-            border: 2px solid #ddd; border-radius: 50px; outline: none; height: 54px;
+            width: 100%; 
+            padding: 16px 25px 16px 55px; 
+            font-size: 16px;
+            border: 2px solid #e0e0e0; 
+            border-radius: 50px; 
+            outline: none; 
+            height: 54px;
+            transition: border-color 0.3s, box-shadow 0.3s; 
+            background: #fafafa;
         }
-        .search-input:focus { border-color: var(--primary-color); }
-        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #888; font-size: 18px; }
+        
+        .search-input:focus { 
+            border-color: var(--primary-color); 
+            background: white; 
+            box-shadow: 0 0 0 4px rgba(4, 87, 201, 0.1); 
+        }
+        
+        .search-icon { 
+            position: absolute; 
+            left: 22px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: #999; 
+            font-size: 20px; 
+            transition: color 0.3s; 
+        }
+        
+        .search-input:focus + .search-icon { 
+            color: var(--primary-color); 
+        }
 
+        /* Botón Limpiar */
         .btn-clear {
-            background-color: var(--danger-color); color: white; border: none;
-            border-radius: 50px; padding: 0 30px; height: 54px; font-size: 16px; font-weight: 600;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            background-color: var(--danger-color); 
+            color: white; 
+            border: none;
+            border-radius: 50px; 
+            padding: 0 35px; 
+            height: 54px; 
+            font-size: 15px; 
+            font-weight: 700;
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-clear:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 15px rgba(220, 53, 69, 0.4); 
+        }
+        
+        .btn-clear:active { 
+            transform: translateY(0); 
         }
 
-        .filters-chips { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        /* Chips de Filtros */
+        .filters-chips { 
+            display: flex; 
+            justify-content: center; 
+            gap: 12px; 
+            margin-top: 20px; 
+            flex-wrap: wrap; 
+        }
+        
         .chip {
-            padding: 8px 16px; background: #e9ecef; border: none; border-radius: 20px;
-            cursor: pointer; font-size: 14px; font-weight: 500; color: #555;
+            padding: 10px 20px; 
+            background: #f1f3f5; 
+            border: 1px solid transparent; 
+            border-radius: 25px;
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #666;
+            transition: all 0.2s; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
         }
-        .chip.active { background: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(4, 87, 201, 0.3); }
-        .divider { width: 1px; background: #ccc; margin: 0 10px; height: 30px; }
+        
+        .chip:hover { 
+            background: #e9ecef; 
+            color: #333; 
+        }
+        
+        .chip.active { 
+            background: var(--primary-color); 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(4, 87, 201, 0.3); 
+            border-color: var(--primary-color);
+        }
+        
+        .chip i { font-size: 14px; }
+        .divider { width: 1px; background: #ddd; margin: 0 10px; height: 32px; }
 
-        .results-container { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 0 20px 40px 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+        /* ==========================================
+           5. GRID RESULTADOS (4 Columnas)
+        ========================================== */
+        .results-container { 
+            flex: 1; 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            width: 100%; 
+            padding: 0 30px 50px 30px; 
+        }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 15px; 
+        }
 
         .card {
-            background: white; border-radius: 8px; padding: 12px 15px;
-            display: flex; align-items: center; justify-content: space-between;
-            border: 1px solid #eee; transition: transform 0.2s, box-shadow 0.2s;
+            background: white; 
+            border-radius: 12px; 
+            padding: 15px 18px;
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            border: 1px solid #f0f0f0; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative; 
+            box-shadow: var(--shadow-sm); 
+            overflow: hidden;
         }
-        .card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: var(--primary-color); }
-        .card-content { flex: 1; overflow: hidden; padding-right: 10px; }
         
-        .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+        .card::before {
+            content: ''; 
+            position: absolute; 
+            left: 0; top: 0; bottom: 0; width: 4px;
+            background: var(--primary-color); 
+            opacity: 0; 
+            transition: opacity 0.3s;
+        }
+        
+        .card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
+            border-color: transparent;
+        }
+        
+        .card:hover::before { opacity: 1; }
+
+        .card-content { 
+            flex: 1; 
+            overflow: hidden; 
+            padding-right: 15px; 
+        }
+        
+        .card-badges { 
+            display: flex; 
+            gap: 6px; 
+            margin-bottom: 6px; 
+        }
+        
+        .badge { 
+            font-size: 10px; 
+            font-weight: 800; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        
         .badge-loc { background: #e3f2fd; color: #1565c0; }
-        .badge-dpi { background: #f5f5f5; color: #616161; }
+        .badge-dpi { background: #f5f5f5; color: #616161; border: 1px solid #eee; }
         .badge-veh { background: #e8f5e9; color: #2e7d32; }
-        .card-title { font-size: 14px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .card-title { 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #333; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            line-height: 1.4;
+        }
 
         .btn-view {
-            color: var(--eye-color); font-size: 24px; padding: 8px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-            background: transparent; border: none;
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            background: #f8f9fa; 
+            border: 1px solid #eee;
+            color: var(--eye-color); 
+            font-size: 20px;
+            transition: all 0.2s; 
+            flex-shrink: 0;
         }
-        .btn-view:hover { background-color: rgba(40, 167, 69, 0.1); transform: scale(1.1); }
+        
+        .btn-view:hover { 
+            background: var(--eye-color); 
+            color: white; 
+            border-color: var(--eye-color); 
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+        }
 
-        .pie-pagina { background-color: var(--primary-color); color: white; text-align: center; padding: 15px 0; margin-top: auto; font-size: 14px; }
-        .loader-box { text-align: center; padding: 50px; font-size: 18px; color: #666; }
+        .loader-box { 
+            text-align: center; 
+            padding: 80px; 
+            font-size: 18px; 
+            color: var(--text-muted); 
+            width: 100%; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: var(--shadow-sm);
+        }
 
+        /* ==========================================
+           6. MODAL AYUDA EXTENSA (COMPLETA)
+        ========================================== */
         .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center;
-            backdrop-filter: blur(3px); padding: 15px;
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.7); 
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center;
+            backdrop-filter: blur(5px); 
+            padding: 20px; 
+            animation: fadeIn 0.3s;
         }
-
+        
         .modal-content-help {
-            background: white; padding: 0; border-radius: 10px;
-            max-width: 600px; width: 100%; position: relative;
-            max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+            background: white; 
+            padding: 0; 
+            border-radius: 16px;
+            max-width: 750px; /* Un poco más ancho para leer mejor */
+            width: 100%; 
+            position: relative;
+            max-height: 85vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25); 
+            animation: slideUp 0.3s;
         }
         
         .help-header {
-            background: var(--primary-color); color: white; padding: 15px 20px;
-            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+            background: var(--primary-color); 
+            color: white; 
+            padding: 20px 30px;
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            flex-shrink: 0;
         }
-        .help-header h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
-        .help-body { padding: 20px; color: #444; overflow-y: auto; flex: 1; }
-        .btn-close-help { cursor: pointer; font-size: 24px; color: white; opacity: 0.8; background: none; border: none; }
-        .help-section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .help-section:last-child { border: none; }
-        .help-title { font-weight: 700; color: var(--primary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 16px; }
-        .help-example { background: #f8f9fa; border-left: 4px solid var(--gad-gold); padding: 10px 15px; margin: 10px 0; font-size: 13px; color: #555; font-style: italic; }
-        .btn-modal-ok { background-color: var(--primary-color); color: white; border: none; padding: 15px 0; width: 100%; font-size: 16px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+        
+        .help-header h2 { 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        
+        .help-body { 
+            padding: 30px; 
+            color: #444; 
+            overflow-y: auto; 
+            flex: 1; 
+            line-height: 1.6; 
+        }
+        
+        .btn-close-help { 
+            cursor: pointer; 
+            font-size: 24px; 
+            color: white; 
+            opacity: 0.8; 
+            background: none; 
+            border: none; 
+            transition: opacity 0.2s; 
+        }
+        .btn-close-help:hover { opacity: 1; }
+        
+        .help-section { 
+            margin-bottom: 30px; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 25px; 
+        }
+        .help-section:last-child { 
+            border: none; 
+            margin-bottom: 0; 
+            padding-bottom: 0; 
+        }
+        
+        .help-title { 
+            font-weight: 800; 
+            color: var(--primary-color); 
+            margin-bottom: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-size: 17px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        
+        .help-text { font-size: 15px; color: #555; margin-bottom: 15px; }
+        
+        .help-subtext { 
+            font-size: 14px; 
+            color: #777; 
+            margin-left: 20px; 
+            margin-bottom: 8px; 
+            display: list-item; 
+            list-style-type: disc; 
+        }
+        
+        .help-tip { 
+            background: #fff9db; 
+            border-left: 5px solid var(--gad-gold); 
+            padding: 15px 20px; 
+            margin: 15px 0; 
+            font-size: 14px; 
+            color: #555; 
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .btn-modal-ok { 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            padding: 20px 0; 
+            width: 100%; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+        .btn-modal-ok:hover { background-color: var(--primary-dark); }
 
+        /* ==========================================
+           7. VISOR (DISEÑO DOBLE BOTÓN)
+        ========================================== */
         #modalVisor {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000; z-index: 5000; flex-direction: column;
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh;
+            background: #000; 
+            z-index: 5000; 
+            flex-direction: column;
         }
-        #modalVisor.active { display: flex; }
+        
+        #modalVisor.active { 
+            display: flex; 
+            animation: fadeIn 0.2s; 
+        }
+        
         .viewer-top {
-            position: absolute; top: 0; left: 0; width: 100%; height: 50px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-            display: flex; align-items: center; justify-content: flex-start;
-            padding: 0 15px; z-index: 5002; pointer-events: none; gap: 15px;
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; 
+            height: 70px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent);
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 25px; 
+            z-index: 5002; 
+            pointer-events: none;
         }
-        .btn-close-viewer {
-            pointer-events: auto; background: #dc3545; color: white; border: none;
-            width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5); flex-shrink: 0;
+
+        /* GRUPO IZQUIERDO: CERRAR + TÍTULO */
+        .viewer-left-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            pointer-events: auto;
+            max-width: 60%;
         }
-        .viewer-title {
-            color: white; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px #000;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            text-align: left; max-width: 65%; opacity: 0.9;
+
+        .btn-close-viewer { 
+            background: var(--danger-color); 
+            color: white; 
+            border: none; 
+            width: 40px; height: 40px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+            flex-shrink: 0; 
+            transition: transform 0.2s;
+            font-size: 20px;
         }
+        .btn-close-viewer:hover { 
+            transform: scale(1.1); 
+        }
+
+        .viewer-title { 
+            color: white; 
+            font-size: 15px; 
+            font-weight: bold; 
+            text-shadow: 0 2px 4px #000; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            background: rgba(0,0,0,0.3); 
+            padding: 6px 15px; 
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* GRUPO DERECHO: ACCIONES */
+        .viewer-actions {
+            display: flex; 
+            gap: 12px; 
+            pointer-events: auto; 
+            align-items: center;
+        }
+
+        .btn-folder-drive {
+            background: var(--folder-color); 
+            color: white; 
+            border: none;
+            height: 40px; 
+            padding: 0 20px; 
+            border-radius: 25px;
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 700;
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            text-transform: uppercase;
+            text-decoration: none; 
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-folder-drive:hover { 
+            background: #d35400; 
+            transform: translateY(-2px); 
+        }
+
+        .btn-file-drive {
+            background: var(--drive-color); 
+            color: white; 
+            border: none;
+            height: 40px; 
+            padding: 0 20px; 
+            border-radius: 25px;
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 700;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            text-decoration: none;
+            transition: transform 0.2s;
+            text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-file-drive:hover { 
+            transform: translateY(-2px); 
+            background-color: #2d9246;
+        }
+
         .iframe-container { flex: 1; width: 100%; height: 100%; position: relative; background: #000; }
         #visor-iframe { width: 100%; height: 100%; border: none; display: block; }
-        .nav-overlay {
-            position: absolute; top: 50%; width: 100%; transform: translateY(-50%);
-            display: flex; justify-content: space-between; padding: 0 10px;
-            pointer-events: none; z-index: 5001;
-        }
-        .nav-btn {
-            pointer-events: auto; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.3); color: white; width: 50px; height: 50px;
-            border-radius: 50%; font-size: 24px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
-        }
-        .nav-btn:hover { background: rgba(241, 196, 15, 0.8); color: black; }
-        #visor-loader {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 16px; background: rgba(0,0,0,0.8);
-            padding: 15px 25px; border-radius: 30px; z-index: 5000;
-            display: flex; gap: 10px; align-items: center;
-        }
+        .nav-overlay { position: absolute; top: 50%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 25px; pointer-events: none; z-index: 5001; }
+        .nav-btn { pointer-events: auto; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.3); color: white; width: 60px; height: 60px; border-radius: 50%; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .nav-btn:hover { background: rgba(241, 196, 15, 0.9); color: black; transform: scale(1.1); }
+        #visor-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; background: rgba(0,0,0,0.8); padding: 20px 40px; border-radius: 40px; z-index: 5000; display: flex; gap: 15px; align-items: center; font-weight: 500; }
 
+        /* MÓVIL (RESPONSIVE) - CORRECCIÓN DE BÚSQUEDA AÑADIDA AQUÍ */
         @media screen and (max-width: 768px) {
-            header { height: auto; flex-direction: column; padding: 15px; gap: 15px; }
-            .header-left, .header-center, .header-right { width: 100%; text-align: center; justify-content: center; }
-            .header-center { order: 1; margin-bottom: 5px; }
-            .header-left { order: 2; margin-bottom: 10px; white-space: normal; width: 100%; }
-            .header-right { order: 3; justify-content: space-evenly; }
-            .header-title { font-size: 18px; white-space: normal; line-height: 1.2; }
-            .search-wrapper { flex-direction: column; gap: 10px; }
-            .search-input-container, .btn-clear { width: 100%; }
-            .nav-btn { width: 45px; height: 45px; font-size: 20px; background: rgba(0,0,0,0.4); }
-            .modal-content-help { max-height: 80vh; }
+            header { padding: 15px 20px; flex-direction: column; align-items: stretch; gap: 15px; }
+            .header-left, .header-center, .header-right { width: 100%; text-align: center; }
+            .header-center { order: 1; } .logo { height: 75px; } .header-left { order: 2; } .header-right { order: 3; align-items: center; }
+            
+            .stats-wrapper { width: 100%; justify-content: space-around; padding: 12px; }
+            .stat-box.divider-right::after { display: none; }
+            
+            /* --- CORRECCIÓN DE BÚSQUEDA MÓVIL (Nueva Lógica) --- */
+            .controls-container { padding: 20px; }
+            .search-wrapper { 
+                flex-direction: column; /* Apilar elementos verticalmente */
+                gap: 15px; 
+            }
+            .search-input-container { width: 100%; } /* Barra ocupa todo */
+            .btn-clear { width: 100%; } /* Botón ocupa todo */
+            /* ---------------------------------------------------- */
+            
+            .btn-folder-drive span, .btn-file-drive span { display: none; } 
+            .grid { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
+            .viewer-top { padding: 0 10px; height: 60px; }
+            .viewer-left-group { max-width: 50%; gap: 10px; }
+            .viewer-title { font-size: 13px; padding: 4px 10px; }
+            .btn-close-viewer { width: 36px; height: 36px; }
+            .btn-folder-drive, .btn-file-drive { padding: 0 12px; height: 36px; }
         }
-
-        :fullscreen header, :fullscreen .controls-container, :fullscreen .pie-pagina { display: none; }
-        :fullscreen #modalVisor { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
 
     <header>
         <div class="header-left">
-            <h1 class="header-title">INVENTARIO DE DOCUMENTOS GAD</h1>
+            <h1 class="header-title">INVENTARIO GAD</h1>
+            <div class="header-subtitle">Sistema de Gestión Documental Inteligente</div>
         </div>
         <div class="header-center">
             <img src="logogad.png" alt="GAD Logo" class="logo" onerror="this.style.display='none'">
         </div>
         <div class="header-right">
-            <button class="btn-help-premium" onclick="toggleModalAyuda(true)">
-                <i class="fa-regular fa-circle-question"></i> AYUDA
-            </button>
-            <div class="stats-group">
-                <span id="stats-number" class="stats-counter">--</span>
-                <span class="stats-label">Documentos</span>
+            <div class="stats-wrapper">
+                <div class="stat-box divider-right">
+                    <span id="stat-total" class="stat-number">--</span>
+                    <span class="stat-label">Total Documentos</span>
+                </div>
+                <div class="stat-box">
+                    <div id="activity-details" class="activity-grid">
+                        <span class="act-item none">--</span> 
+                    </div>
+                    <span class="stat-label">Actividad Diaria</span>
+                </div>
             </div>
+            
+            <div id="fecha-actualizacion" class="last-update-badge">
+                <i class="fa-regular fa-clock"></i> <span>Actualizado: --/-- --:--</span>
+            </div>
+
+            <button class="btn-help-premium" onclick="toggleModalAyuda(true)">
+                <i class="fa-solid fa-book-open"></i> Manual de Operador
+            </button>
         </div>
     </header>
 
@@ -227,15 +828,10 @@
         <div class="search-wrapper">
             <div class="search-input-container">
                 <i class="fa-solid fa-search search-icon"></i>
-                <input type="text" id="buscador" class="search-input" 
-                       placeholder="Ej: España DNI 2025"
-                       onkeyup="aplicarFiltrosInteligentes()">
+                <input type="text" id="buscador" class="search-input" placeholder="Escribe para buscar (Ej: Alemania, DNI, Pasaporte...)" onkeyup="aplicarFiltrosInteligentes()">
             </div>
-            <button class="btn-clear" onclick="limpiarBusqueda()">
-                <i class="fa-solid fa-eraser"></i> Limpiar
-            </button>
+            <button class="btn-clear" onclick="limpiarBusqueda()"><i class="fa-solid fa-eraser"></i> Limpiar Filtros</button>
         </div>
-
         <div class="filters-chips">
             <button class="chip active" onclick="setFiltro('cat', 'TODOS', this)">Todo</button>
             <button class="chip" onclick="setFiltro('cat', 'PERSONAS', this)"><i class="fa-solid fa-user"></i> Personas</button>
@@ -249,7 +845,7 @@
 
     <div class="results-container">
         <div id="loader" class="loader-box">
-            <i class="fa-solid fa-sync fa-spin"></i> Sincronizando con GAD V3...
+            <i class="fa-solid fa-sync fa-spin"></i> Conectando con Base de Datos GAD V1...
         </div>
         <div id="grid-resultados" class="grid"></div>
     </div>
@@ -257,69 +853,70 @@
     <div id="modalAyuda" class="modal-overlay" onclick="if(event.target === this) toggleModalAyuda(false)">
         <div class="modal-content-help">
             <div class="help-header">
-                <h2><i class="fa-solid fa-book-open"></i> Manual de Operador</h2>
+                <h2><i class="fa-solid fa-circle-info"></i> Manual de Operador GAD</h2>
                 <button class="btn-close-help" onclick="toggleModalAyuda(false)">✕</button>
             </div>
             
             <div class="help-body">
                 <div class="help-section">
-                    <div class="help-title"><i class="fa-solid fa-magnifying-glass"></i> 1. Cómo buscar documentos</div>
-                    <p>El buscador es inteligente. No necesitas escribir acentos ni mayúsculas.</p>
-                    
-                    <div class="help-example">
-                        <b>Ejemplo 1:</b> Si escribes "rumania", el sistema encontrará "Rumanía".<br>
-                        <b>Ejemplo 2:</b> Escribe "Alemania PNC 2024" para ver el documento concreto.<br>
-                        <b>Ejemplo 3:</b> Escribe "PNC" para Permisos de Conducción o "PSP" para Pasaporte.
+                    <div class="help-title"><i class="fa-solid fa-magnifying-glass"></i> 1. ¿Cómo busco un documento?</div>
+                    <p class="help-text">El buscador inteligente te permite encontrar cualquier archivo en segundos. Solo tienes que escribir en la barra blanca central.</p>
+                    <span class="help-subtext">Puedes escribir el <b>País</b> (Ej: "Rumania" o "Marruecos").</span>
+                    <span class="help-subtext">Puedes escribir el <b>Tipo de Documento</b> (Ej: "DNI", "Pasaporte", "Permiso").</span>
+                    <span class="help-subtext">O combinar ambos para mayor precisión: <b>"Rumania DNI"</b>.</span>
+                    <div class="help-tip">
+                        <b>Truco Pro:</b> No hace falta que pongas tildes ni mayúsculas. El sistema te entenderá igual si escribes "belgica" o "Bélgica".
                     </div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-title"><i class="fa-solid fa-eye" style="color:var(--eye-color)"></i> 2. El Visor de Imágenes</div>
-                    <p>Al pulsar el icono del ojo, se abre el documento en pantalla completa.</p>
-                    <ul>
-                        <li><strong>Zoom Táctil:</strong> En el móvil, usa dos dedos sobre la pantalla (gesto de pellizco) para ampliar y ver las microescrituras.</li>
-                        <li><strong>Navegación:</strong> Usa las flechas laterales para ver otros documentos de la misma carpeta sin salir.</li>
+                    <div class="help-title"><i class="fa-solid fa-eye" style="color:var(--eye-color)"></i> 2. ¿Cómo veo el documento?</div>
+                    <p class="help-text">Cuando encuentres la ficha que buscas en la lista, pulsa el <b>icono del OJO VERDE</b> situado a la derecha de la tarjeta.</p>
+                    <p class="help-text">Se abrirá el Visor en pantalla completa. Aquí tienes dos opciones importantes arriba a la derecha:</p>
+                    <ul style="margin-left: 20px; color: #555; margin-bottom: 15px; list-style: none;">
+                        <li style="margin-bottom: 8px;"><span style="color:#f39c12; font-weight:bold; background:#fff3cd; padding:2px 8px; border-radius:4px;">BOTÓN NARANJA</span> <b>Ver Carpeta:</b> Te lleva directamente a la carpeta de Google Drive donde está guardado este archivo y sus compañeros.</li>
+                        <li><span style="color:#34a853; font-weight:bold; background:#d1e7dd; padding:2px 8px; border-radius:4px;">BOTÓN VERDE</span> <b>Ver Archivo:</b> Abre la imagen original en alta calidad en una pestaña nueva.</li>
                     </ul>
-                    
-                    <div class="help-example" style="background:#fff3cd; border-color:#ffc107;">
-                        💡 <strong>Nota:</strong> Pulsa el botón <b>ROJO</b> para cerrar o pulsa el botón de la derecha para entrar en Google Drive en ventana nueva y así poder editar el documento.
-                    </div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-title"><i class="fa-solid fa-layer-group"></i> 3. Filtros Rápidos</div>
-                    <p>Usa los botones grises (chips) debajo del buscador para filtrar rápidamente:</p>
-                    <ul>
-                        <li><strong>Personas vs Vehículos:</strong> Separa DNI/Pasaportes de Cartas de Coche.</li>
-                        <li><strong>600 vs 2400 DPI:</strong> Elige entre calidad estándar o ultra-alta definición.</li>
-                    </ul>
+                    <div class="help-title"><i class="fa-solid fa-chart-line"></i> 3. ¿Qué significan los iconos de arriba?</div>
+                    <p class="help-text">En la cabecera verás un panel de actividad que te informa de lo que ha pasado en las últimas 24 horas:</p>
+                    <span class="help-subtext"><b style="color:#f1c40f"><i class="fa-solid fa-circle-plus"></i> NUEVOS (Dorado):</b> Indica cuántos documentos se han añadido al sistema hoy.</span>
+                    <span class="help-subtext"><b style="color:#0dcaf0"><i class="fa-solid fa-pen"></i> MODIFICADOS (Azul):</b> Indica cuántos documentos han cambiado de nombre o se han actualizado.</span>
+                    <span class="help-subtext"><b style="color:#ff6b6b"><i class="fa-solid fa-trash"></i> ELIMINADOS (Rojo):</b> Indica cuántos documentos se han borrado de la base de datos.</span>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-title"><i class="fa-regular fa-clock"></i> 4. Actualización Automática</div>
+                    <p class="help-text">El sistema se sincroniza automáticamente cada noche a las 02:00 AM. La fecha de la última actualización aparece siempre arriba a la derecha.</p>
                 </div>
             </div>
 
-            <button class="btn-modal-ok" onclick="toggleModalAyuda(false)">ENTENDIDO, VOLVER AL INVENTARIO</button>
+            <button class="btn-modal-ok" onclick="toggleModalAyuda(false)">¡ENTENDIDO! CERRAR MANUAL</button>
         </div>
     </div>
 
     <div id="modalVisor">
         <div class="viewer-top">
-            <button class="btn-close-viewer" onclick="cerrarVisor()">✕</button>
-            <div class="viewer-title" id="visor-titulo">Cargando...</div>
+            <div class="viewer-left-group">
+                <button class="btn-close-viewer" onclick="cerrarVisor()">✕</button>
+                <div class="viewer-title" id="visor-titulo">Cargando...</div>
+            </div>
+            <div class="viewer-actions">
+                <a href="#" target="_blank" id="btn-folder-link" class="btn-folder-drive"><i class="fa-solid fa-folder-open"></i> <span>Ver Carpeta</span></a>
+                <a href="#" target="_blank" id="btn-file-link" class="btn-file-drive"><i class="fa-brands fa-google-drive"></i> <span>Ver Archivo</span></a>
+            </div>
         </div>
-
         <div id="visor-loader"><i class="fa-solid fa-spinner fa-spin"></i> Cargando Documento...</div>
-
         <div class="nav-overlay">
             <button class="nav-btn" onclick="cambiarDoc(-1)">&#10094;</button>
             <button class="nav-btn" onclick="cambiarDoc(1)">&#10095;</button>
         </div>
-
-        <div class="iframe-container">
-            <iframe id="visor-iframe" src="" allow="autoplay; fullscreen"></iframe>
-        </div>
+        <div class="iframe-container"><iframe id="visor-iframe" src="" allow="autoplay; fullscreen"></iframe></div>
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE V3 (NUEVA)
         const firebaseConfig = {
             apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
             authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -333,34 +930,160 @@
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth(); 
 
         let BD_GLOBAL = [];
         let LISTA_REPRODUCCION = []; 
         let INDICE_ACTUAL = 0;
         let filtros = { cat: 'TODOS', cal: 'TODOS' };
 
-        // LOGICA DEL VISOR (¡¡ARREGLADA PARA V3!!)
+        auth.onAuthStateChanged(user => {
+            db.ref('_ESTADISTICAS').on('value', snapshot => {
+                const stats = snapshot.val();
+                if (stats) actualizarCabeceraEstadisticas(stats);
+            });
+            iniciarEscuchaDatos();
+        });
+
+        function actualizarCabeceraEstadisticas(stats) {
+            // FECHA ACTUALIZACIÓN
+            document.querySelector('#fecha-actualizacion span').innerText = `Actualizado: ${stats.UltimaActualizacion || '--'}`;
+            
+            // ACTIVIDAD DETALLADA
+            const boxDetalle = document.getElementById('activity-details');
+            boxDetalle.innerHTML = ''; 
+
+            let html = '';
+            let huboCambios = false;
+
+            // 1. NUEVOS
+            let numNuevos = stats.Nuevos || stats.NuevosDetectados || 0;
+            if(numNuevos > 0) {
+                html += `<span class="act-item new"><i class="fa-solid fa-circle-plus"></i> ${numNuevos}</span>`;
+                huboCambios = true;
+            }
+
+            // 2. MODIFICADOS
+            let numMod = stats.Modificados || stats.Actualizados || 0;
+            if(numMod > 0) {
+                html += `<span class="act-item mod"><i class="fa-solid fa-pen"></i> ${numMod}</span>`;
+                huboCambios = true;
+            }
+
+            // 3. ELIMINADOS
+            let numDel = stats.Eliminados || stats.Borrados || 0;
+            if(numDel > 0) {
+                html += `<span class="act-item del"><i class="fa-solid fa-trash"></i> ${numDel}</span>`;
+                huboCambios = true;
+            }
+
+            // Si no hay nada
+            if(!huboCambios) {
+                html = `<span class="act-item none"><i class="fa-solid fa-check"></i> Sin cambios</span>`;
+            }
+
+            boxDetalle.innerHTML = html;
+        }
+
+        function iniciarEscuchaDatos() {
+            const nodos = [
+                { id: 'BD_DOCUMENTOS 600 DPI', cat: 'PERSONAS', cal: '600' },
+                { id: 'BD_VEHICULOS 600 DPI', cat: 'VEHICULOS', cal: '600' }
+            ];
+            let datosTemporales = {};
+            nodos.forEach(nodo => {
+                db.ref(nodo.id).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        datosTemporales[nodo.id] = { raw: data, meta: nodo };
+                        procesarDatos(datosTemporales);
+                    }
+                });
+            });
+        }
+
+        function normalizarTexto(t) { return t ? t.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : ""; }
+
+        function procesarDatos(datosAgrupados) {
+            let lista = [];
+            let contadorId = 0;
+            Object.values(datosAgrupados).forEach(grupo => {
+                Object.entries(grupo.raw).forEach(([key, doc]) => {
+                    if (!doc || !doc.NombreDocumento) return;
+                    const raw = `${doc.NombreDocumento} ${doc.Pais} ${doc.TipoDocumento} ${doc.SubtipoDocumento||''} ${doc.EstadoProvincia||''}`;
+                    const words = normalizarTexto(raw).replace(/_/g,' ').replace(/-/g,' ').split(/\s+/).filter(w=>w.length>0);
+                    lista.push({ ...doc, _cat: grupo.meta.cat, _cal: grupo.meta.cal, _palabras: words, _carpeta: doc.Pais || "General", _idUnico: contadorId++, Timestamp: doc.Timestamp || 0 });
+                });
+            });
+            BD_GLOBAL = lista.sort((a, b) => {
+                const paisA = (a.Pais||'ZZZ').toUpperCase();
+                const paisB = (b.Pais||'ZZZ').toUpperCase();
+                if(paisA!==paisB) return paisA<paisB ? -1:1;
+                return (a.NombreDocumento||'').localeCompare(b.NombreDocumento||'');
+            });
+            if (BD_GLOBAL.length > 0) {
+                document.getElementById('loader').style.display = 'none';
+                aplicarFiltrosInteligentes();
+            }
+        }
+
+        function aplicarFiltrosInteligentes() {
+            const txt = normalizarTexto(document.getElementById('buscador').value).trim();
+            const terms = txt.split(/\s+/).filter(t=>t.length>0);
+            const grid = document.getElementById('grid-resultados');
+            grid.innerHTML = '';
+            const res = BD_GLOBAL.filter(doc => {
+                if(filtros.cat !== 'TODOS' && doc._cat !== filtros.cat) return false;
+                if(filtros.cal !== 'TODOS' && doc._cal !== filtros.cal) return false;
+                if(terms.length > 0) return terms.every(terminoBuscado => doc._palabras.some(palabraDoc => palabraDoc.includes(terminoBuscado)));
+                return true;
+            });
+
+            document.getElementById('stat-total').innerText = res.length.toLocaleString();
+
+            if (res.length > 0) {
+                res.slice(0, 100).forEach(doc => {
+                    const isVeh = doc._cat === 'VEHICULOS';
+                    const icon = isVeh ? '<i class="fa-solid fa-car"></i>' : '<i class="fa-solid fa-user"></i>';
+                    const badge = isVeh ? 'badge-veh' : 'badge-loc';
+                    const html = `
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-badges"><span class="badge ${badge}">${icon} ${doc.Pais||doc.EstadoProvincia}</span> <span class="badge badge-dpi">${doc._cal} DPI</span></div>
+                                <div class="card-title" title="${doc.NombreDocumento}">${doc.NombreDocumento}</div>
+                            </div>
+                            <button class="btn-view" onclick="abrirVisor(${doc._idUnico})" title="Ver"><i class="fa-solid fa-eye"></i></button>
+                        </div>`;
+                    grid.innerHTML += html;
+                });
+            } else { 
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:#999;font-size:16px;"><i class="fa-solid fa-folder-open" style="font-size:40px;margin-bottom:15px;display:block;opacity:0.5"></i>Sin resultados</div>`; 
+            }
+        }
+
+        function setFiltro(type, val, btn) {
+            filtros[type] = val;
+            btn.parentElement.querySelectorAll(`button[onclick*="'${type}'"]`).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            aplicarFiltrosInteligentes();
+        }
+        function limpiarBusqueda() { document.getElementById('buscador').value = ''; aplicarFiltrosInteligentes(); }
+        function toggleModalAyuda(s) { document.getElementById('modalAyuda').style.display = s ? 'flex' : 'none'; }
+
+        // VISOR
         const modalVisor = document.getElementById('modalVisor');
         const iframeEl = document.getElementById('visor-iframe');
         const tituloEl = document.getElementById('visor-titulo');
         const loaderVisor = document.getElementById('visor-loader');
+        const btnFolder = document.getElementById('btn-folder-link');
+        const btnFile = document.getElementById('btn-file-link');
 
         function abrirVisor(idUnico) {
-            const docClicado = BD_GLOBAL.find(d => d._idUnico === idUnico);
-            if (!docClicado) return;
-
-            // TRUCO MAESTRO: Como la nueva base de datos no tiene carpetas reales, 
-            // usamos la propiedad '_carpeta' (que hemos llenado con el PAIS) 
-            // para agrupar las imágenes.
-            // Así, al darle a la flecha, solo pasas al siguiente documento DE ESE PAÍS.
-            
-            LISTA_REPRODUCCION = BD_GLOBAL.filter(d => d._carpeta === docClicado._carpeta);
-            
-            // Si por alguna razón la lista sale vacía (error de datos), usamos la global
+            const doc = BD_GLOBAL.find(d => d._idUnico === idUnico);
+            if (!doc) return;
+            LISTA_REPRODUCCION = BD_GLOBAL.filter(d => d._carpeta === doc._carpeta);
             if (LISTA_REPRODUCCION.length === 0) LISTA_REPRODUCCION = BD_GLOBAL;
-
             INDICE_ACTUAL = LISTA_REPRODUCCION.findIndex(d => d._idUnico === idUnico);
-
             entrarFullscreen();
             modalVisor.classList.add('active');
             cargarDocumentoActual();
@@ -368,181 +1091,28 @@
 
         function cargarDocumentoActual() {
             if (INDICE_ACTUAL < 0 || INDICE_ACTUAL >= LISTA_REPRODUCCION.length) return;
-            
             const doc = LISTA_REPRODUCCION[INDICE_ACTUAL];
-            tituloEl.innerText = `${INDICE_ACTUAL + 1}/${LISTA_REPRODUCCION.length} - ${doc.NombreDocumento}`;
+            tituloEl.innerText = `${INDICE_ACTUAL + 1}/${LISTA_REPRODUCCION.length} - ${doc.Pais} - ${doc.NombreDocumento}`;
             loaderVisor.style.display = 'flex';
-
-            let urlLimpia = doc.Enlace;
-            if (urlLimpia.includes('/view')) {
-                urlLimpia = urlLimpia.replace(/\/view.*/, '/preview');
-            } else if (!urlLimpia.includes('/preview') && !urlLimpia.includes('id=')) {
-                 urlLimpia += '/preview';
-            }
-
-            iframeEl.src = urlLimpia;
-            iframeEl.onload = function() {
-                loaderVisor.style.display = 'none';
-            };
+            let urlPreview = doc.Enlace.includes('/view') ? doc.Enlace.replace(/\/view.*/, '/preview') : doc.Enlace + '/preview';
+            iframeEl.src = urlPreview;
+            iframeEl.onload = () => loaderVisor.style.display = 'none';
+            btnFile.href = doc.Enlace;
+            if (doc.FolderURL && doc.FolderURL !== "") { btnFolder.href = doc.FolderURL; btnFolder.style.display = "flex"; } else { btnFolder.style.display = "none"; }
         }
 
-        function cambiarDoc(direccion) {
-            let nuevoIndice = INDICE_ACTUAL + direccion;
-            if (nuevoIndice < 0) nuevoIndice = LISTA_REPRODUCCION.length - 1;
-            if (nuevoIndice >= LISTA_REPRODUCCION.length) nuevoIndice = 0;
-
-            INDICE_ACTUAL = nuevoIndice;
+        function cambiarDoc(dir) {
+            let nuevo = INDICE_ACTUAL + dir;
+            if (nuevo < 0) nuevo = LISTA_REPRODUCCION.length - 1;
+            if (nuevo >= LISTA_REPRODUCCION.length) nuevo = 0;
+            INDICE_ACTUAL = nuevo;
             cargarDocumentoActual();
         }
 
-        function cerrarVisor() {
-            modalVisor.classList.remove('active');
-            iframeEl.src = "";
-            salirFullscreen();
-        }
-
-        function entrarFullscreen() {
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
-        }
-        function salirFullscreen() {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-        }
-        document.addEventListener('keydown', (e) => {
-            if (!modalVisor.classList.contains('active')) return;
-            if (e.key === "ArrowLeft") cambiarDoc(-1);
-            if (e.key === "ArrowRight") cambiarDoc(1);
-            if (e.key === "Escape") cerrarVisor();
-        });
-
-        // UTILIDADES
-        function normalizarTexto(texto) {
-            if (!texto) return "";
-            return texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
-        }
-
-        // CARGA DE DATOS (VERSIÓN V3 SIN BUCLE x8)
-        async function cargarInventario() {
-            const nodos = [
-                { id: 'BD_DOCUMENTOS 600 DPI', cat: 'PERSONAS', cal: '600' },
-                { id: 'BD_VEHICULOS 600 DPI', cat: 'VEHICULOS', cal: '600' }
-            ];
-
-            let lista = [];
-            let contadorId = 0;
-
-            for (let nodo of nodos) {
-                try {
-                    const snap = await db.ref(nodo.id).once('value');
-                    const data = snap.val();
-                    if (!data) continue;
-
-                    // AQUI ESTA LA MAGIA: 
-                    // 1. Usamos Object.entries para leer la lista plana (sin subcarpetas).
-                    // 2. Asignamos 'doc.Pais' a '_carpeta'. Esto permite que el VISOR
-                    //    sepa que todos los docs de "ESPAÑA" pertenecen al mismo grupo.
-                    
-                    Object.entries(data).forEach(([key, doc]) => {
-                        if (!doc || !doc.NombreDocumento) return;
-
-                        const rawText = `${doc.NombreDocumento} ${doc.Pais} ${doc.TipoDocumento} ${doc.SubtipoDocumento || ''} ${doc.EstadoProvincia || ''}`;
-                        const textoNormalizado = normalizarTexto(rawText).replace(/_/g, ' ').replace(/-/g, ' ');
-                        const palabrasClave = textoNormalizado.split(/\s+/).filter(w => w.length > 0);
-
-                        // TRUCO: Si no hay país, usamos "General" para que no rompa el visor
-                        let carpetaVirtual = doc.Pais || "General"; 
-
-                        lista.push({
-                            ...doc,
-                            _cat: nodo.cat,
-                            _cal: nodo.cal,
-                            _palabras: palabrasClave,
-                            _carpeta: carpetaVirtual, // <--- ESTO ARREGLA EL CARRUSEL
-                            _idUnico: contadorId++
-                        });
-                    });
-                } catch (e) { console.error("Error nodo " + nodo.id, e); }
-            }
-
-            // Ordenamos alfabéticamente por PAÍS (A-Z) para que quede bonito
-            BD_GLOBAL = lista.sort((a, b) => {
-                const paisA = (a.Pais || 'ZZZ').toUpperCase();
-                const paisB = (b.Pais || 'ZZZ').toUpperCase();
-                if (paisA < paisB) return -1;
-                if (paisA > paisB) return 1;
-                return (a.NombreDocumento || '').localeCompare(b.NombreDocumento || '');
-            });
-
-            document.getElementById('loader').style.display = 'none';
-            aplicarFiltrosInteligentes();
-        }
-
-        function aplicarFiltrosInteligentes() {
-            const inputRaw = document.getElementById('buscador').value;
-            const input = normalizarTexto(inputRaw).trim();
-            const terminos = input.split(/\s+/).filter(t => t.length > 0);
-            const grid = document.getElementById('grid-resultados');
-            const statsNum = document.getElementById('stats-number');
-            
-            grid.innerHTML = '';
-
-            const resultados = BD_GLOBAL.filter(doc => {
-                if (filtros.cat !== 'TODOS' && doc._cat !== filtros.cat) return false;
-                if (filtros.cal !== 'TODOS' && doc._cal !== filtros.cal) return false;
-                if (terminos.length > 0) return terminos.every(t => doc._palabras.some(p => p.startsWith(t)));
-                return true;
-            });
-
-            if (resultados.length > 0) {
-                statsNum.innerText = resultados.length.toLocaleString();
-                // Mostramos 100 para no bloquear el navegador
-                resultados.slice(0, 100).forEach(doc => {
-                    const esVehiculo = doc._cat === 'VEHICULOS';
-                    let ubicacion = doc.EstadoProvincia && doc.EstadoProvincia !== 'N/A' ? doc.EstadoProvincia : doc.Pais;
-                    const iconCat = esVehiculo ? '<i class="fa-solid fa-car"></i>' : '<i class="fa-solid fa-user"></i>';
-                    const badgeClass = esVehiculo ? 'badge-veh' : 'badge-loc';
-
-                    const html = `
-                        <div class="card">
-                            <div class="card-content">
-                                <div class="card-badges">
-                                    <span class="badge ${badgeClass}">${iconCat} ${ubicacion}</span>
-                                    <span class="badge badge-dpi">${doc._cal} DPI</span>
-                                </div>
-                                <div class="card-title" title="${doc.NombreDocumento}">
-                                    ${doc.NombreDocumento}
-                                </div>
-                            </div>
-                            <button class="btn-view" onclick="abrirVisor(${doc._idUnico})" title="Ver">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>`;
-                    grid.innerHTML += html;
-                });
-            } else {
-                statsNum.innerText = "0";
-                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">Sin resultados</div>`;
-            }
-        }
-
-        function setFiltro(tipo, valor, btn) {
-            filtros[tipo] = valor;
-            const padre = btn.parentElement;
-            padre.querySelectorAll(`button[onclick*="'${tipo}'"]`).forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            aplicarFiltrosInteligentes();
-        }
-
-        function limpiarBusqueda() {
-            document.getElementById('buscador').value = '';
-            aplicarFiltrosInteligentes();
-        }
-
-        function toggleModalAyuda(mostrar) {
-            document.getElementById('modalAyuda').style.display = mostrar ? 'flex' : 'none';
-        }
-
-        cargarInventario();
+        function cerrarVisor() { modalVisor.classList.remove('active'); iframeEl.src = ""; salirFullscreen(); }
+        function entrarFullscreen() { const e = document.documentElement; if (e.requestFullscreen) e.requestFullscreen().catch(()=>{}); }
+        function salirFullscreen() { if (document.exitFullscreen) document.exitFullscreen().catch(()=>{}); }
+        document.addEventListener('keydown', e => { if(modalVisor.classList.contains('active')) { if(e.key==="ArrowLeft")cambiarDoc(-1); if(e.key==="ArrowRight")cambiarDoc(1); if(e.key==="Escape")cerrarVisor(); } });
     </script>
 </body>
 </html>
