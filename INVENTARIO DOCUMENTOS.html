@@ -761,7 +761,7 @@
         .nav-btn:hover { background: rgba(241, 196, 15, 0.9); color: black; transform: scale(1.1); }
         #visor-loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; background: rgba(0,0,0,0.8); padding: 20px 40px; border-radius: 40px; z-index: 5000; display: flex; gap: 15px; align-items: center; font-weight: 500; }
 
-        /* MÓVIL (RESPONSIVE) - CORRECCIÓN DE BÚSQUEDA AÑADIDA AQUÍ */
+        /* MÓVIL (RESPONSIVE) - CORRECCIÓN DE BÚSQUEDA Y BOTONES FILTRO */
         @media screen and (max-width: 768px) {
             header { padding: 15px 20px; flex-direction: column; align-items: stretch; gap: 15px; }
             .header-left, .header-center, .header-right { width: 100%; text-align: center; }
@@ -770,15 +770,37 @@
             .stats-wrapper { width: 100%; justify-content: space-around; padding: 12px; }
             .stat-box.divider-right::after { display: none; }
             
-            /* --- CORRECCIÓN DE BÚSQUEDA MÓVIL (Nueva Lógica) --- */
+            /* --- CORRECCIÓN DE BÚSQUEDA MÓVIL --- */
             .controls-container { padding: 20px; }
             .search-wrapper { 
-                flex-direction: column; /* Apilar elementos verticalmente */
+                flex-direction: column; 
                 gap: 15px; 
             }
-            .search-input-container { width: 100%; } /* Barra ocupa todo */
-            .btn-clear { width: 100%; } /* Botón ocupa todo */
-            /* ---------------------------------------------------- */
+            .search-input-container { width: 100%; } 
+            .btn-clear { width: 100%; } 
+
+            /* --- NUEVO: CORRECCIÓN BOTONES DE FILTRO EN 2 LÍNEAS EXACTAS (GRID 3x2) --- */
+            .filters-chips {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr); /* 3 Columnas iguales */
+                gap: 8px; /* Espacio reducido para que quepan bien */
+                width: 100%;
+            }
+
+            .chip {
+                width: 100%;
+                padding: 8px 4px; /* Padding reducido para textos largos */
+                font-size: 12px; /* Fuente ajustada */
+                justify-content: center;
+                text-align: center;
+            }
+            
+            /* Ajuste iconos dentro de chips para que no ocupen mucho */
+            .chip i { display: none; } /* Opcional: Ocultar iconos si quieres solo texto limpio en móvil */
+            /* O si prefieres mantenerlos, quita la línea de arriba y usa: .chip { gap: 4px; } */
+
+            .divider { display: none; } /* Ocultamos la barra vertical para que no rompa la rejilla */
+            /* -------------------------------------------------------------------------- */
             
             .btn-folder-drive span, .btn-file-drive span { display: none; } 
             .grid { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
@@ -917,16 +939,16 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
-            authDomain: "gad-alicante-v3.firebaseapp.com",
-            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "gad-alicante-v3",
-            storageBucket: "gad-alicante-v3.firebasestorage.app",
-            messagingSenderId: "906986258369",
-            appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
-            measurementId: "G-Q0E3H1996K"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+  authDomain: "gad-alicante-v3.firebaseapp.com",
+  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gad-alicante-v3",
+  storageBucket: "gad-alicante-v3.firebasestorage.app",
+  messagingSenderId: "906986258369",
+  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+  measurementId: "G-Q0E3H1996K"
+};
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
