@@ -106,12 +106,14 @@
         .cc-line-2 { font-size: 14px; font-weight: bold; color: black; display: block; margin-bottom: 2px; }
         .cc-line-3 { font-size: 12px; font-weight: normal; color: #333; display: block; }
 
-        .cc-main-title { text-align: center; font-size: 22px; font-weight: 900; text-decoration: underline; text-transform: uppercase; margin-bottom: 30px; }
+        /* AJUSTE: Reducido margen inferior del título para ganar espacio */
+        .cc-main-title { text-align: center; font-size: 22px; font-weight: 900; text-decoration: underline; text-transform: uppercase; margin-bottom: 20px; }
 
         /* CAJAS */
+        /* AJUSTE: Reducido margin-bottom de 15px a 8px */
         .cc-box { 
             border: 2px solid #000; 
-            margin-bottom: 15px; 
+            margin-bottom: 8px; 
             padding: 40px 10px 10px 10px; 
             position: relative; 
         }
@@ -145,11 +147,12 @@
         .input-long { flex: 0.7 !important; }
 
         /* CAJA DOBLE */
+        /* AJUSTE: Reducida altura de 150px a 135px y margen superior reducido a 5px */
         .cc-split-box { 
             display: flex; 
             border: 1px solid #999; 
-            margin-top: 10px; 
-            height: 150px; 
+            margin-top: 5px; 
+            height: 135px; 
         }
         .cc-sub-box { flex: 1; padding: 8px; display: flex; flex-direction: column; position: relative; }
         .cc-sub-box:first-child { border-right: 1px dotted #000; }
