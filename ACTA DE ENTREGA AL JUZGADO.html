@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTA ENTREGA DE DOCUMENTOS AL JUZGADO</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* CONFIGURACIÓN BÁSICA */
+        body { background-color: #374151; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        
+        /* HOJA A4 */
+        .page-a4 {
+            width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 10mm 15mm;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        /* INPUT DE PUNTOS (AJUSTADO: BASELINE) */
+        .input-dotted {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 11pt;
+            border: none;
+            border-bottom: 2px dotted #000; 
+            background-color: transparent;
+            outline: none;
+            text-align: center;
+            padding: 0 2px;
+            color: #000;
+            display: inline-block;
+            /* CAMBIO AQUÍ: 'baseline' alinea el texto escrito con el texto fijo */
+            vertical-align: baseline; 
+            margin: 0 1px;
+            line-height: normal; /* Asegura que no herede alturas extrañas */
+        }
+        .input-dotted:focus { background-color: #f0f9ff; }
+
+        /* TEXTAREA (2 LÍNEAS EXACTAS) */
+        .textarea-dotted {
+            width: 100%;
+            border: none;
+            background: repeating-linear-gradient(to bottom, transparent 0px, transparent 29px, #000 30px);
+            line-height: 30px; 
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11pt;
+            font-weight: bold;
+            resize: none;
+            outline: none;
+            padding: 0 5px;
+            overflow: hidden; 
+        }
+
+        /* CHECKBOXES */
+        .check-item {
+            display: flex; align-items: center; cursor: pointer; font-weight: bold; font-size: 10pt; margin-bottom: 8px;
+        }
+        .check-box-visual {
+            width: 18px; height: 18px; border: 2px solid #000; margin-right: 8px; background: white;
+            display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 2px;
+        }
+
+        /* CABECERA */
+        .header-inst { font-weight: 800; font-size: 13px; text-transform: uppercase; line-height: 1.2; }
+        .header-dept { font-weight: 700; font-size: 12px; margin-top: 6px; }
+        .header-info { font-size: 11px; margin-top: 4px; line-height: 1.3; }
+        .header-link { color: #1d4ed8; text-decoration: underline; cursor: pointer; }
+
+        /* IMPRESIÓN */
+        @media print {
+            @page { size: A4 portrait; margin: 0; }
+            body * { visibility: hidden; }
+            .page-a4, .page-a4 * { visibility: visible; }
+            .page-a4 { 
+                position: absolute; left: 0; top: 0; width: 210mm !important; height: 297mm !important; 
+                margin: 0 !important; padding: 10mm 15mm !important; box-shadow: none !important; 
+                border: none !important; 
+            }
+            .no-print { display: none !important; }
+            .input-dotted { border-bottom: 2px dotted #000 !important; }
+            .check-box-visual { border: 2px solid #000 !important; }
+            .textarea-dotted { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+
+        const DottedInput = ({ value, onChange, width = "100px", placeholder = "" }) => (
+            <input 
+                className="input-dotted"
+                style={{ width: width }}
+                value={value || ''}
+                onChange={onChange}
+                placeholder={placeholder}
+                autoComplete="off"
+            />
+        );
+
+        const App = () => {
+            const [formData, setFormData] = React.useState({});
+            const [savedActas, setSavedActas] = React.useState({});
+            const [logos, setLogos] = React.useState({ left: 'judicial.png', right: 'gad.png' });
+
+            React.useEffect(() => {
+                const stored = JSON.parse(localStorage.getItem('actas_entrega_v4') || "{}");
+                setSavedActas(stored);
+                const l = JSON.parse(localStorage.getItem('logos_entrega_v4'));
+                if(l) setLogos(l);
+
+                // INICIALIZACIÓN
+                setFormData(prev => {
+                    if (!prev.lugar) return { ...prev, lugar: "ALICANTE" };
+                    return prev;
+                });
+            }, []);
+
+            const saveActa = () => {
+                const name = prompt("Nombre para guardar:", formData.diligencias || "Sin Diligencias");
+                if(!name) return;
+                const id = Date.now().toString();
+                const newActas = {...savedActas, [id]: { id, name, date: new Date().toLocaleDateString(), data: formData }};
+                setSavedActas(newActas);
+                localStorage.setItem('actas_entrega_v4', JSON.stringify(newActas));
+            };
+
+            const loadActa = (id) => { setFormData(savedActas[id].data); };
+            const deleteActa = (e, id) => {
+                e.stopPropagation();
+                if(confirm("¿Borrar?")) {
+                    const n = {...savedActas}; delete n[id];
+                    setSavedActas(n); localStorage.setItem('actas_entrega_v4', JSON.stringify(n));
+                }
+            };
+            const handleLogoUpload = (e, s) => {
+                const f = e.target.files[0];
+                if(f){
+                    const r = new FileReader();
+                    r.onload = (ev) => { const n = {...logos, [s]: ev.target.result}; setLogos(n); localStorage.setItem('logos_entrega_v4', JSON.stringify(n)); };
+                    r.readAsDataURL(f);
+                }
+            };
+            const handleChange = (k, v) => setFormData(prev => ({...prev, [k]: v}));
+
+            return (
+                <div className="flex h-screen">
+                    {/* MENU */}
+                    <div className="w-64 bg-gray-900 text-white p-4 no-print flex flex-col gap-2 overflow-y-auto shrink-0 border-r border-gray-700">
+                        <h2 className="text-lg font-bold text-blue-400">⚖️ ACTA ENTREGA DE DOCUMENTOS AL JUZGADO</h2>
+                        <button onClick={()=>{setFormData({lugar: "ALICANTE"});}} className="bg-green-600 p-2 rounded text-xs font-bold hover:bg-green-700 w-full mb-4">NUEVA ENTREGA</button>
+                        <div className="flex-1 space-y-1 overflow-y-auto">
+                            {Object.values(savedActas).map(a => (
+                                <div key={a.id} onClick={()=>loadActa(a.id)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded flex justify-between cursor-pointer text-xs border border-gray-700 items-center mb-1">
+                                    <div className="truncate flex-1 font-bold">{a.name}</div>
+                                    <span onClick={(e)=>deleteActa(e, a.id)} className="text-red-400 font-bold px-2">x</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* MAIN */}
+                    <div className="flex-1 bg-gray-200 flex flex-col overflow-hidden">
+                        <div className="bg-white p-2 shadow flex justify-between items-center no-print z-50 shrink-0 h-14">
+                            <div className="font-bold text-gray-700 text-sm">ACTA ENTREGA DE DOCUMENTO AL JUZGADO</div>
+                            <div className="flex gap-2">
+                                <button onClick={saveActa} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 font-medium">Guardar</button>
+                                <button onClick={()=>window.print()} className="bg-gray-800 text-white px-4 py-1.5 rounded text-sm hover:bg-gray-900 font-medium">🖨️ Imprimir</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-auto p-8 flex justify-center bg-gray-500">
+                            <div className="page-a4">
+                                
+                                {/* CABECERA */}
+                                <div className="flex justify-between items-center mb-8 relative border-b-2 border-gray-800 pb-4">
+                                    <div className="w-24 h-24 flex items-center justify-center relative cursor-pointer hover:opacity-80">
+                                        {!logos.left ? <span className="text-[9px] text-center text-gray-400">Escudo<br/>Judicial</span> : <img src={logos.left} className="w-full h-full object-contain" />}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'left')}/>
+                                    </div>
+                                    <div className="flex-1 px-2 text-center">
+                                        <div className="header-inst">EXCMO. AYUNTAMIENTO DE ALICANTE</div>
+                                        <div className="header-inst text-blue-900">POLICÍA LOCAL</div>
+                                        <div className="header-dept">Grupo de Análisis Documental</div>
+                                        <div className="header-dept">Unidad Judicial de Tráfico</div>
+                                        <div className="header-info">Av. Julián Besteiro 15</div>
+                                        <div className="header-info">Email: <span className="header-link">policia.gad@alicante.es</span></div>
+                                        <div className="header-info font-bold">TEL: +34629111387 - Central PL 965107200</div>
+                                    </div>
+                                    <div className="w-24 h-24 flex items-center justify-center relative cursor-pointer hover:opacity-80">
+                                        {!logos.right ? <span className="text-[9px] text-center text-gray-400">Escudo<br/>GAD</span> : <img src={logos.right} className="w-full h-full object-contain" />}
+                                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e)=>handleLogoUpload(e,'right')}/>
+                                    </div>
+                                </div>
+
+                                <div className="text-center mb-8">
+                                    <h1 className="text-xl font-bold underline uppercase tracking-wide">Acta de Entrega de Documentación al Juzgado</h1>
+                                </div>
+
+                                {/* DILIGENCIAS */}
+                                <div className="bg-gray-50 p-3 mb-6 rounded border border-gray-300">
+                                    <div className="flex items-baseline w-full">
+                                        <span className="font-bold text-sm whitespace-nowrap mr-2">DILIGENCIAS / ATESTADO Nº:</span>
+                                        <DottedInput width="100%" value={formData.diligencias} onChange={(e)=>handleChange('diligencias', e.target.value)} />
+                                    </div>
+                                    <div className="flex items-baseline mt-3 w-full">
+                                        <span className="font-bold text-sm whitespace-nowrap mr-2">ASUNTO:</span>
+                                        <span className="text-sm italic border-b border-transparent w-full">Remisión de documento original intervenido para su unión a los autos.</span>
+                                    </div>
+                                </div>
+
+                                {/* CUERPO */}
+                                <div className="text-justify leading-loose text-sm flex-1">
+                                    <p className="mb-4 whitespace-nowrap overflow-hidden">
+                                        En <DottedInput width="90px" value={formData.lugar} onChange={(e)=>handleChange('lugar',e.target.value)} />, 
+                                        siendo las <DottedInput width="50px" value={formData.hora} onChange={(e)=>handleChange('hora',e.target.value)} /> horas 
+                                        del día <DottedInput width="35px" value={formData.dia} onChange={(e)=>handleChange('dia',e.target.value)} /> 
+                                        de <DottedInput width="100px" value={formData.mes} onChange={(e)=>handleChange('mes',e.target.value)} /> 
+                                        de 20<DottedInput width="35px" value={formData.anio} onChange={(e)=>handleChange('anio',e.target.value)} />.
+                                    </p>
+
+                                    <p className="mb-3">
+                                        <strong>COMPARECE:</strong> El Agente de la Policía Local de Alicante (Unidad Judicial de Tráfico) con número de identificación profesional 
+                                        <strong> TIP <DottedInput width="120px" value={formData.agente} onChange={(e)=>handleChange('agente',e.target.value)} /></strong>.
+                                    </p>
+
+                                    <p className="mb-1">
+                                        <strong>EXPONE:</strong> Que mediante la presente acta hace <strong>ENTREGA EFECTIVA</strong> a la Autoridad Judicial, del documento original reseñado a continuación, el cual ha permanecido bajo custodia del Grupo de Análisis Documental (GAD):
+                                    </p>
+
+                                    <div className="mb-4 mt-2">
+                                        <textarea 
+                                            className="textarea-dotted h-[60px]" 
+                                            placeholder=""
+                                            value={formData.descripcion || ''}
+                                            onChange={(e)=>handleChange('descripcion', e.target.value)}
+                                        ></textarea>
+                                    </div>
+
+                                    <p className="mb-2">
+                                        <strong>DESTINATARIO:</strong> La documentación reseñada es recibida en este acto por el:
+                                    </p>
+
+                                    <div className="ml-4 mt-2">
+                                        <div className="check-item" onClick={()=>handleChange('juzgado_tipo', 'instruccion')}>
+                                            <div className="check-box-visual">{formData.juzgado_tipo === 'instruccion' ? 'X' : ''}</div>
+                                            <span>JUZGADO DE INSTRUCCIÓN Nº <DottedInput width="60px" value={formData.num_instruccion} onChange={(e)=>handleChange('num_instruccion',e.target.value)} /> DE ALICANTE.</span>
+                                        </div>
+                                        <div className="check-item" onClick={()=>handleChange('juzgado_tipo', 'penal')}>
+                                            <div className="check-box-visual">{formData.juzgado_tipo === 'penal' ? 'X' : ''}</div>
+                                            <span>JUZGADO DE LO PENAL Nº <DottedInput width="60px" value={formData.num_penal} onChange={(e)=>handleChange('num_penal',e.target.value)} /> DE ALICANTE.</span>
+                                        </div>
+                                        <div className="check-item" onClick={()=>handleChange('juzgado_tipo', 'otro')}>
+                                            <div className="check-box-visual">{formData.juzgado_tipo === 'otro' ? 'X' : ''}</div>
+                                            <span className="flex-1 flex items-baseline">
+                                                OTRO: <DottedInput width="100%" value={formData.otro_destino} onChange={(e)=>handleChange('otro_destino',e.target.value)} />
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* FIRMAS */}
+                                <div className="mt-8 flex justify-between gap-12 h-64"> 
+                                    
+                                    {/* BLOQUE POLICÍA */}
+                                    <div className="w-1/2 relative flex flex-col justify-between">
+                                        <div className="text-center text-xs font-bold p-1 uppercase underline underline-offset-4 decoration-1">
+                                            Por la Policía Local (Entrega)
+                                        </div>
+                                        <div className="w-full text-center text-xs px-2 pb-2">
+                                            Fdo: Agente TIP <span className="font-mono font-bold">{formData.agente}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* BLOQUE JUZGADO */}
+                                    <div className="w-1/2 relative flex flex-col justify-between">
+                                        <div className="text-center text-xs font-bold p-1 uppercase underline underline-offset-4 decoration-1">
+                                            Por el Juzgado (Recibí)
+                                        </div>
+                                        <div className="w-full text-center text-xs pb-2">
+                                            Firma Funcionario/a
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
