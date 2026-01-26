@@ -2,125 +2,953 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso GAD Alicante</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menú GAD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* --- ESTILOS GENERALES --- */
         body {
-            background-color: #0f172a;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; margin: 0; font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0; padding: 0;
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .login-card {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-            border: 1px solid #334155;
-            width: 100%; max-width: 400px;
-            padding: 2rem; border-radius: 1rem;
-            text-align: center; color: white;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        
+        /* --- 1. BARRA SUPERIOR (SIEMPRE VISIBLE) --- */
+        .top-bar-strip {
+            background-color: #1e3a8a; /* Azul muy oscuro */
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            height: 50px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 100; /* Siempre por encima */
+            position: relative;
+            flex-shrink: 0; 
         }
-        .police-badge {
-            width: 120px; height: 120px; margin: 0 auto 1.5rem;
-            background: #1e40af; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(30, 64, 175, 0.5);
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .top-nav-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 10px; /* Reducido el padding para ahorrar espacio */
+            height: 30px;
+            font-size: 0.8rem; /* TAMAÑO DE FUENTE REDUCIDO */
+            font-weight: 500;
+            color: white; /* Color de texto blanco unificado */
+            white-space: nowrap; 
+            cursor: pointer;
+            text-decoration: none;
+            border-right: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.2s;
+            background: transparent;
+            border-radius: 4px;
+            margin: 0 2px;
         }
-        .police-badge img { width: 90%; height: 90%; object-fit: contain; }
-        #debug-log { display: none; margin-top: 10px; color: #f87171; font-size: 0.8rem; text-align: left; background: rgba(0,0,0,0.2); padding: 5px; }
+        .top-nav-link:hover { opacity: 0.9; }
+        
+        /* Colores de Fondo para la Barra Superior (Basados en tipo y color) */
+        .top-nav-link.type-parent { 
+            background-color: #1e40af; /* Azul para carpetas */
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .top-nav-link.type-main {
+            background-color: #16a34a; /* Verde para enlaces */
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        /* Los enlaces con color personalizado se aplicarán directamente vía JS */
+
+        .top-back-btn {
+            background-color: #dc2626; 
+            border: none;
+            margin-right: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+            padding: 0 15px;
+            border-radius: 4px;
+            color: white;
+            height: 30px;
+            display: flex; align-items: center;
+        }
+        .top-back-btn:hover { background-color: #b91c1c; }
+
+        /* --- 2. CONTENEDOR SCROLLABLE PRINCIPAL --- */
+        #main-scroll-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+
+        /* --- 3. CONTENEDOR VISOR IFRAME (OCULTO POR DEFECTO) --- */
+        #iframe-viewer-area {
+            flex-grow: 1;
+            display: none; 
+            width: 100%;
+            height: calc(100vh - 50px); 
+            background: white;
+            position: relative;
+        }
+        #content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* --- HEADER LOGO --- */
+        header.logo-header {
+            background-color: #1e40af; 
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 40;
+            flex-shrink: 0;
+        }
+        .logo-container {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #1e40af; 
+            display: flex; items-center: center; justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- SIDEBAR ÁRBOL --- */
+        #sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: transparent; 
+            display: none; z-index: 9998;
+        }
+        #sidebar-menu {
+            position: fixed; top: 0; left: 0; height: 100%; width: 300px;
+            background: #0f172a; 
+            color: white; z-index: 9999;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+            border-right: 1px solid #334155;
+            display: flex; flex-direction: column;
+        }
+        
+        .sidebar-item { display: flex; flex-direction: column; width: 100%; }
+        .sidebar-row { 
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 15px; 
+            border-bottom: 1px solid #1e293b;
+            color: #cbd5e1; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .sidebar-row:hover { background-color: #1e293b; color: #fff; }
+        .sidebar-row-content { display: flex; align-items: center; flex-grow: 1; overflow: hidden; }
+        .sidebar-row-content i { width: 20px; margin-right: 8px; text-align: center; color: #60a5fa; }
+        
+        .toggle-icon { 
+            padding: 5px 10px; cursor: pointer; color: #94a3b8; font-size: 0.8rem;
+            border-left: 1px solid #334155; margin-left: 5px;
+        }
+        .toggle-icon:hover { color: #fbbf24; background: rgba(255,255,255,0.05); }
+        .toggle-icon.expanded i { transform: rotate(90deg); transition: transform 0.2s; }
+
+        .sidebar-children { 
+            display: none; flex-direction: column; 
+            background-color: #0b1120; 
+            box-shadow: inset 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
+        .sidebar-children.show { display: flex; }
+        .sidebar-children .sidebar-row { padding-left: 35px; border-bottom: 1px solid #172033; }
+        .sidebar-children .sidebar-children .sidebar-row { padding-left: 55px; } 
+
+        .sidebar-footer-btn {
+            margin-top: auto; padding: 15px;
+            background: #1e293b; border-top: 1px solid #334155;
+        }
+
+        /* --- RESTO DE ESTILOS DE CONTENIDO --- */
+        .main-content-wrapper { display: flex; flex-direction: column; align-items: center; flex-grow: 1; width: 100%; padding: 0 10px; box-sizing: border-box; margin-top: 1rem; }
+        .menu-card { background-color: white; padding: 1rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 100%; max-width: 900px; display: flex; flex-direction: column; margin-top: 1rem; }
+        #main-menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; gap: 0.75rem; width: 100%; }
+        .menu-button-container { height: 100%; width: 100%; display: flex; flex-direction: column; position: relative; }
+        .title-container { text-align: center; margin-bottom: 1rem; }
+        h1 { margin: 0; font-size: 1.5rem; padding: 0.5rem 0; }
+        @media (min-width: 640px) { h1 { font-size: 2.5rem; } .main-content-wrapper { padding: 0 2rem; } }
+        .construccion-logo { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); height: 60%; opacity: 0.9; }
+
+        .counters-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; width: 100%; }
+        .counter-card { background-color: #4b5563; color: white; border-radius: 8px; padding: 10px 5px; width: 110px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.2); position: relative; }
+        .counter-card.total { background-color: #2563eb; width: 120px; }
+        .counter-header { font-size: 0.85rem; font-weight: 700; text-align: center; margin-bottom: 5px; line-height: 1.1; word-break: break-word; }
+        .counter-number { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
+        .counter-date { font-size: 0.65rem; color: #d1d5db; margin-bottom: 8px; text-align: center; }
+        .counter-btn { background-color: #6366f1; color: white; font-size: 0.7rem; font-weight: 600; padding: 4px 0; width: 90%; border-radius: 4px; border: none; cursor: pointer; transition: background 0.2s; }
+        .counter-footer-text { font-size: 0.7rem; margin-top: auto; opacity: 0.9; }
+        .controls-container { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .admin-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .btn-modern { display: flex; align-items: center; justify-content: center; padding: 8px 16px; font-size: 0.9rem; font-weight: 600; border-radius: 8px; color: white; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-edit { background-color: #f59e0b; } .btn-edit:hover { background-color: #d97706; } .btn-edit.active { background-color: #16a34a; }
+        .btn-users { background-color: #3b82f6; } .btn-users:hover { background-color: #2563eb; }
+        .btn-log { background-color: #10b981; } .btn-log:hover { background-color: #059669; }
+        .btn-backup { background-color: #8b5cf6; } .btn-backup:hover { background-color: #7c3aed; }
+        .btn-logout-modern { background-color: #ef4444; width: 100%; margin-top: 5px; } .btn-logout-modern:hover { background-color: #dc2626; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px); }
+        .modal { background: linear-gradient(145deg, #1e293b, #0f172a); padding: 30px; border-radius: 16px; text-align: center; color: #f8fafc; width: 90%; max-width: 380px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .modal-header-logo { height: 110px; width: 110px; margin: 0 auto 20px; background: transparent; display: flex; justify-content: center; align-items: center; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3)); }
+        .modal-header-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .modal h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff; }
+        .modal p { font-size: 0.95rem; color: #94a3b8; margin-bottom: 1.5rem; }
+        .modal input, .modal select { padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(255, 255, 255, 0.05); color: #fff; width: 100%; margin-bottom: 15px; box-sizing: border-box; outline: none; transition: all 0.3s ease; font-size: 1rem; }
+        .modal input:focus, .modal select:focus { border-color: #6366f1; background-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+        .google-btn { padding: 14px; border-radius: 10px; border: none; background: white; color: #374151; width: 100%; cursor: pointer; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.5px; transition: transform 0.2s, opacity 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .google-btn:active { transform: scale(0.98); } .google-btn:hover { background-color: #f3f4f6; }
+        .modal button.standard-btn { padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; width: 100%; font-weight: 700; cursor: pointer; }
+        .modal-close { position: absolute; top: 15px; right: 15px; font-size: 1.5em; cursor: pointer; color: #64748b; transition: color 0.3s; }
+        .modal-body hr { border-color: #334155; margin: 15px 0; }
+        #user-list-container { margin-top: 15px; max-height: 200px; overflow-y: auto; width: 100%; }
+        #user-list-to-delete li { display: flex; flex-direction: column; padding: 12px; border-bottom: 1px solid #334155; color: #e2e8f0; gap: 5px; }
+        .user-row-header { display: flex; justify-content: space-between; align-items: center; width: 100%; font-weight: bold; font-size: 0.9rem;}
+        .user-row-actions { display: flex; gap: 8px; justify-content: flex-end; width: 100%; }
+        #user-list-to-delete button { width: auto; padding: 4px 10px; font-size: 0.75rem; background: #ef4444; box-shadow: none; border-radius: 4px; color: white; border: none; cursor: pointer; }
+        #user-list-to-delete .reset-btn { background: #3b82f6; }
+        #full-log-modal .modal table { width:100%; text-align:left; border-collapse: collapse; font-size: 0.85rem; }
+        #full-log-modal .modal th { background: #0f172a; padding: 10px; border: 1px solid #334155; color: #94a3b8; text-transform: uppercase; font-size: 0.75rem; }
+        #full-log-modal .modal td { padding: 10px; border: 1px solid #334155; color: #cbd5e1; }
+        #full-log-modal .modal tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.03); }
+        .btn-admin-modal { background-color: #dc3545; color: white; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; border: none; margin-bottom: 8px; font-weight: 600; }
+        .edit-icon, .delete-icon, .back-icon { position: absolute; width: 28px; height: 28px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .edit-icon { top: -8px; right: -8px; background-color: #2563eb; }
+        .delete-icon { top: -8px; left: -8px; background-color: #dc2626; }
+        .back-icon { bottom: -8px; right: -8px; background-color: #ca8a04; }
+        .menu-button-container.dragging { opacity: 0.5; border: 2px dashed #667eea; }
+        .drag-over-container { border: 2px dashed #667eea; background-color: rgba(102, 126, 234, 0.05); }
+        .navigation-buttons-row { display: flex; justify-content: center; gap: 0.75rem; width: 100%; margin-top: 1rem; }
+        footer { width: 100%; padding: 1.5rem 0; margin-top: auto; }
+        .color-circle { width: 35px; height: 35px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+        .color-circle.active { border-color: #fff; box-shadow: 0 0 0 2px #667eea; }
+        .color-circle-container { display: flex; justify-content: space-around; margin-top: 15px; }
+        .drop-area, .edit-drop-area { border: 2px dashed #667eea; border-radius: 8px; padding: 10px; text-align: center; color: #667eea; background: rgba(102,126,234,0.05); cursor: pointer; margin-top: 10px; }
+        .drop-area.hover, .edit-drop-area.hover { background: rgba(102,126,234,0.2); }
+        .editable-title { position: relative; display: inline-flex; align-items: center; }
+        .editable-title-icon { margin-left: 10px; cursor: pointer; color: #4b5563; font-size: 1.2rem; }
+        #user-info-display { font-size: 0.85rem; color: #4b5563; margin-bottom: 10px; text-align: center; font-weight: 600; }
     </style>
 </head>
-<body>
+<body class="bg-gray-100">
 
-    <div class="login-card">
-        <div class="police-badge">
-            <img src="logogad.png" alt="GAD" onerror="this.style.display='none'">
+<div class="top-bar-strip">
+    <button id="hamburger-btn" class="text-white text-xl mr-4 focus:outline-none hover:text-yellow-300 transition-colors">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div id="top-horizontal-menu" class="flex overflow-x-auto gap-1 items-center hide-scrollbar w-full">
+    </div>
+</div>
+
+<div id="main-scroll-area">
+    <header class="logo-header">
+        <div class="logo-container">
+            <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block">
         </div>
-        <h1 class="text-2xl font-bold mb-1 text-blue-400">GAD ALICANTE</h1>
-        <p class="text-gray-400 text-sm mb-8">Unidad de Análisis Documental</p>
+    </header>
 
-        <button id="google-login-btn" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-100 transition-all shadow-lg">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
-            Iniciar Sesión con Google
-        </button>
+    <div class="main-content-wrapper px-4 sm:px-8 lg:px-12">
+        <div class="menu-card">
+            <div class="title-container text-center mb-4">
+                <h1 id="main-title" class="text-2xl sm:text-4xl font-extrabold text-gray-800 inline-flex items-center">
+                    <span id="main-title-text">Cargando...</span>
+                    <span id="edit-title-icon" style="display: none; margin-left: 10px; cursor: pointer; font-size: 1.2rem; color: #4b5563;">
+                        <i class="fas fa-edit"></i>
+                    </span>
+                </h1>
+            </div>
+            
+            <div id="user-info-display"></div>
 
-        <p id="status-msg" class="mt-4 text-sm text-yellow-500 min-h-[20px]"></p>
-        <div id="debug-log"></div>
+            <div id="drag-drop-zone-main-menu" class="p-1 rounded-lg transition-colors">
+                <div id="main-menu-grid"></div>
+            </div>
+            
+            <div id="navigation-buttons-container" style="display: none;" class="navigation-buttons-row"></div>
+            <div id="secondary-menu-container" class="mt-4 grid grid-cols-2 gap-3 w-full"></div>
+
+            <div id="add-button-container" style="display: none;" class="mt-4">
+                <button id="add-new-button" class="w-full p-4 text-white font-bold rounded-lg shadow-md bg-purple-600 hover:bg-purple-700 border-2 border-dashed border-white transition-all">
+                    <i class="fas fa-plus mr-2"></i> AÑADIR NUEVO BOTÓN
+                </button>
+            </div>
+
+            <div class="controls-container" id="admin-panel" style="display: none;">
+                <div id="counters-row"></div>
+                <hr class="border-gray-300 w-full">
+                <div class="admin-controls">
+                    <button id="show-edit-menu-modal" class="btn-modern btn-edit"><i class="fas fa-pencil-alt"></i> Editar Menú</button>
+                    <button id="show-manage-users-modal" class="btn-modern btn-users"><i class="fas fa-users-cog"></i> Usuarios</button>
+                    <button id="show-full-log-modal" class="btn-modern btn-log"><i class="fas fa-list-alt"></i> Registro Global</button>
+                    <button id="backup-button" class="btn-modern btn-backup" onclick="window.open('COPIA SEGURIDAD FIREBASE.html', '_blank')"><i class="fas fa-cloud-download-alt"></i> Backup</button>
+                </div>
+                <button id="btn-logout" class="btn-modern btn-logout-modern"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+            </div>
+            
+            <div id="user-controls" style="display: none; margin-top: 20px;">
+                <button id="btn-logout-user" class="btn-modern btn-logout-modern">Cerrar Sesión</button>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN V3 (CORREGIDA) ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
-          authDomain: "gad-alicante-v3.firebaseapp.com",
-          databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-          projectId: "gad-alicante-v3",
-          storageBucket: "gad-alicante-v3.firebasestorage.app",
-          messagingSenderId: "906986258369",
-          appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
-          measurementId: "G-Q0E3H1996K"
+    <footer class="bg-gray-200 mt-auto py-6 text-center">
+        <div class="px-4">
+            <hr class="border-t border-gray-400 w-full max-w-md mx-auto mb-4">
+            <p class="font-bold text-gray-800">GRUPO DE ANÁLISIS DOCUMENTAL</p>
+            <p class="font-bold text-gray-800">POLICÍA LOCAL DE ALICANTE</p>
+            <p class="text-sm text-gray-600 mt-2">&copy; GAD - Todos los derechos reservados</p>
+        </div>
+    </footer>
+</div>
+
+<div id="iframe-viewer-area">
+    <iframe id="content-iframe"></iframe>
+</div>
+
+<div id="sidebar-overlay"></div>
+<div id="sidebar-menu">
+     <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-slate-900 shrink-0">
+         <h2 class="font-bold text-lg text-blue-400">Navegación GAD</h2>
+         <button id="close-sidebar" class="text-gray-400 hover:text-white text-lg"><i class="fas fa-times"></i></button>
+     </div>
+     <div id="sidebar-tree-container" class="flex-grow overflow-y-auto"></div>
+     <div class="sidebar-footer-btn">
+         <button id="sidebar-back-btn" class="w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded shadow transition-colors" style="display:none;">
+             <i class="fas fa-arrow-left mr-2"></i> VOLVER ATRÁS
+         </button>
+     </div>
+</div>
+
+<div id="google-login-modal-overlay" class="modal-overlay"></div>
+<div id="manage-users-modal" class="modal-overlay" style="display: none;"></div>
+<div id="full-log-modal" class="modal-overlay" style="display: none;"></div>
+
+<div id="edit-button-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <span class="modal-close" id="close-edit-button-modal">&times;</span>
+        <h2>Editar Botón</h2>
+        <div class="modal-body">
+            <input type="hidden" id="edit-button-id">
+            <input type="text" id="edit-button-text" placeholder="Texto del botón" />
+            <div id="edit-link-fields">
+                <input type="text" id="edit-button-href" placeholder="URL opcional" />
+                <div class="edit-drop-area" id="edit-drop-area">
+                    <p>Arrastra archivo HTML</p>
+                    <input type="file" id="edit-html-file-input" accept=".html" style="display: none;">
+                    <textarea id="edit-button-html-code" rows="5" placeholder="Código HTML"></textarea>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 mt-2 text-left">
+                <p class="text-sm text-gray-400">Tamaño:</p>
+                <div class="flex gap-4">
+                    <label class="flex items-center"><input type="radio" name="edit-button-size" value="normal" checked class="mr-2"> Normal</label>
+                    <label class="flex items-center"><input type="radio" name="edit-button-size" value="full-width" class="mr-2"> Largo</label>
+                </div>
+            </div>
+            <div class="color-circle-container">
+                <div class="color-circle active" style="background:#1e40af;" data-color="#1e40af"></div>
+                <div class="color-circle" style="background:#16a34a;" data-color="#16a34a"></div>
+                <div class="color-circle" style="background:#f59e0b;" data-color="#f59e0b"></div>
+                <div class="color-circle" style="background:#dc3545;" data-color="#dc3545"></div>
+                <div class="color-circle" style="background:#667eea;" data-color="#667eea"></div>
+            </div>
+        </div>
+        <button id="save-button-changes" class="standard-btn">Guardar Cambios</button>
+    </div>
+</div>
+
+<div id="add-button-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <span class="modal-close" id="close-add-button-modal">&times;</span>
+        <h2>Nuevo Botón</h2>
+        <div class="modal-body">
+            <input type="text" id="new-button-text" placeholder="Texto" />
+            <div class="flex gap-4 justify-center">
+                <label><input type="radio" name="button-type" value="link" checked class="mr-2"> Enlace</label>
+                <label><input type="radio" name="button-type" value="menu" class="mr-2"> Submenú</label>
+            </div>
+            <div class="flex gap-4 justify-center mt-2">
+                <label><input type="radio" name="button-size" value="normal" checked class="mr-2"> Normal</label>
+                <label><input type="radio" name="button-size" value="full-width" class="mr-2"> Largo</label>
+            </div>
+            <div id="new-link-fields" class="mt-4">
+                <textarea id="new-button-html-code" rows="5" class="drop-area" placeholder="Pega HTML o arrastra archivo"></textarea>
+            </div>
+        </div>
+        <button id="save-new-button" class="standard-btn">Crear</button>
+    </div>
+</div>
+
+<div id="edit-title-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <span class="modal-close" id="close-edit-title-modal">&times;</span>
+        <h2>Editar Título</h2>
+        <input type="text" id="edit-title-input" />
+        <button id="save-title-changes" class="standard-btn">Guardar</button>
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+  authDomain: "gad-alicante-v3.firebaseapp.com",
+  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gad-alicante-v3",
+  storageBucket: "gad-alicante-v3.firebasestorage.app",
+  messagingSenderId: "906986258369",
+  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+  measurementId: "G-Q0E3H1996K"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    
+    const BUTTONS_NODE = 'menuButtons';
+    const TITLE_NODE = 'pageTitle';
+    const ADMIN_EMAIL = 'copg279@gmail.com';
+    const USERS_NODE = 'usuarios_google'; 
+
+    // UI Refs
+    const mainScrollArea = document.getElementById('main-scroll-area');
+    const iframeViewerArea = document.getElementById('iframe-viewer-area');
+    const contentIframe = document.getElementById('content-iframe');
+    
+    const mainMenuGrid = document.getElementById('main-menu-grid');
+    const secondaryMenuContainer = document.getElementById('secondary-menu-container');
+    const navBtns = document.getElementById('navigation-buttons-container');
+    const dragZone = document.getElementById('drag-drop-zone-main-menu');
+    const adminPanel = document.getElementById('admin-panel');
+    const userControls = document.getElementById('user-controls');
+    const countersRow = document.getElementById('counters-row');
+
+    // Modales
+    const modalLogin = document.getElementById('google-login-modal-overlay');
+    const modalEditBtn = document.getElementById('edit-button-modal');
+    const modalAddBtn = document.getElementById('add-button-modal');
+    const modalManageUsers = document.getElementById('manage-users-modal');
+    const modalFullLog = document.getElementById('full-log-modal');
+    
+    // Refs Sidebar y Topbar
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebarMenu = document.getElementById('sidebar-menu');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const sidebarTreeContainer = document.getElementById('sidebar-tree-container');
+    const sidebarBackBtn = document.getElementById('sidebar-back-btn');
+    const topHorizontalMenu = document.getElementById('top-horizontal-menu');
+
+    let isEditMode = false;
+    let menuButtonsData = {};
+    let draggedItem = null;
+    let currentMenuPath = [];
+    let currentUserEmail = null;
+    let isViewingContent = false;
+
+    // --- LOGICA SIDEBAR ---
+    const openSidebar = () => {
+        sidebarMenu.style.transform = "translateX(0)";
+        sidebarOverlay.style.display = "block";
+    }
+    const closeSidebar = () => {
+        sidebarMenu.style.transform = "translateX(-100%)";
+        sidebarOverlay.style.display = "none";
+    }
+    hamburgerBtn.onclick = openSidebar;
+    closeSidebarBtn.onclick = closeSidebar;
+    sidebarOverlay.onclick = closeSidebar;
+
+    // --- SISTEMA DE VISUALIZACIÓN ---
+    
+    function showMenuArea() {
+        isViewingContent = false;
+        mainScrollArea.style.display = 'flex';
+        iframeViewerArea.style.display = 'none';
+        contentIframe.src = 'about:blank'; // Limpiar iframe
+        renderMenuButtons(); // Re-renderizar barra superior
+    }
+
+    function showIframeArea(data) {
+        isViewingContent = true;
+        // Ocultar área de menú y logo grande
+        mainScrollArea.style.display = 'none';
+        // Mostrar iframe
+        iframeViewerArea.style.display = 'block';
+
+        // Cargar contenido
+        if (data.htmlCode) {
+            const doc = contentIframe.contentWindow.document;
+            doc.open();
+            let content = data.htmlCode;
+            // Inyectar viewport para móviles
+            const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
+            if (!content.includes('<meta name="viewport"')) {
+                if(content.includes('<head>')) {
+                     content = content.replace('<head>', '<head>' + viewportTag);
+                } else {
+                     content = viewportTag + content;
+                }
+            }
+            doc.write(content);
+            doc.close();
+        } else if (data.href) {
+            contentIframe.src = data.href;
+        }
+        
+        // Actualizar barra superior (mostrar botón atrás)
+        renderMenuButtons();
+    }
+
+ // --- ACCION NAVEGAR ATRÁS (MODIFICADA PARA SOPORTAR NAVEGADOR) ---
+function goBack() {
+    // Si estamos en modo visualización (Iframe), forzamos la salida al menú, sin depender de window.history.back()
+    if (isViewingContent) {
+        showMenuArea();
+        const currentMenuId = currentMenuPath.length > 0 ? currentMenuPath[currentMenuPath.length - 1] : '';
+        history.replaceState(null, '', currentMenuId ? '#folder=' + currentMenuId : '#');
+        return;
+    }
+    
+    // Si estamos en un submenú, sí usamos history.back()
+    if (currentMenuPath.length > 0) {
+        window.history.back();
+        return;
+    }
+}
+
+// GESTIÓN DEL HISTORIAL (Mantenemos onpopstate para el botón ATRÁS del NAVEGADOR)
+window.onpopstate = function(event) {
+    if (isViewingContent) {
+        // Si el NAVEGADOR pulsa ATRÁS, salimos del visor
+        showMenuArea();
+    } else if (currentMenuPath.length > 0) {
+        // Si estábamos en una subcarpeta, subimos nivel (la acción de popstate lo hace automáticamente)
+        currentMenuPath.pop();
+        renderMenuButtons();
+    }
+};
+
+sidebarBackBtn.onclick = () => { goBack(); closeSidebar(); };
+// Botón "ATRÁS" de la barra principal (Top Bar)
+document.querySelector('.top-bar-strip').addEventListener('click', (e) => {
+    if (e.target.classList.contains('top-back-btn')) {
+        goBack();
+    }
+});
+
+    // --- UTILS ---
+    async function getClientIP() {
+        try { const r = await fetch('https://api64.ipify.org?format=json'); const d = await r.json(); return d.ip || 'N/A'; } 
+        catch { return 'N/A'; }
+    }
+    function sanitizeEmail(email) { return email.replace(/\./g, ','); }
+
+    // --- DRAG & DROP HTML ---
+    function setupFileDrop(area, input, textArea) {
+        if(!area) return;
+        area.ondragover = e => { e.preventDefault(); area.classList.add('hover'); };
+        area.ondragleave = () => area.classList.remove('hover');
+        area.ondrop = e => { e.preventDefault(); area.classList.remove('hover'); const f = e.dataTransfer.files[0]; if(f?.name.endsWith('.html')) readFile(f, textArea); };
+        area.onclick = () => input?.click();
+        if(input) input.onchange = e => { if(e.target.files[0]) readFile(e.target.files[0], textArea); };
+    }
+    function readFile(f, ta) { const r = new FileReader(); r.onload = e => ta.value = e.target.result; r.readAsText(f); }
+    
+    setupFileDrop(document.getElementById('new-link-fields').querySelector('textarea'), null, document.getElementById('new-button-html-code'));
+    setupFileDrop(document.getElementById('edit-drop-area'), document.getElementById('edit-html-file-input'), document.getElementById('edit-button-html-code'));
+
+    // --- MANEJO DE CLICS EN BOTONES ---
+    function handleGenericButtonClick(key, data) {
+        if (data.type === 'parent') { 
+            // CARPETA (Azul)
+            currentMenuPath.push(key); 
+            history.pushState({folder: key}, '', '#folder=' + key);
+            renderMenuButtons();
+        } else if (data.htmlCode || data.href) {
+            // CONTENIDO (Verde/Personalizado) -> VISOR CON BARRAS
+            history.pushState({content: true}, '', '#view');
+            showIframeArea(data);
+        }
+    }
+
+    // --- 1. RENDER TOP BAR (Marcadores) ---
+    function renderTopBar(visibleButtons) {
+        topHorizontalMenu.innerHTML = '';
+        
+        // Botón ATRÁS siempre visible si hay historial o contenido
+        if(currentMenuPath.length > 0 || isViewingContent) {
+            const backBtn = document.createElement('button');
+            backBtn.className = 'top-nav-link top-back-btn';
+            backBtn.innerHTML = `<i class="fas fa-arrow-left text-white"></i> ATRÁS`;
+            backBtn.onclick = goBack;
+            topHorizontalMenu.appendChild(backBtn);
+        }
+
+        // Mostrar botones (marcadores) SOLO si no estamos viendo contenido
+        if (!isViewingContent && visibleButtons) {
+            visibleButtons.forEach(([key, data]) => {
+                const topBtn = document.createElement('a');
+                topBtn.className = 'top-nav-link';
+                
+                // Determinar la clase de estilo y color
+                let color = data.color;
+                let typeClass = data.type === 'parent' ? 'type-parent' : 'type-main';
+                
+                topBtn.classList.add(typeClass);
+                
+                // Aplicar color personalizado si no es la carpeta por defecto o el enlace por defecto
+                if (data.color && (data.color !== '#1e40af' || data.type !== 'parent') && (data.color !== '#16a34a' || data.type !== 'main')) {
+                    topBtn.style.backgroundColor = data.color;
+                    topBtn.style.color = 'white'; 
+                }
+
+                // ELIMINACIÓN DE ICONOS - Solo se muestra el texto
+                topBtn.innerHTML = `${data.text}`; 
+                topBtn.onclick = () => handleGenericButtonClick(key, data);
+                topHorizontalMenu.appendChild(topBtn);
+            });
+        }
+    }
+
+    // --- 2. RENDER SIDEBAR RECURSIVO ---
+    function renderSidebarTree(parentId, container) {
+        const items = Object.entries(menuButtonsData)
+            .filter(([k, v]) => parentId === null ? !v.parent : v.parent === parentId)
+            .sort((a, b) => a[1].order - b[1].order);
+
+        if (items.length === 0) return;
+
+        items.forEach(([key, data]) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'sidebar-item';
+
+            const row = document.createElement('div');
+            row.className = 'sidebar-row';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'sidebar-row-content';
+            let iconClass = data.type === 'parent' ? 'fa-folder' : 'fa-link';
+            // Mantenemos los iconos en el menú lateral
+            contentDiv.innerHTML = `<i class="fas ${iconClass}"></i> <span>${data.text}</span>`; 
+            contentDiv.onclick = () => { 
+                handleGenericButtonClick(key, data); 
+                closeSidebar(); 
+            };
+            row.appendChild(contentDiv);
+
+            let childContainer = null;
+            if (data.type === 'parent') {
+                const toggleIcon = document.createElement('div');
+                toggleIcon.className = 'toggle-icon';
+                toggleIcon.innerHTML = `<i class="fas fa-plus"></i>`; 
+                
+                childContainer = document.createElement('div');
+                childContainer.className = 'sidebar-children';
+                
+                toggleIcon.onclick = (e) => {
+                    e.stopPropagation(); 
+                    const isExpanded = childContainer.classList.toggle('show');
+                    toggleIcon.classList.toggle('expanded', isExpanded);
+                    toggleIcon.innerHTML = isExpanded ? `<i class="fas fa-minus"></i>` : `<i class="fas fa-plus"></i>`;
+                };
+                
+                row.appendChild(toggleIcon);
+                itemDiv.appendChild(row);
+                itemDiv.appendChild(childContainer); 
+                renderSidebarTree(key, childContainer);
+            } else {
+                itemDiv.appendChild(row);
+            }
+            container.appendChild(itemDiv);
+        });
+    }
+
+    // --- RENDER MENÚ PRINCIPAL ---
+    function renderMenuButtons() {
+        mainMenuGrid.innerHTML = ''; secondaryMenuContainer.innerHTML = ''; navBtns.innerHTML = ''; navBtns.style.display = 'none';
+        
+        // Calcular botones para la barra superior incluso si no se muestra el grid
+        const currentMenuId = currentMenuPath.length > 0 ? currentMenuPath[currentMenuPath.length - 1] : null;
+        const currentButtons = Object.entries(menuButtonsData)
+            .filter(([k, v]) => currentMenuId === null ? !v.parent : v.parent === currentMenuId)
+            .sort((a, b) => a[1].order - b[1].order);
+
+        renderTopBar(currentButtons);
+        
+        sidebarTreeContainer.innerHTML = '';
+        renderSidebarTree(null, sidebarTreeContainer);
+        sidebarBackBtn.style.display = (currentMenuPath.length > 0 || isViewingContent) ? 'block' : 'none';
+
+        // Si estamos viendo contenido, paramos aquí (no renderizamos el grid)
+        if (isViewingContent) return;
+
+        renderTitle();
+        
+        currentButtons.forEach(([k, v]) => {
+            const el = createButton(k, v);
+            if (v.type === 'secondary' && !currentMenuId) secondaryMenuContainer.appendChild(el);
+            else mainMenuGrid.appendChild(el);
+        });
+        
+        if (currentMenuPath.length > 0) {
+            navBtns.style.display = 'flex';
+            const btnMain = document.createElement('button'); btnMain.innerText = 'MENÚ PRINCIPAL'; btnMain.className = 'py-3 px-6 bg-yellow-400 font-bold rounded-lg shadow uppercase text-sm w-40'; btnMain.onclick = () => { currentMenuPath = []; renderMenuButtons(); };
+            const btnBack = document.createElement('button'); btnBack.innerText = 'ATRÁS'; btnBack.className = 'py-3 px-6 bg-yellow-400 font-bold rounded-lg shadow uppercase text-sm w-40'; btnBack.onclick = goBack;
+            navBtns.append(btnMain, btnBack);
+        }
+    }
+    
+    function createButton(key, data) {
+        const div = document.createElement('div');
+        div.className = 'menu-button-container relative';
+        div.dataset.id = key;
+        if (data.size === 'full-width') div.classList.add('col-span-2');
+        const a = document.createElement('a');
+        a.className = 'flex items-center justify-center p-4 lg:p-6 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 text-center leading-tight w-full h-full';
+        a.style.fontSize = window.innerWidth > 640 ? '1.15rem' : '1rem';
+        a.style.backgroundColor = data.color;
+        a.innerHTML = `<span>${data.text}</span>`;
+        if (data.logo) a.innerHTML += `<img src="${data.logo}" class="construccion-logo">`;
+        a.href = 'javascript:void(0)';
+        
+        a.onclick = () => {
+            if (isEditMode) return;
+            handleGenericButtonClick(key, data);
+        };
+        
+        div.appendChild(a);
+        if (isEditMode) {
+            div.draggable = true; addDragHandlers(div);
+            div.innerHTML += `<div class="edit-icon" onclick="openEdit('${key}')"><i class="fas fa-pencil-alt"></i></div><div class="delete-icon" onclick="delBtn('${key}','${data.text}','${data.parent}')"><i class="fas fa-trash-alt"></i></div>`;
+            if (data.parent) div.innerHTML += `<div class="back-icon" onclick="moveToRoot('${key}')"><i class="fas fa-reply"></i></div>`;
+        }
+        return div;
+    }
+
+    function renderTitle() {
+        const currentMenuId = currentMenuPath[currentMenuPath.length - 1];
+        let ref = db.ref(TITLE_NODE);
+        let def = 'Menú Herramientas GAD';
+        if (currentMenuId) { ref = db.ref(BUTTONS_NODE + '/' + currentMenuId + '/menuTitle'); def = menuButtonsData[currentMenuId]?.text || 'Submenú'; }
+        ref.once('value', s => {
+            document.getElementById('main-title-text').textContent = s.val() || def;
+            document.getElementById('edit-title-icon').onclick = () => {
+                document.getElementById('edit-title-input').value = s.val() || def;
+                document.getElementById('edit-title-modal').style.display = 'flex';
+                document.getElementById('save-title-changes').onclick = () => ref.set(document.getElementById('edit-title-input').value).then(() => { renderTitle(); document.getElementById('edit-title-modal').style.display = 'none'; });
+            }
+        });
+    }
+
+    db.ref().on('value', s => { 
+        menuButtonsData = s.val()?.menuButtons || {}; 
+        renderMenuButtons();
+    });
+
+    // --- ACCIONES ADMIN ---
+    window.openEdit = (key) => {
+        const d = menuButtonsData[key];
+        document.getElementById('edit-button-id').value = key;
+        document.getElementById('edit-button-text').value = d.text;
+        document.getElementById('edit-button-href').value = d.href || '';
+        document.getElementById('edit-button-html-code').value = d.htmlCode || '';
+        document.getElementById('edit-link-fields').style.display = (d.type === 'link' || d.type === 'main') ? 'block' : 'none';
+        document.querySelectorAll('input[name="edit-button-size"]').forEach(r => r.checked = r.value === d.size);
+        document.querySelectorAll('.color-circle').forEach(c => c.classList.toggle('active', c.dataset.color === d.color));
+        modalEditBtn.style.display = 'flex';
+    };
+    window.delBtn = (k, t, p) => { if(confirm(`¿Borrar "${t}"?`)) { const u={}; u[`/${BUTTONS_NODE}/${k}`]=null; if(p && Object.values(menuButtonsData).filter(b=>b.parent===p).length===1) u[`/${BUTTONS_NODE}/${p}/children`]=null; db.ref().update(u); }};
+    window.moveToRoot = async (k) => { const s = await db.ref(BUTTONS_NODE).once('value'); const order = Object.values(s.val()||{}).filter(b=>!b.parent).length + 1; db.ref(`${BUTTONS_NODE}/${k}`).update({parent:null, order}); };
+
+    // --- DRAG & DROP ---
+    function addDragHandlers(el) {
+        el.ondragstart = e => { draggedItem = el; setTimeout(() => el.classList.add('dragging'),0); };
+        el.ondragend = () => { draggedItem.classList.remove('dragging'); draggedItem=null; document.querySelectorAll('.drag-over-container').forEach(c=>c.classList.remove('drag-over-container')); };
+        el.ondrop = async e => {
+            e.preventDefault(); e.stopPropagation();
+            if(draggedItem && draggedItem !== el) {
+                const target = menuButtonsData[el.dataset.id];
+                if(target.type==='parent' && confirm("¿Mover dentro?")) db.ref(`${BUTTONS_NODE}/${draggedItem.dataset.id}`).update({parent:el.dataset.id});
+                else { el.parentNode.insertBefore(draggedItem, el); updateOrder(); }
+            }
+        };
+        el.ondragover = e => e.preventDefault();
+    }
+    dragZone.ondragover = e => { e.preventDefault(); dragZone.classList.add('drag-over-container'); };
+    dragZone.ondragleave = () => dragZone.classList.remove('drag-over-container');
+    dragZone.ondrop = e => { e.preventDefault(); dragZone.classList.remove('drag-over-container'); if(draggedItem) { mainMenuGrid.appendChild(draggedItem); updateOrder(); } };
+    function updateOrder() { const u={}; document.querySelectorAll('#main-menu-grid .menu-button-container').forEach((b,i) => u[`/${BUTTONS_NODE}/${b.dataset.id}/order`]=i+1); db.ref().update(u); }
+
+    // --- LOGIN (FINAL) ---
+    function initAppLogic() {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const emailKey = sanitizeEmail(user.email);
+                if (user.email === ADMIN_EMAIL) { grantAccess(user, true); return; }
+                const snap = await db.ref(USERS_NODE + '/' + emailKey).once('value');
+                if (snap.exists()) grantAccess(user, false);
+                else { alert('ACCESO DENEGADO. Contacte con el administrador.'); auth.signOut(); modalLogin.style.display = 'flex'; }
+            } else {
+                modalLogin.style.display = 'flex'; adminPanel.style.display = 'none'; userControls.style.display = 'none';
+            }
+        });
+    }
+
+    async function grantAccess(user, isAdmin) {
+        modalLogin.style.display = 'none';
+        currentUserEmail = user.email;
+        const emailKey = sanitizeEmail(user.email);
+        const now = Date.now();
+        const ip = await getClientIP();
+        
+        db.ref(USERS_NODE + '/' + emailKey).transaction(d => d ? {...d, email: user.email, accesos: (d.accesos||0)+1, ultimoAcceso: now} : (isAdmin ? {email:user.email, accesos:1, ultimoAcceso:now, nombre:'Admin'} : d));
+        db.ref('visitLog').push().set({ userId: emailKey, userName: user.displayName||user.email, email: user.email, timestamp: now, ip: ip });
+
+        document.getElementById('user-info-display').innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
+        if (isAdmin) { adminPanel.style.display = 'flex'; document.getElementById('edit-title-icon').style.display = isEditMode ? 'inline-block' : 'none'; } 
+        else userControls.style.display = 'block';
+    }
+
+    const loginWithGoogle = () => { 
+        const p = new firebase.auth.GoogleAuthProvider(); 
+        p.setCustomParameters({ prompt: 'select_account' }); 
+        auth.signInWithPopup(p).catch(e => alert("Error: " + e.message)); 
+    };
+    
+    const logout = () => { 
+        if(isEditMode) toggleEditModeUI(); 
+        
+        auth.signOut().then(() => {
+            // Limpiar la interfaz
+            adminPanel.style.display = 'none';
+            userControls.style.display = 'none';
+            showMenuArea(); // Asegura volver a la vista del menú (no al iframe)
+            
+            // Mostrar el modal de login.
+            modalLogin.style.display = 'flex';
+        }).catch((error) => {
+            console.error("Error al cerrar sesión:", error);
+            // En caso de error, igualmente forzamos la vista de login
+            modalLogin.style.display = 'flex';
+        });
+    };
+    
+    document.getElementById('btn-logout').onclick = logout;
+    document.getElementById('btn-logout-user').onclick = logout;
+
+    // --- ADMIN PANEL & MODALES ---
+    function renderAdminCounters(users) {
+        if(!users) return;
+        let sorted = Object.entries(users).map(([k, v]) => ({ key: k, ...v })).sort((a, b) => (a.nombre || a.email).localeCompare(b.nombre || b.email));
+        let total = 0, html = '';
+        sorted.forEach(u => {
+            total += (u.accesos || 0);
+            let d = u.ultimoAcceso ? new Date(u.ultimoAcceso).toLocaleDateString() : "Sin acceso";
+            html += `<div class="counter-card"><div class="counter-header" title="${u.email}">${(u.nombre||u.email).substring(0,12)}</div><div class="counter-number">${u.accesos||0}</div><div class="counter-date">${d}</div><button class="counter-btn" onclick="openUserVisitHistory('${u.key}', '${u.email}')">Ver</button></div>`;
+        });
+        document.getElementById('counters-row').innerHTML = `<div class="counters-container"><div class="counter-card total"><div class="counter-header">TOTAL</div><div class="counter-number" style="font-size:1.8rem;">${total}</div></div>${html}</div>`;
+    }
+
+    function toggleEditModeUI() {
+        isEditMode = !isEditMode;
+        const btn = document.getElementById('show-edit-menu-modal');
+        btn.classList.toggle('active', isEditMode);
+        btn.innerHTML = isEditMode ? '<i class="fas fa-check"></i> Finalizar' : '<i class="fas fa-pencil-alt"></i> Editar Menú';
+        document.getElementById('add-button-container').style.display = isEditMode ? 'block' : 'none';
+        document.getElementById('edit-title-icon').style.display = isEditMode ? 'inline-block' : 'none';
+        renderMenuButtons();
+    }
+    document.getElementById('show-edit-menu-modal').onclick = toggleEditModeUI;
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        modalLogin.innerHTML = `<div class="modal"><div class="modal-header-logo"><img src="logogad.png"></div><h2>Acceso GAD</h2><button id="google-login-btn" class="google-btn"><i class="fab fa-google" style="color:#DB4437;"></i> Google Login</button></div>`;
+        document.getElementById('google-login-btn').onclick = loginWithGoogle;
+        
+        document.getElementById('manage-users-modal').innerHTML = `<div class="modal"><span class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</span><h2>Gestionar Acceso</h2><div class="modal-body"><input type="email" id="new-user-email" placeholder="Email"/><input type="text" id="new-user-alias" placeholder="Nombre"/><button id="add-user-button" class="standard-btn">Autorizar</button><p id="add-user-message" style="color:#4ade80;display:none;">OK</p><hr><ul id="user-list-to-delete"></ul></div></div>`;
+        
+        document.getElementById('full-log-modal').innerHTML = `<div class="modal" style="max-width:800px;height:90vh;"><span class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</span><h2>Registro Global</h2><button id="clear-global-log" class="btn-admin-modal">Borrar Log</button><div id="full-log-container" style="overflow-y:auto;height:80%;"></div></div>`;
+
+        document.getElementById('show-manage-users-modal').onclick = () => modalManageUsers.style.display = 'flex';
+        document.getElementById('show-full-log-modal').onclick = () => { renderFullGlobalLog(); modalFullLog.style.display = 'flex'; };
+
+        db.ref(USERS_NODE).on('value', s => {
+            if(s.val()) {
+                const ul = document.getElementById('user-list-to-delete'); if(ul) ul.innerHTML = '';
+                Object.entries(s.val()).forEach(([k,v]) => {
+                    if(ul) ul.innerHTML += `<li><div class="user-row-header"><span>${v.email}</span></div><div class="user-row-actions"><button onclick="delUser('${k}')">X</button></div></li>`;
+                });
+                if (auth.currentUser?.email === ADMIN_EMAIL) renderAdminCounters(s.val());
+            }
+        });
+
+        document.getElementById('add-user-button').onclick = () => {
+            const e = document.getElementById('new-user-email').value.trim().toLowerCase();
+            if(e) db.ref(USERS_NODE + '/' + sanitizeEmail(e)).update({ email: e, nombre: document.getElementById('new-user-alias').value, accesos: 0 }).then(()=>alert('Añadido'));
         };
 
-        // LISTA DE CORREOS AUTORIZADOS AMPLIADA
-        const AUTHORIZED_EMAILS = [
-            'gadalicante@gmail.com', 
-            'copg279@gmail.com', 
-            'adamus03248@gmail.com', 
-            'cdavidmesi83@gmail.com', 
-            'pamiseseg@gmail.com', 
-            'policia.g496@gmail.com', 
-            'verdeguer279@gmail.com'
-        ];
+        document.getElementById('clear-global-log').onclick = () => { if(confirm("¿Borrar?")) db.ref('visitLog').remove(); };
 
-        // --- INICIALIZACIÓN ---
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
+        initAppLogic();
 
-            const btn = document.getElementById('google-login-btn');
-            const msg = document.getElementById('status-msg');
-            const debug = document.getElementById('debug-log');
+        document.getElementById('add-new-button').onclick = () => { document.getElementById('new-button-text').value=''; modalAddBtn.style.display='flex'; };
+        document.getElementById('save-new-button').onclick = async () => {
+            const t = document.getElementById('new-button-text').value; if(!t) return;
+            const type = document.querySelector('input[name="button-type"]:checked').value;
+            const size = document.querySelector('input[name="button-size"]:checked').value;
+            const parent = currentMenuPath.length ? currentMenuPath[currentMenuPath.length-1] : null;
+            const s = await db.ref(BUTTONS_NODE).orderByChild('parent').equalTo(parent).once('value');
+            const d = { text:t, size, parent, order: (s.val()?Object.keys(s.val()).length:0)+1, type: type==='link'?'main':'parent', color: type==='link'?'#16a34a':'#1e40af' };
+            if(type==='link') d.htmlCode = document.getElementById('new-button-html-code').value;
+            db.ref(BUTTONS_NODE).push(d).then(()=>modalAddBtn.style.display='none');
+        };
+        document.getElementById('save-button-changes').onclick = () => {
+            const id = document.getElementById('edit-button-id').value;
+            db.ref(`${BUTTONS_NODE}/${id}`).update({
+                text: document.getElementById('edit-button-text').value,
+                color: document.querySelector('.color-circle.active')?.dataset.color,
+                size: document.querySelector('input[name="edit-button-size"]:checked').value,
+                href: document.getElementById('edit-button-href').value,
+                htmlCode: document.getElementById('edit-button-html-code').value
+            }).then(() => modalEditBtn.style.display = 'none');
+        };
+        document.querySelectorAll('.color-circle').forEach(c => c.onclick = e => { document.querySelectorAll('.color-circle').forEach(x=>x.classList.remove('active')); e.target.classList.add('active'); });
+        document.querySelectorAll('.modal-close').forEach(c => c.onclick = () => c.closest('.modal-overlay').style.display = 'none');
+    });
 
-            // --- COMPROBACIÓN DE SESIÓN ---
-            firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    if (AUTHORIZED_EMAILS.includes(user.email)) {
-                        msg.innerText = "Acceso Correcto. Redirigiendo...";
-                        msg.className = "mt-4 text-sm text-green-400";
-                        window.location.href = 'dashboard.html';
-                    } else {
-                        msg.innerText = "ACCESO DENEGADO: " + user.email;
-                        msg.className = "mt-4 text-sm text-red-500";
-                        firebase.auth().signOut();
-                    }
-                }
-            });
-
-            // --- CLICK EN EL BOTÓN ---
-            btn.onclick = () => {
-                msg.innerText = "Conectando con Google...";
-                const provider = new firebase.auth.GoogleAuthProvider();
-                provider.setCustomParameters({ prompt: 'select_account' });
-                
-                firebase.auth().signInWithPopup(provider).catch((error) => {
-                    msg.innerText = "Error al conectar.";
-                    msg.className = "mt-4 text-sm text-red-500";
-                    debug.style.display = 'block';
-                    debug.innerHTML = `Error: ${error.message} <br> Code: ${error.code}`;
-                    
-                    if(error.code === 'auth/unauthorized-domain') {
-                        alert("IMPORTANTE: Debes ir a Firebase Console > Authentication > Settings y añadir 'localhost' o tu dominio de GitHub a los dominios autorizados.");
-                    }
-                });
-            };
-
-        } catch (e) {
-            alert("Error de script: " + e.message);
-        }
-    </script>
+    window.delUser = (k) => db.ref(USERS_NODE+'/'+k).remove();
+    window.openUserVisitHistory = async (key, email) => {
+        const s = await db.ref('visitLog').orderByChild('userId').equalTo(key).once('value');
+        let h = `<h2>${email}</h2><table>`;
+        if(s.val()) Object.values(s.val()).forEach(e => h+=`<tr><td>${new Date(e.timestamp).toLocaleDateString()}</td></tr>`);
+        const w = window.open('','_blank'); w.document.write(h);
+    };
+    async function renderFullGlobalLog() {
+        const c = document.getElementById('full-log-container'); c.innerHTML = '...';
+        const s = await db.ref('visitLog').limitToLast(50).once('value');
+        c.innerHTML = s.val() ? Object.values(s.val()).map(e=>`<div>${e.email} - ${new Date(e.timestamp).toLocaleString()}</div>`).join('') : 'Vacío';
+    };
+</script>
 </body>
 </html>

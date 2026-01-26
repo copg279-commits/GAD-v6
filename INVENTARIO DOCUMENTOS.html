@@ -845,7 +845,7 @@
 
     <div class="results-container">
         <div id="loader" class="loader-box">
-            <i class="fa-solid fa-sync fa-spin"></i> Conectando con Base de Datos GAD V3...
+            <i class="fa-solid fa-sync fa-spin"></i> Conectando con Base de Datos GAD V1...
         </div>
         <div id="grid-resultados" class="grid"></div>
     </div>
@@ -917,7 +917,6 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN V3
         const firebaseConfig = {
             apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
             authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -929,23 +928,7 @@
             measurementId: "G-Q0E3H1996K"
         };
 
-        // LISTA DE AUTORIZADOS
-        const AUTHORIZED_EMAILS = [
-            'gadalicante@gmail.com', 
-            'copg279@gmail.com', 
-            'adamus03248@gmail.com', 
-            'cdavidmesi83@gmail.com', 
-            'pamiseseg@gmail.com', 
-            'policia.g496@gmail.com', 
-            'verdeguer279@gmail.com',
-            'cambiar_nombre6@gmail.com'
-        ];
-
-        // Inicialización segura de Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth(); 
 
@@ -954,29 +937,12 @@
         let INDICE_ACTUAL = 0;
         let filtros = { cat: 'TODOS', cal: 'TODOS' };
 
-        // --- PORTERO DE SEGURIDAD (V3) ---
-        // Esperamos a la autenticación antes de pedir datos
         auth.onAuthStateChanged(user => {
-            const loader = document.getElementById('loader');
-            
-            if (user && AUTHORIZED_EMAILS.includes(user.email)) {
-                // Usuario válido y en la lista: CARGAMOS DATOS
-                console.log("Acceso autorizado para:", user.email);
-                
-                db.ref('_ESTADISTICAS').on('value', snapshot => {
-                    const stats = snapshot.val();
-                    if (stats) actualizarCabeceraEstadisticas(stats);
-                });
-                iniciarEscuchaDatos();
-                
-            } else {
-                // Usuario no válido o no logueado: REDIRIGIMOS
-                console.warn("Acceso denegado o sin sesión.");
-                loader.innerHTML = '<span style="color:#dc3545; font-weight:bold; font-size:1.2rem"><i class="fa-solid fa-ban"></i> Acceso Denegado. Redirigiendo...</span>';
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-            }
+            db.ref('_ESTADISTICAS').on('value', snapshot => {
+                const stats = snapshot.val();
+                if (stats) actualizarCabeceraEstadisticas(stats);
+            });
+            iniciarEscuchaDatos();
         });
 
         function actualizarCabeceraEstadisticas(stats) {
@@ -1031,16 +997,7 @@
                     if (data) {
                         datosTemporales[nodo.id] = { raw: data, meta: nodo };
                         procesarDatos(datosTemporales);
-                    } else {
-                        // Si no hay datos (porque es V3 nueva), quitamos loader y avisamos
-                        document.getElementById('loader').style.display = 'none';
-                        if(BD_GLOBAL.length === 0) {
-                            document.getElementById('grid-resultados').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:#aaa; font-size:1.2rem">La base de datos V3 está vacía o cargando...</div>';
-                        }
                     }
-                }, (error) => {
-                    console.error("Error lectura:", error);
-                    document.getElementById('loader').innerHTML = '<span style="color:red">Error de Permisos en Firebase.</span>';
                 });
             });
         }
