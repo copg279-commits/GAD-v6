@@ -14,7 +14,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -874,48 +873,11 @@
 
     <div id="modalAyuda" class="modal-overlay" onclick="if(event.target === this) toggleModalAyuda(false)">
         <div class="modal-content-help">
-            <div class="help-header">
-                <h2><i class="fa-solid fa-circle-info"></i> Manual de Operador GAD</h2>
-                <button class="btn-close-help" onclick="toggleModalAyuda(false)">✕</button>
-            </div>
-            
+            <div class="help-header"><h2><i class="fa-solid fa-circle-info"></i> Manual de Operador GAD</h2><button class="btn-close-help" onclick="toggleModalAyuda(false)">✕</button></div>
             <div class="help-body">
-                <div class="help-section">
-                    <div class="help-title"><i class="fa-solid fa-magnifying-glass"></i> 1. ¿Cómo busco un documento?</div>
-                    <p class="help-text">El buscador inteligente te permite encontrar cualquier archivo en segundos. Solo tienes que escribir en la barra blanca central.</p>
-                    <span class="help-subtext">Puedes escribir el <b>País</b> (Ej: "Rumania" o "Marruecos").</span>
-                    <span class="help-subtext">Puedes escribir el <b>Tipo de Documento</b> (Ej: "DNI", "Pasaporte", "Permiso").</span>
-                    <span class="help-subtext">O combinar ambos para mayor precisión: <b>"Rumania DNI"</b>.</span>
-                    <div class="help-tip">
-                        <b>Truco Pro:</b> No hace falta que pongas tildes ni mayúsculas. El sistema te entenderá igual si escribes "belgica" o "Bélgica".
-                    </div>
-                </div>
-
-                <div class="help-section">
-                    <div class="help-title"><i class="fa-solid fa-eye" style="color:var(--eye-color)"></i> 2. ¿Cómo veo el documento?</div>
-                    <p class="help-text">Cuando encuentres la ficha que buscas en la lista, pulsa el <b>icono del OJO VERDE</b> situado a la derecha de la tarjeta.</p>
-                    <p class="help-text">Se abrirá el Visor en pantalla completa. Aquí tienes dos opciones importantes arriba a la derecha:</p>
-                    <ul style="margin-left: 20px; color: #555; margin-bottom: 15px; list-style: none;">
-                        <li style="margin-bottom: 8px;"><span style="color:#f39c12; font-weight:bold; background:#fff3cd; padding:2px 8px; border-radius:4px;">BOTÓN NARANJA</span> <b>Ver Carpeta:</b> Te lleva directamente a la carpeta de Google Drive donde está guardado este archivo y sus compañeros.</li>
-                        <li><span style="color:#34a853; font-weight:bold; background:#d1e7dd; padding:2px 8px; border-radius:4px;">BOTÓN VERDE</span> <b>Ver Archivo:</b> Abre la imagen original en alta calidad en una pestaña nueva.</li>
-                    </ul>
-                </div>
-
-                <div class="help-section">
-                    <div class="help-title"><i class="fa-solid fa-chart-line"></i> 3. ¿Qué significan los iconos de arriba?</div>
-                    <p class="help-text">En la cabecera verás un panel de actividad que te informa de lo que ha pasado en las últimas 24 horas:</p>
-                    <span class="help-subtext"><b style="color:#f1c40f"><i class="fa-solid fa-circle-plus"></i> NUEVOS (Dorado):</b> Indica cuántos documentos se han añadido al sistema hoy.</span>
-                    <span class="help-subtext"><b style="color:#0dcaf0"><i class="fa-solid fa-pen"></i> MODIFICADOS (Azul):</b> Indica cuántos documentos han cambiado de nombre o se han actualizado.</span>
-                    <span class="help-subtext"><b style="color:#ff6b6b"><i class="fa-solid fa-trash"></i> ELIMINADOS (Rojo):</b> Indica cuántos documentos se han borrado de la base de datos.</span>
-                </div>
-
-                <div class="help-section">
-                    <div class="help-title"><i class="fa-regular fa-clock"></i> 4. Actualización Automática</div>
-                    <p class="help-text">El sistema se sincroniza automáticamente cada noche a las 02:00 AM. La fecha de la última actualización aparece siempre arriba a la derecha.</p>
-                </div>
+                <p>Bienvenido al sistema GAD V3. Usa el buscador o los filtros para localizar documentos.</p>
             </div>
-
-            <button class="btn-modal-ok" onclick="toggleModalAyuda(false)">¡ENTENDIDO! CERRAR MANUAL</button>
+            <button class="btn-modal-ok" onclick="toggleModalAyuda(false)">CERRAR</button>
         </div>
     </div>
 
@@ -939,17 +901,19 @@
     </div>
 
     <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
-  authDomain: "gad-alicante-v3.firebaseapp.com",
-  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "gad-alicante-v3",
-  storageBucket: "gad-alicante-v3.firebasestorage.app",
-  messagingSenderId: "906986258369",
-  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
-  measurementId: "G-Q0E3H1996K"
-};
-// LISTA DE AUTORIZADOS
+        // CONFIGURACIÓN V3
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+            authDomain: "gad-alicante-v3.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v3",
+            storageBucket: "gad-alicante-v3.firebasestorage.app",
+            messagingSenderId: "906986258369",
+            appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+            measurementId: "G-Q0E3H1996K"
+        };
+
+        // LISTA DE AUTORIZADOS
         const AUTHORIZED_EMAILS = [
             'gadalicante@gmail.com', 
             'copg279@gmail.com', 
@@ -970,51 +934,43 @@ const firebaseConfig = {
         let INDICE_ACTUAL = 0;
         let filtros = { cat: 'TODOS', cal: 'TODOS' };
 
+        // --- PORTERO DE SEGURIDAD (V3) ---
         auth.onAuthStateChanged(user => {
-            db.ref('_ESTADISTICAS').on('value', snapshot => {
-                const stats = snapshot.val();
-                if (stats) actualizarCabeceraEstadisticas(stats);
-            });
-            iniciarEscuchaDatos();
+            const loader = document.getElementById('loader');
+            
+            if (user && AUTHORIZED_EMAILS.includes(user.email)) {
+                console.log("Usuario V3 validado:", user.email);
+                
+                // Si el usuario es válido, arrancamos la escucha de datos
+                db.ref('_ESTADISTICAS').on('value', snapshot => {
+                    const stats = snapshot.val();
+                    if (stats) actualizarCabeceraEstadisticas(stats);
+                });
+                iniciarEscuchaDatos();
+                
+            } else {
+                console.warn("Usuario no autorizado o sin sesión.");
+                // Mensaje visual y redirección
+                loader.innerHTML = '<span style="color:#dc3545"><i class="fa-solid fa-ban"></i> Acceso Denegado. Inicia sesión en el Menú Principal.</span>';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
         });
 
         function actualizarCabeceraEstadisticas(stats) {
-            // FECHA ACTUALIZACIÓN
             document.querySelector('#fecha-actualizacion span').innerText = `Actualizado: ${stats.UltimaActualizacion || '--'}`;
-            
-            // ACTIVIDAD DETALLADA
             const boxDetalle = document.getElementById('activity-details');
             boxDetalle.innerHTML = ''; 
-
             let html = '';
             let huboCambios = false;
-
-            // 1. NUEVOS
             let numNuevos = stats.Nuevos || stats.NuevosDetectados || 0;
-            if(numNuevos > 0) {
-                html += `<span class="act-item new"><i class="fa-solid fa-circle-plus"></i> ${numNuevos}</span>`;
-                huboCambios = true;
-            }
-
-            // 2. MODIFICADOS
+            if(numNuevos > 0) { html += `<span class="act-item new"><i class="fa-solid fa-circle-plus"></i> ${numNuevos}</span>`; huboCambios = true; }
             let numMod = stats.Modificados || stats.Actualizados || 0;
-            if(numMod > 0) {
-                html += `<span class="act-item mod"><i class="fa-solid fa-pen"></i> ${numMod}</span>`;
-                huboCambios = true;
-            }
-
-            // 3. ELIMINADOS
+            if(numMod > 0) { html += `<span class="act-item mod"><i class="fa-solid fa-pen"></i> ${numMod}</span>`; huboCambios = true; }
             let numDel = stats.Eliminados || stats.Borrados || 0;
-            if(numDel > 0) {
-                html += `<span class="act-item del"><i class="fa-solid fa-trash"></i> ${numDel}</span>`;
-                huboCambios = true;
-            }
-
-            // Si no hay nada
-            if(!huboCambios) {
-                html = `<span class="act-item none"><i class="fa-solid fa-check"></i> Sin cambios</span>`;
-            }
-
+            if(numDel > 0) { html += `<span class="act-item del"><i class="fa-solid fa-trash"></i> ${numDel}</span>`; huboCambios = true; }
+            if(!huboCambios) { html = `<span class="act-item none"><i class="fa-solid fa-check"></i> Sin cambios</span>`; }
             boxDetalle.innerHTML = html;
         }
 
@@ -1030,7 +986,14 @@ const firebaseConfig = {
                     if (data) {
                         datosTemporales[nodo.id] = { raw: data, meta: nodo };
                         procesarDatos(datosTemporales);
+                    } else {
+                        // Si no hay datos, puede ser que la DB esté vacía. Quitamos loader igual.
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('grid-resultados').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999;">Base de datos vacía o sin conexión.</div>';
                     }
+                }, (error) => {
+                    console.error("Error lectura:", error);
+                    document.getElementById('loader').innerHTML = '<span style="color:red">Error de Permisos en Base de Datos.</span>';
                 });
             });
         }
