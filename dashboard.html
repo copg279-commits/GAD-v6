@@ -209,6 +209,7 @@
 </div>
 
 <script>
+// CONFIGURACIÓN V3
 const firebaseConfig = {
   apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
   authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -219,7 +220,17 @@ const firebaseConfig = {
   appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
   measurementId: "G-Q0E3H1996K"
 };
-const AUTHORIZED_EMAILS = ['gadalicante@gmail.com', 'copg279@gmail.com', 'adamus03248@gmail.com', 'cdavidmesi83@gmail.com', 'pamiseseg@gmail.com', 'policia.g496@gmail.com', 'verdeguer279@gmail.com'];
+
+// LISTA DE AUTORIZADOS (GAD)
+const AUTHORIZED_EMAILS = [
+    'gadalicante@gmail.com', 
+    'copg279@gmail.com', 
+    'adamus03248@gmail.com', 
+    'cdavidmesi83@gmail.com', 
+    'pamiseseg@gmail.com', 
+    'policia.g496@gmail.com', 
+    'verdeguer279@gmail.com'
+];
 
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   const db = firebase.database();
@@ -229,7 +240,7 @@ const AUTHORIZED_EMAILS = ['gadalicante@gmail.com', 'copg279@gmail.com', 'adamus
   const TITLE_NODE = 'pageTitle';
   const USERS_NODE = 'usuarios_google'; 
 
-  // --- VARIABLES Y REFERENCIAS ---
+  // --- UI REFS ---
   const mainScrollArea = document.getElementById('main-scroll-area');
   const iframeViewerArea = document.getElementById('iframe-viewer-area');
   const contentIframe = document.getElementById('content-iframe');
@@ -276,34 +287,78 @@ const AUTHORIZED_EMAILS = ['gadalicante@gmail.com', 'copg279@gmail.com', 'adamus
       renderMenuButtons(); 
   }
 
+  // --- FUNCIÓN MEJORADA: CIRUJANO DE ARCHIVOS ---
   function showIframeArea(data) {
-      isViewingContent = true;
-      mainScrollArea.style.display = 'none';
-      iframeViewerArea.style.display = 'block';
+        isViewingContent = true;
+        mainScrollArea.style.display = 'none';
+        iframeViewerArea.style.display = 'block';
 
-      if (data.htmlCode) {
-          const doc = contentIframe.contentWindow.document;
-          doc.open();
-          let content = data.htmlCode;
-          const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-          // INYECTAR CONFIG PARA HTML HIJO
-          const scriptConfig = `
-                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"><\/script>
-                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"><\/script>
-                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"><\/script>
-                <script>
-                   const firebaseConfig = { apiKey: "${firebaseConfig.apiKey}", authDomain: "${firebaseConfig.authDomain}", databaseURL: "${firebaseConfig.databaseURL}", projectId: "${firebaseConfig.projectId}", storageBucket: "${firebaseConfig.storageBucket}", messagingSenderId: "${firebaseConfig.messagingSenderId}", appId: "${firebaseConfig.appId}", measurementId: "${firebaseConfig.measurementId}" };
-                   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-                <\/script>
-            `;
-          if (!content.includes('<meta name="viewport"')) {
-              if(content.includes('<head>')) { content = content.replace('<head>', '<head>' + viewportTag + scriptConfig); } 
-              else { content = viewportTag + scriptConfig + content; }
-          } else if (content.includes('<head>')) { content = content.replace('<head>', '<head>' + scriptConfig); }
-          doc.write(content); doc.close();
-      } else if (data.href) { contentIframe.src = data.href; }
-      renderMenuButtons();
-  }
+        // DEFINIMOS EL SCRIPT DE SEGURIDAD QUE VAMOS A INYECTAR
+        const scriptInyectado = `
+            <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>
+            <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"><\/script>
+            <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"><\/script>
+            <script>
+               // 1. CONFIGURACIÓN FORZADA (La del Dashboard)
+               const firebaseConfig = { apiKey: "${firebaseConfig.apiKey}", authDomain: "${firebaseConfig.authDomain}", databaseURL: "${firebaseConfig.databaseURL}", projectId: "${firebaseConfig.projectId}", storageBucket: "${firebaseConfig.storageBucket}", messagingSenderId: "${firebaseConfig.messagingSenderId}", appId: "${firebaseConfig.appId}", measurementId: "${firebaseConfig.measurementId}" };
+               
+               if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+               
+               // 2. PARCHE: Esperar autenticación
+               firebase.auth().onAuthStateChanged(user => {
+                   if(user) console.log("Usuario verificado en App Interna:", user.email);
+                   else console.warn("Esperando autenticación...");
+               });
+            <\/script>
+        `;
+
+        if (data.htmlCode) {
+            // CASO 1: CÓDIGO HTML EMBEBIDO
+            const doc = contentIframe.contentWindow.document;
+            doc.open();
+            let content = data.htmlCode;
+            const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
+            
+            if (!content.includes('<meta name="viewport"')) {
+                if(content.includes('<head>')) content = content.replace('<head>', '<head>' + viewportTag + scriptInyectado);
+                else content = viewportTag + scriptInyectado + content;
+            } else if (content.includes('<head>')) {
+                 content = content.replace('<head>', '<head>' + scriptInyectado);
+            }
+            doc.write(content);
+            doc.close();
+
+        } else if (data.href) {
+            // CASO 2: ARCHIVOS EXTERNOS -> MODO CIRUJANO
+            fetch(data.href)
+                .then(response => response.text())
+                .then(htmlOriginal => {
+                    let htmlModificado = htmlOriginal;
+
+                    // A. NEUTRALIZAR LA CONFIGURACIÓN VIEJA
+                    htmlModificado = htmlModificado.replace(/firebase\.initializeApp\s*\(/g, '// firebase.initializeApp(');
+
+                    // B. INYECTAR LA NUEVA SEGURIDAD
+                    if (htmlModificado.includes('</head>')) {
+                        htmlModificado = htmlModificado.replace('</head>', scriptInyectado + '</head>');
+                    } else {
+                        htmlModificado = scriptInyectado + htmlModificado;
+                    }
+
+                    // C. ESCRIBIR EL RESULTADO
+                    const doc = contentIframe.contentWindow.document;
+                    doc.open();
+                    doc.write(htmlModificado);
+                    doc.close();
+                })
+                .catch(err => {
+                    console.error("Error al parchear el archivo:", err);
+                    contentIframe.src = data.href; 
+                });
+        }
+        
+        renderMenuButtons();
+    }
 
   function goBack() {
       if (isViewingContent) {
@@ -438,57 +493,46 @@ const AUTHORIZED_EMAILS = ['gadalicante@gmail.com', 'copg279@gmail.com', 'adamus
       });
   }
 
-  // --- ESCUCHA DE DATOS (AHORA CONTROLADA) ---
-  function iniciarEscuchaDeDatos() {
-      // SOLO SE LLAMA CUANDO YA TENEMOS PERMISO
-      console.log("Iniciando descarga segura de datos...");
-      db.ref().on('value', s => { 
-          menuButtonsData = s.val()?.menuButtons || {}; 
-          renderMenuButtons(); 
-          // Ocultar pantalla de carga cuando lleguen los primeros datos
-          loadingScreen.style.opacity = '0';
-          setTimeout(() => loadingScreen.style.display = 'none', 500);
-      });
-  }
-
-  window.openEdit = (key) => {
-      const d = menuButtonsData[key]; document.getElementById('edit-button-id').value = key; document.getElementById('edit-button-text').value = d.text; document.getElementById('edit-button-href').value = d.href || ''; document.getElementById('edit-button-html-code').value = d.htmlCode || ''; document.getElementById('edit-link-fields').style.display = (d.type === 'link' || d.type === 'main') ? 'block' : 'none';
-      document.querySelectorAll('input[name="edit-button-size"]').forEach(r => r.checked = r.value === d.size); document.querySelectorAll('.color-circle').forEach(c => c.classList.toggle('active', c.dataset.color === d.color));
-      modalEditBtn.style.display = 'flex';
-  };
-  window.delBtn = (k, t, p) => { if(confirm(`¿Borrar "${t}"?`)) { const u={}; u[`/${BUTTONS_NODE}/${k}`]=null; if(p && Object.values(menuButtonsData).filter(b=>b.parent===p).length===1) u[`/${BUTTONS_NODE}/${p}/children`]=null; db.ref().update(u); }};
-  window.moveToRoot = async (k) => { const s = await db.ref(BUTTONS_NODE).once('value'); const order = Object.values(s.val()||{}).filter(b=>!b.parent).length + 1; db.ref(`${BUTTONS_NODE}/${k}`).update({parent:null, order}); };
-
-  function addDragHandlers(el) {
-      el.ondragstart = e => { draggedItem = el; setTimeout(() => el.classList.add('dragging'),0); };
-      el.ondragend = () => { draggedItem.classList.remove('dragging'); draggedItem=null; document.querySelectorAll('.drag-over-container').forEach(c=>c.classList.remove('drag-over-container')); };
-      el.ondrop = async e => { e.preventDefault(); e.stopPropagation(); if(draggedItem && draggedItem !== el) { const target = menuButtonsData[el.dataset.id]; if(target.type==='parent' && confirm("¿Mover dentro?")) db.ref(`${BUTTONS_NODE}/${draggedItem.dataset.id}`).update({parent:el.dataset.id}); else { el.parentNode.insertBefore(draggedItem, el); updateOrder(); } } };
-      el.ondragover = e => e.preventDefault();
-  }
-  dragZone.ondragover = e => { e.preventDefault(); dragZone.classList.add('drag-over-container'); };
-  dragZone.ondragleave = () => dragZone.classList.remove('drag-over-container');
-  dragZone.ondrop = e => { e.preventDefault(); dragZone.classList.remove('drag-over-container'); if(draggedItem) { mainMenuGrid.appendChild(draggedItem); updateOrder(); } };
-  function updateOrder() { const u={}; document.querySelectorAll('#main-menu-grid .menu-button-container').forEach((b,i) => u[`/${BUTTONS_NODE}/${b.dataset.id}/order`]=i+1); db.ref().update(u); }
-
-  // --- LÓGICA PRINCIPAL DE SEGURIDAD ---
+  // --- LÓGICA PRINCIPAL DE SEGURIDAD CORREGIDA ---
   function initAppLogic() {
       firebase.auth().onAuthStateChanged(async (user) => {
-          if (user && AUTHORIZED_EMAILS.includes(user.email)) {
-              // 1. USUARIO AUTORIZADO DETECTADO
-              document.body.classList.add('loaded'); // Mostrar body
-              
-              // 2. AHORA SÍ: PEDIMOS LOS DATOS (Porque ya tenemos la "llave")
-              iniciarEscuchaDeDatos();
+          if (user) {
+              // 1. PRIMER FILTRO: ¿Está en la lista de correos autorizados del código?
+              if (AUTHORIZED_EMAILS.includes(user.email)) {
+                  
+                  document.body.classList.add('loaded'); // Mostrar body
+                  iniciarEscuchaDeDatos();
 
-              const emailKey = sanitizeEmail(user.email);
-              const isAdmin = user.email === AUTHORIZED_EMAILS[0];
-              
-              if (isAdmin) { 
-                  grantAccess(user, true); 
+                  const emailKey = sanitizeEmail(user.email);
+                  // El primer correo de la lista es el ADMIN SUPERIOR
+                  const isAdmin = user.email === AUTHORIZED_EMAILS[0];
+                  
+                  if (isAdmin) { 
+                      grantAccess(user, true); 
+                  } else {
+                      // 2. SEGUNDO FILTRO: ¿Existe en la base de datos?
+                      const snap = await db.ref(USERS_NODE + '/' + emailKey).once('value');
+                      
+                      if (snap.exists()) {
+                          // Si ya existe, entra normal
+                          grantAccess(user, false);
+                      } else {
+                          // SI NO EXISTE PERO ESTÁ EN LA LISTA "AUTHORIZED_EMAILS":
+                          // Lo registramos automáticamente y lo dejamos pasar.
+                          console.log("Usuario autorizado nuevo. Creando registro...");
+                          await db.ref(USERS_NODE + '/' + emailKey).set({
+                              email: user.email,
+                              nombre: user.displayName || 'Agente',
+                              accesos: 0,
+                              fechaAlta: new Date().toISOString()
+                          });
+                          grantAccess(user, false);
+                      }
+                  }
               } else {
-                  const snap = await db.ref(USERS_NODE + '/' + emailKey).once('value');
-                  if (snap.exists()) grantAccess(user, false);
-                  else { alert('ACCESO DENEGADO. Contacte con el administrador.'); firebase.auth().signOut().then(() => window.location.href = 'index.html'); }
+                  // Si no está en la lista AUTHORIZED_EMAILS
+                  alert('ACCESO DENEGADO: Tu correo no está en la lista de autorización.'); 
+                  firebase.auth().signOut().then(() => window.location.href = 'index.html');
               }
           } else {
               // NO LOGUEADO -> FUERA
@@ -504,7 +548,18 @@ const AUTHORIZED_EMAILS = ['gadalicante@gmail.com', 'copg279@gmail.com', 'adamus
       const now = Date.now();
       const ip = await getClientIP();
       
-      db.ref(USERS_NODE + '/' + emailKey).transaction(d => d ? {...d, email: user.email, accesos: (d.accesos||0)+1, ultimoAcceso: now} : (isAdmin ? {email:user.email, accesos:1, ultimoAcceso:now, nombre:'Admin'} : d));
+      // Actualizar contador de accesos
+      db.ref(USERS_NODE + '/' + emailKey).transaction(d => {
+          if (d) {
+              // Si el registro existe, actualizamos
+              return {...d, email: user.email, accesos: (d.accesos||0)+1, ultimoAcceso: now};
+          } else {
+              // Por si acaso (fallback), aunque el set anterior ya lo creó
+              return {email: user.email, accesos: 1, ultimoAcceso: now, nombre: user.displayName || 'Agente', fechaAlta: now};
+          }
+      });
+
+      // Log de visita
       db.ref('visitLog').push().set({ userId: emailKey, userName: user.displayName||user.email, email: user.email, timestamp: now, ip: ip });
       
       document.getElementById('user-info-display').innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
@@ -547,8 +602,6 @@ const AUTHORIZED_EMAILS = ['gadalicante@gmail.com', 'copg279@gmail.com', 'adamus
       document.getElementById('show-manage-users-modal').onclick = () => modalManageUsers.style.display = 'flex';
       document.getElementById('show-full-log-modal').onclick = () => { renderFullGlobalLog(); modalFullLog.style.display = 'flex'; };
       
-      // ESTE TAMBIEN LO DEBE MOVER ADENTRO DE INICIARESCUCHA, PERO PARA USUARIOS 
-      // LO DEJAMOS AQUI PORQUE SOLO ADMIN LO VE Y SI FALLA NO ROMPE LA APP
       db.ref(USERS_NODE).on('value', s => {
           if(s.val()) {
               const ul = document.getElementById('user-list-to-delete'); if(ul) ul.innerHTML = '';
