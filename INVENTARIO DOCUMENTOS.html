@@ -867,7 +867,7 @@
 
     <div class="results-container">
         <div id="loader" class="loader-box">
-            <i class="fa-solid fa-sync fa-spin"></i> Conectando con Base de Datos GAD V1...
+            <i class="fa-solid fa-sync fa-spin"></i> Conectando con Base de Datos GAD V3...
         </div>
         <div id="grid-resultados" class="grid"></div>
     </div>
@@ -949,6 +949,17 @@ const firebaseConfig = {
   appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
   measurementId: "G-Q0E3H1996K"
 };
+// LISTA DE AUTORIZADOS
+        const AUTHORIZED_EMAILS = [
+            'gadalicante@gmail.com', 
+            'copg279@gmail.com', 
+            'adamus03248@gmail.com', 
+            'cdavidmesi83@gmail.com', 
+            'pamiseseg@gmail.com', 
+            'policia.g496@gmail.com', 
+            'verdeguer279@gmail.com',
+            'cambiar_nombre6@gmail.com'
+        ];
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
