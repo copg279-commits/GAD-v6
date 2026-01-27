@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Menú GAD</title>
+    <title>Menú GAD V3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -16,7 +16,6 @@
         /* ESTILOS ORIGINALES (MANTENIDOS) */
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; visibility: hidden; }
         body.loaded { visibility: visible; }
-        /* Pantalla de carga mientras verificamos */
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 99999; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; transition: opacity 0.5s; }
         
         .top-bar-strip { background-color: #1e3a8a; color: white; display: flex; align-items: center; padding: 0 10px; height: 50px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 100; position: relative; flex-shrink: 0; }
@@ -209,29 +208,31 @@
 </div>
 
 <script>
-// CONFIGURACIÓN V3 (CORREGIDA)
-const firebaseConfig = {
-  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
-  authDomain: "gad-alicante-v3.firebaseapp.com",
-  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "gad-alicante-v3",
-  storageBucket: "gad-alicante-v3.firebasestorage.app",
-  messagingSenderId: "906986258369",
-  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
-  measurementId: "G-Q0E3H1996K"
-};
-
-// LISTA DE AUTORIZADOS AMPLIADA
-const AUTHORIZED_EMAILS = [
-    'gadalicante@gmail.com', 
-    'copg279@gmail.com', 
-    'adamus03248@gmail.com', 
-    'cdavidmesi83@gmail.com', 
-    'pamiseseg@gmail.com', 
-    'policia.g496@gmail.com', 
-    'verdeguer279@gmail.com',
-    'cambiar_nombre6@gmail.com'
-];
+  // --- CONFIGURACIÓN V4 (LA CORRECTA) ---
+  const firebaseConfig = {
+      apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag",
+      authDomain: "gad-alicante-v4.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v4",
+      storageBucket: "gad-alicante-v4.firebasestorage.app",
+      messagingSenderId: "119727545224",
+      appId: "1:119727545224:web:36880c50d196c456cdb83d"
+  };
+  
+  // --- LISTA COMPLETA DE USUARIOS AUTORIZADOS ---
+  const AUTHORIZED_EMAILS = [
+      'gadalicante@gmail.com', 
+      'copg279@gmail.com',
+      'adamus03248@gmail.com',
+      'davidmesi83@gmail.com', // CORREGIDO
+      'pamiseseg@gmail.com',
+      'policia.g496@gmail.com',
+      'verdeguer279@gmail.com',
+      'cambiar_nombre6@gmail.com'
+  ];
+  
+  // SOLO ESTE ES ADMIN
+  const ADMIN_EMAIL = 'copg279@gmail.com';
 
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   const db = firebase.database();
@@ -241,7 +242,7 @@ const AUTHORIZED_EMAILS = [
   const TITLE_NODE = 'pageTitle';
   const USERS_NODE = 'usuarios_google'; 
 
-  // --- UI REFS ---
+  // --- VARIABLES Y REFERENCIAS ---
   const mainScrollArea = document.getElementById('main-scroll-area');
   const iframeViewerArea = document.getElementById('iframe-viewer-area');
   const contentIframe = document.getElementById('content-iframe');
@@ -288,67 +289,34 @@ const AUTHORIZED_EMAILS = [
       renderMenuButtons(); 
   }
 
-  // --- FUNCIÓN MEJORADA: CIRUJANO DE ARCHIVOS ---
   function showIframeArea(data) {
-        isViewingContent = true;
-        mainScrollArea.style.display = 'none';
-        iframeViewerArea.style.display = 'block';
+      isViewingContent = true;
+      mainScrollArea.style.display = 'none';
+      iframeViewerArea.style.display = 'block';
 
-        const scriptInyectado = `
-            <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>
-            <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"><\/script>
-            <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"><\/script>
-            <script>
-               const firebaseConfig = { apiKey: "${firebaseConfig.apiKey}", authDomain: "${firebaseConfig.authDomain}", databaseURL: "${firebaseConfig.databaseURL}", projectId: "${firebaseConfig.projectId}", storageBucket: "${firebaseConfig.storageBucket}", messagingSenderId: "${firebaseConfig.messagingSenderId}", appId: "${firebaseConfig.appId}", measurementId: "${firebaseConfig.measurementId}" };
-               
-               if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-               
-               firebase.auth().onAuthStateChanged(user => {
-                   if(user) console.log("Usuario verificado en App Interna:", user.email);
-                   else console.warn("Esperando autenticación...");
-               });
-            <\/script>
-        `;
-
-        if (data.htmlCode) {
-            const doc = contentIframe.contentWindow.document;
-            doc.open();
-            let content = data.htmlCode;
-            const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-            
-            if (!content.includes('<meta name="viewport"')) {
-                if(content.includes('<head>')) content = content.replace('<head>', '<head>' + viewportTag + scriptInyectado);
-                else content = viewportTag + scriptInyectado + content;
-            } else if (content.includes('<head>')) {
-                 content = content.replace('<head>', '<head>' + scriptInyectado);
-            }
-            doc.write(content);
-            doc.close();
-
-        } else if (data.href) {
-            fetch(data.href)
-                .then(response => response.text())
-                .then(htmlOriginal => {
-                    let htmlModificado = htmlOriginal;
-                    htmlModificado = htmlModificado.replace(/firebase\.initializeApp\s*\(/g, '// firebase.initializeApp(');
-                    if (htmlModificado.includes('</head>')) {
-                        htmlModificado = htmlModificado.replace('</head>', scriptInyectado + '</head>');
-                    } else {
-                        htmlModificado = scriptInyectado + htmlModificado;
-                    }
-                    const doc = contentIframe.contentWindow.document;
-                    doc.open();
-                    doc.write(htmlModificado);
-                    doc.close();
-                })
-                .catch(err => {
-                    console.error("Error al parchear el archivo:", err);
-                    contentIframe.src = data.href; 
-                });
-        }
-        
-        renderMenuButtons();
-    }
+      if (data.htmlCode) {
+          const doc = contentIframe.contentWindow.document;
+          doc.open();
+          let content = data.htmlCode;
+          const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
+          // INYECCION V4 "ANTI-CONFLICTO" (gadConfigV4)
+          const scriptConfig = `
+                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"><\/script>
+                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"><\/script>
+                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"><\/script>
+                <script>
+                   var gadConfigV4 = { apiKey: "${firebaseConfig.apiKey}", authDomain: "${firebaseConfig.authDomain}", databaseURL: "${firebaseConfig.databaseURL}", projectId: "${firebaseConfig.projectId}", storageBucket: "${firebaseConfig.storageBucket}", messagingSenderId: "${firebaseConfig.messagingSenderId}", appId: "${firebaseConfig.appId}" };
+                   if (!firebase.apps.length) firebase.initializeApp(gadConfigV4);
+                <\/script>
+            `;
+          if (!content.includes('<meta name="viewport"')) {
+              if(content.includes('<head>')) { content = content.replace('<head>', '<head>' + viewportTag + scriptConfig); } 
+              else { content = viewportTag + scriptConfig + content; }
+          } else if (content.includes('<head>')) { content = content.replace('<head>', '<head>' + scriptConfig); }
+          doc.write(content); doc.close();
+      } else if (data.href) { contentIframe.src = data.href; }
+      renderMenuButtons();
+  }
 
   function goBack() {
       if (isViewingContent) {
@@ -485,10 +453,12 @@ const AUTHORIZED_EMAILS = [
 
   // --- ESCUCHA DE DATOS ---
   function iniciarEscuchaDeDatos() {
+      // SOLO SE LLAMA CUANDO YA TENEMOS PERMISO
       console.log("Iniciando descarga segura de datos...");
       db.ref().on('value', s => { 
           menuButtonsData = s.val()?.menuButtons || {}; 
           renderMenuButtons(); 
+          // Ocultar pantalla de carga
           loadingScreen.style.opacity = '0';
           setTimeout(() => loadingScreen.style.display = 'none', 500);
       });
@@ -513,39 +483,45 @@ const AUTHORIZED_EMAILS = [
   dragZone.ondrop = e => { e.preventDefault(); dragZone.classList.remove('drag-over-container'); if(draggedItem) { mainMenuGrid.appendChild(draggedItem); updateOrder(); } };
   function updateOrder() { const u={}; document.querySelectorAll('#main-menu-grid .menu-button-container').forEach((b,i) => u[`/${BUTTONS_NODE}/${b.dataset.id}/order`]=i+1); db.ref().update(u); }
 
-  // --- LÓGICA PRINCIPAL DE SEGURIDAD ESTRICTA (V1 STYLE) ---
+  // --- LÓGICA PRINCIPAL DE SEGURIDAD ---
   function initAppLogic() {
       firebase.auth().onAuthStateChanged(async (user) => {
           if (user) {
+              // 1. USUARIO AUTORIZADO DETECTADO EN AUTH
               if (AUTHORIZED_EMAILS.includes(user.email)) {
+                  document.body.classList.add('loaded'); // Mostrar body
                   
-                  document.body.classList.add('loaded');
+                  // 2. AHORA SÍ: PEDIMOS LOS DATOS
                   iniciarEscuchaDeDatos();
 
                   const emailKey = sanitizeEmail(user.email);
-                  // ADMIN: El primero de la lista tiene privilegios especiales
-                  const isAdmin = user.email === AUTHORIZED_EMAILS[0];
+                  // ADMIN EXPLICITO
+                  const isAdmin = (user.email === ADMIN_EMAIL);
                   
-                  if (isAdmin) { 
-                      grantAccess(user, true); 
-                  } else {
-                      // SI NO ERES ADMIN, BUSCAMOS TU FICHA EN LA DB
-                      const snap = await db.ref(USERS_NODE + '/' + emailKey).once('value');
-                      
-                      if (snap.exists()) {
-                          // ¡EXISTE! ADELANTE
-                          grantAccess(user, false);
+                  // Intentamos escribir el acceso.
+                  try {
+                      if (isAdmin) { 
+                          await grantAccess(user, true); 
                       } else {
-                          // NO EXISTE EN LA DB -> BLOQUEADO (Lógica V1 estricta)
-                          alert('ACCESO DENEGADO: Usuario validado pero NO encontrado en la base de datos. Pida al administrador que cree su ficha.'); 
-                          firebase.auth().signOut().then(() => window.location.href = 'index.html');
+                          // Verificar si existe en DB (doble check)
+                          const snap = await db.ref(USERS_NODE + '/' + emailKey).once('value');
+                          if (snap.exists()) {
+                              await grantAccess(user, false);
+                          } else {
+                              alert('ACCESO DENEGADO por Base de Datos. Contacte con el administrador.');
+                              firebase.auth().signOut().then(() => window.location.href = 'index.html');
+                          }
                       }
+                  } catch (e) {
+                      console.error("Error de permisos:", e);
                   }
+
               } else {
-                  alert('ACCESO DENEGADO: Tu correo no está autorizado en este sistema.'); 
-                  firebase.auth().signOut().then(() => window.location.href = 'index.html');
+                 alert("Usuario no autorizado en lista local.");
+                 window.location.href = 'index.html';
               }
           } else {
+              // NO LOGUEADO -> FUERA
               console.warn("Usuario no autorizado. Redirigiendo al Login...");
               window.location.href = 'index.html';
           }
@@ -558,7 +534,18 @@ const AUTHORIZED_EMAILS = [
       const now = Date.now();
       const ip = await getClientIP();
       
-      db.ref(USERS_NODE + '/' + emailKey).transaction(d => d ? {...d, email: user.email, accesos: (d.accesos||0)+1, ultimoAcceso: now} : (isAdmin ? {email:user.email, accesos:1, ultimoAcceso:now, nombre:'Admin'} : d));
+      const updateData = {};
+      if(isAdmin) {
+          db.ref(USERS_NODE + '/' + emailKey).update({email: user.email, nombre: 'Admin', ultimoAcceso: now});
+      } else {
+          db.ref(USERS_NODE + '/' + emailKey).transaction(currentData => {
+              if (currentData) {
+                  return { ...currentData, email: user.email, accesos: (currentData.accesos||0)+1, ultimoAcceso: now };
+              }
+              return currentData; 
+          });
+      }
+
       db.ref('visitLog').push().set({ userId: emailKey, userName: user.displayName||user.email, email: user.email, timestamp: now, ip: ip });
       
       document.getElementById('user-info-display').innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
@@ -601,13 +588,18 @@ const AUTHORIZED_EMAILS = [
       document.getElementById('show-manage-users-modal').onclick = () => modalManageUsers.style.display = 'flex';
       document.getElementById('show-full-log-modal').onclick = () => { renderFullGlobalLog(); modalFullLog.style.display = 'flex'; };
       
+      // ESCUCHA DE USUARIOS (SOLO ADMIN PODRÁ LEERLO SEGÚN REGLAS)
       db.ref(USERS_NODE).on('value', s => {
           if(s.val()) {
               const ul = document.getElementById('user-list-to-delete'); if(ul) ul.innerHTML = '';
               Object.entries(s.val()).forEach(([k,v]) => { if(ul) ul.innerHTML += `<li><div class="user-row-header"><span>${v.email}</span></div><div class="user-row-actions"><button onclick="delUser('${k}')">X</button></div></li>`; });
-              if (auth.currentUser?.email === AUTHORIZED_EMAILS[0]) renderAdminCounters(s.val());
+              // SOLO ADMIN VE CONTADORES
+              if (auth.currentUser?.email === ADMIN_EMAIL) renderAdminCounters(s.val());
           }
+      }, (error) => {
+          console.log("No tienes permisos para ver usuarios (normal si no eres admin)");
       });
+
       document.getElementById('add-user-button').onclick = () => { const e = document.getElementById('new-user-email').value.trim().toLowerCase(); if(e) db.ref(USERS_NODE + '/' + sanitizeEmail(e)).update({ email: e, nombre: document.getElementById('new-user-alias').value, accesos: 0 }).then(()=>alert('Añadido')); };
       document.getElementById('clear-global-log').onclick = () => { if(confirm("¿Borrar?")) db.ref('visitLog').remove(); };
       
