@@ -208,31 +208,31 @@
 </div>
 
 <script>
-  // --- CONFIGURACIÓN V4 (LA CORRECTA) ---
-const firebaseConfig = {
-  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
-  authDomain: "gad-alicante-v3.firebaseapp.com",
-  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "gad-alicante-v3",
-  storageBucket: "gad-alicante-v3.firebasestorage.app",
-  messagingSenderId: "906986258369",
-  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
-  measurementId: "G-Q0E3H1996K"
-};
+  // --- CONFIGURACIÓN V3 (REAL) ---
+  const firebaseConfig = {
+      apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+      authDomain: "gad-alicante-v3.firebaseapp.com",
+      databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gad-alicante-v3",
+      storageBucket: "gad-alicante-v3.firebasestorage.app",
+      messagingSenderId: "906986258369",
+      appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+      measurementId: "G-Q0E3H1996K"
+  };
   
-  // --- LISTA COMPLETA DE USUARIOS AUTORIZADOS ---
+  // --- LISTA COMPLETA DE ACCESO ---
   const AUTHORIZED_EMAILS = [
       'gadalicante@gmail.com', 
       'copg279@gmail.com',
       'adamus03248@gmail.com',
-      'davidmesi83@gmail.com', // CORREGIDO
+      'davidmesi83@gmail.com',
       'pamiseseg@gmail.com',
       'policia.g496@gmail.com',
       'verdeguer279@gmail.com',
       'cambiar_nombre6@gmail.com'
   ];
   
-  // SOLO ESTE ES ADMIN
+  // SOLO ESTE CORREO ES ADMIN
   const ADMIN_EMAIL = 'copg279@gmail.com';
 
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -300,20 +300,38 @@ const firebaseConfig = {
           doc.open();
           let content = data.htmlCode;
           const viewportTag = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-          // INYECCION V4 "ANTI-CONFLICTO" (gadConfigV4)
-          const scriptConfig = `
-                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"><\/script>
-                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"><\/script>
-                <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"><\/script>
-                <script>
-                   var gadConfigV4 = { apiKey: "${firebaseConfig.apiKey}", authDomain: "${firebaseConfig.authDomain}", databaseURL: "${firebaseConfig.databaseURL}", projectId: "${firebaseConfig.projectId}", storageBucket: "${firebaseConfig.storageBucket}", messagingSenderId: "${firebaseConfig.messagingSenderId}", appId: "${firebaseConfig.appId}" };
-                   if (!firebase.apps.length) firebase.initializeApp(gadConfigV4);
-                <\/script>
-            `;
+          
           if (!content.includes('<meta name="viewport"')) {
-              if(content.includes('<head>')) { content = content.replace('<head>', '<head>' + viewportTag + scriptConfig); } 
-              else { content = viewportTag + scriptConfig + content; }
-          } else if (content.includes('<head>')) { content = content.replace('<head>', '<head>' + scriptConfig); }
+              if(content.includes('<head>')) { content = content.replace('<head>', '<head>' + viewportTag); } 
+              else { content = viewportTag + content; }
+          }
+          
+          // INYECCIÓN DE LA CONFIGURACIÓN PARA QUE LOS ARCHIVOS HIJOS FUNCIONEN
+          // Este script inyecta la configuración del padre al hijo automáticamente.
+          const scriptInjection = `
+            <script>
+                if (typeof firebase === 'undefined') {
+                    console.error("Firebase no cargado en el iframe. Asegúrate de incluir las librerías.");
+                } else if (!firebase.apps.length) {
+                    firebase.initializeApp({
+                        apiKey: "${firebaseConfig.apiKey}",
+                        authDomain: "${firebaseConfig.authDomain}",
+                        databaseURL: "${firebaseConfig.databaseURL}",
+                        projectId: "${firebaseConfig.projectId}",
+                        storageBucket: "${firebaseConfig.storageBucket}",
+                        messagingSenderId: "${firebaseConfig.messagingSenderId}",
+                        appId: "${firebaseConfig.appId}",
+                        measurementId: "${firebaseConfig.measurementId}"
+                    });
+                }
+            <\/script>`;
+            
+          if(content.includes('</body>')) {
+              content = content.replace('</body>', scriptInjection + '</body>');
+          } else {
+              content += scriptInjection;
+          }
+
           doc.write(content); doc.close();
       } else if (data.href) { contentIframe.src = data.href; }
       renderMenuButtons();
@@ -594,7 +612,7 @@ const firebaseConfig = {
           if(s.val()) {
               const ul = document.getElementById('user-list-to-delete'); if(ul) ul.innerHTML = '';
               Object.entries(s.val()).forEach(([k,v]) => { if(ul) ul.innerHTML += `<li><div class="user-row-header"><span>${v.email}</span></div><div class="user-row-actions"><button onclick="delUser('${k}')">X</button></div></li>`; });
-              // SOLO ADMIN VE CONTADORES
+              // SOLO ADMIN (copg279) ve contadores
               if (auth.currentUser?.email === ADMIN_EMAIL) renderAdminCounters(s.val());
           }
       }, (error) => {

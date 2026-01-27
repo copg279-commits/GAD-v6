@@ -52,7 +52,7 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN PROYECTO V3 ---
+        // --- CONFIGURACIÓN V3 (REAL) ---
         const firebaseConfig = {
           apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
           authDomain: "gad-alicante-v3.firebaseapp.com",
@@ -64,12 +64,11 @@
           measurementId: "G-Q0E3H1996K"
         };
 
-        // --- 2. LISTA COMPLETA DE ACCESO ---
         const AUTHORIZED_EMAILS = [
             'gadalicante@gmail.com', 
             'copg279@gmail.com',
             'adamus03248@gmail.com',
-            'davidmesi83@gmail.com', // Corregido
+            'davidmesi83@gmail.com',
             'pamiseseg@gmail.com',
             'policia.g496@gmail.com',
             'verdeguer279@gmail.com',
@@ -85,7 +84,6 @@
             const msg = document.getElementById('status-msg');
             const debug = document.getElementById('debug-log');
 
-            // Comprobar estado de autenticación
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     if (AUTHORIZED_EMAILS.includes(user.email)) {
@@ -100,7 +98,6 @@
                 }
             });
 
-            // Botón Login
             btn.onclick = () => {
                 msg.innerText = "Conectando con Google...";
                 const provider = new firebase.auth.GoogleAuthProvider();
@@ -111,10 +108,6 @@
                     msg.className = "mt-4 text-sm text-red-500";
                     debug.style.display = 'block';
                     debug.innerHTML = `Error: ${error.message} <br> Code: ${error.code}`;
-                    
-                    if(error.code === 'auth/unauthorized-domain') {
-                        alert("IMPORTANTE (V3): Debes añadir tu dominio de GitHub en Firebase Console > Authentication > Settings > Authorized Domains.");
-                    }
                 });
             };
 
