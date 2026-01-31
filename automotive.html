@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>AUTOMOTIVE - FINAL VERIFIED</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <style>
+        /* --- ESTILOS COMUNES --- */
+        body { 
+            background-color: #1e293b; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; padding: 0;
+            width: 100%; min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .controls {
+            background: #0f172a; padding: 0 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            height: 60px; z-index: 1000; flex-shrink: 0; border-bottom: 1px solid #334155;
+        }
+        
+        #statusBadge {
+            font-size: 0.65rem; font-weight: bold; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 4px; color: #64748b; background: #1e293b;
+            border: 1px solid #334155; transition: all 0.3s;
+        }
+        .st-ok { color: #4ade80 !important; border-color: #4ade80 !important; }
+
+        .toggle-wrapper { display: flex; align-items: center; cursor: pointer; gap: 8px; }
+        .toggle-checkbox { display: none; }
+        .toggle-track { 
+            width: 44px; height: 24px; background-color: #334155; 
+            border-radius: 99px; position: relative; transition: 0.3s; border: 1px solid #475569;
+        }
+        .toggle-circle { 
+            width: 18px; height: 18px; background-color: white; 
+            border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; 
+        }
+        .toggle-checkbox:checked + .toggle-track { background-color: #ef4444; border-color: #ef4444; } 
+        .toggle-checkbox:checked + .toggle-track .toggle-circle { transform: translateX(20px); }
+        .edit-label { font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; }
+
+        /* ==========================================================================
+           MOTOR 1: ESCRITORIO (CÓDIGO ORIGINAL - NO TOCADO)
+           Se activa > 900px
+           ========================================================================== */
+        @media (min-width: 901px) {
+            #mobile-engine { display: none !important; }
+            
+            #workspace {
+                flex-grow: 1; display: flex; justify-content: center; align-items: center;
+                background: #1e293b; position: relative; padding: 10px; box-sizing: border-box;
+                overflow-y: auto; 
+            }
+
+            .legend-external {
+                background: #f8fafc; border-bottom: 1px solid #cbd5e1;
+                padding: 10px; text-align: center; width: 100%; z-index: 40;
+            }
+            .legend-text { color: #334155; font-weight: 800; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+
+            /* Contenedor Fijo 1000px */
+            #glassBoard {
+                width: 100%; max-width: 1000px; aspect-ratio: 16/9; 
+                background-color: #ffffff; border: 4px solid #cbd5e1; 
+                position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+                border-radius: 8px; overflow: hidden; container-type: inline-size; 
+            }
+            .mode-editing #glassBoard { border: 4px dashed #ef4444; }
+
+            .brand-text {
+                font-family: 'Arial Black', sans-serif; font-weight: 900; color: #cc0000; 
+                -webkit-text-stroke: 0.15cqw white; text-shadow: 0.2cqw 0.2cqw 0 rgba(0,0,0,0.1);
+                position: absolute; transform: translate(-50%, -50%); 
+                text-align: center; white-space: nowrap; cursor: default; z-index: 5;
+                font-size: 8.5cqw; letter-spacing: 0.2cqw; line-height: 1;
+            }
+            .mode-editing .brand-text { cursor: move; border: 1px dashed #ef4444; }
+
+            .watermark-logo {
+                position: absolute; transform: translate(-50%, -50%);
+                height: 100%; width: auto; opacity: 0.15; z-index: 1; pointer-events: none;
+                object-fit: contain;
+            }
+            .mode-editing .watermark-logo { border: 1px dashed #94a3b8; pointer-events: auto; cursor: move; opacity: 0.4; }
+
+            .dot-wrapper {
+                position: absolute; width: 5cqw; height: 5cqw; 
+                transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; 
+                z-index: 20; touch-action: none;
+            }
+            .dot-point {
+                width: 2.2cqw; height: 2.2cqw; background-color: #fbbf24; border-radius: 50%; 
+                border: 0.3cqw solid #334155; box-shadow: 0 0.4cqw 0.8cqw rgba(0,0,0,0.3); 
+            }
+            .dot-label {
+                position: absolute; color: #0f172a; font-weight: 800;
+                pointer-events: none; white-space: nowrap;
+                font-size: 2cqw; text-shadow: 0 0 2px white;
+            }
+            
+            .pos-top { bottom: 130%; } .pos-bottom { top: 130%; } 
+            .pos-left { right: 130%; } .pos-right { left: 130%; }
+
+            .dot-point.selected { background-color: #22c55e; transform: scale(1.3); border-color: #14532d; box-shadow: 0 0 2cqw #22c55e; }
+            .guide-line { position: absolute; background-color: #06b6d4; z-index: 50; display: none; pointer-events: none; box-shadow: 0 0 2px cyan; }
+            .guide-h { height: 1px; width: 100%; left: 0; } .guide-v { width: 1px; height: 100%; top: 0; }
+        }
+
+        /* ==========================================================================
+           MOTOR 2: MÓVIL (NUEVA ESTRUCTURA VERTICAL)
+           <= 900px
+           ========================================================================== */
+        @media (max-width: 900px) {
+            #workspace, .legend-external { display: none !important; }
+            
+            #mobile-engine {
+                display: flex; flex-direction: column; flex-grow: 1;
+                background-color: #ffffff; width: 100%; height: 100%;
+                position: relative; overflow: hidden;
+            }
+
+            .mobile-legend {
+                background: #f1f5f9; padding: 12px; text-align: center;
+                color: #475569; font-weight: 800; font-size: 11px; text-transform: uppercase;
+                border-bottom: 1px solid #cbd5e1; z-index: 10; flex-shrink: 0;
+            }
+
+            /* Contenedor flexible móvil */
+            #mobileBoard {
+                flex-grow: 1; position: relative; width: 100%;
+                /* Usamos un contenedor interno para centrar verticalmente */
+                display: flex; align-items: center; justify-content: center;
+            }
+
+            .m-inner-box {
+                position: relative;
+                width: 100%; 
+                height: 60vh; /* Altura de trabajo segura */
+            }
+
+            /* TEXTO MÓVIL */
+            .m-brand-text {
+                font-family: 'Arial Black', sans-serif; font-weight: 900; color: #cc0000;
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                text-align: center; white-space: nowrap; cursor: default; z-index: 5;
+                font-size: 14vw; width: 100%; line-height: 1;
+            }
+
+            /* LOGO MÓVIL */
+            .m-watermark {
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 90%; opacity: 0.15; z-index: 1; pointer-events: none;
+            }
+
+            /* PUNTOS MÓVIL */
+            .m-dot-wrapper {
+                position: absolute; width: 12vw; height: 12vw;
+                transform: translate(-50%, -50%); display: flex;
+                justify-content: center; align-items: center; z-index: 20;
+            }
+            .m-dot-point {
+                width: 5vw; height: 5vw; background-color: #fbbf24;
+                border-radius: 50%; border: 1px solid #334155;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .m-dot-label {
+                position: absolute; color: #0f172a; font-weight: 800;
+                font-size: 3.5vw; pointer-events: none; white-space: nowrap;
+                text-shadow: 0 0 2px white;
+            }
+            
+            /* Etiquetas pegadas */
+            .m-pos-top { bottom: 110%; } .m-pos-bottom { top: 110%; }
+            .m-pos-left { right: 110%; } .m-pos-right { left: 110%; }
+            
+            .m-dot-point.selected { background-color: #22c55e; transform: scale(1.3); border-color: #14532d; }
+        }
+
+        /* MODALES */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .result-box { background: white; border: 4px solid #22c55e; padding: 25px; border-radius: 12px; text-align: center; max-width: 90%; width: 400px; }
+        .res-month { font-size: 2.5rem; font-weight: 900; color: #cc0000; text-transform: uppercase; line-height: 1; }
+        .res-years { font-family: monospace; font-size: 1.4rem; color: #15803d; font-weight: bold; }
+        .help-box { background: #0f172a; border: 1px solid #3b82f6; padding: 25px; border-radius: 12px; text-align: left; max-width: 400px; width: 90%; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div class="flex items-center gap-3">
+            <a href="menu_lunas.html" class="text-slate-400 hover:text-white text-lg font-bold flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> <span class="hidden sm:inline">VOLVER</span>
+            </a>
+            <div id="statusBadge" class="status-badge">Cargando...</div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button onclick="toggleModal('helpModal')" class="text-slate-400 hover:text-white text-xl"><i class="far fa-question-circle"></i></button>
+            <label class="toggle-wrapper">
+                <span class="edit-label">CAMBIAR A EDICIÓN</span>
+                <input type="checkbox" id="editSwitch" class="toggle-checkbox" onchange="toggleEdit()">
+                <div class="toggle-track"><div class="toggle-circle"></div></div>
+            </label>
+        </div>
+    </div>
+
+    <div class="legend-external">
+        <span class="legend-text">Señala los puntos tal y como figuran en la luna del vehículo</span>
+    </div>
+    <div id="workspace">
+        <div id="glassBoard">
+            <div id="guideH" class="guide-line guide-h"></div>
+            <div id="guideV" class="guide-line guide-v"></div>
+            <div id="dynamicLayer"></div>
+        </div>
+    </div>
+
+    <div id="mobile-engine">
+        <div class="mobile-legend">Señala los puntos como en la luna</div>
+        <div id="mobileBoard">
+            <div class="m-inner-box">
+                <div id="mobileLayer" style="width:100%; height:100%; position:relative;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultModal" class="modal-overlay" onclick="closeResult()">
+        <div class="result-box" onclick="event.stopPropagation()">
+            <div id="resMonthName" class="res-month">--</div>
+            <p class="text-xs text-slate-500 mt-2 uppercase tracking-widest font-bold">Años de fabricación</p>
+            <div id="resYearsList" class="res-years">--</div>
+            <button onclick="closeResult()" class="mt-6 bg-slate-200 hover:bg-slate-300 text-slate-800 px-8 py-2 rounded-full font-bold transition text-sm w-full">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal-overlay" onclick="toggleModal('helpModal')">
+        <div class="help-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="font-bold text-blue-400"><i class="fas fa-info-circle"></i> GUÍA DE USO</h3>
+                <button onclick="toggleModal('helpModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4 text-sm text-gray-300">
+                <div class="p-2 border-b border-gray-700">
+                    <h4 class="text-green-400 font-bold mb-1">MODO CONSULTA</h4>
+                    <ul class="list-disc pl-4 text-xs text-gray-400 space-y-1">
+                        <li>Selecciona el <strong>Punto del Mes</strong>.</li>
+                        <li>Selecciona el <strong>Punto del Año</strong>.</li>
+                        <li>El sistema calculará la fecha automáticamente.</li>
+                    </ul>
+                </div>
+                <div class="p-2">
+                    <h4 class="text-red-400 font-bold mb-1">MODO EDICIÓN</h4>
+                    <ul class="list-disc pl-4 text-xs text-gray-400 space-y-1">
+                        <li>Activa el interruptor superior.</li>
+                        <li>Arrastra los puntos a su posición real.</li>
+                        <li>Haz clic en un punto para rotar su etiqueta.</li>
+                    </ul>
+                </div>
+            </div>
+            <button onclick="toggleModal('helpModal')" class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag",
+            authDomain: "gad-alicante-v4.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v4",
+            storageBucket: "gad-alicante-v4.firebasestorage.app",
+            messagingSenderId: "119727545224",
+            appId: "1:119727545224:web:36880c50d196c456cdb83d"
+        };
+
+        const NODE_NAME = "automotive"; 
+        let db = null;
+        let isEditMode = false;
+        let selected = { m: null, y: null };
+        let dragItem = null;
+
+        // DATOS BASE (Desktop) - NO TOCAR
+        const factoryData = {
+            brandText: { text: "AUTOMOTIVE", x: 50, y: 50 },
+            logoImg: { src: "logogad.png", x: 50, y: 50 },
+            points: [
+                { id: 'y1', val: 1, label: '1', x: 23, y: 35, pos: 'pos-top' },
+                { id: 'y2', val: 2, label: '2', x: 29, y: 35, pos: 'pos-top' },
+                { id: 'y3', val: 3, label: '3', x: 35, y: 35, pos: 'pos-top' },
+                { id: 'y4', val: 4, label: '4', x: 41, y: 35, pos: 'pos-top' },
+                { id: 'y5', val: 5, label: '5', x: 47, y: 35, pos: 'pos-top' },
+                { id: 'y6', val: 6, label: '6', x: 53, y: 35, pos: 'pos-top' },
+                { id: 'y7', val: 7, label: '7', x: 59, y: 35, pos: 'pos-top' },
+                { id: 'y8', val: 8, label: '8', x: 65, y: 35, pos: 'pos-top' },
+                { id: 'y9', val: 9, label: '9', x: 71, y: 35, pos: 'pos-top' },
+                { id: 'y0', val: 0, label: '0', x: 77, y: 35, pos: 'pos-top' },
+                { id: 'm2', val: 2, label: 'Feb', x: 23, y: 65, pos: 'pos-bottom' },
+                { id: 'm3', val: 3, label: 'Mar', x: 29, y: 65, pos: 'pos-bottom' },
+                { id: 'm4', val: 4, label: 'Abr', x: 35, y: 65, pos: 'pos-bottom' },
+                { id: 'm5', val: 5, label: 'May', x: 41, y: 65, pos: 'pos-bottom' },
+                { id: 'm6', val: 6, label: 'Jun', x: 47, y: 65, pos: 'pos-bottom' },
+                { id: 'm7', val: 7, label: 'Jul', x: 53, y: 65, pos: 'pos-bottom' },
+                { id: 'm8', val: 8, label: 'Ago', x: 59, y: 65, pos: 'pos-bottom' },
+                { id: 'm9', val: 9, label: 'Sep', x: 65, y: 65, pos: 'pos-bottom' },
+                { id: 'm10', val: 10, label: 'Oct', x: 71, y: 65, pos: 'pos-bottom' },
+                { id: 'm11', val: 11, label: 'Nov', x: 77, y: 65, pos: 'pos-bottom' },
+                { id: 'm1', val: 1, label: 'Ene', x: 7, y: 50, pos: 'pos-left' },
+                { id: 'm12', val: 12, label: 'Dic', x: 93, y: 50, pos: 'pos-right' }
+            ]
+        };
+
+        let appState = JSON.parse(JSON.stringify(factoryData));
+
+        window.onload = function() {
+            render(); 
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                firebase.auth().onAuthStateChanged(u => {
+                    const badge = document.getElementById('statusBadge');
+                    if(u) {
+                        badge.innerText = "ONLINE"; badge.className = "status-badge st-ok";
+                        initSync();
+                    } else {
+                        badge.innerText = "LOCAL"; badge.className = "status-badge";
+                        initSync();
+                    }
+                });
+            } catch(e) { console.log("Offline mode"); }
+        };
+
+        function initSync() {
+            db.ref(`LUNAS/${NODE_NAME}`).on('value', snap => {
+                if(snap.val()) {
+                    appState = snap.val();
+                    if(!appState.points) appState.points = factoryData.points;
+                    render();
+                }
+            });
+        }
+
+        function save() {
+            if(db) db.ref(`LUNAS/${NODE_NAME}`).set(appState).catch(console.warn);
+        }
+
+        // === RENDERIZADO DUAL ===
+        function render() {
+            const isMobile = window.innerWidth <= 900;
+            const containerId = isMobile ? 'mobileLayer' : 'dynamicLayer';
+            const container = document.getElementById(containerId);
+            
+            if(!container) return;
+            container.innerHTML = '';
+
+            // 1. Logo
+            const img = document.createElement('img');
+            img.className = isMobile ? 'm-watermark' : 'watermark-logo';
+            img.src = appState.logoImg.src || "logogad.png";
+            img.style.left = appState.logoImg.x + '%';
+            img.style.top = appState.logoImg.y + '%';
+            if(isEditMode) initDrag(img, 'img', appState.logoImg);
+            container.appendChild(img);
+
+            // 2. Texto
+            const brand = document.createElement('div');
+            brand.className = isMobile ? 'm-brand-text' : 'brand-text';
+            brand.textContent = appState.brandText.text;
+            brand.style.left = appState.brandText.x + '%';
+            brand.style.top = appState.brandText.y + '%';
+            if(isEditMode) initDrag(brand, 'brand', appState.brandText);
+            container.appendChild(brand);
+
+            // 3. Puntos
+            appState.points.forEach(p => {
+                const wrap = document.createElement('div');
+                wrap.className = isMobile ? 'm-dot-wrapper' : 'dot-wrapper';
+                
+                // --- TRUCO VISUAL: FORZAR POSICIONES EN MÓVIL ---
+                if(isMobile) {
+                    // Aquí es donde evitamos que se superpongan o se "adivinen".
+                    // 1. Detectar si es fila de arriba (y < 50) o abajo (y > 50) o lateral.
+                    
+                    let visualY = 50; // Default
+                    let visualX = p.x;
+
+                    if (p.pos === 'pos-left') { 
+                        // Enero: A la izquierda total, centrado vertical
+                        visualX = 5; visualY = 50; 
+                    } 
+                    else if (p.pos === 'pos-right') { 
+                        // Diciembre: A la derecha total, centrado vertical
+                        visualX = 95; visualY = 50; 
+                    }
+                    else if (p.y < 50) { 
+                        // Años (Fila Arriba): Forzar al 30% de altura (lejos del centro)
+                        visualY = 30; 
+                    } 
+                    else { 
+                        // Meses (Fila Abajo): Forzar al 70% de altura (lejos del centro)
+                        visualY = 70; 
+                    }
+
+                    wrap.style.left = visualX + '%';
+                    wrap.style.top = visualY + '%';
+                } else {
+                    // ESCRITORIO: Usar datos reales de la DB
+                    wrap.style.left = p.x + '%';
+                    wrap.style.top = p.y + '%';
+                }
+
+                const dot = document.createElement('div');
+                dot.className = isMobile ? 'm-dot-point' : 'dot-point';
+                if ((p.id.startsWith('m') && selected.m === p.val) ||
+                    (p.id.startsWith('y') && selected.y === p.val)) {
+                    dot.classList.add('selected');
+                }
+
+                const lbl = document.createElement('span');
+                lbl.className = isMobile ? `m-dot-label m-${p.pos || 'pos-top'}` : `dot-label ${p.pos || 'pos-top'}`;
+                lbl.textContent = p.label;
+
+                wrap.appendChild(dot);
+                wrap.appendChild(lbl);
+
+                if(isEditMode) {
+                    initDrag(wrap, 'point', p);
+                } else {
+                    wrap.onclick = () => selectPoint(p);
+                    wrap.ontouchend = (e) => { e.preventDefault(); selectPoint(p); };
+                }
+                container.appendChild(wrap);
+            });
+        }
+
+        window.addEventListener('resize', render);
+
+        function selectPoint(p) {
+            const isMonth = p.id.startsWith('m');
+            if(isMonth) selected.m = p.val; else selected.y = p.val;
+            render();
+            if(selected.m !== null && selected.y !== null) showResult();
+        }
+
+        function showResult() {
+            const months = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const yDigit = parseInt(selected.y);
+            document.getElementById('resMonthName').textContent = months[selected.m];
+            document.getElementById('resYearsList').textContent = `${2000+yDigit}, ${2010+yDigit}, ${2020+yDigit}`;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
+            selected = { m: null, y: null };
+            render();
+        }
+
+        // --- DRAG SYSTEM ---
+        function initDrag(el, type, dataObj) {
+            let startX, startY;
+            // Detectar en qué motor estamos para usar las dimensiones correctas
+            const isMobile = window.innerWidth <= 900;
+            const board = isMobile ? document.getElementById('mobileBoard') : document.getElementById('glassBoard');
+
+            const onStart = (e) => {
+                if(e.type === 'mousedown') e.preventDefault();
+                startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('touchmove', onMove, {passive: false});
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchend', onEnd);
+            };
+
+            const onMove = (e) => {
+                e.preventDefault();
+                const rect = board.getBoundingClientRect();
+                const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                
+                const dx = cx - startX;
+                const dy = cy - startY;
+
+                // Calcular porcentaje de movimiento relativo al contenedor actual
+                const moveX_pct = (dx / rect.width) * 100;
+                const moveY_pct = (dy / rect.height) * 100;
+
+                dataObj.x += moveX_pct;
+                dataObj.y += moveY_pct;
+
+                // SNAP (Solo en escritorio, en móvil es libre o forzado)
+                if (type === 'point' && !isMobile) {
+                    const guideH = document.getElementById('guideH');
+                    const guideV = document.getElementById('guideV');
+                    let snapped = false;
+                    appState.points.forEach(other => {
+                        if(other === dataObj) return;
+                        if(Math.abs(dataObj.x - other.x) < 1) { 
+                            dataObj.x = other.x; 
+                            guideV.style.left = dataObj.x + '%'; guideV.style.display = 'block'; snapped = true;
+                        }
+                        if(Math.abs(dataObj.y - other.y) < 1) { 
+                            dataObj.y = other.y; 
+                            guideH.style.top = dataObj.y + '%'; guideH.style.display = 'block'; snapped = true;
+                        }
+                    });
+                    if(!snapped) { guideH.style.display = 'none'; guideV.style.display = 'none'; }
+                }
+
+                startX = cx;
+                startY = cy;
+                render();
+            };
+
+            const onEnd = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchend', onEnd);
+                if(!isMobile) {
+                    document.getElementById('guideH').style.display = 'none';
+                    document.getElementById('guideV').style.display = 'none';
+                }
+                
+                const endX = event.type.includes('mouse') ? event.clientX : event.changedTouches[0].clientX;
+                if(Math.abs(startX - endX) < 5 && type === 'point') {
+                    const order = ['pos-top', 'pos-right', 'pos-bottom', 'pos-left'];
+                    dataObj.pos = order[(order.indexOf(dataObj.pos || 'pos-top') + 1) % 4];
+                    render();
+                }
+                save();
+            };
+
+            el.onmousedown = onStart;
+            el.ontouchstart = onStart;
+        }
+
+        function toggleEdit() {
+            isEditMode = document.getElementById('editSwitch').checked;
+            const body = document.body;
+            const lbl = document.getElementById('editLabel');
+            if(isEditMode) {
+                body.classList.add('mode-editing');
+                lbl.innerText = "CERRAR EDICIÓN"; lbl.style.color = "#ef4444";
+            } else {
+                body.classList.remove('mode-editing');
+                lbl.innerText = "CAMBIAR A EDICIÓN"; lbl.style.color = "#94a3b8";
+                save();
+            }
+            render(); 
+        }
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+    </script>
+</body>
+</html>

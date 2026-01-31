@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAMINEX - G.A.D. Final UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <style>
+        body { 
+            background-color: #1e293b; 
+            font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; 
+            user-select: none;
+            height: 100vh; width: 100vw; margin: 0;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- UI SUPERIOR --- */
+        .controls {
+            background: #0f172a; padding: 0 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #334155; height: 60px; z-index: 200;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        #statusBadge {
+            font-size: 0.65rem; font-weight: bold; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 4px; color: #64748b; background: #1e293b;
+            border: 1px solid #334155; transition: all 0.3s;
+        }
+        .st-ok { color: #4ade80 !important; border-color: #4ade80 !important; }
+        .st-err { color: #ef4444 !important; border-color: #ef4444 !important; }
+
+        /* SWITCH EDICIÓN */
+        .toggle-wrapper { display: flex; align-items: center; cursor: pointer; }
+        .toggle-checkbox { display: none; }
+        .toggle-label { 
+            width: 44px; height: 24px; background-color: #334155; 
+            border-radius: 99px; position: relative; transition: 0.3s; 
+        }
+        .toggle-circle { 
+            width: 18px; height: 18px; background-color: white; 
+            border-radius: 50%; position: absolute; top: 3px; left: 3px; 
+            transition: 0.3s; 
+        }
+        .toggle-checkbox:checked + .toggle-label { background-color: #ef4444; } 
+        .toggle-checkbox:checked + .toggle-label .toggle-circle { transform: translateX(20px); }
+
+        /* --- TABLERO --- */
+        #workspace {
+            flex-grow: 1; display: flex; justify-content: center; align-items: center;
+            background: #1e293b; position: relative; z-index: 10;
+        }
+        #glassBoard {
+            width: 900px; height: 550px; background-color: #0055ff;
+            border: 4px solid white; position: relative; 
+            box-shadow: 0 0 60px rgba(0,0,0,0.5);
+        }
+        .mode-editing #glassBoard { border: 4px dashed #ef4444; }
+
+        /* CAPAS */
+        .bg-text-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        .guides-layer { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
+        .interactive-layer { position: absolute; inset: 0; z-index: 100; }
+
+        .bg-text {
+            font-family: 'Arial Black', sans-serif; font-size: 5rem; color: #cc0000;
+            -webkit-text-stroke: 3px white; position: absolute; left: 50%;
+            transform: translateX(-50%); text-align: center; width: 100%;
+            letter-spacing: 10px; line-height: 1;
+        }
+
+        /* Guías */
+        .smart-guide { position: absolute; background-color: #00ffff; display: none; box-shadow: 0 0 8px #00ffff; }
+        .guide-h { height: 2px; width: 100%; left: 0; } 
+        .guide-v { width: 2px; height: 100%; top: 0; } 
+
+        /* LOGO */
+        #dragLogo { 
+            position: absolute; width: 150px; transform: translate(-50%, -50%); 
+            cursor: default; -webkit-user-drag: none;
+        }
+        .mode-editing #dragLogo { cursor: move; border: 1px dashed white; }
+
+        /* PUNTOS */
+        .dot-wrapper {
+            position: absolute; width: 44px; height: 44px; 
+            transform: translate(-50%, -50%); display: flex;
+            justify-content: center; align-items: center; cursor: pointer;
+        }
+        .dot-point {
+            width: 24px; height: 24px; background-color: #ffff00;
+            border-radius: 50%; border: 1px solid rgba(0,0,0,0.2);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4); 
+        }
+        .dot-label {
+            position: absolute; font-size: 14px; color: white; font-weight: bold;
+            text-shadow: 0 0 3px black, 0 0 4px black; pointer-events: none; white-space: nowrap;
+        }
+
+        /* Posiciones */
+        .pos-top { bottom: 45px; } .pos-bottom { top: 45px; }
+        .pos-left { right: 45px; } .pos-right { left: 45px; }
+
+        /* Estados */
+        .dot-point.selected { background-color: #00ff00; transform: scale(1.4); border: 2px solid #004400; }
+        .mode-editing .dot-wrapper { cursor: move; }
+        .mode-editing .dot-point { background-color: #fbbf24; border: 2px dashed black; }
+
+        /* MODALES (Resultado y Ayuda) */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            z-index: 300; display: none; justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: #0f172a; border: 1px solid #3b82f6; padding: 25px;
+            border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            text-align: center; max-width: 400px; width: 90%; color: white;
+        }
+        
+        #resultModalBox { border-color: #22c55e; } /* Verde para resultado */
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div class="flex items-center gap-4">
+            <a href="menu_lunas.html" class="text-gray-400 hover:text-white font-bold flex items-center gap-2 text-sm">
+                <i class="fas fa-arrow-left"></i> VOLVER
+            </a>
+            
+            <button onclick="toggleHelp()" class="flex items-center gap-2 px-3 py-1 bg-blue-900/50 hover:bg-blue-800 border border-blue-500 rounded text-blue-200 text-xs font-bold transition">
+                <i class="fas fa-question-circle"></i> AYUDA
+            </button>
+
+            <div id="statusBadge">Conectando...</div>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <div id="userInfo" class="hidden md:block text-xs font-mono text-blue-400"></div>
+            
+            <button onclick="restoreFactory()" class="text-xs text-red-400 hover:text-white border border-red-900 px-3 py-1 rounded">Reset</button>
+            
+            <label class="toggle-wrapper">
+                <span class="text-xs font-bold text-gray-300 mr-3 transition-colors" id="editLabel">CAMBIAR A EDICIÓN</span>
+                <input type="checkbox" id="editSwitch" class="toggle-checkbox" onchange="toggleEdit()">
+                <div class="toggle-label"><div class="toggle-circle"></div></div>
+            </label>
+        </div>
+    </div>
+
+    <div id="workspace">
+        <div id="glassBoard">
+            <div class="bg-text-layer">
+                <div class="bg-text" style="top: 25%">LAMINEX</div>
+                <div class="bg-text" style="bottom: 25%">CENTRAL</div>
+            </div>
+            <div class="guides-layer">
+                <div id="guideH" class="smart-guide guide-h"></div>
+                <div id="guideV" class="smart-guide guide-v"></div>
+            </div>
+            <div id="dynamicLayer" class="interactive-layer"></div>
+        </div>
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box" id="resultModalBox">
+            <p class="text-gray-400 text-xs uppercase mb-1">Fecha Fabricación</p>
+            <h2 id="resMonth" class="text-3xl font-bold text-white">--</h2>
+            <p id="resDecades" class="text-green-400 font-mono text-lg tracking-widest mt-1">--</p>
+            <button onclick="closeResult()" class="text-xs text-green-400 underline mt-4 hover:text-white">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-box text-left">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="font-bold text-blue-400"><i class="fas fa-info-circle"></i> GUÍA DE USO</h3>
+                <button onclick="toggleHelp()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="space-y-4 text-sm text-gray-300">
+                <div>
+                    <h4 class="font-bold text-red-400 mb-1"><i class="fas fa-tools"></i> MODO EDICIÓN</h4>
+                    <p>Activa el interruptor arriba a la derecha para:</p>
+                    <ul class="list-disc pl-5 mt-1 text-xs text-gray-400 space-y-1">
+                        <li><strong>Mover Puntos:</strong> Arrástralos a su posición real.</li>
+                        <li><strong>Mover Logo:</strong> Arrastra la imagen central.</li>
+                        <li><strong>Rotar Texto:</strong> Haz clic en un punto para cambiar la etiqueta de sitio (Arriba, Abajo, etc).</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-green-400 mb-1"><i class="fas fa-search"></i> MODO CONSULTA</h4>
+                    <p>Uso normal de la herramienta:</p>
+                    <ul class="list-disc pl-5 mt-1 text-xs text-gray-400 space-y-1">
+                        <li>Selecciona el <strong>Punto del Mes</strong>.</li>
+                        <li>Selecciona el <strong>Punto del Año</strong>.</li>
+                        <li>El sistema calculará la fecha automáticamente.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button onclick="toggleHelp()" class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-xs">ENTENDIDO</button>
+        </div>
+    </div>
+
+    <script>
+        // === CONFIGURACIÓN ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag",
+            authDomain: "gad-alicante-v4.firebaseapp.com",
+            databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gad-alicante-v4",
+            storageBucket: "gad-alicante-v4.firebasestorage.app",
+            messagingSenderId: "119727545224",
+            appId: "1:119727545224:web:36880c50d196c456cdb83d"
+        };
+
+        const brandNode = "laminex"; 
+        let db = null;
+        
+        // DATOS BASE
+        const factoryData = {
+            logo: { top: 50, left: 50 },
+            positions: [
+                { id: 'm1', val: 1, label: 'Ene', top: 38, left: 10, pos: 'pos-bottom' },
+                { id: 'm2', val: 2, label: 'Feb', top: 28, left: 10, pos: 'pos-left' },
+                { id: 'm3', val: 3, label: 'Mar', top: 22, left: 24, pos: 'pos-top' },
+                { id: 'm4', val: 4, label: 'Abr', top: 20, left: 33, pos: 'pos-top' },
+                { id: 'm5', val: 5, label: 'May', top: 19, left: 41, pos: 'pos-top' },
+                { id: 'm6', val: 6, label: 'Jun', top: 19, left: 50, pos: 'pos-top' },
+                { id: 'm7', val: 7, label: 'Jul', top: 19, left: 59, pos: 'pos-top' },
+                { id: 'm8', val: 8, label: 'Ago', top: 20, left: 67, pos: 'pos-top' },
+                { id: 'm9', val: 9, label: 'Sep', top: 22, left: 76, pos: 'pos-top' },
+                { id: 'm10', val: 10, label: 'Oct', top: 18, left: 88, pos: 'pos-top' },
+                { id: 'm11', val: 11, label: 'Nov', top: 28, left: 90, pos: 'pos-right' },
+                { id: 'm12', val: 12, label: 'Dic', top: 38, left: 90, pos: 'pos-bottom' },
+                { id: 'y0', val: 0, label: '0', top: 70, left: 10, pos: 'pos-bottom' },
+                { id: 'y9', val: 9, label: '9', top: 76, left: 24, pos: 'pos-bottom' },
+                { id: 'y8', val: 8, label: '8', top: 79, left: 33, pos: 'pos-bottom' },
+                { id: 'y7', val: 7, label: '7', top: 80, left: 41, pos: 'pos-bottom' },
+                { id: 'y6', val: 6, label: '6', top: 80, left: 50, pos: 'pos-bottom' },
+                { id: 'y5', val: 5, label: '5', top: 80, left: 59, pos: 'pos-bottom' },
+                { id: 'y4', val: 4, label: '4', top: 79, left: 67, pos: 'pos-bottom' },
+                { id: 'y3', val: 3, label: '3', top: 76, left: 76, pos: 'pos-bottom' },
+                { id: 'y1', val: 1, label: '1', top: 65, left: 90, pos: 'pos-right' },
+                { id: 'y2', val: 2, label: '2', top: 75, left: 90, pos: 'pos-right' }
+            ]
+        };
+
+        let appState = JSON.parse(JSON.stringify(factoryData));
+        let isEditMode = false;
+        let startX = 0, startY = 0; 
+        let selectedMonth = null, selectedYear = null;
+
+        // === INICIO ===
+        window.onload = function() {
+            renderAll(); 
+
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                const auth = firebase.auth();
+
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        document.getElementById('userInfo').innerText = user.email;
+                        updateStatus("ok", "ONLINE");
+                    } else {
+                        updateStatus("st-err", "OFFLINE (Público)");
+                    }
+                    initDB();
+                });
+
+            } catch(e) {
+                console.error(e);
+                updateStatus("st-err", "ERROR INIT");
+            }
+        };
+
+        function initDB() {
+            db.ref('LUNAS/' + brandNode).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    appState = data;
+                    if(!appState.positions) appState.positions = factoryData.positions;
+                    if(!appState.logo) appState.logo = factoryData.logo;
+                    renderAll();
+                    updateStatus("ok", "SINCRONIZADO");
+                } else {
+                    saveToCloud();
+                }
+            }, (err) => {
+                console.warn("DB Error:", err.code);
+                updateStatus("st-err", "ACCESO DENEGADO");
+            });
+        }
+
+        function saveToCloud() {
+            if(db) {
+                updateStatus("ok", "GUARDANDO...");
+                db.ref('LUNAS/' + brandNode).set(appState)
+                  .then(() => updateStatus("ok", "GUARDADO"))
+                  .catch(err => console.error("Save Error:", err));
+            }
+        }
+
+        function updateStatus(cls, txt) {
+            const el = document.getElementById('statusBadge');
+            el.className = '';
+            el.classList.add(cls);
+            el.innerText = txt;
+        }
+
+        // === RENDERIZADO ===
+        function renderAll() {
+            const container = document.getElementById('dynamicLayer');
+            container.innerHTML = ''; 
+
+            // LOGO
+            const logo = document.createElement('img');
+            logo.id = 'dragLogo';
+            logo.src = 'logogad.PNG'; 
+            logo.alt = "LOGO";
+            logo.draggable = false;
+            logo.onerror = function() { 
+                if(this.src.includes('logogad.PNG')) this.src = 'logogad.png';
+                else {
+                    this.style.backgroundColor = 'rgba(255,0,0,0.2)'; 
+                    this.style.border = '1px solid red';
+                }
+            };
+            logo.style.top = appState.logo.top + '%';
+            logo.style.left = appState.logo.left + '%';
+            logo.onmousedown = (e) => handleInput(e, null, 'logo');
+            container.appendChild(logo);
+
+            // PUNTOS
+            appState.positions.forEach(pos => {
+                const wrap = document.createElement('div');
+                wrap.className = 'dot-wrapper';
+                wrap.id = pos.id;
+                wrap.style.top = pos.top + '%';
+                wrap.style.left = pos.left + '%';
+
+                const point = document.createElement('div');
+                point.className = 'dot-point';
+                if ((pos.id.startsWith('m') && selectedMonth === pos.val) ||
+                    (pos.id.startsWith('y') && selectedYear === pos.val)) {
+                    point.classList.add('selected');
+                }
+
+                const label = document.createElement('span');
+                label.className = `dot-label ${pos.pos || 'pos-top'}`; 
+                label.innerText = pos.label;
+
+                wrap.appendChild(point);
+                wrap.appendChild(label);
+                
+                wrap.onmousedown = (e) => handleInput(e, pos, 'dot');
+                container.appendChild(wrap);
+            });
+        }
+
+        // === INTERACCIÓN ===
+        function handleInput(e, dataObj, type) {
+            e.preventDefault(); 
+            if(!isEditMode && type === 'logo') return;
+
+            startX = e.clientX; startY = e.clientY;
+            
+            if(isEditMode) initDrag(e, dataObj, type);
+
+            const onUp = (ev) => {
+                document.removeEventListener('mouseup', onUp);
+                const dist = Math.sqrt(Math.pow(ev.clientX - startX, 2) + Math.pow(ev.clientY - startY, 2));
+                if(dist < 5) {
+                    if(isEditMode && type === 'dot') rotateLabel(dataObj);
+                    else if (!isEditMode && type === 'dot') selectDot(dataObj);
+                }
+            };
+            document.addEventListener('mouseup', onUp);
+        }
+
+        function initDrag(e, dataObj, type) {
+            const board = document.getElementById('glassBoard');
+            const rect = board.getBoundingClientRect();
+            
+            const initTop = type === 'logo' ? appState.logo.top : dataObj.top;
+            const initLeft = type === 'logo' ? appState.logo.left : dataObj.left;
+
+            const guideH = document.getElementById('guideH');
+            const guideV = document.getElementById('guideV');
+
+            function onMouseMove(ev) {
+                const dx = ev.clientX - startX; 
+                const dy = ev.clientY - startY;
+
+                if(Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    let newLeft = initLeft + ((dx / rect.width) * 100);
+                    let newTop = initTop + ((dy / rect.height) * 100);
+
+                    // Imán
+                    let snappedX = false, snappedY = false;
+                    const snapTol = 1.0; 
+
+                    if (type === 'dot') {
+                        appState.positions.forEach(other => {
+                            if (other.id === dataObj.id) return;
+                            if (!snappedY && Math.abs(newTop - other.top) < snapTol) {
+                                newTop = other.top; snappedY = true;
+                                guideH.style.display = 'block'; guideH.style.top = newTop + '%';
+                            }
+                            if (!snappedX && Math.abs(newLeft - other.left) < snapTol) {
+                                newLeft = other.left; snappedX = true;
+                                guideV.style.display = 'block'; guideV.style.left = newLeft + '%';
+                            }
+                        });
+                    }
+                    if(!snappedY) guideH.style.display = 'none';
+                    if(!snappedX) guideV.style.display = 'none';
+
+                    newLeft = Math.max(0, Math.min(100, newLeft));
+                    newTop = Math.max(0, Math.min(100, newTop));
+
+                    const el = type === 'logo' ? document.getElementById('dragLogo') : document.getElementById(dataObj.id);
+                    el.style.top = newTop + '%'; el.style.left = newLeft + '%';
+
+                    if(type === 'logo') { appState.logo.top = newTop; appState.logo.left = newLeft; }
+                    else { dataObj.top = newTop; dataObj.left = newLeft; }
+                }
+            }
+
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                guideH.style.display = 'none'; guideV.style.display = 'none';
+                saveToCloud(); 
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function rotateLabel(dataObj) {
+            const order = ['pos-top', 'pos-right', 'pos-bottom', 'pos-left'];
+            let current = dataObj.pos || 'pos-top';
+            dataObj.pos = order[(order.indexOf(current) + 1) % 4];
+            saveToCloud(); renderAll();
+        }
+
+        // === PERITAJE ===
+        const months = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        function selectDot(dataObj) {
+            const isMonth = dataObj.id.startsWith('m');
+            document.querySelectorAll('.dot-point').forEach(d => {
+                const pid = d.parentElement.id;
+                if ((isMonth && pid.startsWith('m')) || (!isMonth && pid.startsWith('y'))) d.classList.remove('selected');
+            });
+            document.getElementById(dataObj.id).querySelector('.dot-point').classList.add('selected');
+
+            if(isMonth) selectedMonth = dataObj.val; else selectedYear = dataObj.val;
+            
+            if(selectedMonth !== null && selectedYear !== null) {
+                const modal = document.getElementById('resultModal');
+                modal.style.display = 'flex'; // FLEX PARA CENTRAR
+                document.getElementById('resMonth').innerText = months[selectedMonth];
+                const y = selectedYear;
+                document.getElementById('resDecades').innerText = `${2000+y} / ${2010+y} / ${2020+y}`;
+            }
+        }
+
+        function closeResult() {
+            selectedMonth = null; selectedYear = null; renderAll();
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        // === CONTROLES ===
+        function toggleEdit() {
+            isEditMode = document.getElementById('editSwitch').checked;
+            const body = document.body;
+            const lbl = document.getElementById('editLabel');
+
+            if(isEditMode) {
+                body.classList.add('mode-editing');
+                lbl.innerText = "CERRAR EDICIÓN";
+                lbl.style.color = "#ef4444";
+            } else {
+                body.classList.remove('mode-editing');
+                lbl.innerText = "CAMBIAR A EDICIÓN";
+                lbl.style.color = "#94a3b8";
+                saveToCloud();
+            }
+        }
+
+        function toggleHelp() {
+            const modal = document.getElementById('helpModal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function restoreFactory() {
+            if(confirm("¿Restaurar configuración de fábrica?")) {
+                appState = JSON.parse(JSON.stringify(factoryData));
+                saveToCloud(); renderAll();
+            }
+        }
+    </script>
+</body>
+</html>

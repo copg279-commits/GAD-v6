@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NIPPON SAFETY - CLEAN TEMPLATE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <style>
+        /* --- GENERAL --- */
+        body { 
+            background-color: #1e1e1e; /* Fondo oscuro limpio */
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; padding: 0; 
+            width: 100%; height: 100vh; 
+            display: flex; flex-direction: column; 
+            overflow: hidden;
+        }
+        
+        /* FOOTER CON BOTÓN CALCULAR */
+        .action-footer {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(30, 30, 30, 0.9); 
+            padding: 20px; display: flex; justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        .btn-calc {
+            background: #22c55e; color: #022c22;
+            font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
+            padding: 15px 50px; border-radius: 12px;
+            font-size: 18px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.5);
+            transition: all 0.2s; border: none;
+            width: 100%; max-width: 500px; cursor: pointer;
+        }
+        .btn-calc:active { transform: scale(0.98); background: #16a34a; }
+
+        /* --- CONTENEDOR GRÁFICO --- */
+        .graphic-container {
+            position: relative;
+            background: #1e1e1e; /* Mismo fondo para integración perfecta */
+            width: 100%; height: 100%;
+        }
+
+        /* LETRAS (Estética Nano Banana) */
+        .letter {
+            position: absolute;
+            font-family: 'Arial Black', sans-serif;
+            font-weight: 900;
+            color: #cc0000; /* Rojo intenso */
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.6);
+            transform-origin: center center;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        /* PUNTOS */
+        .dot {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+        
+        /* Rojo: Meses */
+        .dot-red {
+            background-color: #ef4444; 
+            border: 2px solid #1e1e1e;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Azul: Años */
+        .dot-blue {
+            background-color: #3b82f6;
+            border: 2px solid #1e1e1e;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+            display: flex; justify-content: center; align-items: center;
+            color: white; font-weight: 900; font-family: sans-serif;
+        }
+
+        /* SELECCIÓN */
+        .dot.selected { transform: scale(1.5); border-color: white; z-index: 20; }
+        .dot-red.selected { background-color: #dc2626; box-shadow: 0 0 25px #ff0000; }
+        .dot-blue.selected { background-color: #1d4ed8; box-shadow: 0 0 25px #0088ff; }
+
+        /* --- MOTOR 1: ESCRITORIO (>900px) --- */
+        @media (min-width: 901px) {
+            #mobile-engine { display: none !important; }
+            #desktop-engine { 
+                flex-grow: 1; display: flex; justify-content: center; align-items: center; 
+                padding-bottom: 80px; /* Espacio para el botón */
+            }
+            
+            #glassBoard {
+                width: 900px; height: 500px;
+                position: relative;
+                /* Borde sutil opcional para delimitar área en PC */
+                /* border: 1px solid #333; border-radius: 20px; */
+            }
+            
+            .letter { font-size: 65px; }
+            .dot { width: 26px; height: 26px; }
+            .dot-blue { font-size: 13px; width: 32px; height: 32px; }
+        }
+
+        /* --- MOTOR 2: MÓVIL (<=900px) --- */
+        @media (max-width: 900px) {
+            #desktop-engine { display: none !important; }
+            #mobile-engine { 
+                flex-grow: 1; display: flex; flex-direction: column; justify-content: center;
+                width: 100vw; height: calc(100vh - 100px); 
+            }
+            
+            #mobileBoard {
+                position: relative; width: 100%; aspect-ratio: 16/10;
+            }
+            
+            /* Escalado relativo agresivo para móvil */
+            .letter { font-size: 14vw; }
+            .dot { width: 6.5vw; height: 6.5vw; }
+            .dot-blue { font-size: 3.5vw; width: 8vw; height: 8vw; }
+        }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .result-box { background: #1e293b; border: 2px solid #22c55e; padding: 30px; border-radius: 20px; text-align: center; max-width: 90%; width: 400px; color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .res-month { font-size: 2.5rem; font-weight: 900; color: #ef4444; text-transform: uppercase; margin-bottom: 5px; line-height: 1; }
+        .res-years { font-family: monospace; font-size: 1.8rem; color: #4ade80; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="desktop-engine">
+        <div id="glassBoard" class="graphic-container"></div>
+    </div>
+
+    <div id="mobile-engine">
+        <div id="mobileBoard" class="graphic-container"></div>
+    </div>
+
+    <div class="action-footer">
+        <button onclick="calcResult()" class="btn-calc">
+            CALCULAR FECHA
+        </button>
+    </div>
+
+    <div id="resultModal" class="modal-overlay" onclick="closeResult()">
+        <div class="result-box" onclick="event.stopPropagation()">
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2">Mes Fabricación</p>
+            <div id="resMonthName" class="res-month">--</div>
+            
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <div class="text-[10px] text-gray-500 mb-1 font-mono">COMBINACIÓN: <span id="resPattern" class="text-blue-400 font-bold"></span></div>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Años Compatibles</p>
+                <div id="resYearsList" class="res-years">--</div>
+            </div>
+            
+            <button onclick="closeResult()" class="mt-8 bg-gray-700 hover:bg-gray-600 text-white w-full py-3 rounded-xl font-bold transition">VOLVER</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN
+        const firebaseConfig = { apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag", authDomain: "gad-alicante-v4.firebaseapp.com", databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app", projectId: "gad-alicante-v4", storageBucket: "gad-alicante-v4.firebasestorage.app", messagingSenderId: "119727545224", appId: "1:119727545224:web:36880c50d196c456cdb83d" };
+        const NODE_NAME = "nippon_clean"; 
+        let db = null;
+        let selected = { m: null, yDots: [] };
+
+        // TABLA DE AÑOS
+        const YEAR_TABLE = {
+            "A": [1991, 2021], "B": [1992, 2022], "C": [1993, 2023], "D": [1994, 2024],
+            "AB": [1995, 2025], "AC": [1996, 2026], "AD": [1997, 2027], "BC": [1998, 2028], "BD": [1999, 2029], "CD": [2000, 2030],
+            "AE": [2001], "BE": [2002], "CE": [2003], "DE": [2004], "ABE": [2005], "ACE": [2006], "ADE": [2007], "BCE": [2008], "BDE": [2009], "CDE": [2010],
+            "AF": [2011], "BF": [2012], "CF": [2013], "DF": [2014], "ABF": [2015], "ACF": [2016], "ADF": [2017], "BCF": [2018], "BDF": [2019], "CDF": [2020]
+        };
+
+        // COORDENADAS EXACTAS (DISEÑO NANO BANANA)
+        const ELEMENTS = [
+            // NIPPON (Arriba)
+            { type: 'letter', char: 'N', x: 25, y: 40, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 30 },
+            { type: 'letter', char: 'I', x: 35, y: 35, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 25 },
+            { type: 'letter', char: 'P', x: 45, y: 32, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 22 },
+            { type: 'letter', char: 'P', x: 55, y: 32, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 22 },
+            { type: 'letter', char: 'O', x: 65, y: 35, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 25 },
+            { type: 'letter', char: 'N', x: 75, y: 40, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 30 },
+
+            // SAFETY (Abajo)
+            { type: 'letter', char: 'S', x: 25, y: 60, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 70 },
+            { type: 'letter', char: 'A', x: 35, y: 65, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 75 },
+            { type: 'letter', char: 'F', x: 45, y: 68, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 78 },
+            { type: 'letter', char: 'E', x: 55, y: 68, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 78 },
+            { type: 'letter', char: 'T', x: 65, y: 65, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 75 },
+            { type: 'letter', char: 'Y', x: 75, y: 60, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 70 },
+
+            // AÑOS (AZULES)
+            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 15, y: 40 },
+            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 85, y: 40 },
+            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 15, y: 60 },
+            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 85, y: 60 },
+            
+            // E y F (Huecos Superiores)
+            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 56 },
+            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 56 }
+        ];
+
+        window.onload = function() {
+            renderScene();
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                firebase.auth().onAuthStateChanged(u => { if(u) initSync(); });
+            } catch(e) {}
+        };
+
+        function initSync() {
+            db.ref(`LUNAS/${NODE_NAME}`).on('value', snap => { 
+                if(snap.val()) { selected = snap.val(); renderScene(); } // Sync opcional
+            }); 
+        }
+
+        function renderScene() {
+            const isMobile = window.innerWidth <= 900;
+            const container = isMobile ? document.getElementById('mobileBoard') : document.getElementById('glassBoard');
+            container.innerHTML = '';
+
+            ELEMENTS.forEach(el => {
+                const div = document.createElement('div');
+                div.style.left = el.x + '%';
+                div.style.top = el.y + '%';
+                
+                if (el.type === 'letter') {
+                    div.className = 'letter';
+                    div.textContent = el.char;
+                    div.style.transform = `translate(-50%, -50%) rotate(${el.rot}deg)`;
+                } else if (el.type === 'dot') {
+                    div.className = `dot dot-${el.color}`;
+                    div.id = el.id;
+                    if(el.label) div.textContent = el.label;
+                    
+                    let isSelected = false;
+                    if (el.color === 'red') isSelected = (selected.m === el.val);
+                    else isSelected = selected.yDots.includes(el.val);
+                    
+                    if(isSelected) div.classList.add('selected');
+
+                    div.onclick = (e) => handleClick(e, el);
+                    div.style.transform = `translate(-50%, -50%)`;
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function handleClick(e, el) {
+            e.stopPropagation();
+            if (el.color === 'red') {
+                selected.m = (selected.m === el.val) ? null : el.val;
+            } else {
+                const idx = selected.yDots.indexOf(el.val);
+                if (idx > -1) selected.yDots.splice(idx, 1);
+                else selected.yDots.push(el.val);
+                selected.yDots.sort();
+            }
+            renderScene();
+            if(db) db.ref(`LUNAS/${NODE_NAME}`).set(selected).catch(console.warn);
+        }
+
+        function calcResult() {
+            if (selected.m === null && selected.yDots.length === 0) {
+                // No mostrar nada si no hay selección
+                return;
+            }
+
+            const months = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            const pattern = selected.yDots.join('');
+            
+            document.getElementById('resMonthName').textContent = selected.m ? months[selected.m] : "--";
+            document.getElementById('resPattern').textContent = pattern || "Ninguno";
+
+            let years = YEAR_TABLE[pattern];
+            
+            if(years) {
+                document.getElementById('resYearsList').className = "res-years text-green-400";
+                document.getElementById('resYearsList').textContent = years.join(", ");
+            } else {
+                if (selected.yDots.length > 0) {
+                    document.getElementById('resYearsList').className = "res-years text-red-400 text-sm";
+                    document.getElementById('resYearsList').innerHTML = "COMBINACIÓN NO VÁLIDA";
+                } else {
+                    document.getElementById('resYearsList').textContent = "--";
+                }
+            }
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResult() { document.getElementById('resultModal').style.display = 'none'; }
+        window.addEventListener('resize', renderScene);
+    </script>
+</body>
+</html>
