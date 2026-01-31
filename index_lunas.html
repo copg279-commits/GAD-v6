@@ -15,6 +15,7 @@
             --nippon-red: #ef4444;
             --nippon-blue: #3b82f6;
             --label-text: #999;
+            
             --letter-size: 2.5rem;
             --dot-size: 14px;
         }
@@ -30,22 +31,16 @@
             margin: 0;
             min-height: 100vh;
             overflow-x: hidden;
+            overflow-y: auto;
         }
 
-        /* --- CABECERA: SELECTOR + AYUDA --- */
-        .top-bar {
+        /* --- SELECTOR DE FABRICANTE (DROPDOWN) --- */
+        .selector-wrapper {
             width: 100%;
             max-width: 600px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
+            margin-bottom: 10px;
             position: relative;
             z-index: 100;
-        }
-
-        .selector-wrapper {
-            flex-grow: 1; /* Ocupa el máximo espacio posible */
         }
 
         .custom-select {
@@ -63,11 +58,25 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             text-align: left;
             text-transform: uppercase;
+            /* Flecha personalizada */
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffd700%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right 15px top 50%;
             background-size: 12px auto;
         }
+        
+        .top-bar {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .selector-wrapper { flex-grow: 1; margin-bottom: 0; }
 
         .help-btn-header {
             width: 45px;
@@ -85,14 +94,14 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             flex-shrink: 0;
         }
-        .help-btn-header:hover { background: #555; }
 
         /* --- CONTENEDOR PRINCIPAL --- */
         .glass-container {
             background: var(--panel-bg);
             border: 1px solid #3a3a3a;
             border-radius: 8px;
-            padding: 25px 0 100px 0; /* Espacio limpio abajo para los logos */
+            /* CRUCIAL: Dejamos mucho espacio abajo para logos y resultado */
+            padding: 20px 0 120px 0; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -103,87 +112,54 @@
             box-sizing: border-box;
             position: relative;
             min-height: 400px;
-            z-index: 1; 
         }
 
-        /* --- LOGOS INFERIORES (DOBLE TAMAÑO) --- */
+        /* --- LOGOS INFERIORES --- */
         .corner-logo {
             position: absolute;
-            bottom: 15px;
+            bottom: 10px;
             height: 90px;
             width: auto;
             opacity: 0.8;
-            z-index: 0;
+            z-index: 1;
             pointer-events: none;
         }
-        .logo-left { left: 15px; }
-        .logo-right { right: 15px; }
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
 
-        /* --- VENTANAS MODALES (AYUDA Y RESULTADO) --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            display: none;
-            justify-content: center;
+        /* --- CAJA DE RESULTADO (ENTRE LOS LOGOS) --- */
+        .result-box {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 200px); 
+            min-width: 180px;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid #555;
+            border-left: 4px solid var(--dot-on); 
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            backdrop-filter: blur(5px);
-        }
-
-        /* Caja genérica para modales */
-        .modal-box {
-            background: #222;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            padding: 25px;
-            width: 85%;
-            max-width: 400px;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
+            justify-content: center;
             text-align: center;
-            animation: popIn 0.3s ease-out;
         }
-
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        
+        .res-main { 
+            font-size: 1rem; color: white; font-weight: bold; line-height: 1.2; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
         }
-
-        /* Estilos específicos Resultado */
-        .result-content h2 { color: #ccc; margin: 0 0 10px 0; font-size: 1rem; text-transform: uppercase; }
-        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; line-height: 1.1; }
-        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .res-sub { 
+            color: #aaa; font-size: 0.7rem; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+        }
         .hl { color: var(--dot-on); }
 
-        /* Estilos específicos Ayuda */
-        .help-content { text-align: left; max-height: 70vh; overflow-y: auto; }
-        .help-content h3 { color: #ffd700; border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 0; text-align: center; }
-        .help-content h4 { color: var(--accent-red); margin-bottom: 5px; margin-top: 20px; font-size: 1.1rem; }
-        .help-content p { margin-bottom: 10px; color: #ccc; font-size: 0.95rem; line-height: 1.5; }
-        .help-note { background: rgba(255, 215, 0, 0.1); padding: 15px; border-left: 4px solid #ffd700; border-radius: 4px; font-size: 0.9rem; color: #eee; margin-top: 15px; }
-
-        /* Botón Cerrar Común */
-        .close-btn {
-            display: block;
-            width: 100%;
-            background: #d32f2f;
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .close-btn:active { transform: scale(0.98); }
-
-        /* --- SECCIONES Y ELEMENTOS GRÁFICOS --- */
+        /* --- SECCIONES --- */
         .brand-section {
             display: none;
             flex-direction: column;
@@ -195,8 +171,26 @@
         }
         .brand-section.active { display: flex; }
 
+        /* --- MODALES --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #ffd700; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+        
+        .result-content h2 { color: #ccc; font-size: 1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; }
+
+        .help-content { text-align: left; max-height: 70vh; overflow-y: auto; color: #ccc; font-size: 0.95rem; }
+        .help-content h3 { color: #ffd700; border-bottom: 1px solid #444; padding-bottom: 10px; text-align: center; }
+        .help-content h4 { color: var(--accent-red); margin-top: 20px; margin-bottom: 5px; }
+        .help-note { background: rgba(255,215,0,0.1); padding: 10px; border-left: 4px solid #ffd700; margin-top: 10px; }
+
+        /* --- LEYENDA --- */
         .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 5px; font-style: italic; padding: 0 10px; }
 
+        /* --- ESTRUCTURA GENERAL --- */
         .word-row { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
         .letters-group { display: flex; justify-content: center; gap: 1vw; }
         .letter-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 9vw; max-width: 45px; position: relative; cursor: pointer; }
@@ -207,6 +201,8 @@
         .pos-top-floating { top: -35px; } .pos-bot-floating { bottom: -35px; }
         .lbl { font-size: 0.55rem; color: var(--label-text); text-transform: uppercase; font-weight: bold; margin-bottom: 1px; white-space: nowrap; }
         .lbl-bot { margin-bottom: 0; margin-top: 1px; }
+
+        /* ESTILOS ESPECÍFICOS */
         .dot-stack { display: flex; flex-direction: column-reverse; gap: 4px; height: 40px; justify-content: flex-start; align-items: center; margin-bottom: 2px; }
         .triplex-num { font-size: 0.8rem; color: #aaa; font-weight: bold; margin-top: -2px; }
         .triplex-mid-word { text-align: center; color: #777; font-size: 1.8rem; font-weight: bold; letter-spacing: 2px; margin: 15px 0; text-transform: capitalize; }
@@ -215,7 +211,7 @@
         input[type="radio"], input[type="checkbox"] { display: none; }
         label { display: flex; justify-content: center; align-items: center; padding: 8px; margin: -8px; cursor: pointer; z-index: 10; }
         .dot { width: var(--dot-size); height: var(--dot-size); background-color: var(--dot-off); border: 2px solid #666; border-radius: 50%; transition: all 0.2s; }
-        input[type="radio"]:checked + .dot, .dot.active { background-color: var(--dot-on); border-color: #fff; box-shadow: var(--glow); transform: scale(1.3); }
+        input[type="radio"]:checked + .dot, .dot.active { background-color: var(--dot-on); border-color: #fff; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); transform: scale(1.3); }
         .dot-stack .dot { opacity: 0.2; } .dot-stack .dot.active { opacity: 1; }
 
         /* Genérico */
@@ -240,30 +236,43 @@
         .btn-calc-nippon { background: #22c55e; color: #022c22; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 12px 30px; border-radius: 6px; font-size: 1rem; border: none; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3); z-index: 10; }
         .btn-calc-nippon:active { transform: scale(0.98); }
 
-        /* --- MEDIA QUERIES (CORRECCIONES MÓVIL) --- */
+        /* KIA DOT 748 ESPECIFICO */
+        .kia-num-label { font-size: 0.6rem; color: #666; margin-top: 2px; }
+
+        /* --- MEDIA QUERIES (MÓVIL) --- */
         @media (max-width: 600px) {
             :root { --letter-size: 1.8rem; --dot-size: 12px; }
             .pos-top-floating { top: -28px; } .pos-bot-floating { bottom: -28px; }
             .glass-container { padding: 20px 0 100px 0; }
-            
             .nippon-wrapper { transform: scale(0.8); margin: -30px 0; }
             .gen-num-display { font-size: 4rem; width: 70px; height: 90px; margin: 0 10px; }
             .gen-dot { width: 14px; height: 14px; }
             .gen-dots-group { gap: 3px; }
-            
-            /* Corrección Temperlite y Hyundai para que quepan */
-            #hyundai .letters-group, #temperlite .letters-group { gap: 0px; width: 100%; justify-content: space-between; }
-            #hyundai .letter-col, #temperlite .letter-col { width: auto; flex: 1; max-width: none; }
-            #hyundai .letter, #temperlite .letter { font-size: 1.1rem; }
-            #hyundai .side-col, #temperlite .side-col { width: 30px; padding: 0 2px; }
-            
-            #triplex-months .letters-group { gap: 2px; }
-            #triplex-months .letter { font-size: 1.6rem; }
-            
             .corner-logo { height: 60px; bottom: 10px; }
             .logo-left { left: 5px; } .logo-right { right: 5px; }
+            
+            /* Ajuste para caja resultado fija en móvil */
+            .result-box { position: fixed; bottom: 10px; left: 50%; width: 95%; max-width: none; background: #252525; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.9); z-index: 100; display: none; /* Oculto por defecto en móvil, usa modal */ }
+            body { padding-bottom: 120px; }
+
+            /* Ajustes para filas anchas (10-12 chars) */
+            #hyundai .letters-group, #temperlite .letters-group, #kia-dot748 .letters-group { 
+                gap: 0; width: 100%; justify-content: space-between; 
+            }
+            #hyundai .letter-col, #temperlite .letter-col, #kia-dot748 .letter-col { 
+                width: auto; flex: 1; max-width: none; 
+            }
+            #hyundai .letter, #temperlite .letter, #kia-dot748 .letter { 
+                font-size: 1.1rem; 
+            }
+            #hyundai .side-col, #temperlite .side-col, #kia-dot748 .side-col { 
+                width: 25px; padding: 0 1px; 
+            }
+            #kia-dot748 .letters-group { width: 98%; } /* Kia tiene 12 columnas, necesita todo el ancho */
+
+            #triplex-months .letters-group { gap: 2px; }
+            #triplex-months .letter { font-size: 1.6rem; }
         }
-        
         @media (max-width: 360px) {
             :root { --letter-size: 1.4rem; --dot-size: 10px; }
             .nippon-wrapper { transform: scale(0.7); margin: -40px 0; }
@@ -278,6 +287,7 @@
             <select class="custom-select" onchange="openTab(this.value)">
                 <option value="generic">Genérico (Estándar)</option>
                 <option value="hyundai">43R (Hyundai-Kia)</option>
+                <option value="kia-dot748">DOT 748 (HYUNDAI-KIA)</option>
                 <option value="laminex">Laminex</option>
                 <option value="lamisafe">Lamisafe</option>
                 <option value="nippon">Nippon Safety (Toyota)</option>
@@ -303,6 +313,26 @@
             <p class="input-legend">Toca el número para cambiar el AÑO - Toca los puntos para cambiar el MES</p>
         </div>
 
+        <div id="kia-dot748" class="brand-section">
+            <div class="word-row" style="margin-bottom: 20px;">
+                <div class="letters-group">
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="1" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">1</span></div><div class="letter">D</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Enero" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">1</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="2" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">2</span></div><div class="letter">O</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Febrero" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">2</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="3" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">3</span></div><div class="letter">T</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Marzo" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">3</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="4" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">4</span></div><div class="letter">7</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Abril" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">4</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="5" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">5</span></div><div class="letter">4</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Mayo" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">5</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="6" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">6</span></div><div class="letter">8</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Junio" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">6</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="7" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">7</span></div><div class="letter">A</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Julio" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">7</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="8" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">8</span></div><div class="letter">S</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Agosto" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">8</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="9" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">9</span></div><div class="letter">2</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Septiembre" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">9</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper"><label><input type="radio" name="anio" value="0" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">10</span></div><div class="letter">M</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Octubre" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">10</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper" style="opacity:0.2"><div class="dot"></div></div><div class="letter">3</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Noviembre" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">11</span></div></div>
+                    <div class="letter-col"><div class="dot-wrapper" style="opacity:0.2"><div class="dot"></div></div><div class="letter">5</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Diciembre" onchange="calcKiaDot748()"><div class="dot"></div></label><span class="kia-num-label">12</span></div></div>
+                </div>
+            </div>
+            <p class="input-legend">Puntos SUPERIORES = Año (1-10) | Puntos INFERIORES = Mes (1-12)</p>
+        </div>
+
         <div id="hyundai" class="brand-section">
             <div class="word-row">
                 <div class="side-col">
@@ -320,42 +350,12 @@
                     <div class="letter-col"><div class="dot-wrapper"><span class="lbl">9</span><label><input type="radio" name="anio" value="9" onchange="calc()"><div class="dot"></div></label></div><div class="letter">4</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Octubre" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Oct</span></div></div>
                     <div class="letter-col"><div class="dot-wrapper"><span class="lbl">0</span><label><input type="radio" name="anio" value="0" onchange="calc()"><div class="dot"></div></label></div><div class="letter">4</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Noviembre" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Nov</span></div></div>
                 </div>
+
                 <div class="side-col">
                     <div class="dot-wrapper"><span class="lbl">Dic</span><label><input type="radio" name="mes" value="Diciembre" onchange="calc()"><div class="dot"></div></label></div>
                 </div>
             </div>
             <p class="input-legend">Marca el punto superior para AÑO y el inferior para MES</p>
-        </div>
-
-        <div id="triplex" class="brand-section">
-            <div class="word-row">
-                <div class="letters-group" id="triplex-months">
-                    <div class="letter-col" onclick="toggleTriplex(0, 2)"><div class="dot-stack"><div class="dot" id="tm-0-2"></div><div class="dot" id="tm-0-1"></div></div><div class="letter">T</div></div>
-                    <div class="letter-col" onclick="toggleTriplex(1, 1)"><div class="dot-stack"><div class="dot" id="tm-1-1"></div></div><div class="letter">R</div></div>
-                    <div class="letter-col" onclick="toggleTriplex(2, 1)"><div class="dot-stack"><div class="dot" id="tm-2-1"></div></div><div class="letter">I</div></div>
-                    <div class="letter-col" onclick="toggleTriplex(3, 1)"><div class="dot-stack"><div class="dot" id="tm-3-1"></div></div><div class="letter">P</div></div>
-                    <div class="letter-col" onclick="toggleTriplex(4, 1)"><div class="dot-stack"><div class="dot" id="tm-4-1"></div></div><div class="letter">L</div></div>
-                    <div class="letter-col" onclick="toggleTriplex(5, 1)"><div class="dot-stack"><div class="dot" id="tm-5-1"></div></div><div class="letter">E</div></div>
-                    <div class="letter-col" onclick="toggleTriplex(6, 2)"><div class="dot-stack"><div class="dot" id="tm-6-2"></div><div class="dot" id="tm-6-1"></div></div><div class="letter">X</div></div>
-                </div>
-            </div>
-            <p class="triplex-mid-word">Sundym</p>
-            <div class="word-row">
-                <div class="letters-group">
-                    <div class="letter-col" onclick="setTriplexYear(1)"><div class="letter letter-lower">T</div><div class="dot-wrapper"><div class="dot" id="ty-1"></div><span class="triplex-num">1</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(2)"><div class="letter letter-lower">O</div><div class="dot-wrapper"><div class="dot" id="ty-2"></div><span class="triplex-num">2</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(3)"><div class="letter letter-lower">U</div><div class="dot-wrapper"><div class="dot" id="ty-3"></div><span class="triplex-num">3</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(4)"><div class="letter letter-lower">G</div><div class="dot-wrapper"><div class="dot" id="ty-4"></div><span class="triplex-num">4</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(5)"><div class="letter letter-lower">H</div><div class="dot-wrapper"><div class="dot" id="ty-5"></div><span class="triplex-num">5</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(6)"><div class="letter letter-lower">E</div><div class="dot-wrapper"><div class="dot" id="ty-6"></div><span class="triplex-num">6</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(7)"><div class="letter letter-lower">N</div><div class="dot-wrapper"><div class="dot" id="ty-7"></div><span class="triplex-num">7</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(8)"><div class="letter letter-lower">E</div><div class="dot-wrapper"><div class="dot" id="ty-8"></div><span class="triplex-num">8</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(9)"><div class="letter letter-lower">D</div><div class="dot-wrapper"><div class="dot" id="ty-9"></div><span class="triplex-num">9</span></div></div>
-                    <div class="letter-col" onclick="setTriplexYear(0)"><div class="letter letter-lower" style="opacity:0">.</div><div class="dot-wrapper"><div class="dot" id="ty-0"></div><span class="triplex-num">0</span></div></div>
-                </div>
-            </div>
-            <button onclick="calcTriplexResult()" class="btn-calc-nippon">CALCULAR</button>
-            <p class="input-legend">Toca las letras de ARRIBA para el Mes y las de ABAJO para el Año</p>
         </div>
 
         <div id="laminex" class="brand-section">
@@ -409,6 +409,37 @@
             <p class="input-legend">Marca el punto del MES y el punto del AÑO</p>
         </div>
 
+        <div id="triplex" class="brand-section">
+            <div class="word-row">
+                <div class="letters-group" id="triplex-months">
+                    <div class="letter-col" onclick="toggleTriplex(0, 2)"><div class="dot-stack"><div class="dot" id="tm-0-2"></div><div class="dot" id="tm-0-1"></div></div><div class="letter">T</div></div>
+                    <div class="letter-col" onclick="toggleTriplex(1, 1)"><div class="dot-stack"><div class="dot" id="tm-1-1"></div></div><div class="letter">R</div></div>
+                    <div class="letter-col" onclick="toggleTriplex(2, 1)"><div class="dot-stack"><div class="dot" id="tm-2-1"></div></div><div class="letter">I</div></div>
+                    <div class="letter-col" onclick="toggleTriplex(3, 1)"><div class="dot-stack"><div class="dot" id="tm-3-1"></div></div><div class="letter">P</div></div>
+                    <div class="letter-col" onclick="toggleTriplex(4, 1)"><div class="dot-stack"><div class="dot" id="tm-4-1"></div></div><div class="letter">L</div></div>
+                    <div class="letter-col" onclick="toggleTriplex(5, 1)"><div class="dot-stack"><div class="dot" id="tm-5-1"></div></div><div class="letter">E</div></div>
+                    <div class="letter-col" onclick="toggleTriplex(6, 2)"><div class="dot-stack"><div class="dot" id="tm-6-2"></div><div class="dot" id="tm-6-1"></div></div><div class="letter">X</div></div>
+                </div>
+            </div>
+            <p class="triplex-mid-word">Sundym</p>
+            <div class="word-row">
+                <div class="letters-group">
+                    <div class="letter-col" onclick="setTriplexYear(1)"><div class="letter letter-lower">T</div><div class="dot-wrapper"><div class="dot" id="ty-1"></div><span class="triplex-num">1</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(2)"><div class="letter letter-lower">O</div><div class="dot-wrapper"><div class="dot" id="ty-2"></div><span class="triplex-num">2</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(3)"><div class="letter letter-lower">U</div><div class="dot-wrapper"><div class="dot" id="ty-3"></div><span class="triplex-num">3</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(4)"><div class="letter letter-lower">G</div><div class="dot-wrapper"><div class="dot" id="ty-4"></div><span class="triplex-num">4</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(5)"><div class="letter letter-lower">H</div><div class="dot-wrapper"><div class="dot" id="ty-5"></div><span class="triplex-num">5</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(6)"><div class="letter letter-lower">E</div><div class="dot-wrapper"><div class="dot" id="ty-6"></div><span class="triplex-num">6</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(7)"><div class="letter letter-lower">N</div><div class="dot-wrapper"><div class="dot" id="ty-7"></div><span class="triplex-num">7</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(8)"><div class="letter letter-lower">E</div><div class="dot-wrapper"><div class="dot" id="ty-8"></div><span class="triplex-num">8</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(9)"><div class="letter letter-lower">D</div><div class="dot-wrapper"><div class="dot" id="ty-9"></div><span class="triplex-num">9</span></div></div>
+                    <div class="letter-col" onclick="setTriplexYear(0)"><div class="letter letter-lower" style="opacity:0">.</div><div class="dot-wrapper"><div class="dot" id="ty-0"></div><span class="triplex-num">0</span></div></div>
+                </div>
+            </div>
+            <button onclick="calcTriplexResult()" class="btn-calc-nippon">CALCULAR</button>
+            <p class="input-legend">Toca las letras de ARRIBA para el Mes y las de ABAJO para el Año</p>
+        </div>
+
         <div id="nippon" class="brand-section">
             <div class="nippon-wrapper" id="nipponBoard"></div>
             <button onclick="calcNippon()" class="btn-calc-nippon">CALCULAR</button>
@@ -428,6 +459,8 @@
                 <p>Usa lógica de Bloques: Puntos simples (Ene-Abr), T con 2 puntos + otro (May-Ago), X con 2 puntos + otro (Sep-Dic).</p>
                 <h4>NIPPON SAFETY</h4>
                 <p>Sistema complejo. Marca todos los puntos visibles y pulsa CALCULAR.</p>
+                <h4>KIA (DOT 748)</h4>
+                <p>Puntos superiores: Año (1...0). Puntos inferiores: Mes (1...12).</p>
             </div>
             <button class="close-btn" onclick="closeHelp()">Cerrar</button>
         </div>
@@ -445,8 +478,10 @@
     </div>
 
     <script>
-        // --- ESTADOS GLOBALES ---
+        // --- TRIPLEX STATE ---
         let triplexState = { months: [0,0,0,0,0,0,0], year: null };
+
+        // --- NIPPON STATE ---
         const YEAR_TABLE_NIPPON = {
             "A": [1991, 2021], "B": [1992, 2022], "C": [1993, 2023], "D": [1994, 2024],
             "AB": [1995, 2025], "AC": [1996, 2026], "AD": [1997, 2027], "BC": [1998, 2028], "BD": [1999, 2029], "CD": [2000, 2030],
@@ -475,6 +510,11 @@
             { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 56 },
             { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 56 }
         ];
+
+        /* --- KIA DOT 748 STATE --- */
+        let kia748State = { y: null, m: null };
+
+        /* --- GENÉRICO (HYUNDAI STYLE) --- */
         let genState = { yearDigit: 4, leftDots: 0, rightDots: 0 };
 
         // --- FUNCIONES VISUALES (MODALES) ---
@@ -496,15 +536,16 @@
             document.querySelectorAll('.brand-section').forEach(el => el.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            resetCalc(); // Limpiar al cambiar
+            resetCalc(); 
             
             if (id === 'nippon') {
                 renderNippon();
             } else if (id === 'generic') {
                 initGeneric();
-                // calcGeneric(); // No calc auto on init to avoid popup
             } else if (id === 'triplex') {
                 updateTriplexVisuals();
+            } else if (id === 'kia-dot748') {
+                // Kia init logic if needed, simple radio reset handled by resetCalc
             }
         }
 
@@ -512,13 +553,14 @@
             document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
             nipponSel = { m: null, yDots: [] };
             triplexState = { months: [0,0,0,0,0,0,0], year: null };
+            kia748State = { y: null, m: null };
             updateTriplexVisuals();
         }
 
         // --- CÁLCULO ESTÁNDAR (Laminex, Temperlite, Hyundai...) ---
         function calc() {
             const activeSec = document.querySelector('.brand-section.active');
-            if(activeSec.id === 'nippon' || activeSec.id === 'help' || activeSec.id === 'generic' || activeSec.id === 'triplex') return;
+            if(activeSec.id === 'nippon' || activeSec.id === 'help' || activeSec.id === 'generic' || activeSec.id === 'triplex' || activeSec.id === 'kia-dot748') return;
 
             const mInp = activeSec.querySelector('input[name="mes"]:checked');
             const aInp = activeSec.querySelector('input[name="anio"]:checked');
@@ -579,7 +621,6 @@
         }
 
         function checkGenericComplete() {
-            // Solo muestra popup si hay puntos seleccionados
             if (genState.leftDots > 0 || genState.rightDots > 0) {
                 calcGeneric();
             }
@@ -595,6 +636,22 @@
                 const y = genState.yearDigit;
                 const years = `${2000+y} / ${2010+y} / ${2020+y}`;
                 showResultModal(`${months[monthIndex]} - Año ...${y}`, `Posibles fechas: ${years}`);
+            }
+        }
+
+        // --- KIA DOT 748 LOGIC ---
+        function calcKiaDot748() {
+            const activeSec = document.getElementById('kia-dot748');
+            const mInp = activeSec.querySelector('input[name="mes"]:checked');
+            const aInp = activeSec.querySelector('input[name="anio"]:checked');
+            
+            let mVal = mInp ? mInp.value : null;
+            let aVal = aInp ? aInp.value : null;
+
+            if (mVal && aVal) {
+                let d = parseInt(aVal) % 10;
+                let decades = `Posibles fechas: 200${d} / 201${d} / 202${d}`;
+                showResultModal(`${mVal} - Año ...${aVal}`, decades);
             }
         }
 
