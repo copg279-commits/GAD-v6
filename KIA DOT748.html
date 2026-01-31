@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>KCC GLASS (HYUNDAI/KIA) DECODER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <style>
+        /* --- GENERAL --- */
+        body { 
+            background-color: #1e1e1e; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; padding: 0; 
+            width: 100%; min-height: 100vh; 
+            display: flex; flex-direction: column; 
+            color: white; overflow-x: hidden;
+        }
+
+        /* HEADER */
+        .controls { background: #1f2937; padding: 10px 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #374151; }
+        
+        /* ZONA DE TRABAJO */
+        .workspace { 
+            flex-grow: 1; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            padding: 20px; width: 100%;
+        }
+
+        .glass-simulation {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 900px;
+            background: #252a33; border: 1px solid #374151;
+            padding: 40px 10px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* LOGO KCC / HYUNDAI */
+        .brand-logo {
+            font-family: sans-serif; font-weight: 900; font-size: 1.8rem;
+            color: #e5e7eb; margin-bottom: 5px; text-transform: uppercase;
+        }
+        .brand-sub { font-size: 0.9rem; color: #9ca3af; margin-bottom: 40px; letter-spacing: 1px; font-weight: bold; }
+
+        /* --- GRILLA PRINCIPAL --- */
+        .code-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr); /* 12 Posiciones */
+            gap: 4px;
+            width: 100%; max-width: 800px;
+        }
+
+        /* CELDA */
+        .col-cell {
+            display: flex; flex-direction: column; align-items: center;
+            position: relative; width: 100%;
+        }
+
+        /* TEXTO DEL CÓDIGO */
+        .char-text {
+            font-family: 'Courier New', monospace; font-weight: bold; font-size: 2rem;
+            color: #e5e7eb; height: 50px; display: flex; align-items: center; justify-content: center;
+            user-select: none;
+        }
+        .char-text.dim { color: #4b5563; } /* Para espacios o caracteres variables */
+
+        /* PUNTOS */
+        .dot {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid #6b7280; background: #1f2937;
+            cursor: pointer; transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        /* AÑO (ARRIBA) - CYAN */
+        .dot-year { margin-bottom: 8px; }
+        .dot-year:hover { border-color: #22d3ee; }
+        .dot-year.active {
+            background: #06b6d4; border-color: white;
+            box-shadow: 0 0 12px #22d3ee; transform: scale(1.3);
+        }
+
+        /* MES (ABAJO) - ROJO */
+        .dot-month { margin-top: 8px; }
+        .dot-month:hover { border-color: #f87171; }
+        .dot-month.active {
+            background: #dc2626; border-color: white;
+            box-shadow: 0 0 12px #f87171; transform: scale(1.3);
+        }
+
+        /* ETIQUETAS NUMÉRICAS (Guía visual 1-12) */
+        .guide-num {
+            font-size: 0.6rem; color: #6b7280; margin-top: 4px; font-weight: bold;
+        }
+
+        /* PANEL DE RESULTADOS AUTOMÁTICO */
+        .result-panel {
+            width: 100%; background: #1f2937; border-top: 1px solid #374151;
+            padding: 20px; display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3); z-index: 100;
+        }
+        
+        .res-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+            width: 100%; max-width: 600px; text-align: center;
+        }
+        
+        .res-box { background: #111827; padding: 10px; border-radius: 10px; border: 1px solid #374151; }
+        .res-label { font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .res-value { font-weight: 900; font-size: 1.2rem; }
+        
+        .val-month { color: #f87171; text-transform: uppercase; }
+        .val-year { color: #22d3ee; font-family: monospace; }
+
+        /* AJUSTES MÓVIL */
+        @media (max-width: 700px) {
+            .char-text { font-size: 1.5rem; height: 40px; }
+            .dot { width: 10px; height: 10px; }
+            .code-grid { gap: 2px; }
+            .guide-num { font-size: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <a href="menu_lunas.html" class="text-gray-400 font-bold flex items-center gap-2 text-sm"><i class="fas fa-arrow-left"></i> VOLVER</a>
+        <div id="statusBadge" class="text-xs text-gray-500 font-bold border border-gray-600 px-2 rounded flex items-center">OFFLINE</div>
+    </div>
+
+    <div class="workspace">
+        <div class="glass-simulation">
+            <div class="brand-logo">KCC GLASS</div>
+            <div class="brand-sub">HYUNDAI / KIA (DOT 748)</div>
+
+            <div class="code-grid" id="gridContainer">
+                </div>
+            
+            <p class="text-xs text-gray-500 mt-10 text-center px-4 max-w-lg">
+                La posición del punto indica la fecha.<br>
+                <strong>ARRIBA:</strong> Año (1=...1, 3=...3, 10=...0).<br>
+                <strong>ABAJO:</strong> Mes (1=Ene ... 12=Dic).
+            </p>
+        </div>
+    </div>
+
+    <div class="result-panel">
+        <div class="res-grid">
+            <div class="res-box" style="border-color: #22d3ee;">
+                <div class="res-label text-cyan-400">AÑO (ARRIBA)</div>
+                <div id="resYear" class="res-value val-year">--</div>
+            </div>
+            <div class="res-box" style="border-color: #f87171;">
+                <div class="res-label text-red-400">MES (ABAJO)</div>
+                <div id="resMonth" class="res-value val-month">--</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag", authDomain: "gad-alicante-v4.firebaseapp.com", databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app", projectId: "gad-alicante-v4" };
+        const NODE_NAME = "kcc_dot748";
+        let db = null;
+
+        // SECUENCIA DE CARACTERES SEGÚN TU NOTA MANUSCRITA
+        // D O T 7 4 8 (sp) A S 2 M 3 5 3
+        // Usamos una cadena representativa de 12 chars para la guía visual
+        // Pos: 1 2 3 4 5 6 7 8 9 10 11 12
+        const VISUAL_CHARS = ['D', 'O', 'T', '7', '4', '8', 'A', 'S', '2', 'M', '3', '5'];
+        
+        let selectedYearPos = null; // 1-12 (Pero logicamente 1-10 son años)
+        let selectedMonthPos = null; // 1-12
+
+        window.onload = function() {
+            renderGrid();
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                firebase.auth().onAuthStateChanged(u => {
+                    if(u) {
+                        const b = document.getElementById('statusBadge');
+                        b.innerText = "ONLINE"; b.classList.add('text-green-400', 'border-green-400');
+                        initSync();
+                    }
+                });
+            } catch(e) {}
+        };
+
+        function initSync() {
+            db.ref(`LUNAS/${NODE_NAME}`).on('value', snap => {
+                if(snap.val()) {
+                    selectedYearPos = snap.val().y;
+                    selectedMonthPos = snap.val().m;
+                    updateVisuals();
+                    calculateAuto();
+                }
+            });
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('gridContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const pos = i + 1; // 1-based index
+                const char = VISUAL_CHARS[i] || '-';
+
+                const col = document.createElement('div');
+                col.className = 'col-cell';
+
+                // 1. PUNTO AÑO (Arriba)
+                // Nota: Solo posiciones 1-10 suelen usarse para año (1-0), pero generamos todos por si acaso
+                const dotY = document.createElement('div');
+                dotY.className = 'dot dot-year';
+                dotY.id = `y-${pos}`;
+                // Solo activamos click si es posición válida para año (normalmente 1-10)
+                if (pos <= 10) {
+                    dotY.onclick = () => selectYear(pos);
+                    dotY.title = `Año terminado en ${pos === 10 ? 0 : pos}`;
+                } else {
+                    dotY.style.opacity = '0.1';
+                    dotY.style.cursor = 'default';
+                }
+                col.appendChild(dotY);
+
+                // 2. TEXTO
+                const txt = document.createElement('div');
+                txt.className = 'char-text';
+                txt.innerText = char;
+                col.appendChild(txt);
+
+                // 3. PUNTO MES (Abajo)
+                const dotM = document.createElement('div');
+                dotM.className = 'dot dot-month';
+                dotM.id = `m-${pos}`;
+                dotM.onclick = () => selectMonth(pos);
+                dotM.title = `Mes ${pos}`;
+                col.appendChild(dotM);
+
+                // 4. Guía numérica
+                const guide = document.createElement('div');
+                guide.className = 'guide-num';
+                guide.innerText = pos;
+                col.appendChild(guide);
+
+                container.appendChild(col);
+            }
+        }
+
+        function selectYear(pos) {
+            selectedYearPos = (selectedYearPos === pos) ? null : pos;
+            updateVisuals(); calculateAuto(); saveState();
+        }
+
+        function selectMonth(pos) {
+            selectedMonthPos = (selectedMonthPos === pos) ? null : pos;
+            updateVisuals(); calculateAuto(); saveState();
+        }
+
+        function updateVisuals() {
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+            if (selectedYearPos !== null) document.getElementById(`y-${selectedYearPos}`)?.classList.add('active');
+            if (selectedMonthPos !== null) document.getElementById(`m-${selectedMonthPos}`)?.classList.add('active');
+        }
+
+        function calculateAuto() {
+            // AÑO
+            let yText = "--";
+            if (selectedYearPos !== null) {
+                // Pos 1 = 1, Pos 10 = 0
+                const digit = (selectedYearPos === 10) ? 0 : selectedYearPos;
+                yText = `...${digit} (${2000+digit}, ${2010+digit}, ${2020+digit})`;
+            }
+            document.getElementById('resYear').innerText = yText;
+
+            // MES
+            const months = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            let mText = "--";
+            if (selectedMonthPos !== null && selectedMonthPos <= 12) {
+                mText = months[selectedMonthPos];
+            }
+            document.getElementById('resMonth').innerText = mText;
+        }
+
+        function saveState() {
+            if(db) db.ref(`LUNAS/${NODE_NAME}`).set({ y: selectedYearPos, m: selectedMonthPos }).catch(console.warn);
+        }
+    </script>
+</body>
+</html>
