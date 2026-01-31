@@ -32,6 +32,8 @@
             margin: 0;
             min-height: 100vh;
             overflow-x: hidden;
+            /* Eliminamos padding excesivo en body, lo maneja el contenedor */
+            padding-bottom: 20px; 
         }
 
         /* --- NAVEGACIÓN --- */
@@ -76,7 +78,8 @@
             background: var(--panel-bg);
             border: 1px solid #3a3a3a;
             border-radius: 8px;
-            padding: 25px 0 80px 0;
+            /* Padding inferior grande para dejar hueco al resultado y logos */
+            padding: 25px 0 110px 0; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -90,21 +93,11 @@
             z-index: 1; 
         }
 
-        /* --- LEYENDA / INSTRUCCIONES --- */
-        .input-legend {
-            color: #777;
-            font-size: 0.8rem;
-            text-align: center;
-            margin-top: 10px;
-            font-style: italic;
-            padding: 0 20px;
-        }
-
         /* --- LOGOS INFERIORES --- */
         .corner-logo {
             position: absolute;
             bottom: 15px;
-            height: 80px;
+            height: 70px; /* Ajustado para dar espacio */
             width: auto;
             opacity: 0.8;
             z-index: 0;
@@ -113,6 +106,45 @@
         .logo-left { left: 15px; }
         .logo-right { right: 15px; }
 
+        /* --- RESULTADO (EMPOTRADO EN EL CONTENEDOR) --- */
+        .result-box {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            
+            /* Ocupa el espacio central entre los logos */
+            width: calc(100% - 180px); /* Restamos espacio de logos */
+            max-width: 500px;
+            
+            background: rgba(0, 0, 0, 0.6); /* Un poco más oscuro para leer bien */
+            border: 1px solid #444;
+            border-left: 4px solid var(--dot-on); 
+            padding: 10px 15px;
+            border-radius: 8px;
+            
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        
+        .res-content { text-align: left; flex-grow: 1; overflow: hidden; }
+        .res-main { font-size: 1.1rem; color: white; font-weight: bold; margin-bottom: 2px; line-height: 1.2; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .res-sub { color: #aaa; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+        .hl { color: var(--dot-on); }
+
+        .help-btn-small {
+            background: #444; color: #ffd700; border: 1px solid #666;
+            border-radius: 4px; padding: 5px 10px; font-size: 0.7rem;
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+            transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+        }
+        .help-btn-small:hover { background: #555; color: #fff; }
+
+        /* --- SECCIONES Y RESTO --- */
         .brand-section {
             display: none;
             flex-direction: column;
@@ -124,258 +156,6 @@
         }
         .brand-section.active { display: flex; }
 
-        /* --- ESTRUCTURA GENERAL --- */
-        .word-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            position: relative;
-        }
-
-        .letters-group {
-            display: flex;
-            justify-content: center;
-            gap: 1vw; 
-        }
-
-        .letter-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 9vw;
-            max-width: 45px;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .letter {
-            font-family: 'Arial Black', sans-serif;
-            font-size: var(--letter-size);
-            color: var(--accent-red);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-            line-height: 1;
-            margin: 6px 0;
-            cursor: default;
-            user-select: none;
-        }
-
-        .side-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 12vw;
-            max-width: 50px;
-            position: relative;
-            height: 100%;
-            padding-top: 10px; 
-        }
-
-        .dot-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 30px;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .dot-wrapper.absolute {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        .pos-top-floating { top: -35px; } 
-        .pos-bot-floating { bottom: -35px; }
-        
-        .lbl {
-            font-size: 0.55rem;
-            color: var(--label-text);
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 1px;
-            white-space: nowrap;
-        }
-        .lbl-bot { margin-bottom: 0; margin-top: 1px; }
-
-        /* ESTILOS TRIPLEX ESPECÍFICOS */
-        .dot-stack {
-            display: flex;
-            flex-direction: column-reverse;
-            gap: 4px;
-            height: 40px;
-            justify-content: flex-start;
-            align-items: center;
-            margin-bottom: 2px;
-        }
-        .triplex-num {
-            font-size: 0.8rem;
-            color: #aaa;
-            font-weight: bold;
-            margin-top: -2px;
-        }
-        .triplex-mid-word {
-            text-align: center;
-            color: #777;
-            font-size: 1.8rem; /* MÁS GRANDE */
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin: 15px 0;
-            text-transform: capitalize; /* Sundym */
-        }
-        /* Clase para letras en minúscula (toughened) */
-        .letter-lower {
-            text-transform: lowercase !important;
-        }
-
-        input[type="radio"], input[type="checkbox"] { display: none; }
-
-        label {
-            display: flex; justify-content: center; align-items: center;
-            padding: 8px; margin: -8px; cursor: pointer;
-            z-index: 10;
-        }
-
-        .dot {
-            width: var(--dot-size); height: var(--dot-size);
-            background-color: var(--dot-off);
-            border: 2px solid #666; border-radius: 50%;
-            transition: all 0.2s;
-        }
-        
-        input[type="radio"]:checked + .dot, .dot.active {
-            background-color: var(--dot-on); border-color: #fff;
-            box-shadow: var(--glow); transform: scale(1.3);
-        }
-        
-        .dot-stack .dot { opacity: 0.2; }
-        .dot-stack .dot.active { opacity: 1; }
-
-        /* --- ESTILOS GENÉRICO --- */
-        .gen-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .gen-dots-group { display: flex; gap: 4px; }
-
-        .gen-dot {
-            width: 20px; height: 20px;
-            background-color: var(--dot-off);
-            border: 2px solid #555;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .gen-dot.active {
-            background-color: var(--dot-on);
-            border-color: white;
-            box-shadow: 0 0 10px var(--dot-on);
-            transform: scale(1.2);
-        }
-
-        .gen-num-display {
-            font-family: 'Arial', sans-serif;
-            font-weight: 900;
-            font-size: 5rem;
-            color: var(--text-color);
-            border: 2px dashed #555;
-            border-radius: 12px;
-            width: 90px;
-            height: 110px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 15px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            line-height: 1;
-        }
-        .gen-num-display:active {
-            border-color: var(--accent-red);
-            color: var(--accent-red);
-            transform: scale(0.95);
-        }
-
-        /* --- ESTILOS NIPPON SAFETY --- */
-        .nippon-wrapper {
-            position: relative;
-            width: 100%;
-            height: 320px; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        
-        .nippon-letter {
-            position: absolute;
-            font-family: 'Arial Black', sans-serif;
-            font-weight: 900;
-            color: #cc0000;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-            transform-origin: center center;
-            display: flex; justify-content: center; align-items: center;
-            pointer-events: none;
-            line-height: 1;
-        }
-
-        .n-elem {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-        }
-
-        .n-dot {
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.15s;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #333;
-        }
-        
-        .n-lbl {
-            font-size: 0.55rem;
-            color: #aaa;
-            font-weight: bold;
-            position: absolute;
-            white-space: nowrap;
-            text-shadow: 1px 1px 2px black;
-        }
-        .n-lbl-top { top: -18px; }
-        .n-lbl-bot { bottom: -18px; }
-
-        .n-dot-red { background-color: #7f1d1d; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        .n-dot-red.selected { background-color: var(--nippon-red); border-color: white; transform: scale(1.4); box-shadow: 0 0 15px var(--nippon-red); }
-        .n-dot-blue { background-color: #1e3a8a; display: flex; justify-content: center; align-items: center; color: #aaa; font-size: 10px; font-weight: bold; width: 24px; height: 24px; }
-        .n-dot-blue.selected { background-color: var(--nippon-blue); border-color: white; color: white; transform: scale(1.3); box-shadow: 0 0 15px var(--nippon-blue); }
-
-        .btn-calc-nippon {
-            background: #22c55e; color: #022c22;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
-            padding: 12px 30px; border-radius: 6px;
-            font-size: 1rem; border: none; cursor: pointer;
-            margin-top: 10px;
-            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
-            z-index: 10;
-        }
-        .btn-calc-nippon:active { transform: scale(0.98); }
-
         /* --- VENTANA MODAL DE AYUDA --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .help-box { background: #222; border: 2px solid #ffd700; border-radius: 12px; padding: 25px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 0 50px rgba(0,0,0,1); position: relative; text-align: left; }
@@ -386,31 +166,72 @@
         .help-content p { margin-bottom: 10px; color: #ccc; font-size: 0.95rem; line-height: 1.5; }
         .help-note { background: rgba(255, 215, 0, 0.1); padding: 15px; border-left: 4px solid #ffd700; border-radius: 4px; font-size: 0.9rem; color: #eee; margin-top: 15px;}
 
-        /* --- RESULTADO Y BOTÓN AYUDA --- */
-        .result-box {
-            margin-top: 20px; background: rgba(30, 30, 30, 0.95);
-            border-left: 5px solid var(--dot-on); padding: 15px 15px 15px 25px;
-            width: auto; min-width: 280px; max-width: 90%; 
-            border-radius: 0 8px 8px 0; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            position: relative; z-index: 10;
-            display: flex; align-items: center; justify-content: space-between; gap: 15px;
-        }
-        .res-content { text-align: left; flex-grow: 1; }
-        .res-main { font-size: 1.3rem; color: white; font-weight: bold; margin-bottom: 4px; line-height: 1.2; display: block;}
-        .res-sub { color: #aaa; font-size: 0.8rem; }
-        .hl { color: var(--dot-on); }
-        .help-btn-small { background: #444; color: #ffd700; border: 1px solid #666; border-radius: 4px; padding: 5px 12px; font-size: 0.75rem; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: all 0.2s; white-space: nowrap; }
-        .help-btn-small:hover { background: #555; color: #fff; }
+        /* --- LEYENDA --- */
+        .input-legend { color: #777; font-size: 0.8rem; text-align: center; margin-top: 10px; font-style: italic; padding: 0 20px; }
+
+        /* --- ESTRUCTURA DE LETRAS Y PUNTOS --- */
+        .word-row { display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
+        .letters-group { display: flex; justify-content: center; gap: 1vw; }
+        .letter-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 9vw; max-width: 45px; position: relative; cursor: pointer; }
+        .letter { font-family: 'Arial Black', sans-serif; font-size: var(--letter-size); color: var(--accent-red); text-shadow: 2px 2px 4px rgba(0,0,0,0.6); line-height: 1; margin: 6px 0; cursor: default; user-select: none; }
+        .side-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 12vw; max-width: 50px; position: relative; height: 100%; padding-top: 10px; }
+        .dot-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 30px; position: relative; z-index: 10; }
+        .dot-wrapper.absolute { position: absolute; left: 50%; transform: translateX(-50%); }
+        .pos-top-floating { top: -35px; } .pos-bot-floating { bottom: -35px; }
+        .lbl { font-size: 0.55rem; color: var(--label-text); text-transform: uppercase; font-weight: bold; margin-bottom: 1px; white-space: nowrap; }
+        .lbl-bot { margin-bottom: 0; margin-top: 1px; }
+        .dot-stack { display: flex; flex-direction: column-reverse; gap: 4px; height: 40px; justify-content: flex-start; align-items: center; margin-bottom: 2px; }
+        .triplex-num { font-size: 0.8rem; color: #aaa; font-weight: bold; margin-top: -2px; }
+        .triplex-mid-word { text-align: center; color: #777; font-size: 1.8rem; font-weight: bold; letter-spacing: 2px; margin: 15px 0; text-transform: capitalize; }
+        .letter-lower { text-transform: lowercase !important; }
+        
+        input[type="radio"], input[type="checkbox"] { display: none; }
+        label { display: flex; justify-content: center; align-items: center; padding: 8px; margin: -8px; cursor: pointer; z-index: 10; }
+        .dot { width: var(--dot-size); height: var(--dot-size); background-color: var(--dot-off); border: 2px solid #666; border-radius: 50%; transition: all 0.2s; }
+        input[type="radio"]:checked + .dot, .dot.active { background-color: var(--dot-on); border-color: #fff; box-shadow: var(--glow); transform: scale(1.3); }
+        .dot-stack .dot { opacity: 0.2; } .dot-stack .dot.active { opacity: 1; }
+
+        /* --- GENÉRICO --- */
+        .gen-container { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 20px; margin-bottom: 20px; }
+        .gen-dots-group { display: flex; gap: 4px; }
+        .gen-dot { width: 20px; height: 20px; background-color: var(--dot-off); border: 2px solid #555; border-radius: 50%; cursor: pointer; transition: all 0.2s ease; }
+        .gen-dot.active { background-color: var(--dot-on); border-color: white; box-shadow: 0 0 10px var(--dot-on); transform: scale(1.2); }
+        .gen-num-display { font-family: 'Arial', sans-serif; font-weight: 900; font-size: 5rem; color: var(--text-color); border: 2px dashed #555; border-radius: 12px; width: 90px; height: 110px; display: flex; align-items: center; justify-content: center; margin: 0 15px; cursor: pointer; user-select: none; transition: all 0.2s; line-height: 1; }
+        .gen-num-display:active { border-color: var(--accent-red); color: var(--accent-red); transform: scale(0.95); }
+
+        /* --- NIPPON --- */
+        .nippon-wrapper { position: relative; width: 100%; height: 320px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .nippon-letter { position: absolute; font-family: 'Arial Black', sans-serif; font-weight: 900; color: #cc0000; font-size: 2.2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); transform-origin: center center; display: flex; justify-content: center; align-items: center; pointer-events: none; line-height: 1; }
+        .n-elem { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); z-index: 20; }
+        .n-dot { border-radius: 50%; cursor: pointer; transition: transform 0.15s; width: 18px; height: 18px; border: 2px solid #333; }
+        .n-lbl { font-size: 0.55rem; color: #aaa; font-weight: bold; position: absolute; white-space: nowrap; text-shadow: 1px 1px 2px black; }
+        .n-lbl-top { top: -18px; } .n-lbl-bot { bottom: -18px; }
+        .n-dot-red { background-color: #7f1d1d; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .n-dot-red.selected { background-color: var(--nippon-red); border-color: white; transform: scale(1.4); box-shadow: 0 0 15px var(--nippon-red); }
+        .n-dot-blue { background-color: #1e3a8a; display: flex; justify-content: center; align-items: center; color: #aaa; font-size: 10px; font-weight: bold; width: 24px; height: 24px; }
+        .n-dot-blue.selected { background-color: var(--nippon-blue); border-color: white; color: white; transform: scale(1.3); box-shadow: 0 0 15px var(--nippon-blue); }
+        .btn-calc-nippon { background: #22c55e; color: #022c22; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 12px 30px; border-radius: 6px; font-size: 1rem; border: none; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3); z-index: 10; }
+        .btn-calc-nippon:active { transform: scale(0.98); }
 
         /* --- MEDIA QUERIES --- */
         @media (max-width: 600px) {
             :root { --letter-size: 1.8rem; --dot-size: 12px; }
             .pos-top-floating { top: -28px; } .pos-bot-floating { bottom: -28px; }
-            .glass-container { padding: 20px 0 70px 0; }
+            .glass-container { padding: 20px 0 100px 0; } /* Más espacio abajo */
             .nippon-wrapper { transform: scale(0.85); margin: -20px 0; }
-            .corner-logo { height: 50px; bottom: 10px; }
-            .logo-left { left: 10px; } .logo-right { right: 10px; }
             
+            /* Logos más pequeños en móvil para dejar sitio al resultado */
+            .corner-logo { height: 50px; bottom: 10px; }
+            .logo-left { left: 5px; } .logo-right { right: 5px; }
+            
+            /* Caja resultado en móvil */
+            .result-box { 
+                width: calc(100% - 120px); /* Ajuste para logos de 50px + margen */
+                bottom: 10px;
+            }
+            .res-main { font-size: 1rem; }
+            
+            /* Ajustes Fabricantes */
             .gen-num-display { font-size: 4rem; width: 70px; height: 90px; margin: 0 10px; }
             .gen-dot { width: 14px; height: 14px; }
             .gen-dots-group { gap: 3px; }
@@ -458,9 +279,7 @@
 
         <div id="hyundai" class="brand-section">
             <div class="word-row">
-                <div class="side-col">
-                    <div class="dot-wrapper"><span class="lbl">Ene</span><label><input type="radio" name="mes" value="Enero" onchange="calc()"><div class="dot"></div></label></div>
-                </div>
+                <div class="side-col"><div class="dot-wrapper"><span class="lbl">Ene</span><label><input type="radio" name="mes" value="Enero" onchange="calc()"><div class="dot"></div></label></div></div>
                 <div class="letters-group">
                     <div class="letter-col"><div class="dot-wrapper"><span class="lbl">1</span><label><input type="radio" name="anio" value="1" onchange="calc()"><div class="dot"></div></label></div><div class="letter">4</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Febrero" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Feb</span></div></div>
                     <div class="letter-col"><div class="dot-wrapper"><span class="lbl">2</span><label><input type="radio" name="anio" value="2" onchange="calc()"><div class="dot"></div></label></div><div class="letter">3</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Marzo" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Mar</span></div></div>
@@ -473,9 +292,7 @@
                     <div class="letter-col"><div class="dot-wrapper"><span class="lbl">9</span><label><input type="radio" name="anio" value="9" onchange="calc()"><div class="dot"></div></label></div><div class="letter">4</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Octubre" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Oct</span></div></div>
                     <div class="letter-col"><div class="dot-wrapper"><span class="lbl">0</span><label><input type="radio" name="anio" value="0" onchange="calc()"><div class="dot"></div></label></div><div class="letter">4</div><div class="dot-wrapper"><label><input type="radio" name="mes" value="Noviembre" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Nov</span></div></div>
                 </div>
-                <div class="side-col">
-                    <div class="dot-wrapper"><span class="lbl">Dic</span><label><input type="radio" name="mes" value="Diciembre" onchange="calc()"><div class="dot"></div></label></div>
-                </div>
+                <div class="side-col"><div class="dot-wrapper"><span class="lbl">Dic</span><label><input type="radio" name="mes" value="Diciembre" onchange="calc()"><div class="dot"></div></label></div></div>
             </div>
             <p class="input-legend">Marca el punto superior para AÑO y el inferior para MES</p>
         </div>
@@ -508,7 +325,7 @@
                 </div>
             </div>
             <button onclick="calcTriplexResult()" class="btn-calc-nippon">CALCULAR</button>
-            <p class="input-legend">Marca los puntos y pulsa Calcular. (Permite selección múltiple)</p>
+            <p class="input-legend">Toca las letras de ARRIBA para el Mes y las de ABAJO para el Año</p>
         </div>
 
         <div id="laminex" class="brand-section">
@@ -538,7 +355,7 @@
                 </div>
                 <div class="side-col"><div class="dot-wrapper absolute pos-top-floating"><label><input type="radio" name="anio" value="1" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">1</span></div><div class="dot-wrapper"><label><input type="radio" name="anio" value="2" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">2</span></div></div>
             </div>
-            <p class="input-legend">Marca el punto del MES y el punto del AÑO</p>
+            <p class="input-legend">Marca el punto rojo (Mes) y el punto amarillo (Año)</p>
         </div>
 
         <div id="tempalex" class="brand-section">
@@ -568,6 +385,14 @@
             <p class="input-legend">Marca TODOS los puntos azules (Año) y el punto rojo (Mes)</p>
         </div>
 
+        <div class="result-box">
+            <div class="res-content">
+                <div class="res-main" id="res-main">--</div>
+                <div class="res-sub" id="res-sub">Selecciona los datos</div>
+            </div>
+            <button class="help-btn-small" onclick="openHelp()">AYUDA</button>
+        </div>
+
     </div>
 
     <div id="helpModal" class="modal-overlay">
@@ -593,14 +418,6 @@
             </div>
             <button class="close-help-btn" onclick="closeHelp()">Cerrar Ayuda</button>
         </div>
-    </div>
-
-    <div class="result-box">
-        <div class="res-content">
-            <div class="res-main" id="res-main">--</div>
-            <div class="res-sub" id="res-sub">Selecciona los datos</div>
-        </div>
-        <button class="help-btn-small" onclick="openHelp()">AYUDA</button>
     </div>
 
     <script>
