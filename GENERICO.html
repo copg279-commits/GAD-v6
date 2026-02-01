@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Genérico - G.A.D. System</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --accent-red: #d32f2f;
+            --dot-off: #444444;
+            --dot-on: #ffd700;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Botón Volver Ajustado */
+        .top-bar {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .back-btn {
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
+
+        /* Contenedor Principal */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 20px 0 120px 0; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+            position: relative;
+            min-height: 400px;
+            justify-content: center;
+        }
+
+        /* Estilos Genéricos */
+        .gen-container { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 20px; margin-bottom: 20px; }
+        .gen-dots-group { display: flex; gap: 4px; }
+        .gen-dot { width: 20px; height: 20px; background-color: var(--dot-off); border: 2px solid #555; border-radius: 50%; cursor: pointer; transition: all 0.2s ease; }
+        .gen-dot.active { background-color: var(--dot-on); border-color: white; box-shadow: 0 0 10px var(--dot-on); transform: scale(1.2); }
+        .gen-num-display { font-family: 'Arial', sans-serif; font-weight: 900; font-size: 5rem; color: var(--text-color); border: 2px dashed #555; border-radius: 12px; width: 90px; height: 110px; display: flex; align-items: center; justify-content: center; margin: 0 15px; cursor: pointer; user-select: none; transition: all 0.2s; line-height: 1; }
+        .gen-num-display:active { border-color: var(--accent-red); color: var(--accent-red); transform: scale(0.95); }
+        .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 5px; font-style: italic; padding: 0 10px; }
+
+        /* Logos */
+        .corner-logo { position: absolute; bottom: 10px; height: 90px; width: auto; opacity: 0.8; pointer-events: none; }
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
+
+        /* Modal Resultado */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #ffd700; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+        
+        .result-content h2 { color: #ccc; font-size: 1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; }
+
+        /* Móvil */
+        @media (max-width: 600px) {
+            .gen-num-display { font-size: 4rem; width: 70px; height: 90px; margin: 0 10px; }
+            .gen-dot { width: 14px; height: 14px; }
+            .gen-dots-group { gap: 3px; }
+            .corner-logo { height: 60px; bottom: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+        </a>
+    </div>
+
+    <div class="glass-container">
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
+
+        <div class="gen-container">
+            <div class="gen-dots-group" id="gen-left-dots"></div>
+            <div class="gen-num-display" id="genNumDisplay" onclick="toggleGenYear()">4</div>
+            <div class="gen-dots-group" id="gen-right-dots"></div>
+        </div>
+        <p class="input-legend">Toca el número para cambiar el AÑO - Toca los puntos para cambiar el MES</p>
+
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="result-content">
+                <h2>RESULTADO</h2>
+                <div class="res-modal-main" id="res-modal-main">--</div>
+                <div class="res-modal-sub" id="res-modal-sub">...</div>
+            </div>
+            <button class="close-btn" onclick="closeResult()">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ESTADO GENÉRICO ---
+        let genState = { yearDigit: 4, leftDots: 0, rightDots: 0 };
+        let resultTimeout = null; // Variable para gestionar el temporizador
+
+        // Inicialización
+        window.onload = function() {
+            initGeneric();
+        };
+
+        function initGeneric() {
+            renderGenDots('left');
+            renderGenDots('right');
+            document.getElementById('genNumDisplay').textContent = genState.yearDigit;
+        }
+
+        function toggleGenYear() {
+            genState.yearDigit = (genState.yearDigit + 1) % 10;
+            document.getElementById('genNumDisplay').textContent = genState.yearDigit;
+            checkGenericComplete();
+        }
+
+        function setGenDots(side, count) {
+            if (side === 'left') {
+                if (genState.leftDots === count) genState.leftDots = 0;
+                else { genState.leftDots = count; genState.rightDots = 0; }
+            } else {
+                if (genState.rightDots === count) genState.rightDots = 0;
+                else { genState.rightDots = count; genState.leftDots = 0; }
+            }
+            renderGenDots('left');
+            renderGenDots('right');
+            checkGenericComplete();
+        }
+
+        function renderGenDots(side) {
+            const container = document.getElementById(side === 'left' ? 'gen-left-dots' : 'gen-right-dots');
+            container.innerHTML = '';
+            const activeCount = side === 'left' ? genState.leftDots : genState.rightDots;
+            
+            for (let i = 1; i <= 6; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'gen-dot';
+                let isActive = false;
+                
+                // Lógica de llenado
+                if (side === 'left') {
+                    if (i > (6 - activeCount)) isActive = true;
+                } else {
+                    if (i <= activeCount) isActive = true;
+                }
+                
+                if (isActive) dot.classList.add('active');
+                
+                let clickCount = side === 'left' ? (7 - i) : i;
+                dot.onclick = () => setGenDots(side, clickCount);
+                container.appendChild(dot);
+            }
+        }
+
+        function checkGenericComplete() {
+            if (genState.leftDots > 0 || genState.rightDots > 0) {
+                calcGeneric();
+            }
+        }
+
+        function calcGeneric() {
+            const months = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            let monthIndex = 0;
+
+            // IZQ: 1 punto = Enero ... 6 puntos = Junio
+            // DER: 1 punto = Julio ... 6 puntos = Diciembre
+            if (genState.leftDots > 0) monthIndex = genState.leftDots; 
+            else if (genState.rightDots > 0) monthIndex = 6 + genState.rightDots;
+
+            if (monthIndex > 0) {
+                const y = genState.yearDigit;
+                const years = `${2000+y} / ${2010+y} / ${2020+y}`;
+                
+                // Limpiamos cualquier temporizador anterior si el usuario pulsa rápido
+                if (resultTimeout) clearTimeout(resultTimeout);
+
+                // --- AQUÍ ESTÁ EL RETARDO ---
+                // Esperamos 1000ms (1 segundo) antes de mostrar el resultado
+                resultTimeout = setTimeout(() => {
+                    showResultModal(`${months[monthIndex]} - Año ...${y}`, `Posibles fechas: ${years}`);
+                }, 1000); 
+            }
+        }
+
+        // Modal
+        function showResultModal(mainText, subText) {
+            document.getElementById('res-modal-main').innerHTML = mainText;
+            document.getElementById('res-modal-sub').innerHTML = subText;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

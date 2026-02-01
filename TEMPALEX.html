@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TEMPALEX - G.A.D.</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --accent-red: #d32f2f;
+            --dot-off: #444444;
+            --dot-on: #ffd700;
+            --label-text: #999;
+            --letter-size: 2.2rem;
+            --dot-size: 14px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* BARRA SUPERIOR */
+        .top-bar {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .back-btn {
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
+
+        /* CONTENEDOR PRINCIPAL */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 30px 10px; /* Padding lateral reducido para móvil */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px; /* Ancho máximo controlado para que no se expanda demasiado */
+            box-sizing: border-box;
+            position: relative;
+            min-height: 400px;
+            justify-content: center;
+        }
+
+        /* --- ESTILOS TEMPALEX UNIFICADOS --- */
+        
+        /* Contenedor de la fila completa (centrado y compacto) */
+        .row-compact {
+            display: flex;
+            align-items: flex-end; /* Alinear abajo para cuadrar letras y puntos */
+            justify-content: center;
+            gap: 2px; /* Espacio mínimo entre elementos */
+            width: 100%;
+        }
+
+        /* Columna de Letra */
+        .col-char {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            width: 35px; /* Ancho fijo base */
+        }
+
+        /* Columna solo de Punto (Lateral) */
+        .col-dot-only {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Centrado vertical respecto a la letra */
+            width: 25px;
+            padding-bottom: 8px; /* Ajuste óptico para alinear con el centro de la letra */
+        }
+
+        .letter {
+            font-family: 'Arial Black', sans-serif;
+            font-size: var(--letter-size);
+            color: var(--accent-red);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            line-height: 1;
+            cursor: default;
+            user-select: none;
+            margin-bottom: 5px;
+        }
+
+        /* Wrapper del punto */
+        .dot-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 25px;
+            z-index: 10;
+        }
+
+        /* Posicionamiento absoluto para puntos flotantes (Ene/Dic) */
+        .dot-float-top {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .dot-float-bot {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .lbl { font-size: 0.55rem; color: var(--label-text); text-transform: uppercase; font-weight: bold; margin-bottom: 2px; white-space: nowrap; line-height: 1; }
+        .lbl-bot { margin-bottom: 0; margin-top: 2px; }
+        
+        .year-title { color:#777; font-size:0.8rem; letter-spacing:2px; margin: 15px 0 5px 0; font-weight: bold; text-align: center; }
+
+        /* PUNTOS Y RADIOS */
+        input[type="radio"] { display: none; }
+        label { display: flex; justify-content: center; align-items: center; padding: 5px; cursor: pointer; }
+        
+        .dot { width: var(--dot-size); height: var(--dot-size); background-color: var(--dot-off); border: 2px solid #666; border-radius: 50%; transition: all 0.2s; }
+        input[type="radio"]:checked + .dot { background-color: var(--dot-on); border-color: #fff; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); transform: scale(1.3); }
+
+        .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 30px; font-style: italic; padding: 0 10px; }
+
+        /* LOGOS */
+        .corner-logo { position: absolute; bottom: 10px; height: 70px; width: auto; opacity: 0.8; pointer-events: none; }
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
+
+        /* MODAL RESULTADO */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #ffd700; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+        
+        .result-content h2 { color: #ccc; font-size: 1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; }
+
+        /* MEDIA QUERIES (MÓVIL) */
+        @media (max-width: 500px) {
+            :root { --letter-size: 1.6rem; --dot-size: 11px; }
+            .col-char { width: 11%; } /* Fluido en móvil */
+            .col-dot-only { width: 15px; } /* Puntos laterales más pegados */
+            .corner-logo { height: 60px; bottom: 10px; }
+            .lbl { font-size: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+        </a>
+    </div>
+
+    <div class="glass-container">
+        
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
+
+        <div class="row-compact">
+            
+            <div class="col-dot-only">
+                <div class="dot-box"><span class="lbl">Feb</span><label><input type="radio" name="mes" value="Febrero" onchange="calc()"><div class="dot"></div></label></div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Mar</span><label><input type="radio" name="mes" value="Marzo" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">T</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="mes" value="Enero" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Ene</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Abr</span><label><input type="radio" name="mes" value="Abril" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">E</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">May</span><label><input type="radio" name="mes" value="Mayo" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">M</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Jun</span><label><input type="radio" name="mes" value="Junio" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">P</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Jul</span><label><input type="radio" name="mes" value="Julio" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">A</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Ago</span><label><input type="radio" name="mes" value="Agosto" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">L</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Sep</span><label><input type="radio" name="mes" value="Septiembre" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">E</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top"><span class="lbl">Oct</span><label><input type="radio" name="mes" value="Octubre" onchange="calc()"><div class="dot"></div></label></div>
+                <div class="letter">X</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="mes" value="Diciembre" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">Dic</span></div>
+            </div>
+
+            <div class="col-dot-only">
+                <div class="dot-box"><span class="lbl">Nov</span><label><input type="radio" name="mes" value="Noviembre" onchange="calc()"><div class="dot"></div></label></div>
+            </div>
+
+        </div>
+
+        <p class="year-title">AÑO (CENTRAL)</p>
+
+        <div class="row-compact">
+            
+            <div class="col-dot-only">
+                <div class="dot-box"><label><input type="radio" name="anio" value="0" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">0</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">C</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="9" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">9</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">E</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="8" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">8</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">N</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="7" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">7</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">T</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="6" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">6</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">R</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="5" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">5</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">A</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="4" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">4</span></div>
+            </div>
+
+            <div class="col-char">
+                <div class="letter">L</div>
+                <div class="dot-box dot-float-bot"><label><input type="radio" name="anio" value="3" onchange="calc()"><div class="dot"></div></label><span class="lbl lbl-bot">3</span></div>
+            </div>
+
+            <div class="col-dot-only" style="width: 30px;">
+                <div class="dot-box" style="margin-bottom: 10px;">
+                    <label><input type="radio" name="anio" value="1" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-bot">1</span>
+                </div>
+                <div class="dot-box">
+                    <label><input type="radio" name="anio" value="2" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-bot">2</span>
+                </div>
+            </div>
+
+        </div>
+
+        <p class="input-legend">Marca el punto del MES y el punto del AÑO</p>
+
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="result-content">
+                <h2>RESULTADO</h2>
+                <div class="res-modal-main" id="res-modal-main">--</div>
+                <div class="res-modal-sub" id="res-modal-sub">...</div>
+            </div>
+            <button class="close-btn" onclick="closeResult()">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+        let calcTimeout = null;
+
+        function calc() {
+            const mInp = document.querySelector('input[name="mes"]:checked');
+            const aInp = document.querySelector('input[name="anio"]:checked');
+            
+            let mVal = mInp ? mInp.value : null;
+            let aVal = aInp ? aInp.value : null;
+
+            if (mVal && aVal) {
+                let d = parseInt(aVal) % 10;
+                let decades = `Posibles fechas: 200${d} / 201${d} / 202${d}`;
+                
+                if (calcTimeout) clearTimeout(calcTimeout);
+
+                calcTimeout = setTimeout(() => {
+                    showResultModal(`${mVal} - Año ...${aVal}`, decades);
+                }, 1000);
+            }
+        }
+
+        function showResultModal(mainText, subText) {
+            document.getElementById('res-modal-main').innerHTML = mainText;
+            document.getElementById('res-modal-sub').innerHTML = subText;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

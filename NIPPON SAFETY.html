@@ -2,176 +2,272 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>NIPPON SAFETY - CLEAN TEMPLATE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NIPPON SAFETY - G.A.D.</title>
     <style>
-        /* --- GENERAL --- */
-        body { 
-            background-color: #1e1e1e; /* Fondo oscuro limpio */
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; padding: 0; 
-            width: 100%; height: 100vh; 
-            display: flex; flex-direction: column; 
-            overflow: hidden;
+        :root {
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --nippon-red: #ef4444;
+            --nippon-blue: #3b82f6;
+            --dot-off: #444;
         }
-        
-        /* FOOTER CON BOTÓN CALCULAR */
-        .action-footer {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(30, 30, 30, 0.9); 
-            padding: 20px; display: flex; justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(5px);
-        }
-        .btn-calc {
-            background: #22c55e; color: #022c22;
-            font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
-            padding: 15px 50px; border-radius: 12px;
-            font-size: 18px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.5);
-            transition: all 0.2s; border: none;
-            width: 100%; max-width: 500px; cursor: pointer;
-        }
-        .btn-calc:active { transform: scale(0.98); background: #16a34a; }
 
-        /* --- CONTENEDOR GRÁFICO --- */
-        .graphic-container {
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* BARRA SUPERIOR */
+        .top-bar {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .back-btn {
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
+
+        /* CONTENEDOR PRINCIPAL */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 20px 0 100px 0; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
             position: relative;
-            background: #1e1e1e; /* Mismo fondo para integración perfecta */
-            width: 100%; height: 100%;
+            min-height: 500px; /* Altura suficiente para el diagrama */
+            justify-content: center;
         }
 
-        /* LETRAS (Estética Nano Banana) */
-        .letter {
-            position: absolute;
-            font-family: 'Arial Black', sans-serif;
-            font-weight: 900;
-            color: #cc0000; /* Rojo intenso */
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.6);
-            transform-origin: center center;
-            display: flex; justify-content: center; align-items: center;
+        /* --- DIAGRAMA NIPPON --- */
+        .nippon-wrapper {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Elementos (Letras y Puntos) */
+        .n-elem { 
+            position: absolute; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transform: translate(-50%, -50%); 
+            z-index: 20; 
+        }
+
+        /* Letras */
+        .nippon-letter { 
+            font-family: 'Arial Black', sans-serif; 
+            font-weight: 900; 
+            color: #cc0000; 
+            font-size: 2rem; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6); 
+            line-height: 1; 
             pointer-events: none;
-            line-height: 1;
         }
 
-        /* PUNTOS */
-        .dot {
-            position: absolute;
+        /* Puntos */
+        .n-dot {
             border-radius: 50%;
             cursor: pointer;
-            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 10;
+            transition: transform 0.15s, box-shadow 0.2s;
+            border: 2px solid #333;
+            background-color: var(--dot-off);
         }
+
+        /* Punto Rojo (Mes) */
+        .n-dot-red {
+            width: 18px; 
+            height: 18px;
+            background-color: #500; /* Rojo apagado */
+        }
+        .n-dot-red.selected {
+            background-color: var(--nippon-red);
+            border-color: white;
+            transform: scale(1.4);
+            box-shadow: 0 0 15px var(--nippon-red);
+        }
+
+        /* Punto Azul (Año) */
+        .n-dot-blue {
+            width: 28px; 
+            height: 28px;
+            background-color: #002244; /* Azul apagado */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #aaa;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .n-dot-blue.selected {
+            background-color: var(--nippon-blue);
+            border-color: white;
+            color: white;
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--nippon-blue);
+        }
+
+        /* Etiquetas Mes (Ene, Feb...) */
+        .n-lbl {
+            font-size: 0.6rem;
+            color: #aaa;
+            font-weight: bold;
+            position: absolute;
+            white-space: nowrap;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px black;
+            pointer-events: none;
+        }
+        .n-lbl-top { top: -18px; }
+        .n-lbl-bot { bottom: -18px; }
+
+        /* Botón Calcular (Necesario para Nippon) */
+        .btn-calc-nippon {
+            background: linear-gradient(to right, #2563eb, #3b82f6);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            z-index: 50;
+            transition: transform 0.1s;
+        }
+        .btn-calc-nippon:active { transform: scale(0.95); }
+
+        .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 15px; font-style: italic; padding: 0 10px; }
+
+        /* LOGOS */
+        .corner-logo { position: absolute; bottom: 10px; height: 90px; width: auto; opacity: 0.8; pointer-events: none; }
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
+
+        /* MODAL RESULTADO */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #3b82f6; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
         
-        /* Rojo: Meses */
-        .dot-red {
-            background-color: #ef4444; 
-            border: 2px solid #1e1e1e;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-        }
-        
-        /* Azul: Años */
-        .dot-blue {
-            background-color: #3b82f6;
-            border: 2px solid #1e1e1e;
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-            display: flex; justify-content: center; align-items: center;
-            color: white; font-weight: 900; font-family: sans-serif;
-        }
+        .result-content h2 { color: #ccc; font-size: 1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #3b82f6; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; }
 
-        /* SELECCIÓN */
-        .dot.selected { transform: scale(1.5); border-color: white; z-index: 20; }
-        .dot-red.selected { background-color: #dc2626; box-shadow: 0 0 25px #ff0000; }
-        .dot-blue.selected { background-color: #1d4ed8; box-shadow: 0 0 25px #0088ff; }
-
-        /* --- MOTOR 1: ESCRITORIO (>900px) --- */
-        @media (min-width: 901px) {
-            #mobile-engine { display: none !important; }
-            #desktop-engine { 
-                flex-grow: 1; display: flex; justify-content: center; align-items: center; 
-                padding-bottom: 80px; /* Espacio para el botón */
-            }
-            
-            #glassBoard {
-                width: 900px; height: 500px;
-                position: relative;
-                /* Borde sutil opcional para delimitar área en PC */
-                /* border: 1px solid #333; border-radius: 20px; */
-            }
-            
-            .letter { font-size: 65px; }
-            .dot { width: 26px; height: 26px; }
-            .dot-blue { font-size: 13px; width: 32px; height: 32px; }
+        /* RESPONSIVE SCALING */
+        @media (max-width: 450px) {
+            .nippon-wrapper { transform: scale(0.85); transform-origin: center top; margin-bottom: -40px; }
+            .corner-logo { height: 60px; bottom: 10px; }
         }
-
-        /* --- MOTOR 2: MÓVIL (<=900px) --- */
-        @media (max-width: 900px) {
-            #desktop-engine { display: none !important; }
-            #mobile-engine { 
-                flex-grow: 1; display: flex; flex-direction: column; justify-content: center;
-                width: 100vw; height: calc(100vh - 100px); 
-            }
-            
-            #mobileBoard {
-                position: relative; width: 100%; aspect-ratio: 16/10;
-            }
-            
-            /* Escalado relativo agresivo para móvil */
-            .letter { font-size: 14vw; }
-            .dot { width: 6.5vw; height: 6.5vw; }
-            .dot-blue { font-size: 3.5vw; width: 8vw; height: 8vw; }
+        @media (max-width: 360px) {
+            .nippon-wrapper { transform: scale(0.7); margin-bottom: -80px; }
         }
-
-        /* MODAL */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .result-box { background: #1e293b; border: 2px solid #22c55e; padding: 30px; border-radius: 20px; text-align: center; max-width: 90%; width: 400px; color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        .res-month { font-size: 2.5rem; font-weight: 900; color: #ef4444; text-transform: uppercase; margin-bottom: 5px; line-height: 1; }
-        .res-years { font-family: monospace; font-size: 1.8rem; color: #4ade80; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="desktop-engine">
-        <div id="glassBoard" class="graphic-container"></div>
+    <div class="top-bar">
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+        </a>
     </div>
 
-    <div id="mobile-engine">
-        <div id="mobileBoard" class="graphic-container"></div>
-    </div>
+    <div class="glass-container">
+        
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
 
-    <div class="action-footer">
-        <button onclick="calcResult()" class="btn-calc">
-            CALCULAR FECHA
-        </button>
-    </div>
-
-    <div id="resultModal" class="modal-overlay" onclick="closeResult()">
-        <div class="result-box" onclick="event.stopPropagation()">
-            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2">Mes Fabricación</p>
-            <div id="resMonthName" class="res-month">--</div>
-            
-            <div class="mt-6 pt-6 border-t border-gray-700">
-                <div class="text-[10px] text-gray-500 mb-1 font-mono">COMBINACIÓN: <span id="resPattern" class="text-blue-400 font-bold"></span></div>
-                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Años Compatibles</p>
-                <div id="resYearsList" class="res-years">--</div>
+        <div class="nippon-wrapper" id="nipponBoard">
             </div>
-            
-            <button onclick="closeResult()" class="mt-8 bg-gray-700 hover:bg-gray-600 text-white w-full py-3 rounded-xl font-bold transition">VOLVER</button>
+
+        <button onclick="calcNippon()" class="btn-calc-nippon">CALCULAR</button>
+
+        <p class="input-legend">
+            Puntos ROJOS = Mes (Selecciona 1)<br>
+            Puntos AZULES = Año (Selecciona combinaciones)
+        </p>
+
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="result-content">
+                <h2>RESULTADO</h2>
+                <div class="res-modal-main" id="res-modal-main">--</div>
+                <div class="res-modal-sub" id="res-modal-sub">...</div>
+            </div>
+            <button class="close-btn" onclick="closeResult()">CERRAR</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN
-        const firebaseConfig = { apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag", authDomain: "gad-alicante-v4.firebaseapp.com", databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app", projectId: "gad-alicante-v4", storageBucket: "gad-alicante-v4.firebasestorage.app", messagingSenderId: "119727545224", appId: "1:119727545224:web:36880c50d196c456cdb83d" };
-        const NODE_NAME = "nippon_clean"; 
-        let db = null;
-        let selected = { m: null, yDots: [] };
+        // --- CONFIGURACIÓN DE ELEMENTOS ---
+        const ELEMENTS = [
+            // FILA SUPERIOR (N-I-P-P-O-N) y MESES 1-6
+            { type: 'letter', char: 'N', x: 25, y: 35, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 25, label: 'ENE', lblPos: 'top' },
+            { type: 'letter', char: 'I', x: 35, y: 30, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 20, label: 'FEB', lblPos: 'top' },
+            { type: 'letter', char: 'P', x: 45, y: 28, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 18, label: 'MAR', lblPos: 'top' },
+            { type: 'letter', char: 'P', x: 55, y: 28, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 18, label: 'ABR', lblPos: 'top' },
+            { type: 'letter', char: 'O', x: 65, y: 30, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 20, label: 'MAY', lblPos: 'top' },
+            { type: 'letter', char: 'N', x: 75, y: 35, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 25, label: 'JUN', lblPos: 'top' },
+            
+            // FILA INFERIOR (S-A-F-E-T-Y) y MESES 7-12
+            { type: 'letter', char: 'S', x: 25, y: 65, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 75, label: 'JUL', lblPos: 'bot' },
+            { type: 'letter', char: 'A', x: 35, y: 70, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 80, label: 'AGO', lblPos: 'bot' },
+            { type: 'letter', char: 'F', x: 45, y: 73, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 83, label: 'SEP', lblPos: 'bot' },
+            { type: 'letter', char: 'E', x: 55, y: 73, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 83, label: 'OCT', lblPos: 'bot' },
+            { type: 'letter', char: 'T', x: 65, y: 70, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 80, label: 'NOV', lblPos: 'bot' },
+            { type: 'letter', char: 'Y', x: 75, y: 65, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 75, label: 'DIC', lblPos: 'bot' },
+            
+            // PUNTOS AZULES (AÑOS)
+            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 15, y: 35 },
+            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 85, y: 35 },
+            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 15, y: 65 },
+            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 85, y: 65 },
+            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 35, y: 50 },
+            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 65, y: 50 }
+        ];
 
         // TABLA DE AÑOS
         const YEAR_TABLE = {
@@ -181,126 +277,98 @@
             "AF": [2011], "BF": [2012], "CF": [2013], "DF": [2014], "ABF": [2015], "ACF": [2016], "ADF": [2017], "BCF": [2018], "BDF": [2019], "CDF": [2020]
         };
 
-        // COORDENADAS EXACTAS (DISEÑO NANO BANANA)
-        const ELEMENTS = [
-            // NIPPON (Arriba)
-            { type: 'letter', char: 'N', x: 25, y: 40, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 30 },
-            { type: 'letter', char: 'I', x: 35, y: 35, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 25 },
-            { type: 'letter', char: 'P', x: 45, y: 32, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 22 },
-            { type: 'letter', char: 'P', x: 55, y: 32, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 22 },
-            { type: 'letter', char: 'O', x: 65, y: 35, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 25 },
-            { type: 'letter', char: 'N', x: 75, y: 40, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 30 },
+        // ESTADO
+        let state = { m: null, yDots: [] };
 
-            // SAFETY (Abajo)
-            { type: 'letter', char: 'S', x: 25, y: 60, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 70 },
-            { type: 'letter', char: 'A', x: 35, y: 65, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 75 },
-            { type: 'letter', char: 'F', x: 45, y: 68, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 78 },
-            { type: 'letter', char: 'E', x: 55, y: 68, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 78 },
-            { type: 'letter', char: 'T', x: 65, y: 65, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 75 },
-            { type: 'letter', char: 'Y', x: 75, y: 60, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 70 },
+        // INIT
+        window.onload = () => { renderBoard(); };
 
-            // AÑOS (AZULES)
-            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 15, y: 40 },
-            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 85, y: 40 },
-            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 15, y: 60 },
-            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 85, y: 60 },
-            
-            // E y F (Huecos Superiores)
-            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 56 },
-            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 56 }
-        ];
-
-        window.onload = function() {
-            renderScene();
-            try {
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-                firebase.auth().onAuthStateChanged(u => { if(u) initSync(); });
-            } catch(e) {}
-        };
-
-        function initSync() {
-            db.ref(`LUNAS/${NODE_NAME}`).on('value', snap => { 
-                if(snap.val()) { selected = snap.val(); renderScene(); } // Sync opcional
-            }); 
-        }
-
-        function renderScene() {
-            const isMobile = window.innerWidth <= 900;
-            const container = isMobile ? document.getElementById('mobileBoard') : document.getElementById('glassBoard');
+        function renderBoard() {
+            const container = document.getElementById('nipponBoard');
             container.innerHTML = '';
 
             ELEMENTS.forEach(el => {
                 const div = document.createElement('div');
+                div.className = 'n-elem';
                 div.style.left = el.x + '%';
                 div.style.top = el.y + '%';
-                
-                if (el.type === 'letter') {
-                    div.className = 'letter';
-                    div.textContent = el.char;
-                    div.style.transform = `translate(-50%, -50%) rotate(${el.rot}deg)`;
-                } else if (el.type === 'dot') {
-                    div.className = `dot dot-${el.color}`;
-                    div.id = el.id;
-                    if(el.label) div.textContent = el.label;
-                    
-                    let isSelected = false;
-                    if (el.color === 'red') isSelected = (selected.m === el.val);
-                    else isSelected = selected.yDots.includes(el.val);
-                    
-                    if(isSelected) div.classList.add('selected');
 
-                    div.onclick = (e) => handleClick(e, el);
-                    div.style.transform = `translate(-50%, -50%)`;
+                if (el.type === 'letter') {
+                    const span = document.createElement('div');
+                    span.className = 'nippon-letter';
+                    span.textContent = el.char;
+                    span.style.transform = `rotate(${el.rot}deg)`;
+                    div.appendChild(span);
+                } 
+                else if (el.type === 'dot') {
+                    const dot = document.createElement('div');
+                    dot.className = `n-dot n-dot-${el.color}`;
+                    if(el.label && el.color === 'blue') dot.textContent = el.label;
+
+                    // Estado seleccionado
+                    let isSel = false;
+                    if(el.color === 'red') isSel = (state.m === el.val);
+                    else isSel = state.yDots.includes(el.val);
+                    
+                    if(isSel) dot.classList.add('selected');
+
+                    // Click handler
+                    dot.onclick = () => handleDotClick(el);
+
+                    // Etiqueta Mes
+                    if(el.label && el.color === 'red') {
+                        const lbl = document.createElement('div');
+                        lbl.className = `n-lbl n-lbl-${el.lblPos}`;
+                        lbl.textContent = el.label;
+                        div.appendChild(lbl);
+                    }
+
+                    div.appendChild(dot);
                 }
                 container.appendChild(div);
             });
         }
 
-        function handleClick(e, el) {
-            e.stopPropagation();
+        function handleDotClick(el) {
             if (el.color === 'red') {
-                selected.m = (selected.m === el.val) ? null : el.val;
+                state.m = (state.m === el.val) ? null : el.val;
             } else {
-                const idx = selected.yDots.indexOf(el.val);
-                if (idx > -1) selected.yDots.splice(idx, 1);
-                else selected.yDots.push(el.val);
-                selected.yDots.sort();
+                const idx = state.yDots.indexOf(el.val);
+                if(idx > -1) state.yDots.splice(idx, 1);
+                else state.yDots.push(el.val);
+                state.yDots.sort();
             }
-            renderScene();
-            if(db) db.ref(`LUNAS/${NODE_NAME}`).set(selected).catch(console.warn);
+            renderBoard();
         }
 
-        function calcResult() {
-            if (selected.m === null && selected.yDots.length === 0) {
-                // No mostrar nada si no hay selección
-                return;
-            }
-
+        function calcNippon() {
             const months = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
-            const pattern = selected.yDots.join('');
             
-            document.getElementById('resMonthName').textContent = selected.m ? months[selected.m] : "--";
-            document.getElementById('resPattern').textContent = pattern || "Ninguno";
-
+            const pattern = state.yDots.join('');
+            const mText = state.m ? months[state.m] : "MES ?";
+            
             let years = YEAR_TABLE[pattern];
+            let subText = "Combinación de puntos inválida";
             
-            if(years) {
-                document.getElementById('resYearsList').className = "res-years text-green-400";
-                document.getElementById('resYearsList').textContent = years.join(", ");
-            } else {
-                if (selected.yDots.length > 0) {
-                    document.getElementById('resYearsList').className = "res-years text-red-400 text-sm";
-                    document.getElementById('resYearsList').innerHTML = "COMBINACIÓN NO VÁLIDA";
-                } else {
-                    document.getElementById('resYearsList').textContent = "--";
-                }
+            if (years) {
+                subText = `Posibles fechas: ${years.join(" / ")}`;
+            } else if (state.yDots.length === 0) {
+                subText = "Selecciona puntos AZULES para el año";
             }
+
+            showResultModal(mText, subText);
+        }
+
+        function showResultModal(mainText, subText) {
+            document.getElementById('res-modal-main').innerHTML = mainText;
+            document.getElementById('res-modal-sub').innerHTML = subText;
             document.getElementById('resultModal').style.display = 'flex';
         }
 
-        function closeResult() { document.getElementById('resultModal').style.display = 'none'; }
-        window.addEventListener('resize', renderScene);
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
     </script>
 </body>
 </html>

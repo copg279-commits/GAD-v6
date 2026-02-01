@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Decodificador XYG - G.A.D. System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-bg: #262626;
+            --glass-text: #e5e5e5;
+            --input-bg: #ffffff;
+            --input-text: #000000;
+            --accent-blue: #3b82f6;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Panel estilo Cristal */
+        .glass-panel {
+            background-color: var(--panel-bg);
+            border: 1px solid #333;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px; /* asegura ajuste en móvil */
+            padding: 2rem;
+            position: relative;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Tipografía Marca */
+        .brand-logo {
+            font-family: 'Arial Black', 'Impact', sans-serif;
+            font-size: 3.5rem;
+            line-height: 1;
+            letter-spacing: -2px;
+            color: var(--glass-text);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tech-text-laminated {
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--glass-text);
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .tech-text-safety {
+             font-family: 'Courier New', Courier, monospace;
+             color: var(--glass-text);
+             font-size: 0.9rem;
+             font-weight: normal;
+             letter-spacing: 0.5px;
+             margin-bottom: 10px;
+        }
+
+        .dot-code {
+            font-family: 'Courier New', monospace;
+            color: var(--glass-text);
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .homologation-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #444;
+            width: 100%;
+        }
+        
+        .e-circle {
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            font-family: sans-serif;
+        }
+
+        .r-code {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* Inputs Personalizados */
+        .glass-input {
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            border: 2px solid #555;
+            border-radius: 4px;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .glass-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        /* Input Grande del Año */
+        .year-input {
+            font-size: 2.5rem;
+            width: 80px;
+            height: 60px;
+            background: transparent;
+            color: var(--glass-text);
+            border: 2px dashed #555;
+        }
+        .year-input:focus {
+            border-style: solid;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Inputs de Suma (Mes/Día) */
+        .sum-input {
+            width: 18%;
+            max-width: 50px;
+            aspect-ratio: 1; 
+            font-size: 1.2rem;
+            padding: 0;
+        }
+
+        /* Cajas de Resultado Parcial */
+        .result-display-partial {
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1rem;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .label-desc {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+            width: 100%;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .calc-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #444;
+        }
+        
+        .inputs-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        /* Botón Calcular */
+        .calc-button {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: linear-gradient(to right, #2563eb, #3b82f6);
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .calc-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        
+        /* Estilo para los años dinámicos */
+        .dynamic-years {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="w-full max-w-[500px] mb-4">
+        <a href="index.html" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors w-fit text-decoration-none">
+            <span>←</span> VOLVER
+        </a>
+    </div>
+
+    <div class="glass-panel">
+        
+        <div class="brand-logo">XYG</div>
+        <div class="tech-text-laminated">LAMINATED</div>
+        <div class="tech-text-safety">SAFETY GLASS</div>
+        <div class="dot-code">DOT-563 AS-1 M-668</div>
+        
+        <div class="homologation-container">
+            <div class="e-circle">E1</div>
+            <span class="r-code">43R-0015322</span>
+        </div>
+
+        <div class="mt-6 relative flex flex-col items-center">
+            <span class="label-desc text-center mb-2" style="text-align: center;">INTRODUCE EL DÍGITO DE LA PRIMERA LÍNEA</span>
+            <div class="flex justify-center items-center gap-4">
+                <span class="text-2xl text-gray-500 tracking-widest">...</span>
+                <input type="number" id="yearInput" class="glass-input year-input" placeholder="#" oninput="handleYearInput(this)">
+                <span class="text-2xl text-gray-500 tracking-widest">...</span>
+            </div>
+            <div id="dynamicYearsDisplay" class="dynamic-years text-blue-400 text-sm mt-3 h-6 font-bold"></div>
+        </div>
+
+        <div class="calc-section">
+             <span class="label-desc">INTRODUCE LOS NÚMEROS DE LA SEGUNDA LÍNEA</span>
+             <div class="inputs-row">
+                <div class="flex gap-2 flex-grow justify-center">
+                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
+                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
+                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
+                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
+                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
+                </div>
+                <div class="flex flex-col items-center">
+                     <span class="text-[0.6rem] text-gray-500 mb-1">SUMA</span>
+                     <div id="monthResultPartial" class="result-display-partial text-yellow-400">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="calc-section">
+             <span class="label-desc">INTRODUCE LOS NÚMEROS DE LA TERCERA LÍNEA</span>
+             <div class="inputs-row">
+                <div class="flex gap-2 flex-grow justify-center">
+                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
+                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
+                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
+                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
+                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
+                </div>
+                <div class="flex flex-col items-center">
+                     <span class="text-[0.6rem] text-gray-500 mb-1">SUMA</span>
+                     <div id="dayResultPartial" class="result-display-partial text-green-400">0</div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="showFinalResult()" class="calc-button">
+            CALCULAR FECHA COMPLETA
+        </button>
+
+    </div>
+
+    <div id="resultModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-800 border-2 border-blue-500 rounded-2xl p-6 w-full max-w-md text-center shadow-2xl transform transition-all scale-95" id="modalContent">
+            <h3 class="text-gray-400 uppercase tracking-widest mb-4 font-bold">Fecha de Fabricación</h3>
+            
+            <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10 mb-6">
+                <h2 id="finalDateText" class="text-3xl md:text-4xl font-bold text-white leading-relaxed">
+                    ---
+                </h2>
+                <p class="text-blue-400 text-sm mt-2">Día / Mes / Año</p>
+            </div>
+
+            <button onclick="closeModal()" class="bg-gray-600 hover:bg-gray-500 text-white w-full py-3 rounded-xl font-bold transition-colors">
+                CERRAR
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Función para validar input y MOSTRAR AÑOS DINÁMICAMENTE
+        function handleYearInput(input) {
+            // Limitar a 1 dígito
+            if (input.value.length > 1) {
+                input.value = input.value.slice(-1);
+            }
+
+            const val = input.value;
+            const display = document.getElementById('dynamicYearsDisplay');
+
+            if (val !== "") {
+                // Generar décadas (199x, 200x, 201x, 202x)
+                const decades = [199, 200, 201, 202];
+                const yearsStr = decades.map(d => `${d}${val}`).join(" <span class='text-gray-600'>/</span> ");
+                display.innerHTML = yearsStr;
+            } else {
+                display.innerHTML = "";
+            }
+        }
+
+        // Cálculo parcial para feedback inmediato
+        function calcSumPartial(type) {
+            const inputs = document.querySelectorAll(`.${type}-inp`);
+            let total = 0;
+            inputs.forEach(inp => {
+                const val = parseInt(inp.value);
+                if (!isNaN(val)) total += val;
+            });
+            document.getElementById(`${type}ResultPartial`).innerText = total;
+            return total;
+        }
+
+        // Lógica del Botón Calcular y Modal
+        function showFinalResult() {
+            // 1. Obtener Datos
+            const yearDigit = document.getElementById('yearInput').value;
+            const monthSum = calcSumPartial('month');
+            const daySum = calcSumPartial('day');
+
+            // 2. Validaciones Básicas
+            let errorMsg = "";
+            if (yearDigit === "") errorMsg += "Falta el dígito de la primera línea.\n";
+            if (monthSum === 0) errorMsg += "La suma de la segunda línea es 0.\n";
+            if (daySum === 0) errorMsg += "La suma de la tercera línea es 0.\n";
+            
+            if (monthSum > 12) errorMsg += "Error: Mes superior a 12.\n";
+            if (daySum > 31) errorMsg += "Error: Día superior a 31.\n";
+
+            const modalText = document.getElementById('finalDateText');
+
+            if (errorMsg !== "") {
+                modalText.innerHTML = `<span class="text-red-400 text-xl">${errorMsg.replace(/\n/g, '<br>')}</span>`;
+            } else {
+                // 3. Formatear Fecha Final
+                const dayStr = daySum.toString().padStart(2, '0');
+                const monthStr = monthSum.toString().padStart(2, '0');
+                
+                // Mostrar años posibles en el modal también
+                const decadeBase = [199, 200, 201, 202];
+                const possibleYears = decadeBase.map(d => `${d}${yearDigit}`).join("/");
+
+                modalText.innerHTML = `
+                    <span class="text-green-400">${dayStr}</span> / 
+                    <span class="text-yellow-400">${monthStr}</span> / 
+                    <span class="text-blue-400">...${yearDigit}</span>
+                    <div class="text-lg text-gray-400 mt-2 font-mono">${possibleYears}</div>
+                `;
+            }
+
+            // 4. Mostrar Modal con animación
+            const modal = document.getElementById('resultModal');
+            const modalContent = document.getElementById('modalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('resultModal');
+            const modalContent = document.getElementById('modalContent');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+    </script>
+</body>
+</html>

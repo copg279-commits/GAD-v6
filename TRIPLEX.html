@@ -2,414 +2,532 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>TRIPLEX MASTER DECODER</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TRIPLEX - G.A.D.</title>
     <style>
-        /* --- GENERAL --- */
-        body { 
-            background-color: #1e1e1e; 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; padding: 0; 
-            width: 100%; min-height: 100vh; 
-            display: flex; flex-direction: column; 
-            color: white; overflow-x: hidden;
+        :root {
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --accent-red: #d32f2f;
+            --btn-green: #22c55e;
+            --dot-off: #444444;
+            --dot-on: #ffd700;
+            --preview-text: #ffd700;
+            --error-text: #ff4444; /* Color rojo para el error */
+            --letter-size: 2.2rem; 
+            --letter-size-sm: 2.0rem;
+            --dot-size: 15px;
         }
 
-        /* HEADER */
-        .controls { background: #1f2937; padding: 10px 15px; display: flex; justify-content: space-between; border-bottom: 1px solid #374151; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* BARRA SUPERIOR */
+        .top-bar {
+            width: 100%;
+            max-width: 750px; 
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start;
+            padding: 0 2px;
+            box-sizing: border-box;
+        }
         
-        /* ZONA DE TRABAJO */
-        .workspace { 
-            flex-grow: 1; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            padding: 20px; width: 100%;
+        .back-btn {
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
 
-        .glass-simulation {
-            display: flex; flex-direction: column; align-items: center;
-            width: 100%; max-width: 800px;
-            /* Efecto cristal sutil */
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 40px 10px;
+        /* CONTENEDOR PRINCIPAL */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 40px 2px 90px 2px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 750px; 
+            box-sizing: border-box;
             position: relative;
+            min-height: 450px;
+            justify-content: center;
+            overflow: hidden; 
         }
 
-        /* LOGO XXX */
-        .logo-xxx {
+        /* --- FILAS FLEXIBLES --- */
+        .row-compact {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center; 
+            width: 100%;
+            gap: 0px; 
+        }
+
+        /* COLUMNAS */
+        .col-char {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex: 1; 
+            min-width: 0; 
+        }
+        
+        .col-spacer { width: 15px; } 
+
+        /* ESTILO LETRAS */
+        .letter {
             font-family: 'Arial Black', sans-serif;
-            font-weight: 900; font-size: 4rem;
-            line-height: 0.8; letter-spacing: -5px;
-            color: transparent;
-            -webkit-text-stroke: 2px #e5e7eb;
-            opacity: 0.5; margin-bottom: 40px;
+            font-size: var(--letter-size);
+            color: var(--accent-red);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            line-height: 1; 
+            cursor: default;
             user-select: none;
-        }
-
-        /* TEXTOS DE LA LUNA */
-        .word-row {
-            display: flex; justify-content: center; gap: 6px;
-            margin-bottom: 5px; position: relative;
+            text-align: center;
+            margin: 5px 0;
         }
         
-        .word-sundym {
-            font-family: sans-serif; font-weight: bold; font-size: 1.5rem;
-            color: #d1d5db; margin: 20px 0; letter-spacing: 2px;
-            text-transform: capitalize; opacity: 0.8;
+        .letter-lower {
+            font-size: var(--letter-size-sm); 
+            font-weight: 900;
+            text-transform: none !important; 
+            color: #ccc; 
+            text-shadow: 1px 1px 2px #000;
         }
 
-        /* COLUMNAS DE CARACTERES */
-        .char-col {
-            display: flex; flex-direction: column; align-items: center;
-            width: 32px; position: relative;
-            cursor: pointer;
+        /* TÍTULO CENTRAL (Sundym) */
+        .mid-title {
+            color: #888;
+            font-weight: bold;
+            font-size: 2.2rem;
+            margin: 15px 0;
+            font-family: 'Times New Roman', serif;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* CAJA DEL PUNTO */
+        .dot-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 25px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
         }
         
-        /* ZONA DE PUNTOS SUPERIORES (Para TRIPLEX) */
-        .dots-top-container {
-            height: 35px; /* Altura fija para albergar 1 o 2 puntos */
-            display: flex; flex-direction: column-reverse; /* Puntos crecen hacia arriba */
-            align-items: center; justify-content: flex-start;
-            gap: 3px; margin-bottom: 2px;
+        /* Caja especial para DOBLE PUNTO (:) en T y X */
+        .dot-box-double {
+            height: 50px; 
+            justify-content: space-between;
+            padding-bottom: 5px;
         }
 
-        .char-text {
-            font-family: 'Courier New', monospace; font-weight: bold; font-size: 2.2rem;
-            color: #e5e7eb; height: 40px; display: flex; align-items: center; justify-content: center;
-            user-select: none;
-        }
+        /* Posicionamiento Absoluto de Puntos */
+        .pos-top { margin-bottom: 0px; } 
+        .pos-bot { margin-top: 5px; }    
 
-        /* PUNTOS */
-        .dot {
-            width: 12px; height: 12px; border-radius: 50%;
-            border: 2px solid #6b7280; background: #1f2937;
-            transition: all 0.15s; flex-shrink: 0;
-        }
-
-        /* MES (ARRIBA) - CYAN */
-        .dot-month {
-            opacity: 0.2; /* Casi invisible si no está activo */
-            border-color: #374151;
-        }
-        .dot-month.active {
-            opacity: 1;
-            background: #06b6d4; border-color: white;
-            box-shadow: 0 0 10px #22d3ee;
-        }
-
-        /* AÑO (ABAJO) - ROJO */
-        .dots-bottom-container {
-            height: 25px; display: flex; align-items: flex-start; justify-content: center; margin-top: 5px;
-        }
-        .dot-year:hover { border-color: #f87171; }
-        .dot-year.active {
-            background: #dc2626; border-color: white;
-            box-shadow: 0 0 10px #f87171; transform: scale(1.3);
-        }
-        
-        /* ETIQUETA NÚMERO AÑO */
+        /* ETIQUETAS NUMÉRICAS */
         .lbl-num {
-            font-size: 0.6rem; color: #f87171; font-weight: bold; margin-top: 2px;
-            opacity: 0.7; position: absolute; bottom: -15px;
+            font-size: 0.8rem;
+            color: #999;
+            font-weight: bold;
+            margin-top: 2px;
         }
 
-        /* PANEL DE RESULTADOS AUTOMÁTICO */
-        .result-panel {
-            width: 100%; background: #1f2937; border-top: 1px solid #374151;
-            padding: 20px; display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.3); z-index: 100;
+        /* PREVISUALIZACIÓN EN TIEMPO REAL */
+        .live-preview {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #444;
+            color: var(--preview-text);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            min-height: 24px;
+            text-align: center;
+            width: 80%;
+            margin-top: 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
-        
-        .res-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-            width: 100%; max-width: 600px; text-align: center;
+        /* Estilo ERROR */
+        .preview-error {
+            color: var(--error-text) !important;
+            border-color: var(--error-text);
+            animation: pulseError 1s infinite;
         }
-        
-        .res-box { background: #111827; padding: 10px; border-radius: 10px; border: 1px solid #374151; }
-        .res-label { font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .res-value { font-weight: 900; font-size: 1.2rem; }
-        
-        .val-month { color: #22d3ee; font-size: 1.4rem; text-transform: uppercase; }
-        .val-year { color: #f87171; font-family: monospace; }
+        @keyframes pulseError {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
 
-        /* AJUSTES MÓVIL */
+        /* PUNTOS Y RADIOS */
+        input[type="checkbox"] { display: none; } 
+        input[type="radio"] { display: none; }    
+        
+        label { 
+            display: flex; justify-content: center; align-items: center; 
+            padding: 6px; cursor: pointer; width: 100%;
+        }
+        
+        .dot { 
+            width: var(--dot-size); height: var(--dot-size); 
+            background-color: var(--dot-off); border: 2px solid #666; 
+            border-radius: 50%; transition: all 0.2s; flex-shrink: 0; 
+        }
+        
+        input:checked + .dot { 
+            background-color: var(--dot-on); border-color: #fff; 
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.9); transform: scale(1.2); 
+        }
+
+        /* BOTÓN CALCULAR (VERDE) */
+        .btn-calc {
+            background: linear-gradient(to bottom, #22c55e, #16a34a);
+            color: #fff;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+        .btn-calc:active { transform: scale(0.95); }
+
+        /* LOGOS */
+        .corner-logo { 
+            position: absolute; bottom: 15px; 
+            height: 90px; 
+            width: auto; opacity: 0.8; pointer-events: none; 
+        }
+        .logo-left { left: 15px; }
+        .logo-right { right: 15px; }
+
+        /* MODAL RESULTADO */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #22c55e; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+        
+        .result-content h2 { color: #ccc; font-size: 1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #22c55e; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; }
+
+        /* MEDIA QUERIES (MÓVIL CRÍTICO) */
         @media (max-width: 600px) {
-            .char-text { font-size: 1.5rem; }
-            .word-sundym { font-size: 1.2rem; }
-            .logo-xxx { font-size: 3rem; }
-            .char-col { width: 22px; }
-            .dot { width: 9px; height: 9px; }
-            .word-row { gap: 1px; }
-            .dots-top-container { height: 25px; gap: 2px; }
+            :root { 
+                --letter-size: 1.8rem; 
+                --letter-size-sm: 1.6rem; 
+                --dot-size: 11px; 
+            }
+            .lbl-num { font-size: 0.65rem; }
+            .mid-title { font-size: 1.8rem; }
+            
+            /* Ajuste de logos en móvil 60px */
+            .corner-logo { height: 60px; bottom: 10px; }
+            .logo-left { left: 10px; }
+            .logo-right { right: 10px; }
+            
+            .glass-container { padding-top: 30px; }
+            .dot-box-double { height: 40px; } 
         }
     </style>
 </head>
 <body>
 
-    <div class="controls">
-        <a href="menu_lunas.html" class="text-gray-400 font-bold flex items-center gap-2 text-sm"><i class="fas fa-arrow-left"></i> VOLVER</a>
-        <div id="statusBadge" class="text-xs text-gray-500 font-bold border border-gray-600 px-2 rounded flex items-center">OFFLINE</div>
+    <div class="top-bar">
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+        </a>
     </div>
 
-    <div class="workspace">
-        <div class="glass-simulation">
-            <div class="logo-xxx">XXX</div>
+    <div class="glass-container">
+        
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
 
-            <div class="word-row" id="rowTriplex">
-                </div>
-
-            <div class="word-sundym">Sundym</div>
-
-            <div class="word-row" id="rowToughened">
-                </div>
+        <div class="row-compact" style="width: 85%;">
             
-            <p class="text-xs text-gray-500 mt-8 text-center px-4 italic max-w-md">
-                Haz clic en <strong>T, R, I, P, X</strong> para alternar: 1 punto > 2 puntos > nada.<br>
-                (T=Ene/May, R=Feb/Jun, I=Mar/Jul, P=Abr/Ago, X=Nov/Dic).
-            </p>
+            <div class="col-char">
+                <div class="dot-box dot-box-double pos-top">
+                    <label><input type="checkbox" name="chk_t_top" onchange="updateRealTime()"><div class="dot"></div></label>
+                    <label><input type="checkbox" name="chk_t_bot" onchange="updateRealTime()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">T</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box pos-top"><label><input type="checkbox" name="chk_r" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <div class="letter">R</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box pos-top"></div> <div class="letter">I</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box pos-top"></div>
+                <div class="letter">P</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box pos-top"></div>
+                <div class="letter">L</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box pos-top"><label><input type="checkbox" name="chk_e" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <div class="letter">E</div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-box-double pos-top">
+                    <label><input type="checkbox" name="chk_x_top" onchange="updateRealTime()"><div class="dot"></div></label>
+                    <label><input type="checkbox" name="chk_x_bot" onchange="updateRealTime()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">X</div>
+            </div>
+
         </div>
+
+        <div class="mid-title">Sundym</div>
+
+        <div class="row-compact">
+            
+            <div class="col-char">
+                <div class="letter letter-lower">t</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="1" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">1</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">o</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="2" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">2</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">u</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="3" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">3</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">g</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="4" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">4</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">h</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="5" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">5</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">e</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="6" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">6</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">n</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="7" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">7</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">e</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="8" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">8</span>
+            </div>
+
+            <div class="col-char">
+                <div class="letter letter-lower">d</div>
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="9" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">9</span>
+            </div>
+
+            <div class="col-spacer"></div>
+
+            <div class="col-char" style="flex: 0.5;">
+                <div class="letter letter-lower" style="opacity: 0;">.</div> 
+                <div class="dot-box pos-bot"><label><input type="radio" name="anio" value="0" onchange="updateRealTime()"><div class="dot"></div></label></div>
+                <span class="lbl-num">0</span>
+            </div>
+
+        </div>
+
+        <div id="livePreview" class="live-preview">Esperando selección...</div>
+
+        <button class="btn-calc" onclick="calculateResult()">CALCULAR</button>
+
     </div>
 
-    <div class="result-panel">
-        <div class="res-grid">
-            <div class="res-box" style="border-color: #22d3ee;">
-                <div class="res-label text-cyan-400">MES (TRIPLEX)</div>
-                <div id="resMonth" class="res-value val-month">--</div>
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="result-content">
+                <h2>RESULTADO DETALLADO</h2>
+                <div class="res-modal-main" id="res-modal-main">--</div>
+                <div class="res-modal-sub" id="res-modal-sub">...</div>
             </div>
-            <div class="res-box" style="border-color: #f87171;">
-                <div class="res-label text-red-400">AÑO (TOUGHENED)</div>
-                <div id="resYear" class="res-value val-year">--</div>
-            </div>
+            <button class="close-btn" onclick="closeResult()">CERRAR</button>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyCY8V_P7m8lZUvGbMVlGaa-GVhbmyikmag", authDomain: "gad-alicante-v4.firebaseapp.com", databaseURL: "https://gad-alicante-v4-default-rtdb.europe-west1.firebasedatabase.app", projectId: "gad-alicante-v4" };
-        const NODE_NAME = "triplex_master_v3";
-        let db = null;
+        // Función principal que determina el mes y año según tus reglas
+        function detectDate() {
+            // 1. Detectar Estado de Puntos (Mes)
+            const t_top = document.querySelector('input[name="chk_t_top"]').checked;
+            const t_bot = document.querySelector('input[name="chk_t_bot"]').checked;
+            const t_colon = t_top && t_bot;
+            const t_dot = (t_top || t_bot) && !t_colon;
 
-        // CONFIGURACIÓN TRIPLEX
-        // maxDots: Cuántos puntos puede tener esa letra (1 o 2)
-        const CONFIG_TRIPLEX = [
-            { char: 'T', maxDots: 2 }, // Ene, May
-            { char: 'R', maxDots: 2 }, // Feb, Jun
-            { char: 'I', maxDots: 2 }, // Mar, Jul
-            { char: 'P', maxDots: 2 }, // Abr, Ago
-            { char: 'L', maxDots: 1 }, // Sep
-            { char: 'E', maxDots: 1 }, // Oct
-            { char: 'X', maxDots: 2 }  // Nov, Dic
-        ];
+            const r_dot = document.querySelector('input[name="chk_r"]').checked;
+            const e_dot = document.querySelector('input[name="chk_e"]').checked;
 
-        const WORD_TOUGHENED = ['t', 'o', 'u', 'g', 'h', 'e', 'n', 'e', 'd'];
+            const x_top = document.querySelector('input[name="chk_x_top"]').checked;
+            const x_bot = document.querySelector('input[name="chk_x_bot"]').checked;
+            const x_colon = x_top && x_bot;
+            const x_dot = (x_top || x_bot) && !x_colon;
 
-        // ESTADO
-        // stateTriplex: Array de 7 enteros (0, 1, 2) representando los puntos actuales de cada letra
-        let stateTriplex = [0, 0, 0, 0, 0, 0, 0];
-        let selectedYearVal = null; 
+            // Verificar si hay alguna selección
+            const anySelection = t_top || t_bot || r_dot || e_dot || x_top || x_bot;
 
-        window.onload = function() {
-            renderUI();
-            try {
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-                firebase.auth().onAuthStateChanged(u => {
-                    if(u) {
-                        const b = document.getElementById('statusBadge');
-                        b.innerText = "ONLINE"; b.classList.add('text-green-400', 'border-green-400');
-                        initSync();
-                    }
-                });
-            } catch(e) {}
-        };
+            let month = null;
 
-        function initSync() {
-            db.ref(`LUNAS/${NODE_NAME}`).on('value', snap => {
-                if(snap.val()) {
-                    stateTriplex = snap.val().t || [0,0,0,0,0,0,0];
-                    selectedYearVal = snap.val().y;
-                    updateVisuals();
-                    calculateAuto();
+            // Lógica Específica del Dictado
+            if (anySelection) {
+                // Combinaciones de 3 o más puntos (T: y R/E/X)
+                if (t_colon && r_dot && !e_dot && !x_top && !x_bot) month = "JUNIO";
+                else if (t_colon && e_dot && !r_dot && !x_top && !x_bot) month = "JULIO";
+                // T: + X. (un punto en X)
+                else if (t_colon && x_dot && !r_dot && !e_dot) month = "AGOSTO";
+                
+                // T: sola (Mayo)
+                else if (t_colon && !r_dot && !e_dot && !x_top && !x_bot) month = "MAYO";
+
+                // Combinaciones con X:
+                else if (t_dot && x_colon && !r_dot && !e_dot) month = "SEPTIEMBRE";
+                else if (r_dot && x_colon && !t_top && !t_bot && !e_dot) month = "OCTUBRE";
+                else if (e_dot && x_colon && !t_top && !t_bot && !r_dot) month = "NOVIEMBRE";
+                
+                // X: sola (Diciembre)
+                else if (x_colon && !t_top && !t_bot && !r_dot && !e_dot) month = "DICIEMBRE";
+
+                // Puntos Simples
+                else if (t_dot && !r_dot && !e_dot && !x_top && !x_bot) month = "ENERO";
+                else if (r_dot && !t_top && !t_bot && !e_dot && !x_top && !x_bot) month = "FEBRERO";
+                else if (e_dot && !t_top && !t_bot && !r_dot && !x_top && !x_bot) month = "MARZO";
+                else if (x_dot && !t_top && !t_bot && !r_dot && !e_dot) month = "ABRIL";
+                
+                // Si hay selección pero no encaja en ninguna regla anterior
+                else {
+                    month = "ERROR";
                 }
-            });
-        }
-
-        function renderUI() {
-            // --- RENDER TRIPLEX (MESES) ---
-            const contM = document.getElementById('rowTriplex');
-            contM.innerHTML = ''; // Limpiar
-
-            CONFIG_TRIPLEX.forEach((item, idx) => {
-                const col = document.createElement('div');
-                col.className = 'char-col';
-                col.onclick = () => toggleTriplexDot(idx, item.maxDots);
-
-                // CONTENEDOR DE PUNTOS (ARRIBA)
-                const dotsCont = document.createElement('div');
-                dotsCont.className = 'dots-top-container';
-                
-                // Generar los 2 divs de puntos (incluso si maxDots es 1, para mantener estructura, pero ocultamos el segundo)
-                // El orden es flex-reverse, así que el primero en HTML es el de abajo visualmente? No, flex-col-reverse:
-                // HTML elem 1 -> Visual Abajo (Punto 1)
-                // HTML elem 2 -> Visual Arriba (Punto 2)
-                
-                // Punto 1 (Base)
-                const d1 = document.createElement('div');
-                d1.className = 'dot dot-month';
-                d1.id = `t-${idx}-1`;
-                dotsCont.appendChild(d1);
-
-                // Punto 2 (Superior) - Solo si maxDots >= 2
-                if (item.maxDots >= 2) {
-                    const d2 = document.createElement('div');
-                    d2.className = 'dot dot-month';
-                    d2.id = `t-${idx}-2`;
-                    dotsCont.appendChild(d2);
-                }
-
-                // LETRA
-                const txt = document.createElement('div');
-                txt.className = 'char-text';
-                txt.innerText = item.char;
-
-                col.appendChild(dotsCont);
-                col.appendChild(txt);
-                contM.appendChild(col);
-            });
-
-            // --- RENDER TOUGHENED (AÑOS) ---
-            const contY = document.getElementById('rowToughened');
-            contY.innerHTML = '';
-
-            WORD_TOUGHENED.forEach((char, i) => {
-                const val = i + 1; // 1..9
-                createYearCol(contY, char, val);
-            });
-
-            // El Cero suelto
-            createYearCol(contY, "&nbsp;", 0);
-        }
-
-        function createYearCol(container, char, val) {
-            const col = document.createElement('div');
-            col.className = 'char-col';
-            col.onclick = () => selectYear(val);
-
-            const txt = document.createElement('div');
-            txt.className = 'char-text';
-            txt.innerHTML = char;
-
-            const dotsCont = document.createElement('div');
-            dotsCont.className = 'dots-bottom-container';
-
-            const dot = document.createElement('div');
-            dot.className = 'dot dot-year';
-            dot.id = `y-${val}`;
-
-            const lbl = document.createElement('div');
-            lbl.className = 'lbl-num';
-            lbl.innerText = val;
-
-            dotsCont.appendChild(dot);
-            col.appendChild(txt);
-            col.appendChild(dotsCont);
-            col.appendChild(lbl);
-            container.appendChild(col);
-        }
-
-        function toggleTriplexDot(idx, max) {
-            // Ciclo: 0 -> 1 -> 2 -> 0 (si max=2)
-            // Ciclo: 0 -> 1 -> 0 (si max=1)
-            
-            // Primero, limpiar otros para que sea selección única de mes (opcional pero recomendado)
-            // Si quieres permitir multiselección bórralo, pero para calcular fecha necesitamos uno.
-            // Vamos a limpiar los demás para evitar confusión.
-            const currentVal = stateTriplex[idx];
-            stateTriplex = [0, 0, 0, 0, 0, 0, 0]; // Reset all
-            
-            let nextVal = currentVal + 1;
-            if (nextVal > max) nextVal = 0;
-            
-            stateTriplex[idx] = nextVal;
-            
-            updateVisuals(); calculateAuto(); saveState();
-        }
-
-        function selectYear(val) {
-            selectedYearVal = (selectedYearVal === val) ? null : val;
-            updateVisuals(); calculateAuto(); saveState();
-        }
-
-        function updateVisuals() {
-            // Visualizar estado Triplex
-            stateTriplex.forEach((count, idx) => {
-                const d1 = document.getElementById(`t-${idx}-1`);
-                const d2 = document.getElementById(`t-${idx}-2`);
-                
-                if(d1) d1.classList.remove('active');
-                if(d2) d2.classList.remove('active');
-
-                if (count >= 1 && d1) d1.classList.add('active');
-                if (count >= 2 && d2) d2.classList.add('active');
-            });
-
-            // Visualizar estado Año
-            document.querySelectorAll('.dot-year').forEach(d => d.classList.remove('active'));
-            if (selectedYearVal !== null) document.getElementById(`y-${selectedYearVal}`)?.classList.add('active');
-        }
-
-        function calculateAuto() {
-            // LÓGICA MESES
-            // T(1)=Jan, T(2)=May
-            // R(1)=Feb, R(2)=Jun
-            // I(1)=Mar, I(2)=Jul
-            // P(1)=Apr, P(2)=Ago
-            // L(1)=Sep
-            // E(1)=Oct
-            // X(1)=Nov, X(2)=Dic
-            
-            let mText = "--";
-            
-            if (stateTriplex[0] === 1) mText = "ENERO";
-            else if (stateTriplex[0] === 2) mText = "MAYO";
-            
-            else if (stateTriplex[1] === 1) mText = "FEBRERO";
-            else if (stateTriplex[1] === 2) mText = "JUNIO";
-            
-            else if (stateTriplex[2] === 1) mText = "MARZO";
-            else if (stateTriplex[2] === 2) mText = "JULIO";
-            
-            else if (stateTriplex[3] === 1) mText = "ABRIL";
-            else if (stateTriplex[3] === 2) mText = "AGOSTO";
-            
-            else if (stateTriplex[4] === 1) mText = "SEPTIEMBRE";
-            
-            else if (stateTriplex[5] === 1) mText = "OCTUBRE";
-            
-            else if (stateTriplex[6] === 1) mText = "NOVIEMBRE";
-            else if (stateTriplex[6] === 2) mText = "DICIEMBRE";
-
-            document.getElementById('resMonth').innerText = mText;
-
-            // LÓGICA AÑO
-            let yText = "--";
-            if (selectedYearVal !== null) {
-                const digit = selectedYearVal;
-                // Décadas típicas de Triplex
-                yText = `...${digit} (${1970+digit}, ${1980+digit}, ${1990+digit})`;
             }
-            document.getElementById('resYear').innerText = yText;
+
+            // 2. Detectar Año
+            const yearCheck = document.querySelector('input[name="anio"]:checked');
+            let year = yearCheck ? yearCheck.value : "?";
+
+            return { month, year };
         }
 
-        function saveState() {
-            if(db) db.ref(`LUNAS/${NODE_NAME}`).set({ t: stateTriplex, y: selectedYearVal }).catch(console.warn);
+        // Actualiza la caja amarilla en tiempo real
+        function updateRealTime() {
+            const data = detectDate();
+            const previewBox = document.getElementById('livePreview');
+            
+            let mText = data.month ? data.month : "--";
+            let yText = data.year !== "?" ? `...${data.year}` : "--";
+
+            // Cambiar estilo si es ERROR
+            if (mText === "ERROR") {
+                previewBox.classList.add("preview-error");
+                mText = "ERROR (COMBINACIÓN INVÁLIDA)";
+            } else {
+                previewBox.classList.remove("preview-error");
+            }
+
+            previewBox.innerHTML = `MES: ${mText} &nbsp;|&nbsp; AÑO: ${yText}`;
+        }
+
+        // Muestra el modal final
+        function calculateResult() {
+            const data = detectDate();
+            
+            let mainText = "";
+            let subText = "";
+
+            if (!data.month && data.year === "?") {
+                mainText = "Sin selección";
+                subText = "Marca puntos arriba y abajo";
+            } else if (data.month === "ERROR") {
+                mainText = "ERROR";
+                subText = "La combinación de puntos de mes no es válida";
+            } else {
+                let m = data.month ? data.month : "MES ?";
+                let y = data.year !== "?" ? data.year : "?";
+                
+                mainText = `${m} - Año ...${y}`;
+                
+                if (y !== "?") {
+                    subText = `Posibles fechas: 200${y} / 201${y} / 202${y}`;
+                } else {
+                    subText = "Falta seleccionar el año";
+                }
+            }
+
+            showResultModal(mainText, subText);
+        }
+
+        function showResultModal(main, sub) {
+            document.getElementById('res-modal-main').innerHTML = main;
+            document.getElementById('res-modal-sub').innerHTML = sub;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
         }
     </script>
 </body>
