@@ -3,389 +3,356 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Decodificador XYG - G.A.D. System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>XYG - G.A.D.</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --panel-bg: #262626;
-            --glass-text: #e5e5e5;
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --accent-blue: #3b82f6;
             --input-bg: #ffffff;
             --input-text: #000000;
-            --accent-blue: #3b82f6;
+            --label-text: #999;
+            --res-text: #3b82f6; /* Azul para resultados parciales */
         }
 
         body {
             background-color: var(--bg-color);
-            color: white;
+            color: var(--text-color);
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            padding: 10px;
             margin: 0;
-            padding: 20px;
+            min-height: 100vh;
         }
 
-        /* Panel estilo Cristal */
-        .glass-panel {
-            background-color: var(--panel-bg);
-            border: 1px solid #333;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* BARRA SUPERIOR */
+        .top-bar {
             width: 100%;
-            max-width: 500px; /* asegura ajuste en móvil */
-            padding: 2rem;
-            position: relative;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        /* Tipografía Marca */
-        .brand-logo {
-            font-family: 'Arial Black', 'Impact', sans-serif;
-            font-size: 3.5rem;
-            line-height: 1;
-            letter-spacing: -2px;
-            color: var(--glass-text);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .tech-text-laminated {
-            font-family: 'Courier New', Courier, monospace;
-            color: var(--glass-text);
-            font-size: 1.1rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        .tech-text-safety {
-             font-family: 'Courier New', Courier, monospace;
-             color: var(--glass-text);
-             font-size: 0.9rem;
-             font-weight: normal;
-             letter-spacing: 0.5px;
-             margin-bottom: 10px;
-        }
-
-        .dot-code {
-            font-family: 'Courier New', monospace;
-            color: var(--glass-text);
-            font-size: 0.9rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-
-        .homologation-container {
+            max-width: 500px; 
+            margin-bottom: 10px;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin: 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #444;
-            width: 100%;
+            justify-content: flex-start;
+            padding: 0 2px;
+            box-sizing: border-box;
         }
         
-        .e-circle {
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            display: flex;
+        .back-btn {
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            font-family: sans-serif;
+            gap: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
+
+        /* CONTENEDOR PRINCIPAL */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 15px 10px 30px 10px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px; 
+            box-sizing: border-box;
+            position: relative;
         }
 
-        .r-code {
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-            font-weight: bold;
+        /* LOGOS - SUPERIORES */
+        .corner-logo { 
+            position: absolute; 
+            top: 15px; 
+            height: 80px; 
+            width: auto; 
+            opacity: 0.8; 
+            pointer-events: none; 
         }
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
 
-        /* Inputs Personalizados */
-        .glass-input {
-            background-color: var(--input-bg);
-            color: var(--input-text);
-            border: 2px solid #555;
-            border-radius: 4px;
-            text-align: center;
-            font-family: monospace;
-            font-weight: bold;
-            outline: none;
-            transition: border-color 0.2s;
+        /* HEADER */
+        .brand-header { text-align: center; margin-bottom: 5px; margin-top: 5px; }
+        .brand-logo { font-family: 'Arial Black', sans-serif; font-size: 2.5rem; line-height: 1; letter-spacing: -1px; margin: 0; }
+        .tech-info { font-family: 'Courier New', monospace; font-size: 0.75rem; color: #aaa; margin-top: 5px; }
+        
+        .homologation { 
+            border: 1px solid #555; border-radius: 50px; padding: 2px 15px; 
+            display: flex; align-items: center; gap: 10px; margin-bottom: 5px;
         }
-        .glass-input:focus {
-            border-color: var(--accent-blue);
-        }
+        .e-circle { border: 1px solid #fff; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
+        .r-code { font-family: 'Courier New', monospace; font-size: 0.9rem; font-weight: bold; }
 
-        /* Input Grande del Año */
-        .year-input {
-            font-size: 2.5rem;
-            width: 80px;
-            height: 60px;
-            background: transparent;
-            color: var(--glass-text);
-            border: 2px dashed #555;
-        }
-        .year-input:focus {
-            border-style: solid;
-            background: rgba(255,255,255,0.1);
-        }
-
-        /* Inputs de Suma (Mes/Día) */
-        .sum-input {
-            width: 18%;
-            max-width: 50px;
-            aspect-ratio: 1; 
-            font-size: 1.2rem;
-            padding: 0;
-        }
-
-        /* Cajas de Resultado Parcial */
-        .result-display-partial {
-            background-color: #333;
-            color: #fff;
-            padding: 5px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 1rem;
-            min-width: 40px;
-            text-align: center;
+        /* SECCIONES DE INPUT - ESTRUCTURA UNIFICADA */
+        .input-section {
+            width: 100%;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* Distribuir espacio */
+            box-sizing: border-box;
+            min-height: 95px; /* Altura forzada igual para los 3 */
         }
 
         .label-desc {
-            font-size: 0.7rem;
-            color: #888;
+            font-size: 0.6rem;
+            color: var(--label-text);
             text-transform: uppercase;
-            display: block;
-            margin-bottom: 5px;
-            text-align: left;
-            width: 100%;
             font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            width: 100%;
             letter-spacing: 0.5px;
         }
 
-        .calc-section {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #444;
-        }
-        
+        /* FILA DE INPUTS */
         .inputs-row {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 5px;
             width: 100%;
+            align-items: center;
+            margin-bottom: 5px;
         }
 
-        /* Botón Calcular */
-        .calc-button {
-            width: 100%;
-            margin-top: 2rem;
-            padding: 1rem;
-            background: linear-gradient(to right, #2563eb, #3b82f6);
-            color: white;
+        /* CAJAS DE TEXTO (INPUTS) */
+        .glass-input {
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            border: none;
+            border-radius: 4px;
+            text-align: center;
+            font-family: monospace;
             font-weight: bold;
-            font-size: 1.1rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-            transition: transform 0.1s, box-shadow 0.1s;
+            font-size: 1.2rem;
+            width: 45px; 
+            height: 40px; 
+            outline: none;
+            padding: 0;
         }
-        .calc-button:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-        }
-        
-        /* Estilo para los años dinámicos */
-        .dynamic-years {
+        .glass-input:focus { border: 2px solid var(--accent-blue); }
+
+        /* RESULTADOS PARCIALES (Dinámicos) */
+        .dynamic-result {
             font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            font-size: 0.8rem;
+            color: var(--res-text);
+            height: 16px; /* Altura reservada para que no salte */
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* BOTÓN CALCULAR */
+        .btn-calc {
+            width: 100%;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        .btn-calc:active { transform: scale(0.98); opacity: 0.9; }
+
+        /* MODAL RESULTADO */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid var(--accent-blue); padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+        
+        .res-main { font-size: 2.5rem; color: #fff; font-weight: bold; margin: 10px 0; line-height: 1; }
+        .res-sub { color: var(--accent-blue); font-size: 1rem; margin-bottom: 20px; display: block; font-family: monospace; }
+        .close-btn { width: 100%; background: #444; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+
+        /* MÓVIL */
+        @media (max-width: 600px) {
+            .glass-input { height: 35px; width: 40px; font-size: 1rem; }
+            .brand-logo { font-size: 2rem; }
+            .label-desc { font-size: 0.55rem; }
+            /* Logos a 50px en móvil */
+            .corner-logo { height: 50px; top: 15px; } 
+            
+            .input-section { padding: 8px 4px; min-height: 85px; }
+            .glass-container { gap: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="w-full max-w-[500px] mb-4">
-        <a href="index.html" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors w-fit text-decoration-none">
-            <span>←</span> VOLVER
+    <div class="top-bar">
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
         </a>
     </div>
 
-    <div class="glass-panel">
+    <div class="glass-container">
         
-        <div class="brand-logo">XYG</div>
-        <div class="tech-text-laminated">LAMINATED</div>
-        <div class="tech-text-safety">SAFETY GLASS</div>
-        <div class="dot-code">DOT-563 AS-1 M-668</div>
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
+
+        <div class="brand-header">
+            <h1 class="brand-logo">XYG</h1>
+            <div class="tech-info">LAMINATED SAFETY GLASS</div>
+            <div class="tech-info">DOT-563 AS-1 M-668</div>
+        </div>
         
-        <div class="homologation-container">
+        <div class="homologation">
             <div class="e-circle">E1</div>
             <span class="r-code">43R-0015322</span>
         </div>
 
-        <div class="mt-6 relative flex flex-col items-center">
-            <span class="label-desc text-center mb-2" style="text-align: center;">INTRODUCE EL DÍGITO DE LA PRIMERA LÍNEA</span>
-            <div class="flex justify-center items-center gap-4">
-                <span class="text-2xl text-gray-500 tracking-widest">...</span>
-                <input type="number" id="yearInput" class="glass-input year-input" placeholder="#" oninput="handleYearInput(this)">
-                <span class="text-2xl text-gray-500 tracking-widest">...</span>
+        <div class="input-section">
+            <span class="label-desc">INTRODUCE EL DÍGITO DE LA PRIMERA LÍNEA (AÑO)</span>
+            <div class="inputs-row">
+                <input type="number" id="yearInput" class="glass-input" placeholder="#" oninput="handleYearInput(this)">
             </div>
-            <div id="dynamicYearsDisplay" class="dynamic-years text-blue-400 text-sm mt-3 h-6 font-bold"></div>
+            <div id="dynamicYearsDisplay" class="dynamic-result">...</div>
         </div>
 
-        <div class="calc-section">
-             <span class="label-desc">INTRODUCE LOS NÚMEROS DE LA SEGUNDA LÍNEA</span>
+        <div class="input-section">
+             <span class="label-desc">INTRODUCE LOS NÚMEROS DE LA SEGUNDA LÍNEA (MES)</span>
              <div class="inputs-row">
-                <div class="flex gap-2 flex-grow justify-center">
-                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
-                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
-                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
-                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
-                    <input type="number" class="glass-input sum-input month-inp" oninput="calcSumPartial('month')">
-                </div>
-                <div class="flex flex-col items-center">
-                     <span class="text-[0.6rem] text-gray-500 mb-1">SUMA</span>
-                     <div id="monthResultPartial" class="result-display-partial text-yellow-400">0</div>
-                </div>
+                <input type="number" class="glass-input month-inp" oninput="calcSumPartial('month')">
+                <input type="number" class="glass-input month-inp" oninput="calcSumPartial('month')">
+                <input type="number" class="glass-input month-inp" oninput="calcSumPartial('month')">
+                <input type="number" class="glass-input month-inp" oninput="calcSumPartial('month')">
+                <input type="number" class="glass-input month-inp" oninput="calcSumPartial('month')">
             </div>
+            <div id="monthResultPartial" class="dynamic-result">MES: --</div>
         </div>
 
-        <div class="calc-section">
-             <span class="label-desc">INTRODUCE LOS NÚMEROS DE LA TERCERA LÍNEA</span>
+        <div class="input-section">
+             <span class="label-desc">INTRODUCE LOS NÚMEROS DE LA TERCERA LÍNEA (DÍA)</span>
              <div class="inputs-row">
-                <div class="flex gap-2 flex-grow justify-center">
-                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
-                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
-                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
-                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
-                    <input type="number" class="glass-input sum-input day-inp" oninput="calcSumPartial('day')">
-                </div>
-                <div class="flex flex-col items-center">
-                     <span class="text-[0.6rem] text-gray-500 mb-1">SUMA</span>
-                     <div id="dayResultPartial" class="result-display-partial text-green-400">0</div>
-                </div>
+                <input type="number" class="glass-input day-inp" oninput="calcSumPartial('day')">
+                <input type="number" class="glass-input day-inp" oninput="calcSumPartial('day')">
+                <input type="number" class="glass-input day-inp" oninput="calcSumPartial('day')">
+                <input type="number" class="glass-input day-inp" oninput="calcSumPartial('day')">
+                <input type="number" class="glass-input day-inp" oninput="calcSumPartial('day')">
             </div>
+            <div id="dayResultPartial" class="dynamic-result">DÍA: --</div>
         </div>
 
-        <button onclick="showFinalResult()" class="calc-button">
-            CALCULAR FECHA COMPLETA
-        </button>
+        <button onclick="showFinalResult()" class="btn-calc">CALCULAR</button>
 
     </div>
 
-    <div id="resultModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 border-2 border-blue-500 rounded-2xl p-6 w-full max-w-md text-center shadow-2xl transform transition-all scale-95" id="modalContent">
-            <h3 class="text-gray-400 uppercase tracking-widest mb-4 font-bold">Fecha de Fabricación</h3>
-            
-            <div class="bg-slate-900/50 p-4 rounded-xl border border-white/10 mb-6">
-                <h2 id="finalDateText" class="text-3xl md:text-4xl font-bold text-white leading-relaxed">
-                    ---
-                </h2>
-                <p class="text-blue-400 text-sm mt-2">Día / Mes / Año</p>
-            </div>
-
-            <button onclick="closeModal()" class="bg-gray-600 hover:bg-gray-500 text-white w-full py-3 rounded-xl font-bold transition-colors">
-                CERRAR
-            </button>
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color:#999; font-size:0.8rem; text-transform:uppercase; margin-bottom:5px;">FECHA DE FABRICACIÓN</h3>
+            <div id="finalDateText" class="res-main">-- / -- / --</div>
+            <div id="finalYearsText" class="res-sub">...</div>
+            <button onclick="closeModal()" class="close-btn">CERRAR</button>
         </div>
     </div>
 
     <script>
-        // Función para validar input y MOSTRAR AÑOS DINÁMICAMENTE
-        function handleYearInput(input) {
-            // Limitar a 1 dígito
-            if (input.value.length > 1) {
-                input.value = input.value.slice(-1);
-            }
+        // Auto-foco inteligente
+        document.querySelectorAll('.glass-input').forEach((input, index, inputs) => {
+            input.addEventListener('input', () => {
+                if(input.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+        });
 
+        function handleYearInput(input) {
+            if (input.value.length > 1) input.value = input.value.slice(-1);
+            
             const val = input.value;
             const display = document.getElementById('dynamicYearsDisplay');
 
             if (val !== "") {
-                // Generar décadas (199x, 200x, 201x, 202x)
                 const decades = [199, 200, 201, 202];
-                const yearsStr = decades.map(d => `${d}${val}`).join(" <span class='text-gray-600'>/</span> ");
-                display.innerHTML = yearsStr;
+                display.innerHTML = decades.map(d => `${d}${val}`).join(" / ");
             } else {
-                display.innerHTML = "";
+                display.innerHTML = "...";
             }
         }
 
-        // Cálculo parcial para feedback inmediato
         function calcSumPartial(type) {
             const inputs = document.querySelectorAll(`.${type}-inp`);
             let total = 0;
+            let hasValue = false;
+            
             inputs.forEach(inp => {
                 const val = parseInt(inp.value);
-                if (!isNaN(val)) total += val;
+                if (!isNaN(val)) {
+                    total += val;
+                    hasValue = true;
+                }
             });
-            document.getElementById(`${type}ResultPartial`).innerText = total;
+
+            const display = document.getElementById(`${type}ResultPartial`);
+            const label = type === 'month' ? 'MES' : 'DÍA';
+            
+            if (hasValue) {
+                display.innerText = `${label}: ${total}`;
+            } else {
+                display.innerText = `${label}: --`;
+            }
+            
             return total;
         }
 
-        // Lógica del Botón Calcular y Modal
         function showFinalResult() {
-            // 1. Obtener Datos
             const yearDigit = document.getElementById('yearInput').value;
             const monthSum = calcSumPartial('month');
             const daySum = calcSumPartial('day');
 
-            // 2. Validaciones Básicas
             let errorMsg = "";
-            if (yearDigit === "") errorMsg += "Falta el dígito de la primera línea.\n";
-            if (monthSum === 0) errorMsg += "La suma de la segunda línea es 0.\n";
-            if (daySum === 0) errorMsg += "La suma de la tercera línea es 0.\n";
-            
-            if (monthSum > 12) errorMsg += "Error: Mes superior a 12.\n";
-            if (daySum > 31) errorMsg += "Error: Día superior a 31.\n";
+            if (yearDigit === "") errorMsg = "Falta el Año";
+            else if (monthSum === 0) errorMsg = "Falta la 2ª Línea";
+            else if (daySum === 0) errorMsg = "Falta la 3ª Línea";
+            else if (monthSum > 12) errorMsg = "Mes inválido (>12)";
+            else if (daySum > 31) errorMsg = "Día inválido (>31)";
 
-            const modalText = document.getElementById('finalDateText');
+            const modalMain = document.getElementById('finalDateText');
+            const modalSub = document.getElementById('finalYearsText');
 
             if (errorMsg !== "") {
-                modalText.innerHTML = `<span class="text-red-400 text-xl">${errorMsg.replace(/\n/g, '<br>')}</span>`;
+                modalMain.innerHTML = "ERROR";
+                modalMain.style.color = "#ff4444";
+                modalSub.innerHTML = errorMsg;
             } else {
-                // 3. Formatear Fecha Final
                 const dayStr = daySum.toString().padStart(2, '0');
                 const monthStr = monthSum.toString().padStart(2, '0');
                 
-                // Mostrar años posibles en el modal también
                 const decadeBase = [199, 200, 201, 202];
-                const possibleYears = decadeBase.map(d => `${d}${yearDigit}`).join("/");
+                const possibleYears = decadeBase.map(d => `${d}${yearDigit}`).join(" / ");
 
-                modalText.innerHTML = `
-                    <span class="text-green-400">${dayStr}</span> / 
-                    <span class="text-yellow-400">${monthStr}</span> / 
-                    <span class="text-blue-400">...${yearDigit}</span>
-                    <div class="text-lg text-gray-400 mt-2 font-mono">${possibleYears}</div>
-                `;
+                modalMain.innerHTML = `${dayStr} / ${monthStr} / ...${yearDigit}`;
+                modalMain.style.color = "#fff";
+                modalSub.innerHTML = possibleYears;
             }
 
-            // 4. Mostrar Modal con animación
-            const modal = document.getElementById('resultModal');
-            const modalContent = document.getElementById('modalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-            }, 10);
+            document.getElementById('resultModal').style.display = 'flex';
         }
 
         function closeModal() {
-            const modal = document.getElementById('resultModal');
-            const modalContent = document.getElementById('modalContent');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 200);
+            document.getElementById('resultModal').style.display = 'none';
         }
     </script>
 </body>
