@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
         /* --- VARIABLES --- */
         :root {
@@ -399,11 +403,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
+    <script>
         // CONFIGURACIÓN FIREBASE (PRODUCCIÓN V3)
         const firebaseConfig = {
             apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
@@ -416,25 +416,25 @@
             measurementId: "G-Q0E3H1996K"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
-        
-        // Nodo de la Base de Datos
-        const dbRef = ref(db, 'lunas'); 
+        // Inicializar Firebase (Solo si no está ya activo)
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const dbRef = db.ref('lunas');
 
         // ESTADO
         let buttons = [];
         let isEditing = false;
-        let currentId = null; 
+        let currentId = null;
 
-        // --- AUTH & DATA LOGIC (CORE) ---
-        
-        // 1. Cargar Datos
-        const loadData = () => {
-            onValue(dbRef, (snapshot) => {
+        // --- AUTH & DATA LOGIC ---
+
+        function loadData() {
+            dbRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                
                 if (data) {
                     buttons = Object.keys(data).map(key => {
                         return { id: key, ...data[key] };
@@ -442,51 +442,49 @@
                     render();
                     document.getElementById('loginModal').style.display = 'none';
                 } else {
-                    // BD vacía (y permiso concedido)
+                    // BD vacía
                     buttons = [];
                     render();
+                    document.getElementById('gridContainer').innerHTML = '<p style="text-align:center; color:#64748b;">Base de datos vacía. Usa el modo edición (+).</p>';
                     document.getElementById('loginModal').style.display = 'none';
                 }
             }, (error) => {
-                console.error("Error de acceso a BD:", error);
-                if (error.code === 'PERMISSION_DENIED' || error.message.includes('permission_denied')) {
-                    // Reglas estrictas: Mostrar Login
+                console.error("Error BD:", error);
+                if (error.code === 'PERMISSION_DENIED') {
+                    // Si falla por permisos, mostrar login
                     document.getElementById('loginModal').style.display = 'flex';
                     document.getElementById('gridContainer').innerHTML = '<p style="text-align:center; color:#ef4444;">Acceso denegado. Inicia sesión.</p>';
                 }
             });
-        };
+        }
 
-        // 2. Monitor Auth
-        onAuthStateChanged(auth, (user) => {
+        // Monitor de Autenticación (¡CLAVE PARA MÓVIL!)
+        auth.onAuthStateChanged((user) => {
             if (user) {
+                // Si el usuario viene logueado del index.html, entra aquí INMEDIATAMENTE
                 document.getElementById('btnLogout').style.display = 'flex';
                 document.getElementById('loginModal').style.display = 'none';
                 loadData();
             } else {
                 document.getElementById('btnLogout').style.display = 'none';
+                // Intentamos cargar (si las reglas son públicas funcionará, si no, saltará error permission_denied)
                 loadData();
             }
         });
 
-        // --- FUNCIONES ---
+        // --- FUNCIONES UI ---
 
         window.doLogin = function() {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
-
             if(!email || !pass) { alert("Introduce credenciales"); return; }
 
-            signInWithEmailAndPassword(auth, email, pass)
-                .catch((error) => {
-                    alert("Error de acceso: " + error.message);
-                });
+            auth.signInWithEmailAndPassword(email, pass)
+                .catch((error) => { alert("Error: " + error.message); });
         }
 
         window.doLogout = function() {
-            signOut(auth).then(() => {
-                window.location.reload();
-            });
+            auth.signOut().then(() => { window.location.reload(); });
         }
 
         function sanitizeId(name) {
@@ -529,25 +527,17 @@
             const nameVal = document.getElementById('inpName').value.trim().toUpperCase();
             let fileVal = document.getElementById('inpFile').value.trim();
 
-            if (!nameVal || !fileVal) {
-                alert("Rellena todos los campos");
-                return;
-            }
-
+            if (!nameVal || !fileVal) { alert("Rellena todos los campos"); return; }
             if (!fileVal.includes('.')) fileVal += '.html';
 
             const newId = sanitizeId(nameVal);
-            const payload = { 
-                name: nameVal, 
-                file: fileVal
-            };
-            const newItemRef = ref(db, `lunas/${newId}`);
+            const payload = { name: nameVal, file: fileVal };
 
-            set(newItemRef, payload)
+            // Usar update para guardar (si cambia ID hay que borrar el viejo manual, pero simplificamos con set)
+            db.ref('lunas/' + newId).set(payload)
                 .then(() => {
                     if (currentId !== null && currentId !== newId) {
-                        const oldItemRef = ref(db, `lunas/${currentId}`);
-                        remove(oldItemRef); 
+                        db.ref('lunas/' + currentId).remove();
                     }
                     window.closeModal();
                 })
@@ -555,9 +545,8 @@
         }
 
         window.deleteBtn = function(id) {
-            if (confirm("¿Borrar permanentemente este fabricante?")) {
-                const itemRef = ref(db, `lunas/${id}`);
-                remove(itemRef)
+            if (confirm("¿Borrar permanentemente?")) {
+                db.ref('lunas/' + id).remove()
                     .catch((error) => alert("Error al borrar: " + error.message));
             }
         }
@@ -567,7 +556,6 @@
             if(url) window.location.href = url;
         });
 
-        // --- RENDERIZADO ---
         function render() {
             const grid = document.getElementById('gridContainer');
             const navSelect = document.getElementById('navSelect');
@@ -581,12 +569,8 @@
                 // CARD
                 const card = document.createElement(isEditing ? 'div' : 'a');
                 card.className = 'btn-card';
-                
-                if (!isEditing) {
-                    card.href = btn.file;
-                } else {
-                    card.onclick = (e) => e.preventDefault();
-                }
+                if (!isEditing) { card.href = btn.file; } 
+                else { card.onclick = (e) => e.preventDefault(); }
 
                 card.innerHTML = `
                     <div class="card-actions">
@@ -595,10 +579,9 @@
                     </div>
                     <div class="btn-label">${btn.name}</div>
                 `;
-
                 grid.appendChild(card);
 
-                // DROPDOWN OPTION
+                // DROPDOWN
                 const option = document.createElement('option');
                 option.value = btn.file;
                 option.text = btn.name;
@@ -613,9 +596,6 @@
                 grid.appendChild(addBtn);
             }
         }
-        
-        loadData();
-
     </script>
 </body>
 </html>
