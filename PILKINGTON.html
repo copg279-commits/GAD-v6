@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PILKINGTON - G.A.D.</title>
+    <style>
+        /* --- ESTILOS EXACTOS DE AUTOMOTIVE.HTML --- */
+        :root {
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --accent-red: #d32f2f; /* Usado para letras */
+            --dot-off: #444444;
+            --dot-on: #ffd700;     /* Dorado para activo */
+            --label-text: #999;
+            --letter-size: 2.2rem; 
+            --dot-size: 14px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* BARRA SUPERIOR (Botón Volver) */
+        .top-bar {
+            width: 100%;
+            max-width: 750px; 
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start; /* Alineado a la izquierda del bloque */
+            padding: 0 2px;
+            box-sizing: border-box;
+        }
+        
+        .back-btn {
+            background: #333;
+            color: #ccc;
+            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
+
+        /* CONTENEDOR PRINCIPAL */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            /* Padding inferior amplio para los logos absolutos */
+            padding: 60px 2px 90px 2px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 750px; 
+            box-sizing: border-box;
+            position: relative;
+            min-height: 350px;
+            justify-content: center;
+            overflow: hidden; 
+        }
+
+        /* LOGOS INFERIORES (Corner Logos) */
+        .corner-logo { 
+            position: absolute; bottom: 15px; 
+            height: 90px; 
+            width: auto; opacity: 0.9; pointer-events: none; 
+        }
+        .logo-left { left: 15px; }   /* logogad2.png */
+        .logo-right { right: 15px; } /* logogad.png */
+
+        /* ESTRUCTURA FILA DE LETRAS */
+        .row-compact {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* COLUMNA POR LETRA */
+        .col-char {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex: 1; 
+            min-width: 0; 
+        }
+
+        .letter {
+            font-family: 'Times New Roman', serif; /* Pilkington usa serif */
+            font-size: var(--letter-size);
+            color: #ccc; /* Color claro para Pilkington */
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            line-height: 1; 
+            cursor: default;
+            user-select: none;
+            margin: 0; 
+            text-align: center;
+        }
+
+        /* CAJA DEL PUNTO */
+        .dot-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 20px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* POSICIONAMIENTO PUNTOS */
+        .dot-float-top { position: absolute; top: -38px; left: 0; width: 100%; }
+        .dot-float-bot { position: absolute; bottom: -38px; left: 0; width: 100%; }
+
+        .lbl { 
+            font-size: 0.55rem; color: var(--label-text); 
+            text-transform: uppercase; font-weight: bold; 
+            margin-bottom: 1px; white-space: nowrap; line-height: 1; 
+        }
+        
+        /* Etiquetas para Años (Abajo) */
+        .lbl-year-num { 
+            color: #ffd700; 
+            font-size: 0.7rem;
+            margin-top: 2px;
+        }
+
+        /* INPUTS Y PUNTOS */
+        input[type="radio"] { display: none; }
+        
+        label { 
+            display: flex; justify-content: center; align-items: center; 
+            padding: 5px 0; cursor: pointer; width: 100%; 
+        }
+        
+        .dot { 
+            width: var(--dot-size); height: var(--dot-size); 
+            background-color: var(--dot-off); border: 2px solid #666; 
+            border-radius: 50%; transition: all 0.2s; flex-shrink: 0; 
+        }
+        
+        input[type="radio"]:checked + .dot { 
+            background-color: var(--dot-on); border-color: #fff; 
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.9); transform: scale(1.3); 
+        }
+
+        /* Colores Lógicos opcionales (pero mantenemos dorado según diseño pedido) */
+        /* Si quisieras diferenciar:
+        input[name="mes_offset"]:checked + .dot { background-color: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        input[name="trimestre"]:checked + .dot { background-color: #ef4444; box-shadow: 0 0 10px #ef4444; } 
+        */
+
+        .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 60px; font-style: italic; padding: 0 10px; }
+
+        /* MODAL RESULTADO */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #ffd700; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+        
+        .result-content h2 { color: #ccc; font-size: 1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; text-transform: uppercase; }
+
+        /* --- RESPONSIVE MÓVIL --- */
+        @media (max-width: 600px) {
+            :root { 
+                --letter-size: 1.6rem; 
+                --dot-size: 11px; 
+            }
+            .lbl { font-size: 0.45rem; transform: scale(0.9); }
+            
+            /* Ajuste de logos en móvil */
+            .corner-logo { height: 50px; bottom: 10px; }
+            .logo-left { left: 10px; }
+            .logo-right { right: 10px; }
+            
+            .dot-float-top { top: -30px; }
+            .dot-float-bot { bottom: -30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+        </a>
+    </div>
+
+    <div class="glass-container">
+        
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
+
+        <div class="row-compact">
+            
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Mes</span>
+                    <label><input type="radio" name="mes_offset" value="1" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">P</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="0" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">0</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Mes</span>
+                    <label><input type="radio" name="mes_offset" value="2" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">I</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="1" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">1</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Mes</span>
+                    <label><input type="radio" name="mes_offset" value="3" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">L</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="2" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">2</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    </div>
+                <div class="letter">K</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="3" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">3</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    </div>
+                <div class="letter">I</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="4" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">4</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    </div>
+                <div class="letter">N</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="5" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">5</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Tri</span>
+                    <label><input type="radio" name="trimestre" value="0" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">G</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="6" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">6</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Tri</span>
+                    <label><input type="radio" name="trimestre" value="3" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">T</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="7" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">7</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Tri</span>
+                    <label><input type="radio" name="trimestre" value="6" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">O</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="8" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">8</span>
+                </div>
+            </div>
+
+            <div class="col-char">
+                <div class="dot-box dot-float-top">
+                    <span class="lbl">Tri</span>
+                    <label><input type="radio" name="trimestre" value="9" onchange="calc()"><div class="dot"></div></label>
+                </div>
+                <div class="letter">N</div>
+                <div class="dot-box dot-float-bot">
+                    <label><input type="radio" name="anio" value="9" onchange="calc()"><div class="dot"></div></label>
+                    <span class="lbl lbl-year-num">9</span>
+                </div>
+            </div>
+
+        </div>
+
+        <p class="input-legend">Puntos Arriba: MES/TRIMESTRE | Puntos Abajo: AÑO</p>
+
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="result-content">
+                <h2>FECHA DE FABRICACIÓN</h2>
+                <div class="res-modal-main" id="res-modal-main">--</div>
+                <div class="res-modal-sub" id="res-modal-sub">...</div>
+            </div>
+            <button class="close-btn" onclick="closeResult()">CERRAR</button>
+        </div>
+    </div>
+
+    <script>
+        let calcTimeout = null;
+
+        function calc() {
+            // Obtenemos las 3 partes
+            const offsetInp = document.querySelector('input[name="mes_offset"]:checked');
+            const trimInp = document.querySelector('input[name="trimestre"]:checked');
+            const anioInp = document.querySelector('input[name="anio"]:checked');
+            
+            // Calculamos solo si tenemos todo (o parcial para sugerir, pero el modal salta con todo)
+            if (offsetInp && trimInp && anioInp) {
+                
+                const offset = parseInt(offsetInp.value); // 1, 2, 3
+                const base = parseInt(trimInp.value);     // 0, 3, 6, 9
+                const yearDigit = anioInp.value;
+                
+                const monthIndex = base + offset; // 1 a 12
+                const months = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+                
+                const finalMonth = months[monthIndex];
+                const finalDecades = `Posibles fechas: 200${yearDigit} / 201${yearDigit} / 202${yearDigit}`;
+
+                if (calcTimeout) clearTimeout(calcTimeout);
+
+                calcTimeout = setTimeout(() => {
+                    showResultModal(`${finalMonth} - Año ...${yearDigit}`, finalDecades);
+                }, 500);
+            }
+        }
+
+        function showResultModal(mainText, subText) {
+            document.getElementById('res-modal-main').innerHTML = mainText;
+            document.getElementById('res-modal-sub').innerHTML = subText;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
