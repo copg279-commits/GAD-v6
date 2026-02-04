@@ -9,15 +9,9 @@
             --bg-color: #1a1a1a; 
             --panel-bg: #252525;
             --text-color: #f0f0f0;
-            
-            /* Colores Base */
-            --dot-off-bg: #333333;       /* Gris oscuro fondo */
-            --dot-off-border: #666666;   /* Gris claro borde */
-            
-            /* Colores Activos */
-            --active-yellow: #ffd700;    /* Amarillo para MESES */
-            --active-blue: #00d2ff;      /* Azul Claro para AÑOS */
-            --active-border: #ffffff;    /* Borde blanco al seleccionar */
+            --nippon-red: #ef4444;
+            --nippon-blue: #3b82f6;
+            --dot-off: #444;
         }
 
         body {
@@ -74,7 +68,7 @@
             max-width: 800px;
             box-sizing: border-box;
             position: relative;
-            min-height: 600px; 
+            min-height: 500px; /* Altura suficiente para el diagrama */
             justify-content: center;
         }
 
@@ -82,7 +76,7 @@
         .nippon-wrapper {
             position: relative;
             width: 100%;
-            height: 450px; 
+            height: 350px;
             max-width: 500px;
             margin: 0 auto;
         }
@@ -109,51 +103,46 @@
             pointer-events: none;
         }
 
-        /* --- ESTILOS DE LOS PUNTOS (BOTONES) --- */
+        /* Puntos */
         .n-dot {
             border-radius: 50%;
             cursor: pointer;
-            transition: all 0.2s ease;
-            
-            /* Estado Inactivo (Gris con borde gris claro) */
-            background-color: var(--dot-off-bg);
-            border: 3px solid var(--dot-off-border); 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            transition: transform 0.15s, box-shadow 0.2s;
+            border: 2px solid #333;
+            background-color: var(--dot-off);
         }
 
-        /* ESTADO SELECCIONADO - MESES (AMARILLO) */
-        .n-dot-red.selected {
-            background-color: var(--active-yellow) !important;
-            border-color: var(--active-border) !important;
-            transform: scale(1.3);
-            box-shadow: 0 0 20px var(--active-yellow); 
-            color: #000 !important; 
-        }
-
-        /* ESTADO SELECCIONADO - AÑOS (AZUL CLARO) */
-        .n-dot-blue.selected {
-            background-color: var(--active-blue) !important;
-            border-color: var(--active-border) !important;
-            transform: scale(1.3);
-            box-shadow: 0 0 20px var(--active-blue); 
-            color: #000 !important; 
-        }
-
-        /* Dimensiones específicas */
+        /* Punto Rojo (Mes) */
         .n-dot-red {
-            width: 20px; 
-            height: 20px;
+            width: 18px; 
+            height: 18px;
+            background-color: #500; /* Rojo apagado */
         }
-        
+        .n-dot-red.selected {
+            background-color: var(--nippon-red);
+            border-color: white;
+            transform: scale(1.4);
+            box-shadow: 0 0 15px var(--nippon-red);
+        }
+
+        /* Punto Azul (Año) */
         .n-dot-blue {
-            width: 30px; 
-            height: 30px;
+            width: 28px; 
+            height: 28px;
+            background-color: #002244; /* Azul apagado */
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #aaa; /* Color texto inactivo */
-            font-size: 0.8rem;
+            color: #aaa;
+            font-size: 0.7rem;
             font-weight: bold;
+        }
+        .n-dot-blue.selected {
+            background-color: var(--nippon-blue);
+            border-color: white;
+            color: white;
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--nippon-blue);
         }
 
         /* Etiquetas Mes (Ene, Feb...) */
@@ -170,7 +159,7 @@
         .n-lbl-top { top: -18px; }
         .n-lbl-bot { bottom: -18px; }
 
-        /* Botón Calcular */
+        /* Botón Calcular (Necesario para Nippon) */
         .btn-calc-nippon {
             background: linear-gradient(to right, #2563eb, #3b82f6);
             color: white;
@@ -208,12 +197,11 @@
 
         /* RESPONSIVE SCALING */
         @media (max-width: 450px) {
-            .nippon-wrapper { transform: scale(0.82); transform-origin: center top; margin-bottom: -50px; }
+            .nippon-wrapper { transform: scale(0.85); transform-origin: center top; margin-bottom: -40px; }
             .corner-logo { height: 60px; bottom: 10px; }
-            .glass-container { min-height: 550px; }
         }
         @media (max-width: 360px) {
-            .nippon-wrapper { transform: scale(0.7); margin-bottom: -90px; }
+            .nippon-wrapper { transform: scale(0.7); margin-bottom: -80px; }
         }
     </style>
 </head>
@@ -236,7 +224,8 @@
         <button onclick="calcNippon()" class="btn-calc-nippon">CALCULAR</button>
 
         <p class="input-legend">
-            Selecciona Mes (Amarillo) y Años (Azul Claro)
+            Puntos ROJOS = Mes (Selecciona 1)<br>
+            Puntos AZULES = Año (Selecciona combinaciones)
         </p>
 
     </div>
@@ -254,37 +243,32 @@
 
     <script>
         // --- CONFIGURACIÓN DE ELEMENTOS ---
-        
         const ELEMENTS = [
-            // --- FILA SUPERIOR (N-I-P-P-O-N) y MESES 1-6 ---
-            { type: 'letter', char: 'N', x: 25, y: 30, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 20, label: 'ENE', lblPos: 'top' },
-            { type: 'letter', char: 'I', x: 35, y: 25, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 15, label: 'FEB', lblPos: 'top' },
-            { type: 'letter', char: 'P', x: 45, y: 23, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 13, label: 'MAR', lblPos: 'top' },
-            { type: 'letter', char: 'P', x: 55, y: 23, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 13, label: 'ABR', lblPos: 'top' },
-            { type: 'letter', char: 'O', x: 65, y: 25, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 15, label: 'MAY', lblPos: 'top' },
-            { type: 'letter', char: 'N', x: 75, y: 30, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 20, label: 'JUN', lblPos: 'top' },
+            // FILA SUPERIOR (N-I-P-P-O-N) y MESES 1-6
+            { type: 'letter', char: 'N', x: 25, y: 35, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 25, label: 'ENE', lblPos: 'top' },
+            { type: 'letter', char: 'I', x: 35, y: 30, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 20, label: 'FEB', lblPos: 'top' },
+            { type: 'letter', char: 'P', x: 45, y: 28, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 18, label: 'MAR', lblPos: 'top' },
+            { type: 'letter', char: 'P', x: 55, y: 28, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 18, label: 'ABR', lblPos: 'top' },
+            { type: 'letter', char: 'O', x: 65, y: 30, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 20, label: 'MAY', lblPos: 'top' },
+            { type: 'letter', char: 'N', x: 75, y: 35, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 25, label: 'JUN', lblPos: 'top' },
             
-            // --- FILA INFERIOR (S-A-F-E-T-Y) y MESES 7-12 ---
-            { type: 'letter', char: 'S', x: 25, y: 75, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 85, label: 'JUL', lblPos: 'bot' },
-            { type: 'letter', char: 'A', x: 35, y: 80, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 90, label: 'AGO', lblPos: 'bot' },
-            { type: 'letter', char: 'F', x: 45, y: 83, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 93, label: 'SEP', lblPos: 'bot' },
-            { type: 'letter', char: 'E', x: 55, y: 83, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 93, label: 'OCT', lblPos: 'bot' },
-            { type: 'letter', char: 'T', x: 65, y: 80, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 90, label: 'NOV', lblPos: 'bot' },
-            { type: 'letter', char: 'Y', x: 75, y: 75, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 85, label: 'DIC', lblPos: 'bot' },
+            // FILA INFERIOR (S-A-F-E-T-Y) y MESES 7-12
+            { type: 'letter', char: 'S', x: 25, y: 65, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 75, label: 'JUL', lblPos: 'bot' },
+            { type: 'letter', char: 'A', x: 35, y: 70, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 80, label: 'AGO', lblPos: 'bot' },
+            { type: 'letter', char: 'F', x: 45, y: 73, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 83, label: 'SEP', lblPos: 'bot' },
+            { type: 'letter', char: 'E', x: 55, y: 73, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 83, label: 'OCT', lblPos: 'bot' },
+            { type: 'letter', char: 'T', x: 65, y: 70, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 80, label: 'NOV', lblPos: 'bot' },
+            { type: 'letter', char: 'Y', x: 75, y: 65, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 75, label: 'DIC', lblPos: 'bot' },
             
-            // --- PUNTOS AÑOS (AJUSTADOS) ---
+            // PUNTOS AZULES (AÑOS) - POSICIONES AJUSTADAS
+            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 18, y: 35 }, 
+            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 82, y: 35 }, 
+            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 18, y: 65 }, 
+            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 82, y: 65 }, 
             
-            // A y B: Separados 3% más hacia afuera (de 18 a 15 y de 82 a 85)
-            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 15, y: 30 }, 
-            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 85, y: 30 }, 
-            
-            // C y D: Separados 3% más hacia afuera
-            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 15, y: 75 }, 
-            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 85, y: 75 }, 
-            
-            // E y F: Ajustados a Y:70 (Punto medio entre 68 y 72)
-            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 70 }, 
-            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 70 }  
+            // Puntos E y F subidos (y:60) para estar 'entre' las letras
+            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 60 }, 
+            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 60 }  
         ];
 
         // TABLA DE AÑOS
@@ -371,7 +355,7 @@
             if (years) {
                 subText = `Posibles fechas: ${years.join(" / ")}`;
             } else if (state.yDots.length === 0) {
-                subText = "Selecciona puntos para el año";
+                subText = "Selecciona puntos AZULES para el año";
             }
 
             showResultModal(mText, subText);
