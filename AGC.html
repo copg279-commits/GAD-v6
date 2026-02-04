@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGC Automotive - G.A.D. System</title>
+    <title>AGC Automotive - Sistema Mes/Semana</title>
     <style>
         :root {
-            --bg-color: #1a1a1a; 
-            --panel-bg: #252525;
-            --text-color: #f0f0f0;
-            --accent-red: #d32f2f;
-            --accent-green: #2e7d32;
-            --dot-off: #444444;
-            --dot-on: #ffd700;
+            --bg-color: #121212;
+            --panel-bg: #1a1a1a;
+            --text-color: #e0e0e0; /* Texto más grisáceo */
+            --accent-green: #2e7d32; /* Verde Botón */
+            --accent-green-hover: #1b5e20;
+            --dot-off: #333333;
+            --dot-on: #e0e0e0;
+            --dot-border: #555;
+            --dot-size: 18px; 
         }
 
         body {
@@ -25,167 +27,234 @@
             padding: 10px;
             margin: 0;
             min-height: 100vh;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Botón Volver */
+        /* BARRA SUPERIOR */
         .top-bar {
             width: 100%;
-            max-width: 800px;
-            margin-bottom: 20px;
+            max-width: 750px; 
+            margin-bottom: 15px;
             display: flex;
             justify-content: flex-start;
         }
+        
         .back-btn {
-            background: #333;
+            background: #2b2b2b;
             color: #ccc;
-            border: 1px solid #555;
-            padding: 12px 20px;
-            border-radius: 8px;
+            border: 1px solid #444;
+            padding: 10px 15px;
+            border-radius: 6px;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.85rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             text-transform: uppercase;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: all 0.2s;
         }
-        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
 
-        /* Contenedor Principal */
-        .glass-container {
+        /* PANEL PRINCIPAL */
+        .glass-panel {
             background: var(--panel-bg);
-            border: 1px solid #3a3a3a;
-            border-radius: 8px;
-            padding: 20px 0 20px 0; 
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 20px 5px 80px 5px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             width: 100%;
-            max-width: 800px;
+            max-width: 750px;
+            box-sizing: border-box;
             position: relative;
-            min-height: 500px;
-            justify-content: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            min-height: 450px;
         }
 
-        .manufacturer-title {
-            font-weight: bold;
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            color: #fff;
-            margin-bottom: 10px;
-            text-align: center;
+        /* CABECERA (Color más gris) */
+        .header { text-align: center; margin-bottom: 20px; width: 100%; }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #dcdcdc; /* Gris claro/plata */
+            letter-spacing: 1px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
-
-        /* Área de Puntos y Número */
-        .gen-container { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .dots-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            width: fit-content;
-            padding: 10px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-        }
-
-        .gen-dot { 
-            width: 24px; 
-            height: 24px; 
-            background-color: var(--dot-off); 
-            border: 2px solid #555; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .gen-dot.active { 
-            background-color: var(--dot-on); 
-            border-color: white; 
-            box-shadow: 0 0 12px var(--dot-on); 
-            transform: scale(1.15); 
-        }
-
-        .gen-num-display { 
-            font-family: 'Arial', sans-serif; 
-            font-weight: 900; 
-            font-size: 5rem; 
-            color: var(--text-color); 
-            border: 2px dashed #555; 
-            border-radius: 12px; 
-            width: 90px; 
-            height: 110px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            margin: 0 20px; 
-            cursor: pointer; 
-            user-select: none; 
-            line-height: 1;
-            background: rgba(0,0,0,0.2);
-        }
-
-        /* Sugerencia en vivo (texto pequeño) */
-        .live-preview {
-            height: 20px;
-            font-size: 1rem;
-            color: #ffd700;
+        .header .subtitle {
+            color: #888; /* Gris neutro para el subtítulo */
+            font-size: 0.75rem;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.9;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
         }
 
-        /* Botón Calcular */
+        /* CONTENEDOR CENTRAL */
+        .console-container {
+            background: #111;
+            border-radius: 12px;
+            padding: 20px 5px;
+            width: 98%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px; 
+            position: relative;
+            box-sizing: border-box;
+            border: 1px solid #2a2a2a;
+        }
+
+        /* COLUMNAS LATERALES */
+        .side-col {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: center; 
+        }
+
+        /* ETIQUETAS */
+        .side-label {
+            font-size: 0.6rem; color: #777;
+            text-transform: uppercase; font-weight: bold;
+            margin-bottom: 10px; text-align: center;
+        }
+        .row-label {
+            font-size: 0.5rem; color: #666;
+            margin-bottom: 4px; text-transform: uppercase;
+            width: 100%; text-align: center;
+        }
+
+        /* GRIDS DE PUNTOS */
+        .dot-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.03);
+            padding: 8px;
+            border-radius: 20px;
+            min-height: 30px;
+        }
+
+        /* LÓGICA DE DIRECCIÓN (CENTRO HACIA AFUERA) */
+        /* Izquierda: Reverse (1 pegado al número) */
+        .left-side .dot-row {
+            flex-direction: row-reverse; 
+            justify-content: flex-start; 
+        }
+        /* Derecha: Normal (1 pegado al número) */
+        .right-side .dot-row {
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        /* PUNTO */
+        .dot-wrapper {
+            width: var(--dot-size); height: var(--dot-size);
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            padding: 5px; margin: -5px; 
+        }
+        .dot {
+            width: 100%; height: 100%;
+            background-color: var(--dot-off);
+            border-radius: 50%;
+            border: 1px solid #444;
+            transition: all 0.2s;
+            pointer-events: none;
+        }
+        .dot.active {
+            background-color: var(--dot-on);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            border-color: #fff;
+            transform: scale(1.2);
+        }
+
+        /* COLUMNA CENTRAL (AÑO) */
+        .center-col {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            width: 60px; flex-shrink: 0; z-index: 2;
+        }
+        .big-number {
+            font-size: 3.5rem; line-height: 1;
+            font-weight: 800; color: #fff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            cursor: pointer; margin-bottom: 5px;
+        }
+        .tap-hint { font-size: 0.5rem; color: #555; text-transform: uppercase; }
+
+        /* SUGERENCIA EN VIVO */
+        .suggestion-box {
+            min-height: 25px;
+            margin-top: 15px;
+            color: #888;
+            font-size: 0.9rem;
+            font-style: italic;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* BOTÓN CALCULAR VERDE */
         .calc-btn {
-            background-color: var(--accent-green);
-            color: white;
+            background: var(--accent-green);
+            color: #fff;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.1rem;
+            padding: 12px 30px;
+            font-size: 1rem;
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
-            transition: transform 0.1s, box-shadow 0.1s;
-            text-transform: uppercase;
             margin-top: 10px;
-            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+            opacity: 0; 
+            pointer-events: none;
+            transition: all 0.3s;
+            transform: translateY(10px);
         }
-        .calc-btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
+        .calc-btn:hover { background: var(--accent-green-hover); }
+        .calc-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .calc-btn:active { transform: scale(0.95); }
+
+        /* RESULTADO FINAL (MODAL INTEGRADO) */
+        .result-overlay {
+            position: absolute; inset: 0;
+            background: rgba(18, 18, 18, 0.95);
+            border-radius: 15px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .result-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        .res-main { font-size: 1.8rem; color: #fff; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .res-sub { font-size: 1.2rem; color: var(--accent-green); font-family: 'Consolas', monospace; margin-bottom: 20px; font-weight: bold; }
+        .reset-btn {
+            background: transparent; border: 1px solid #555;
+            color: #ccc; padding: 8px 20px; border-radius: 20px;
+            cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
         }
 
-        .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 5px; font-style: italic; max-width: 90%; }
-        .corner-logo { position: absolute; bottom: 10px; height: 70px; width: auto; opacity: 0.6; pointer-events: none; }
-        .logo-left { left: 10px; }
-        .logo-right { right: 10px; }
+        /* LOGOS */
+        .corner-logo { position: absolute; bottom: 15px; height: 60px; width: auto; opacity: 0.6; pointer-events: none; }
+        .logo-left { left: 15px; }
+        .logo-right { right: 15px; }
 
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-box { background: #222; border: 2px solid #ffd700; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
-        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
-
-        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
-        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
-        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-
-        @media (max-width: 600px) {
-            .gen-num-display { font-size: 3.5rem; width: 70px; height: 90px; margin: 0 10px; }
-            .gen-dot { width: 20px; height: 20px; }
-            .dots-grid { gap: 6px; padding: 6px; }
-            .manufacturer-title { font-size: 1.2rem; }
+        @media (max-width: 450px) {
+            .big-number { font-size: 3rem; }
+            :root { --dot-size: 16px; }
+            .console-container { padding: 15px 2px; }
+            .side-label { font-size: 0.5rem; }
         }
     </style>
 </head>
@@ -193,163 +262,183 @@
 
     <div class="top-bar">
         <a href="index_lunas.html" class="back-btn">
-            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+            <span>&#8592;</span> VOLVER AL SELECTOR DE FABRICANTES
         </a>
     </div>
 
-    <div class="glass-container">
-        <div class="manufacturer-title">AGC AUTOMOTIVE</div>
+    <div class="glass-panel">
         
-        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
-        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
-
-        <div class="gen-container">
-            <div class="dots-grid" id="grid-left"></div>
-            
-            <div class="gen-num-display" id="genNumDisplay" onclick="toggleGenYear()">4</div>
-            
-            <div class="dots-grid" id="grid-right"></div>
+        <div class="header">
+            <h1>AGC AUTOMOTIVE</h1>
+            <div class="subtitle">SISTEMA MES Y SEMANA</div>
         </div>
 
-        <div class="live-preview" id="livePreview">--</div>
+        <div class="console-container">
+            
+            <div class="side-col left-side">
+                <span class="side-label">IZQUIERDA</span>
+                
+                <span class="row-label">MES (1-6)</span>
+                <div class="dot-row" id="month-left">
+                    <div class="dot-wrapper" onclick="handleInput('L', 'month', 1)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'month', 2)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'month', 3)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'month', 4)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'month', 5)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'month', 6)"><div class="dot"></div></div>
+                </div>
 
-        <button class="calc-btn" onclick="openModal()">CALCULAR</button>
-        
-        <p class="input-legend">Marca puntos en la cuadrícula (Máx. 6 total por lado).<br>La posición no importa, solo la cantidad.</p>
-    </div>
-
-    <div id="resultModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="result-content">
-                <h2>RESULTADO</h2>
-                <div class="res-modal-main" id="res-modal-main">--</div>
-                <div class="res-modal-sub" id="res-modal-sub">...</div>
+                <span class="row-label">SEMANA (1-4)</span>
+                <div class="dot-row" id="week-left">
+                    <div class="dot-wrapper" onclick="handleInput('L', 'week', 1)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'week', 2)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'week', 3)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('L', 'week', 4)"><div class="dot"></div></div>
+                </div>
             </div>
-            <button class="close-btn" onclick="closeResult()">CERRAR</button>
+
+            <div class="center-col">
+                <div class="big-number" id="yearNum" onclick="cycleNumber()">4</div>
+                <div class="tap-hint">AÑO</div>
+            </div>
+
+            <div class="side-col right-side">
+                <span class="side-label">DERECHA</span>
+                
+                <span class="row-label">MES (7-12)</span>
+                <div class="dot-row" id="month-right">
+                    <div class="dot-wrapper" onclick="handleInput('R', 'month', 1)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'month', 2)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'month', 3)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'month', 4)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'month', 5)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'month', 6)"><div class="dot"></div></div>
+                </div>
+
+                <span class="row-label">SEMANA (1-4)</span>
+                <div class="dot-row" id="week-right">
+                    <div class="dot-wrapper" onclick="handleInput('R', 'week', 1)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'week', 2)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'week', 3)"><div class="dot"></div></div>
+                    <div class="dot-wrapper" onclick="handleInput('R', 'week', 4)"><div class="dot"></div></div>
+                </div>
+            </div>
+
         </div>
+
+        <div class="suggestion-box" id="suggestion"></div>
+
+        <button class="calc-btn" id="calcBtn" onclick="showFinalResult()">CALCULAR</button>
+
+        <div class="result-overlay" id="resultOverlay">
+            <div class="res-main" id="finalResultText">--</div>
+            <div class="res-sub" id="finalResultYears">--</div>
+            <button class="reset-btn" onclick="resetAll()">NUEVA CONSULTA</button>
+        </div>
+
+        <img src="logogad2.png" alt="Logo" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo" class="corner-logo logo-right">
+
     </div>
 
     <script>
-        // Estado: activeSide ('left', 'right', o null), y un Set para los índices marcados
-        let state = {
-            year: 4,
-            activeSide: null, // 'left' o 'right'
-            markedIndices: new Set() // Guarda qué puntos (1-8) están activos
-        };
+        let activeSide = null; 
+        let monthCount = 0;    
+        let weekCount = 0;     
+        let yearDigit = 4;
 
         const months = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", 
                         "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
-        window.onload = () => {
-            renderGrids();
-            updatePreview();
-        };
+        function handleInput(side, type, index) {
+            if (activeSide !== side) {
+                activeSide = side;
+                monthCount = 0;
+                weekCount = 0;
+            }
 
-        function toggleGenYear() {
-            state.year = (state.year + 1) % 10;
-            document.getElementById('genNumDisplay').textContent = state.year;
-            updatePreview();
+            if (type === 'month') {
+                monthCount = index;
+            } else if (type === 'week') {
+                weekCount = index;
+            }
+
+            updateVisuals();
+            updateSuggestion();
         }
 
-        // Maneja el clic en un punto específico
-        function handleDotClick(side, index) {
-            // Si cambiamos de lado, limpiamos el anterior
-            if (state.activeSide !== side) {
-                state.activeSide = side;
-                state.markedIndices.clear();
-            }
+        function updateVisuals() {
+            document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
 
-            // Si ya está marcado, lo quitamos
-            if (state.markedIndices.has(index)) {
-                state.markedIndices.delete(index);
-            } else {
-                // Si no está marcado, verificamos que no pasemos de 6
-                if (state.markedIndices.size < 6) {
-                    state.markedIndices.add(index);
-                }
-            }
+            if (!activeSide) return;
 
-            // Si se vacía el lado, reseteamos activeSide a null para limpieza
-            if (state.markedIndices.size === 0) {
-                state.activeSide = null;
-            }
+            // Iluminar Meses
+            const mGrid = document.getElementById(activeSide === 'L' ? 'month-left' : 'month-right');
+            const mDots = mGrid.querySelectorAll('.dot');
+            mDots.forEach((d, i) => {
+                if (i < monthCount) d.classList.add('active');
+            });
 
-            renderGrids();
-            updatePreview();
-        }
-
-        function renderGrids() {
-            // Renderiza ambos lados
-            ['left', 'right'].forEach(side => {
-                const container = document.getElementById(`grid-${side}`);
-                container.innerHTML = '';
-
-                // Creamos los 8 puntos del grid (4x2)
-                for (let i = 1; i <= 8; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'gen-dot';
-                    
-                    // Verificamos si este lado es el activo y si el índice está en el Set
-                    if (state.activeSide === side && state.markedIndices.has(i)) {
-                        dot.classList.add('active');
-                    }
-
-                    dot.onclick = () => handleDotClick(side, i);
-                    container.appendChild(dot);
-                }
+            // Iluminar Semanas
+            const wGrid = document.getElementById(activeSide === 'L' ? 'week-left' : 'week-right');
+            const wDots = wGrid.querySelectorAll('.dot');
+            wDots.forEach((d, i) => {
+                if (i < weekCount) d.classList.add('active');
             });
         }
 
-        // Calcula el mes y devuelve el texto (para preview o modal)
-        function getCalculationData() {
-            const count = state.markedIndices.size;
+        function updateSuggestion() {
+            const sugBox = document.getElementById('suggestion');
+            const btn = document.getElementById('calcBtn');
+
+            if (!activeSide || monthCount === 0) {
+                sugBox.innerText = "";
+                btn.classList.remove('visible');
+                return;
+            }
+
+            let mIndex = monthCount;
+            if (activeSide === 'R') mIndex += 6; // Lógica 7-12
             
-            if (count === 0) return null;
+            let txt = `Sugerencia: ${months[mIndex]}`;
+            if (weekCount > 0) txt += ` (Semana ${weekCount})`;
 
-            let monthIdx = 0;
-            if (state.activeSide === 'left') {
-                // Izquierda: 1 punto = Enero, 6 puntos = Junio
-                monthIdx = count;
-            } else if (state.activeSide === 'right') {
-                // Derecha: 1 punto = Julio, 6 puntos = Diciembre
-                monthIdx = 6 + count;
-            }
-
-            return {
-                monthName: months[monthIdx],
-                yearsStr: `Posibles fechas: ${2000+state.year} / ${2010+state.year} / ${2020+state.year}`
-            };
+            sugBox.innerText = txt;
+            btn.classList.add('visible');
         }
 
-        // Actualiza el texto pequeño encima del botón
-        function updatePreview() {
-            const data = getCalculationData();
-            const previewEl = document.getElementById('livePreview');
+        function cycleNumber() {
+            yearDigit++;
+            if (yearDigit > 9) yearDigit = 0;
+            document.getElementById('yearNum').innerText = yearDigit;
+        }
+
+        function showFinalResult() {
+            if (!activeSide || monthCount === 0) return;
+
+            let mIndex = monthCount;
+            if (activeSide === 'R') mIndex += 6;
+
+            const mName = months[mIndex];
+            const wText = weekCount > 0 ? ` - SEMANA ${weekCount}` : "";
             
-            if (data) {
-                previewEl.textContent = `${data.monthName} (Año ...${state.year})`;
-            } else {
-                previewEl.textContent = "Selecciona puntos...";
-            }
+            let y0 = `200${yearDigit}`;
+            let y1 = `201${yearDigit}`;
+            let y2 = `202${yearDigit}`;
+
+            document.getElementById('finalResultText').innerText = mName + wText;
+            document.getElementById('finalResultYears').innerHTML = `${y0} / ${y1} / ${y2}`;
+            
+            document.getElementById('resultOverlay').classList.add('show');
         }
 
-        // Abre el modal con el resultado final
-        function openModal() {
-            const data = getCalculationData();
-            if (data) {
-                document.getElementById('res-modal-main').textContent = `${data.monthName} - Año ...${state.year}`;
-                document.getElementById('res-modal-sub').textContent = data.yearsStr;
-                document.getElementById('resultModal').style.display = 'flex';
-            } else {
-                // Feedback visual si no hay nada seleccionado (opcional)
-                const btn = document.querySelector('.calc-btn');
-                btn.style.backgroundColor = '#d32f2f';
-                setTimeout(() => btn.style.backgroundColor = 'var(--accent-green)', 200);
-            }
-        }
-
-        function closeResult() {
-            document.getElementById('resultModal').style.display = 'none';
+        function resetAll() {
+            activeSide = null;
+            monthCount = 0;
+            weekCount = 0;
+            updateVisuals();
+            updateSuggestion();
+            document.getElementById('resultOverlay').classList.remove('show');
         }
     </script>
 </body>
