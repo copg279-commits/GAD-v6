@@ -272,17 +272,19 @@
             { type: 'letter', char: 'T', x: 65, y: 80, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 90, label: 'NOV', lblPos: 'bot' },
             { type: 'letter', char: 'Y', x: 75, y: 75, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 85, label: 'DIC', lblPos: 'bot' },
             
-            // --- PUNTOS AÑOS ---
-            // A, B, C, D (Intactos)
-            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 18, y: 30 }, 
-            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 82, y: 30 }, 
-            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 18, y: 75 }, 
-            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 82, y: 75 }, 
+            // --- PUNTOS AÑOS (AJUSTADOS) ---
             
-            // Puntos E y F
-            // AHORA EN PUNTO MEDIO (Y: 68%)
-            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 68 }, 
-            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 68 }  
+            // A y B: Separados 3% más hacia afuera (de 18 a 15 y de 82 a 85)
+            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 15, y: 30 }, 
+            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 85, y: 30 }, 
+            
+            // C y D: Separados 3% más hacia afuera
+            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 15, y: 75 }, 
+            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 85, y: 75 }, 
+            
+            // E y F: Ajustados a Y:70 (Punto medio entre 68 y 72)
+            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 70 }, 
+            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 70 }  
         ];
 
         // TABLA DE AÑOS
