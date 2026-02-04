@@ -74,7 +74,7 @@
             max-width: 800px;
             box-sizing: border-box;
             position: relative;
-            min-height: 500px; 
+            min-height: 600px; 
             justify-content: center;
         }
 
@@ -82,7 +82,7 @@
         .nippon-wrapper {
             position: relative;
             width: 100%;
-            height: 350px;
+            height: 450px; 
             max-width: 500px;
             margin: 0 auto;
         }
@@ -121,7 +121,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        /* ESTADO SELECCIONADO - MESES (ROJOS EN LÓGICA, AMARILLOS VISUALMENTE) */
+        /* ESTADO SELECCIONADO - MESES (AMARILLO) */
         .n-dot-red.selected {
             background-color: var(--active-yellow) !important;
             border-color: var(--active-border) !important;
@@ -130,7 +130,7 @@
             color: #000 !important; 
         }
 
-        /* ESTADO SELECCIONADO - AÑOS (AZULES EN LÓGICA, AZUL CLARO VISUALMENTE) */
+        /* ESTADO SELECCIONADO - AÑOS (AZUL CLARO) */
         .n-dot-blue.selected {
             background-color: var(--active-blue) !important;
             border-color: var(--active-border) !important;
@@ -208,11 +208,12 @@
 
         /* RESPONSIVE SCALING */
         @media (max-width: 450px) {
-            .nippon-wrapper { transform: scale(0.85); transform-origin: center top; margin-bottom: -40px; }
+            .nippon-wrapper { transform: scale(0.82); transform-origin: center top; margin-bottom: -50px; }
             .corner-logo { height: 60px; bottom: 10px; }
+            .glass-container { min-height: 550px; }
         }
         @media (max-width: 360px) {
-            .nippon-wrapper { transform: scale(0.7); margin-bottom: -80px; }
+            .nippon-wrapper { transform: scale(0.7); margin-bottom: -90px; }
         }
     </style>
 </head>
@@ -253,32 +254,35 @@
 
     <script>
         // --- CONFIGURACIÓN DE ELEMENTOS ---
+        
         const ELEMENTS = [
-            // FILA SUPERIOR (N-I-P-P-O-N) y MESES 1-6
-            { type: 'letter', char: 'N', x: 25, y: 35, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 25, label: 'ENE', lblPos: 'top' },
-            { type: 'letter', char: 'I', x: 35, y: 30, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 20, label: 'FEB', lblPos: 'top' },
-            { type: 'letter', char: 'P', x: 45, y: 28, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 18, label: 'MAR', lblPos: 'top' },
-            { type: 'letter', char: 'P', x: 55, y: 28, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 18, label: 'ABR', lblPos: 'top' },
-            { type: 'letter', char: 'O', x: 65, y: 30, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 20, label: 'MAY', lblPos: 'top' },
-            { type: 'letter', char: 'N', x: 75, y: 35, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 25, label: 'JUN', lblPos: 'top' },
+            // --- FILA SUPERIOR (N-I-P-P-O-N) y MESES 1-6 ---
+            { type: 'letter', char: 'N', x: 25, y: 30, rot: -20 }, { type: 'dot', id: 'm1', val: 1, color: 'red', x: 25, y: 20, label: 'ENE', lblPos: 'top' },
+            { type: 'letter', char: 'I', x: 35, y: 25, rot: -10 }, { type: 'dot', id: 'm2', val: 2, color: 'red', x: 35, y: 15, label: 'FEB', lblPos: 'top' },
+            { type: 'letter', char: 'P', x: 45, y: 23, rot: -5 },  { type: 'dot', id: 'm3', val: 3, color: 'red', x: 45, y: 13, label: 'MAR', lblPos: 'top' },
+            { type: 'letter', char: 'P', x: 55, y: 23, rot: 5 },   { type: 'dot', id: 'm4', val: 4, color: 'red', x: 55, y: 13, label: 'ABR', lblPos: 'top' },
+            { type: 'letter', char: 'O', x: 65, y: 25, rot: 10 },  { type: 'dot', id: 'm5', val: 5, color: 'red', x: 65, y: 15, label: 'MAY', lblPos: 'top' },
+            { type: 'letter', char: 'N', x: 75, y: 30, rot: 20 },  { type: 'dot', id: 'm6', val: 6, color: 'red', x: 75, y: 20, label: 'JUN', lblPos: 'top' },
             
-            // FILA INFERIOR (S-A-F-E-T-Y) y MESES 7-12
-            { type: 'letter', char: 'S', x: 25, y: 65, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 75, label: 'JUL', lblPos: 'bot' },
-            { type: 'letter', char: 'A', x: 35, y: 70, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 80, label: 'AGO', lblPos: 'bot' },
-            { type: 'letter', char: 'F', x: 45, y: 73, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 83, label: 'SEP', lblPos: 'bot' },
-            { type: 'letter', char: 'E', x: 55, y: 73, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 83, label: 'OCT', lblPos: 'bot' },
-            { type: 'letter', char: 'T', x: 65, y: 70, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 80, label: 'NOV', lblPos: 'bot' },
-            { type: 'letter', char: 'Y', x: 75, y: 65, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 75, label: 'DIC', lblPos: 'bot' },
+            // --- FILA INFERIOR (S-A-F-E-T-Y) y MESES 7-12 ---
+            { type: 'letter', char: 'S', x: 25, y: 75, rot: 20 },  { type: 'dot', id: 'm7', val: 7, color: 'red', x: 25, y: 85, label: 'JUL', lblPos: 'bot' },
+            { type: 'letter', char: 'A', x: 35, y: 80, rot: 10 },  { type: 'dot', id: 'm8', val: 8, color: 'red', x: 35, y: 90, label: 'AGO', lblPos: 'bot' },
+            { type: 'letter', char: 'F', x: 45, y: 83, rot: 5 },   { type: 'dot', id: 'm9', val: 9, color: 'red', x: 45, y: 93, label: 'SEP', lblPos: 'bot' },
+            { type: 'letter', char: 'E', x: 55, y: 83, rot: -5 },  { type: 'dot', id: 'm10', val: 10, color: 'red', x: 55, y: 93, label: 'OCT', lblPos: 'bot' },
+            { type: 'letter', char: 'T', x: 65, y: 80, rot: -10 }, { type: 'dot', id: 'm11', val: 11, color: 'red', x: 65, y: 90, label: 'NOV', lblPos: 'bot' },
+            { type: 'letter', char: 'Y', x: 75, y: 75, rot: -20 }, { type: 'dot', id: 'm12', val: 12, color: 'red', x: 75, y: 85, label: 'DIC', lblPos: 'bot' },
             
-            // PUNTOS AÑOS (Posiciones Ajustadas)
-            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 18, y: 35 }, 
-            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 82, y: 35 }, 
-            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 18, y: 65 }, 
-            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 82, y: 65 }, 
+            // --- PUNTOS AÑOS ---
+            // A, B, C, D (Intactos)
+            { type: 'dot', id: 'yA', val: 'A', label: 'A', color: 'blue', x: 18, y: 30 }, 
+            { type: 'dot', id: 'yB', val: 'B', label: 'B', color: 'blue', x: 82, y: 30 }, 
+            { type: 'dot', id: 'yC', val: 'C', label: 'C', color: 'blue', x: 18, y: 75 }, 
+            { type: 'dot', id: 'yD', val: 'D', label: 'D', color: 'blue', x: 82, y: 75 }, 
             
             // Puntos E y F
-            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 60 }, 
-            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 60 }  
+            // AHORA EN PUNTO MEDIO (Y: 68%)
+            { type: 'dot', id: 'yE', val: 'E', label: 'E', color: 'blue', x: 30, y: 68 }, 
+            { type: 'dot', id: 'yF', val: 'F', label: 'F', color: 'blue', x: 70, y: 68 }  
         ];
 
         // TABLA DE AÑOS
@@ -314,7 +318,6 @@
                 } 
                 else if (el.type === 'dot') {
                     const dot = document.createElement('div');
-                    // Asigna clase n-dot-red o n-dot-blue según la config
                     dot.className = `n-dot n-dot-${el.color}`;
                     if(el.label && el.color === 'blue') dot.textContent = el.label;
 
