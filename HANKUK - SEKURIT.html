@@ -24,8 +24,20 @@
             padding: 10px; margin: 0; min-height: 100vh; user-select: none;
         }
 
-        .top-bar { width: 100%; max-width: 800px; margin-bottom: 20px; display: flex; justify-content: flex-start; }
-        .back-btn { background: #333; color: #ccc; border: 1px solid #555; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        /* BARRA SUPERIOR CORREGIDA */
+        .top-bar {
+            width: 100%; max-width: 800px; margin-bottom: 20px;
+            display: flex; justify-content: flex-start;
+        }
+        .back-btn {
+            background: #333; color: #ccc; border: 1px solid #555;
+            padding: 12px 20px; border-radius: 8px; text-decoration: none;
+            font-weight: bold; font-size: 0.85rem; display: inline-flex;
+            align-items: center; gap: 8px; text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
 
         .glass-container {
             background: var(--panel-bg); border: 1px solid #3a3a3a;
@@ -80,7 +92,9 @@
 <body>
 
     <div class="top-bar">
-        <a href="menu_lunas.html" class="back-btn">&#8678; VOLVER</a>
+        <a href="index_lunas.html" class="back-btn">
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
+        </a>
     </div>
 
     <div class="glass-container">
