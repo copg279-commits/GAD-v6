@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGC AUTOMOTIVE - Doble Fila</title>
+    <title>AGC Automotive - G.A.D. System</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --panel-bg: #1a1a1a;
-            --text-color: #ffffff;
-            --accent-blue: #00bfff; /* Azul similar al de la imagen */
-            --dot-off: #333333;
-            --dot-on: #e0e0e0;
-            --dot-border: #555;
-            --dot-size: 16px;
+            --bg-color: #1a1a1a; 
+            --panel-bg: #252525;
+            --text-color: #f0f0f0;
+            --accent-red: #d32f2f;
+            --accent-green: #2e7d32;
+            --dot-off: #444444;
+            --dot-on: #ffd700;
         }
 
         body {
@@ -26,200 +25,167 @@
             padding: 10px;
             margin: 0;
             min-height: 100vh;
-            user-select: none;
         }
 
-        /* --- BARRA SUPERIOR --- */
+        /* Botón Volver */
         .top-bar {
             width: 100%;
-            max-width: 700px; 
-            margin-bottom: 15px;
+            max-width: 800px;
+            margin-bottom: 20px;
             display: flex;
             justify-content: flex-start;
         }
-        
         .back-btn {
-            background: #2b2b2b;
+            background: #333;
             color: #ccc;
-            border: 1px solid #444;
-            padding: 10px 15px;
-            border-radius: 6px;
+            border: 1px solid #555;
+            padding: 12px 20px;
+            border-radius: 8px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: bold;
             font-size: 0.85rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             text-transform: uppercase;
-            transition: background 0.2s;
-        }
-        .back-btn:active { background: #444; color: #fff; }
-
-        /* --- CONTENEDOR PRINCIPAL --- */
-        .glass-panel {
-            background: var(--panel-bg);
-            border: 1px solid #333;
-            border-radius: 15px;
-            /* Padding ajustado para parecerse a la imagen */
-            padding: 30px 10px 50px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 700px;
-            box-sizing: border-box;
-            position: relative;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-        }
-
-        /* CABECERA (DENTRO DEL CONTENEDOR) */
-        .header { text-align: center; margin-bottom: 25px; width: 100%; }
-        .header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #fff;
-            letter-spacing: 1px;
-        }
-        .header .subtitle {
-            color: var(--accent-blue);
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-top: 5px;
-            letter-spacing: 0.5px;
-        }
-
-        /* --- ZONA CENTRAL (DOTS Y NÚMERO) --- */
-        .console-container {
-            background: #111; /* Fondo negro interior */
-            border-radius: 15px;
-            padding: 20px 10px;
-            width: 95%;
-            max-width: 500px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-        }
-
-        /* COLUMNAS LATERALES (PUNTOS) */
-        .side-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-        .side-label {
-            font-size: 0.6rem;
-            color: #666;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-
-        /* GRID DE PUNTOS (2 filas x 4 columnas = 8 huecos visuales) */
-        .dot-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-        }
-
-        .dot-wrapper {
-            width: var(--dot-size);
-            height: var(--dot-size);
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .dot {
-            width: 100%;
-            height: 100%;
-            background-color: var(--dot-off);
-            border-radius: 50%;
-            border: 1px solid #444;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: all 0.2s;
         }
-        /* Estado Activo */
-        .dot.active {
-            background-color: var(--dot-on);
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-            border-color: #fff;
-            transform: scale(1.1);
-        }
+        .back-btn:active { transform: scale(0.98); background: #444; color: white; }
 
-        /* COLUMNA CENTRAL (NÚMERO) */
-        .center-col {
+        /* Contenedor Principal */
+        .glass-container {
+            background: var(--panel-bg);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 20px 0 20px 0; 
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+            min-height: 500px;
             justify-content: center;
-            width: 80px;
         }
 
-        .big-number {
-            font-size: 5.5rem;
-            line-height: 1;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-            cursor: pointer; 
-            margin-bottom: 5px;
-        }
-        /* Indicador visual pequeño de que se puede clicar */
-        .tap-hint {
-            font-size: 0.6rem;
-            color: #444;
-            text-transform: uppercase;
-        }
-
-        /* --- RESULTADO --- */
-        .divider {
-            color: var(--accent-blue);
+        .manufacturer-title {
             font-weight: bold;
-            margin: 20px 0 10px 0;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: #fff;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        .result-text {
-            color: #ccc;
-            font-size: 0.9rem;
+        /* Área de Puntos y Número */
+        .gen-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .dots-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: fit-content;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .gen-dot { 
+            width: 24px; 
+            height: 24px; 
+            background-color: var(--dot-off); 
+            border: 2px solid #555; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .gen-dot.active { 
+            background-color: var(--dot-on); 
+            border-color: white; 
+            box-shadow: 0 0 12px var(--dot-on); 
+            transform: scale(1.15); 
+        }
+
+        .gen-num-display { 
+            font-family: 'Arial', sans-serif; 
+            font-weight: 900; 
+            font-size: 5rem; 
+            color: var(--text-color); 
+            border: 2px dashed #555; 
+            border-radius: 12px; 
+            width: 90px; 
+            height: 110px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 20px; 
+            cursor: pointer; 
+            user-select: none; 
+            line-height: 1;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* Sugerencia en vivo (texto pequeño) */
+        .live-preview {
+            height: 20px;
+            font-size: 1rem;
+            color: #ffd700;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-weight: bold;
+            opacity: 0.9;
         }
-        
-        .result-years {
-            color: #fff;
+
+        /* Botón Calcular */
+        .calc-btn {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 15px 40px;
             font-size: 1.1rem;
-            margin-top: 5px;
-            font-weight: normal;
-        }
-        .result-years span {
-            color: var(--accent-blue);
             font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-transform: uppercase;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .calc-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
         }
 
-        /* LOGOS */
-        .corner-logo { 
-            position: absolute; bottom: 15px; 
-            height: 50px; width: auto; 
-            opacity: 0.6; pointer-events: none; 
-        }
-        .logo-left { left: 15px; }
-        .logo-right { right: 15px; }
+        .input-legend { color: #777; font-size: 0.75rem; text-align: center; margin-top: 5px; font-style: italic; max-width: 90%; }
+        .corner-logo { position: absolute; bottom: 10px; height: 70px; width: auto; opacity: 0.6; pointer-events: none; }
+        .logo-left { left: 10px; }
+        .logo-right { right: 10px; }
 
-        /* AJUSTES MÓVIL */
-        @media (max-width: 450px) {
-            .console-container { gap: 5px; padding: 15px 5px; width: 100%; }
-            .big-number { font-size: 4rem; }
-            .side-label { font-size: 0.5rem; }
-            :root { --dot-size: 13px; }
-            .dot-grid { gap: 4px; }
-            .header h1 { font-size: 1.5rem; }
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-box { background: #222; border: 2px solid #ffd700; padding: 25px; width: 85%; max-width: 400px; border-radius: 12px; text-align: center; animation: popIn 0.3s; }
+        @keyframes popIn { from {transform:scale(0.8);opacity:0;} to {transform:scale(1);opacity:1;} }
+
+        .res-modal-main { font-size: 2rem; color: #fff; font-weight: bold; margin: 10px 0; }
+        .res-modal-sub { color: #ffd700; font-size: 1.1rem; margin-bottom: 20px; display: block; }
+        .close-btn { width: 100%; background: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        @media (max-width: 600px) {
+            .gen-num-display { font-size: 3.5rem; width: 70px; height: 90px; margin: 0 10px; }
+            .gen-dot { width: 20px; height: 20px; }
+            .dots-grid { gap: 6px; padding: 6px; }
+            .manufacturer-title { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -227,166 +193,163 @@
 
     <div class="top-bar">
         <a href="index_lunas.html" class="back-btn">
-            <span>&#8592;</span> VOLVER AL SELECTOR DE FABRICANTES
+            <span>&#8678;</span> VOLVER AL SELECTOR DE FABRICANTES
         </a>
     </div>
 
-    <div class="glass-panel">
+    <div class="glass-container">
+        <div class="manufacturer-title">AGC AUTOMOTIVE</div>
         
-        <div class="header">
-            <h1>AGC AUTOMOTIVE</h1>
-            <div class="subtitle">SISTEMA DOBLE FILA (MAX 6 PUNTOS)</div>
+        <img src="logogad2.png" alt="Logo Izq" class="corner-logo logo-left">
+        <img src="logogad.png" alt="Logo Der" class="corner-logo logo-right">
+
+        <div class="gen-container">
+            <div class="dots-grid" id="grid-left"></div>
+            
+            <div class="gen-num-display" id="genNumDisplay" onclick="toggleGenYear()">4</div>
+            
+            <div class="dots-grid" id="grid-right"></div>
         </div>
 
-        <div class="console-container">
-            <div class="side-col">
-                <span class="side-label">IZQUIERDA</span>
-                <div class="dot-grid" id="grid-left">
-                    <div class="dot-wrapper" onclick="toggleDot('L', 0)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 1)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 2)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 3)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 4)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 5)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 6)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('L', 7)"><div class="dot"></div></div>
-                </div>
-            </div>
+        <div class="live-preview" id="livePreview">--</div>
 
-            <div class="center-col">
-                <div class="big-number" id="yearNum" onclick="cycleNumber()">9</div>
-                <div class="tap-hint">TOCA PARA CAMBIAR</div>
-            </div>
+        <button class="calc-btn" onclick="openModal()">CALCULAR</button>
+        
+        <p class="input-legend">Marca puntos en la cuadrícula (Máx. 6 total por lado).<br>La posición no importa, solo la cantidad.</p>
+    </div>
 
-            <div class="side-col">
-                <span class="side-label">DERECHA</span>
-                <div class="dot-grid" id="grid-right">
-                    <div class="dot-wrapper" onclick="toggleDot('R', 0)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 1)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 2)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 3)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 4)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 5)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 6)"><div class="dot"></div></div>
-                    <div class="dot-wrapper" onclick="toggleDot('R', 7)"><div class="dot"></div></div>
-                </div>
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="result-content">
+                <h2>RESULTADO</h2>
+                <div class="res-modal-main" id="res-modal-main">--</div>
+                <div class="res-modal-sub" id="res-modal-sub">...</div>
             </div>
+            <button class="close-btn" onclick="closeResult()">CERRAR</button>
         </div>
-
-        <div class="divider">--</div>
-        <div class="result-text" id="result-text">MARCA PUNTOS</div>
-        <div class="result-years" id="result-years"></div>
-
-        <img src="logogad2.png" alt="Logo" class="corner-logo logo-left">
-        <img src="logogad.png" alt="Logo" class="corner-logo logo-right">
-
     </div>
 
     <script>
-        // Variables de estado
-        let leftDots = 0; // Cantidad de puntos activos a la izquierda
-        let rightDots = 0; // Cantidad de puntos activos a la derecha
-        let currentYearDigit = 9;
+        // Estado: activeSide ('left', 'right', o null), y un Set para los índices marcados
+        let state = {
+            year: 4,
+            activeSide: null, // 'left' o 'right'
+            markedIndices: new Set() // Guarda qué puntos (1-8) están activos
+        };
 
-        // Limpiar otros puntos al seleccionar (Para simular conteo acumulativo o selección única)
-        // En AGC normalmente se cuentan los puntos. Aquí haremos que al pulsar el 3er punto, se iluminen 3.
-        
-        function toggleDot(side, index) {
-            const gridId = side === 'L' ? 'grid-left' : 'grid-right';
-            const grid = document.getElementById(gridId);
-            const dots = grid.querySelectorAll('.dot');
-            
-            // Lógica: Si toco el punto 3 (índice 2), activo 0, 1 y 2.
-            // Si toco uno ya activo, reduzco la cuenta.
-            
-            let clickedCount = index + 1;
-            let currentCount = side === 'L' ? leftDots : rightDots;
+        const months = ["", "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", 
+                        "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
-            // Si hago clic en el mismo número que ya tengo, lo apago (vuelvo a 0 o al anterior)
-            // Para simplificar: clic en el punto N -> activa N puntos.
-            // Si quiero borrar, clic en el último activo o crear botón reset. 
-            // Mejor: Clic en punto N activa hasta N. Si N ya es el max, desactiva todo (0).
-            
-            let newCount = clickedCount;
-            if (clickedCount === currentCount) {
-                newCount = 0; 
+        window.onload = () => {
+            renderGrids();
+            updatePreview();
+        };
+
+        function toggleGenYear() {
+            state.year = (state.year + 1) % 10;
+            document.getElementById('genNumDisplay').textContent = state.year;
+            updatePreview();
+        }
+
+        // Maneja el clic en un punto específico
+        function handleDotClick(side, index) {
+            // Si cambiamos de lado, limpiamos el anterior
+            if (state.activeSide !== side) {
+                state.activeSide = side;
+                state.markedIndices.clear();
             }
 
-            // Actualizar estado
-            if (side === 'L') {
-                leftDots = newCount;
-                rightDots = 0; // Normalmente es un lado U otro, no ambos a la vez para el mes.
+            // Si ya está marcado, lo quitamos
+            if (state.markedIndices.has(index)) {
+                state.markedIndices.delete(index);
             } else {
-                rightDots = newCount;
-                leftDots = 0;
+                // Si no está marcado, verificamos que no pasemos de 6
+                if (state.markedIndices.size < 6) {
+                    state.markedIndices.add(index);
+                }
             }
 
-            updateVisuals();
-            calculate();
+            // Si se vacía el lado, reseteamos activeSide a null para limpieza
+            if (state.markedIndices.size === 0) {
+                state.activeSide = null;
+            }
+
+            renderGrids();
+            updatePreview();
         }
 
-        function updateVisuals() {
-            // Actualizar Izquierda
-            const lDots = document.querySelectorAll('#grid-left .dot');
-            lDots.forEach((d, i) => {
-                if (i < leftDots) d.classList.add('active');
-                else d.classList.remove('active');
+        function renderGrids() {
+            // Renderiza ambos lados
+            ['left', 'right'].forEach(side => {
+                const container = document.getElementById(`grid-${side}`);
+                container.innerHTML = '';
+
+                // Creamos los 8 puntos del grid (4x2)
+                for (let i = 1; i <= 8; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'gen-dot';
+                    
+                    // Verificamos si este lado es el activo y si el índice está en el Set
+                    if (state.activeSide === side && state.markedIndices.has(i)) {
+                        dot.classList.add('active');
+                    }
+
+                    dot.onclick = () => handleDotClick(side, i);
+                    container.appendChild(dot);
+                }
             });
-
-            // Actualizar Derecha
-            const rDots = document.querySelectorAll('#grid-right .dot');
-            rDots.forEach((d, i) => {
-                if (i < rightDots) d.classList.add('active');
-                else d.classList.remove('active');
-            });
         }
 
-        function cycleNumber() {
-            currentYearDigit++;
-            if (currentYearDigit > 9) currentYearDigit = 0;
-            document.getElementById('yearNum').innerText = currentYearDigit;
-            calculate();
+        // Calcula el mes y devuelve el texto (para preview o modal)
+        function getCalculationData() {
+            const count = state.markedIndices.size;
+            
+            if (count === 0) return null;
+
+            let monthIdx = 0;
+            if (state.activeSide === 'left') {
+                // Izquierda: 1 punto = Enero, 6 puntos = Junio
+                monthIdx = count;
+            } else if (state.activeSide === 'right') {
+                // Derecha: 1 punto = Julio, 6 puntos = Diciembre
+                monthIdx = 6 + count;
+            }
+
+            return {
+                monthName: months[monthIdx],
+                yearsStr: `Posibles fechas: ${2000+state.year} / ${2010+state.year} / ${2020+state.year}`
+            };
         }
 
-        function calculate() {
-            const resText = document.getElementById('result-text');
-            const resYears = document.getElementById('result-years');
+        // Actualiza el texto pequeño encima del botón
+        function updatePreview() {
+            const data = getCalculationData();
+            const previewEl = document.getElementById('livePreview');
             
-            // Lógica AGC (Aproximada estándar)
-            // Izquierda: 1 punto = Enero ... 6 puntos = Junio
-            // Derecha: 1 punto = Julio ... 6 puntos = Diciembre
-            
-            let monthName = "";
-            let isValid = false;
-
-            const months = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-                            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-            if (leftDots > 0 && leftDots <= 6) {
-                monthName = months[leftDots];
-                isValid = true;
-            } else if (rightDots > 0 && rightDots <= 6) {
-                monthName = months[rightDots + 6];
-                isValid = true;
-            } else if (leftDots === 0 && rightDots === 0) {
-                resText.innerText = "MARCA PUNTOS";
-                resYears.innerHTML = "";
-                return;
+            if (data) {
+                previewEl.textContent = `${data.monthName} (Año ...${state.year})`;
             } else {
-                // Caso > 6 puntos (si el usuario marca 7 u 8)
-                resText.innerText = "MÁXIMO 6 PUNTOS";
-                resYears.innerHTML = "";
-                return;
+                previewEl.textContent = "Selecciona puntos...";
             }
+        }
 
-            // Cálculo de años
-            let y0 = `200${currentYearDigit}`;
-            let y1 = `201${currentYearDigit}`;
-            let y2 = `202${currentYearDigit}`;
+        // Abre el modal con el resultado final
+        function openModal() {
+            const data = getCalculationData();
+            if (data) {
+                document.getElementById('res-modal-main').textContent = `${data.monthName} - Año ...${state.year}`;
+                document.getElementById('res-modal-sub').textContent = data.yearsStr;
+                document.getElementById('resultModal').style.display = 'flex';
+            } else {
+                // Feedback visual si no hay nada seleccionado (opcional)
+                const btn = document.querySelector('.calc-btn');
+                btn.style.backgroundColor = '#d32f2f';
+                setTimeout(() => btn.style.backgroundColor = 'var(--accent-green)', 200);
+            }
+        }
 
-            // Resultado final
-            resText.innerText = `MES: ${monthName}`;
-            resYears.innerHTML = `${monthName} de <span>${y0}</span> / <span>${y1}</span> / <span>${y2}</span>`;
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
         }
     </script>
 </body>
