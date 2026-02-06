@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POLICÍA LOCAL ALICANTE - VMP</title>
+    <style>
+        :root {
+            --police-blue: #0a2e52;
+            --police-light: #1c4e80;
+            --accent: #ffd700;
+            --danger: #dc3545;
+            --success: #28a745;
+            --white: #ffffff;
+            --bg: #f4f6f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh; /* Fijo al alto de pantalla */
+            overflow: hidden; /* Evita scroll en el body principal */
+        }
+
+        /* --- CABECERA --- */
+        header {
+            background-color: var(--white);
+            color: var(--police-blue);
+            width: 100%;
+            padding: 5px 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--police-blue);
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            height: 80px; /* Reducido un poco por defecto */
+            transition: all 0.3s;
+        }
+
+        .header-logo { height: 60px; width: auto; object-fit: contain; }
+        .header-titles { display: flex; flex-direction: column; align-items: center; text-align: center; flex-grow: 1; }
+        
+        header h1 { 
+            margin: 0; 
+            font-size: 1.2rem; 
+            font-weight: 900; 
+            letter-spacing: 1px; 
+            text-transform: uppercase; 
+            line-height: 1.1;
+            background: linear-gradient(90deg, var(--police-blue), var(--police-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header h2 { margin: 2px 0 0 0; font-size: 0.75rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px;}
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .container { 
+            margin-top: 90px; /* Ajustado a la cabecera */
+            width: 95%; 
+            max-width: 600px; 
+            flex-grow: 1; 
+            overflow-y: auto; /* Scroll solo aquí si hace falta */
+            padding-bottom: 50px;
+        }
+
+        .card { background: var(--white); border-radius: 12px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); display: flex; flex-direction: column; }
+        
+        /* HEADER PREGUNTA */
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid var(--accent);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+        }
+
+        .question-title { 
+            color: var(--police-blue); 
+            font-size: 1.15rem; 
+            font-weight: 700; 
+            margin: 0;
+            padding-right: 10px;
+        }
+
+        .help-btn-icon {
+            background: transparent; border: 2px solid var(--police-light); color: var(--police-light); border-radius: 50%;
+            width: 28px; height: 28px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+
+        button.option-btn { background-color: var(--police-light); color: var(--white); border: none; padding: 14px 15px; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: 0.2s; text-align: left; display: flex; justify-content: space-between; align-items: center; font-weight: 500; }
+        button.option-btn:hover { background-color: var(--police-blue); transform: translateX(3px); }
+
+        .controls { margin-top: 20px; display: flex; gap: 10px; }
+        .btn-control { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; font-size: 0.9rem; }
+        .btn-back { background-color: #90a4ae; color: #37474f; }
+        .btn-reset { background-color: var(--accent); color: #000; }
+
+        /* --- FOOTER --- */
+        footer {
+            position: fixed; bottom: 0; width: 100%; background: var(--police-blue); color: white; text-align: center;
+            padding: 8px 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; z-index: 900;
+            display: flex; justify-content: center; gap: 15px;
+        }
+        .footer-item { opacity: 0.8; }
+
+        /* --- MODALES (OPTIMIZACIÓN MÓVIL) --- */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 10px; backdrop-filter: blur(3px); box-sizing: border-box; }
+        
+        /* Flex column para que el footer siempre se vea */
+        .modal-content { 
+            background-color: var(--white); 
+            border-radius: 12px; 
+            width: 100%; 
+            max-width: 550px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            max-height: 96vh; /* Casi toda la pantalla */
+            animation: slideUp 0.3s ease-out; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header-strip { 
+            padding: 10px; 
+            text-align: center; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            flex-shrink: 0; /* No encoger cabecera */
+        }
+        .header-success { background-color: var(--success); }
+        .header-danger { background-color: var(--danger); }
+        .header-warning { background-color: #f57f17; }
+        .header-help { background-color: var(--police-light); } 
+
+        .modal-body { 
+            padding: 15px; 
+            overflow-y: auto; /* SCROLL SOLO AQUÍ */
+            flex-grow: 1; /* Ocupa todo el espacio disponible */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .result-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; }
+        .result-logo-img { height: 50px; width: 50px; object-fit: contain; } /* Logos más pequeños */
+        .result-main-icon { font-size: 3rem; line-height: 1; }
+        .result-main-title { text-align: center; font-size: 1.3rem; margin: 0 0 15px 0; color: #333; font-weight: 800; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+        .legal-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 0.85rem; border: 1px solid #e0e0e0; }
+        .legal-table th { text-align: left; padding: 8px; background-color: #f5f7fa; width: 40%; border-bottom: 1px solid #ddd; color: var(--police-blue); }
+        .legal-table td { padding: 8px; border-bottom: 1px solid #eee; color: #444; font-weight: 500; }
+
+        .legal-box { padding: 10px; border-radius: 6px; font-size: 0.85rem; line-height: 1.4; text-align: left; margin-top: 10px; }
+        .box-penal { background-color: #ffebee; border-left: 5px solid var(--danger); color: #c62828; }
+        .box-admin { background-color: #e8f5e9; border-left: 5px solid var(--success); color: #2e7d32; }
+        .box-info { background-color: #e3f2fd; border-left: 5px solid var(--police-blue); color: #0d47a1; }
+
+        .btn-soa { 
+            display: none; width: 100%; background-color: #d32f2f; color: white; padding: 10px; margin-top: 10px; 
+            border: none; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; text-align: center; 
+            box-shadow: 0 3px 5px rgba(211, 47, 47, 0.3);
+        }
+        .btn-soa span { margin-right: 5px; font-size: 1.1rem; }
+
+        .modal-footer { 
+            padding: 10px; 
+            background: #f8f9fa; 
+            display: flex; 
+            gap: 10px; 
+            border-top: 1px solid #eee; 
+            flex-shrink: 0; /* IMPIDE QUE LOS BOTONES SE ESCONDAN O ENCOJAN */
+        }
+        .btn-modal-back { flex: 1; padding: 12px; background: #fff; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; cursor: pointer; color: #555; font-size: 0.9rem;}
+        .btn-modal-new { flex: 1; padding: 12px; background: var(--police-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9rem;}
+
+        /* --- MEDIA QUERY ESPECÍFICA PARA MÓVILES --- */
+        @media (max-height: 700px) {
+            header { height: 60px; padding: 5px 10px; }
+            .header-logo { height: 45px; }
+            header h1 { font-size: 1rem; }
+            header h2 { display: none; } /* Ocultar subtítulo en móviles pequeños para ganar espacio */
+            .container { margin-top: 70px; }
+            
+            .modal-header-strip { padding: 8px; font-size: 0.9rem; }
+            .result-logo-img { height: 40px; width: 40px; }
+            .result-main-icon { font-size: 2.5rem; }
+            .result-main-title { font-size: 1.1rem; margin-bottom: 10px; }
+            .modal-body { padding: 10px; }
+            .legal-table { font-size: 0.8rem; margin-bottom: 5px; }
+            .legal-table th, .legal-table td { padding: 5px; }
+            .btn-soa { padding: 8px; margin-top: 8px; font-size: 0.85rem; }
+        }
+
+        /* --- MODAL INFRACCIÓN --- */
+        #infraction-modal { z-index: 2001; background-color: rgba(0,0,0,0.95); } 
+        .infraction-box { background: white; padding: 15px; border-radius: 12px; width: 95%; max-width: 500px; border-top: 6px solid #d32f2f; display: flex; flex-direction: column; max-height: 90vh; overflow-y: auto;}
+        .infraction-title { color: #d32f2f; font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; text-align: center;}
+        .inf-toggle-container { display: flex; gap: 5px; margin-bottom: 10px; background: #eee; padding: 3px; border-radius: 6px; }
+        .inf-toggle-btn { flex: 1; padding: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 0.8rem; border-radius: 4px; background: transparent; color: #666; }
+        .inf-toggle-btn.active { background: #d32f2f; color: white; }
+        .inf-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; border-bottom: 1px dashed #eee; padding-bottom: 3px; }
+        .inf-val { font-weight: 800; text-align: right; }
+        .inf-text { background: #f9f9f9; padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-family: 'Courier New', monospace; font-size: 0.85rem; margin: 10px 0; color: #333; line-height: 1.3; }
+        .inf-note { font-size: 0.8rem; color: #666; font-style: italic; background: #fff3e0; padding: 8px; border-radius: 5px; margin-top: 8px; border-left: 4px solid #ff9800; }
+        .btn-close-inf { width: 100%; padding: 12px; background: #444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; margin-top: 8px;}
+
+    </style>
+</head>
+<body>
+
+<header>
+    <img id="head-logo-left" class="header-logo" alt="Judicial" />
+    <div class="header-titles">
+        <h1>POLICÍA LOCAL ALICANTE</h1>
+        <h2>CATEGORIZACIÓN VEHÍCULOS LIGEROS</h2>
+    </div>
+    <img id="head-logo-right" class="header-logo" alt="GAD" />
+</header>
+
+<div class="container">
+    <div class="card">
+        <div id="question-area">
+            </div>
+        
+        <div class="controls">
+            <button class="btn-control btn-back" id="btn-back-main" onclick="app.prevStep()">⬅️ Atrás</button>
+            <button class="btn-control btn-reset" onclick="app.resetApp()">Reiniciar 🔄</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <span class="footer-item">UNIDAD JUDICIAL © 2026</span>
+    <span>|</span>
+    <span class="footer-item">GAD © 2026</span>
+</footer>
+
+<div id="result-modal" class="modal">
+    <div class="modal-content">
+        <div id="modal-header-strip" class="modal-header-strip">DICTAMEN TÉCNICO POLICIAL</div>
+        <div class="modal-body">
+            <div class="result-top-row">
+                <img id="res-logo-left" class="result-logo-img" alt="Judicial" />
+                <span id="res-icon" class="result-main-icon"></span>
+                <img id="res-logo-right" class="result-logo-img" alt="GAD" />
+            </div>
+
+            <h3 id="res-title" class="result-main-title"></h3>
+            
+            <table class="legal-table">
+                <tr><th>Permiso</th><td id="res-permiso"></td></tr>
+                <tr><th>Seguro</th><td id="res-seguro"></td></tr>
+                <tr><th>Matrícula/Reg</th><td id="res-matricula"></td></tr>
+                <tr><th>Casco</th><td id="res-casco"></td></tr>
+            </table>
+            
+            <div id="res-legal-box" class="legal-box"></div>
+
+            <button id="btn-soa" class="btn-soa" onclick="app.showSoaInfraction()">
+                <span>🚨</span> VER INFRACCIÓN SEGURO (SOA)
+            </button>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn-modal-back" onclick="app.closeModal()">🔙 Corregir</button>
+            <button class="btn-modal-new" onclick="app.resetApp()">🔄 Nueva Consulta</button>
+        </div>
+    </div>
+</div>
+
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header-strip header-help">¿CÓMO FUNCIONA?</div>
+        <div class="modal-body">
+            <ul class="help-list">
+                <li>
+                    <strong>1. Categorización Técnica</strong>
+                    Responde a las preguntas sobre las características del vehículo. El sistema determinará la categoría legal exacta.
+                </li>
+                <li>
+                    <strong>2. Dictamen Legal</strong>
+                    Obtendrás una ficha policial indicando si el vehículo puede circular, requisitos (Matrícula, Seguro, Casco) e implicaciones penales.
+                </li>
+                <li>
+                    <strong>3. Infracciones (SOA)</strong>
+                    Si aparece un botón ROJO de infracción, púlsalo para ver el artículo, importe y texto codificado para la denuncia.
+                </li>
+            </ul>
+            <p style="font-size:0.85rem; color:#666; margin-top:20px; text-align:center;">
+                Herramienta de soporte policial.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-new" onclick="document.getElementById('help-modal').style.display='none'">ENTENDIDO</button>
+        </div>
+    </div>
+</div>
+
+<div id="infraction-modal" class="modal">
+    <div class="infraction-box">
+        <div class="infraction-title">BOLETÍN DE DENUNCIA (SOA)</div>
+        
+        <div class="inf-toggle-container" id="inf-tabs">
+            <button class="inf-toggle-btn active" onclick="app.switchInfractionMode('driver')">CIRCULANDO (Conductor)</button>
+            <button class="inf-toggle-btn" onclick="app.switchInfractionMode('owner')">ESTACIONADO (Titular)</button>
+        </div>
+
+        <div class="inf-row">
+            <span class="inf-label">Normativa:</span>
+            <span class="inf-val">RD Leg 8/2004</span>
+        </div>
+        <div class="inf-row">
+            <span class="inf-label">Opción:</span>
+            <span id="inf-option" class="inf-val"></span>
+        </div>
+        <div class="inf-row">
+            <span class="inf-label">Importe Total:</span>
+            <span id="inf-amount" class="inf-val" style="color: #d32f2f; font-size:1.2rem;"></span>
+        </div>
+        <div class="inf-row">
+            <span class="inf-label">Reducido (50%):</span>
+            <span id="inf-reduced" class="inf-val" style="color: #28a745;"></span>
+        </div>
+
+        <p style="margin-bottom:5px; font-weight:bold; font-size:0.9rem; margin-top:15px;">Hecho Denunciado (Codificado):</p>
+        <div class="inf-text" id="inf-text"></div>
+        
+        <div id="inf-note" class="inf-note" style="display:none;">
+            <b>ℹ️ NOTA VMP LIGERO:</b> La denuncia por defecto es para VMP "Pesado" (>25kg y >14km/h). Si el vehículo fuese <b>VMP Ligero</b> (Peso ≤25kg y Vel ≤14km/h), la denuncia correcta es la Opción <b>2.1.5P</b> con importe <b>350€</b> (Reducido: 175€).
+        </div>
+
+        <button class="btn-close-inf" onclick="document.getElementById('infraction-modal').style.display='none'">CERRAR VENTANA</button>
+    </div>
+</div>
+
+<script>
+    // --- NOMBRES ARCHIVOS GITHUB ---
+    const LOGO_JUDICIAL = "judicial.png";
+    const LOGO_GAD = "logogad.png";
+    // -------------------------------
+
+    window.onload = function() {
+        document.getElementById('head-logo-left').src = LOGO_JUDICIAL;
+        document.getElementById('head-logo-right').src = LOGO_GAD;
+        document.getElementById('res-logo-left').src = LOGO_JUDICIAL;
+        document.getElementById('res-logo-right').src = LOGO_GAD;
+        
+        const imgs = document.querySelectorAll('img');
+        imgs.forEach(img => img.onerror = function(){ this.style.visibility='hidden'; });
+
+        app.renderStep('start');
+    };
+
+    const app = {
+        currentSoaData: null, 
+        currentMode: 'driver', 
+
+        resultsDB: {
+            "r_vmp_legal": {
+                title: "VMP (VEHÍCULO MOVILIDAD PERSONAL)", icon: "🛴", style: "admin",
+                perm: "Ninguno", seg: "OBLIGATORIO (SOA)", mat: "Registro DGT (Chapa/QR)", casco: "Consultar Ordenanza Mun.",
+                text: "✅ <b>VMP APTO</b><br>Régimen administrativo. Edad mínima según Ordenanza Municipal.<br>Requiere Seguro Obligatorio si supera 25kg y 14km/h (Ver botón Infracción).<br><b>⚖️ VÍA PENAL:</b><br>• No aplica Art. 379/384 CP salvo conducción temeraria manifiesta.",
+                soa: { 
+                    type: "vmp_standard",
+                    driver: { opt: "2.1.5N", amount: 800, text: "Circular con el vehículo reseñado (VMP >25kg y >14km/h) careciendo del seguro obligatorio de responsabilidad civil." },
+                    owner:  { opt: "2.1.5N (Tit)", amount: 610, text: "Incumplir el propietario del vehículo reseñado (VMP >25kg y >14km/h) la obligación de mantener suscrito el seguro obligatorio (Vehículo sin circular)." }
+                }
+            },
+            "r_epac": {
+                title: "BICICLETA EPAC", icon: "🚲", style: "admin",
+                perm: "Ninguno", seg: "No", mat: "No", casco: "Recomendado",
+                text: "✅ <b>BICI ASISTIDA</b><br>Tratamiento de bicicleta.",
+                soa: null
+            },
+            "r_ciclo": {
+                title: "CICLO", icon: "🚲", style: "admin",
+                perm: "Ninguno", seg: "No", mat: "No", casco: "Consultar Ordenanza Mun.",
+                text: "✅ <b>BICICLETA</b><br>Tratamiento de bicicleta.",
+                soa: null
+            },
+            "r_juguete": {
+                title: "JUGUETE", icon: "🧸", style: "info",
+                perm: "No", seg: "No", mat: "No", casco: "No",
+                text: "ℹ️ <b>USO PEATONAL</b><br>Velocidad < 6 km/h.",
+                soa: null
+            },
+            // --- VEHÍCULOS A MOTOR ---
+            "r_l1e_a": {
+                title: "L1e-A (CICLO MOTOR)", icon: "🛵", style: "penal",
+                perm: "AM / B", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí",
+                text: "⚠️ <b>VEHÍCULO A MOTOR (L1e-A)</b><br>Requiere Matrícula, Seguro y Casco.<br><b>⚖️ VÍA PENAL:</b><br>• <b>Art. 379.2 CP:</b> Si tasa alcohol >0.60 mg/l o bajo influencia drogas.<br>• <b>Art. 384 CP:</b> Si carece de permiso (nunca obtenido/vigencia).",
+                soa: { type: "moped", driver: { opt: "2.1.5A", amount: 1000, text: "Circular con el ciclomotor reseñado careciendo del seguro obligatorio." }, owner: { opt: "2.1.1A", amount: 650, text: "Incumplir el propietario del ciclomotor la obligación de asegurar." } }
+            },
+            "r_l1e_b": {
+                title: "L1e-B (CICLOMOTOR 2R)", icon: "🛵", style: "penal",
+                perm: "AM / B", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí",
+                text: "⚠️ <b>CICLOMOTOR (L1e-B)</b><br>Supera prestaciones VMP. Vehículo matriculable.<br><b>⚖️ VÍA PENAL (Delitos):</b><br>• <b>Art. 379.2 CP:</b> Alcohol >0.60 mg/l o influencia drogas/tóxicos.<br>• <b>Art. 384 CP:</b> Conducir sin haber obtenido nunca permiso o pérdida de vigencia.",
+                soa: { type: "moped", driver: { opt: "2.1.5A", amount: 1000, text: "Circular con el ciclomotor reseñado careciendo del seguro obligatorio." }, owner: { opt: "2.1.1A", amount: 650, text: "Incumplir el propietario del ciclomotor la obligación de asegurar." } }
+            },
+            "r_l2e": {
+                title: "L2e (CICLOMOTOR 3R)", icon: "🛺", style: "penal",
+                perm: "AM / B", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí",
+                text: "⚠️ <b>CICLOMOTOR 3 RUEDAS</b><br>Vehículo matriculable.<br><b>⚖️ VÍA PENAL:</b><br>• <b>Art. 379.2 CP:</b> Alcohol >0.60 mg/l o influencia drogas.<br>• <b>Art. 384 CP:</b> Carecer de permiso AM.",
+                soa: { type: "moped", driver: { opt: "2.1.5A", amount: 1000, text: "Circular con el ciclomotor reseñado careciendo del seguro obligatorio." }, owner: { opt: "2.1.1A", amount: 650, text: "Incumplir el propietario del ciclomotor la obligación de asegurar." } }
+            },
+            "r_l6e": {
+                title: "L6e (CUADRICICLO LIGERO)", icon: "🚙", style: "penal",
+                perm: "AM / B", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí/Cinturón",
+                text: "⚠️ <b>CUADRICICLO LIGERO</b><br>Vehículo matriculable.<br><b>⚖️ VÍA PENAL:</b><br>• <b>Art. 379.2 CP:</b> Alcohol >0.60 mg/l o influencia drogas.<br>• <b>Art. 384 CP:</b> Carecer de permiso AM.",
+                soa: { type: "moped", driver: { opt: "2.1.5A", amount: 1000, text: "Circular con el ciclomotor reseñado careciendo del seguro obligatorio." }, owner: { opt: "2.1.1A", amount: 650, text: "Incumplir el propietario del ciclomotor la obligación de asegurar." } }
+            },
+            "r_l3e": {
+                title: "L3e (MOTOCICLETA)", icon: "🏍️", style: "penal",
+                perm: "A1 / A2 / A", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí",
+                text: "⚠️ <b>MOTOCICLETA (L3e)</b><br>Excede prestaciones ciclomotor.<br><b>⚖️ VÍA PENAL:</b><br>• <b>Art. 379.2 CP:</b> Alcohol >0.60 mg/l o influencia drogas.<br>• <b>Art. 384 CP:</b> Carecer de permiso A1/A2/A (o B+3 años si no cubre potencia).",
+                soa: { type: "moto", driver: { opt: "2.1.5B", amount: 1250, text: "Circular con la motocicleta reseñada careciendo del seguro obligatorio." }, owner: { opt: "2.1.1B", amount: 850, text: "Incumplir el propietario de la motocicleta la obligación de asegurar." } }
+            },
+            "r_l4e": {
+                title: "L4e (MOTO CON SIDECAR)", icon: "🏍️", style: "penal",
+                perm: "A1 / A2 / A", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí",
+                text: "⚠️ <b>MOTO CON SIDECAR</b><br>Tratamiento de Motocicleta.<br><b>⚖️ VÍA PENAL:</b><br>• Aplica Art. 379.2 CP (Alcohol/Drogas) y Art. 384 CP (Permiso).",
+                soa: { type: "moto", driver: { opt: "2.1.5B", amount: 1250, text: "Circular con la motocicleta reseñada careciendo del seguro obligatorio." }, owner: { opt: "2.1.1B", amount: 850, text: "Incumplir el propietario de la motocicleta la obligación de asegurar." } }
+            },
+            "r_l5e": {
+                title: "L5e (TRICICLO DE MOTOR)", icon: "🛺", style: "penal",
+                perm: "B (Coche) / A", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí",
+                text: "⚠️ <b>TRICICLO SIMÉTRICO</b><br>Tratamiento de Motocicleta/Turismo.<br><b>⚖️ VÍA PENAL:</b><br>• Aplica Art. 379.2 CP (Alcohol/Drogas) y Art. 384 CP (Permiso).",
+                soa: { type: "moto", driver: { opt: "2.1.5B", amount: 1250, text: "Circular con el vehículo reseñado careciendo del seguro obligatorio." }, owner: { opt: "2.1.1B", amount: 850, text: "Incumplir el propietario del vehículo la obligación de asegurar." } }
+            },
+            "r_l7e": {
+                title: "L7e (CUADRICICLO PESADO)", icon: "🚜", style: "penal",
+                perm: "CLASE B", seg: "Sí", mat: "SÍ (Matrícula DGT)", casco: "Sí/Cinturón",
+                text: "⚠️ <b>CUADRICICLO PESADO</b><br>Requiere permiso Clase B.<br><b>⚖️ VÍA PENAL:</b><br>• Aplica Art. 379.2 CP (Alcohol/Drogas) y Art. 384 CP (Permiso).",
+                soa: { type: "turismo", driver: { opt: "2.1.5C", amount: 1500, text: "Circular con el vehículo reseñado careciendo del seguro obligatorio." }, owner: { opt: "2.1.1C", amount: 1000, text: "Incumplir el propietario del vehículo la obligación de asegurar." } }
+            },
+            "r_prohibido": {
+                title: "PROHIBIDO", icon: "⛔", style: "danger",
+                perm: "-", seg: "-", mat: "-", casco: "-",
+                text: "🚫 <b>NO APTO</b><br>No cumple normativa. Denuncia y retirada.",
+                soa: null
+            },
+            "r_prohibido_voltaje": {
+                title: "ILEGAL (VOLTAJE)", icon: "🔌", style: "danger",
+                perm: "-", seg: "-", mat: "-", casco: "-",
+                text: "🚫 <b>VOLTAJE PELIGROSO</b><br>Excede 100VCC / 240VAC.",
+                soa: null
+            }
+        },
+
+        // --- ÁRBOL DE DECISIÓN OPTIMIZADO ---
+        steps: {
+            start: { q: "¿El vehículo está motorizado?", opts: [{ t: "Sí", next: "motor_si" }, { t: "No", next: "motor_no" }] },
+            motor_no: { q: "¿Funciona a pedal o manivela?", opts: [{ t: "Sí", next: "pedal_si" }, { t: "No", result: "r_juguete" }] },
+            pedal_si: { q: "¿Cuántas ruedas tiene?", opts: [{ t: "1 rueda", result: "r_prohibido" }, { t: "2 o más ruedas", result: "r_ciclo" }] },
+            motor_si: { q: "¿Funciona con pedales Y el motor es auxiliar?", opts: [{ t: "Sí (Pedelec/Híbrido)", next: "pedales_aux_si" }, { t: "No (Solo acelerador/otro)", next: "pedales_aux_no" }] },
+            pedales_aux_si: { q: "¿Cuál es la potencia del motor?", opts: [{ t: "Hasta 250 W", next: "potencia_250" }, { t: "Entre 250 W y 1000 W", next: "potencia_1000" }, { t: "Más de 1000 W", result: "r_l1e_b" }] },
+            potencia_250: { q: "¿El motor se detiene al superar 25 km/h?", opts: [{ t: "Sí", result: "r_epac" }, { t: "No (Sigue asistiendo)", result: "r_l1e_a" }] },
+            potencia_1000: { q: "¿Hasta qué velocidad auxilia el motor?", opts: [{ t: "Entre 25 y 45 km/h", result: "r_l1e_a" }, { t: "Más de 45 km/h", result: "r_l3e" }] },
+            
+            // RAMA SIN PEDALES
+            pedales_aux_no: { q: "¿Cuál es la velocidad máxima por construcción?", opts: [{ t: "Hasta 6 km/h", result: "r_juguete" }, { t: "De 6 a 25 km/h", next: "vel_6_25" }, { t: "De 25 a 45 km/h", next: "vel_hasta_45" }, { t: "Más de 45 km/h", next: "vel_mas_45" }] },
+            
+            // RAMA VMP FLUIDA
+            vel_6_25: { q: "Velocidad 6-25 km/h. ¿Tiene sillín?", opts: [{ t: "Sí", next: "con_sillin_6_25" }, { t: "No", next: "check_baterias" }] },
+            con_sillin_6_25: { q: "¿Es un vehículo autoequilibrado (ej. Segway)?", opts: [{ t: "Sí", next: "check_baterias" }, { t: "No", next: "check_altura_sillin" }] },
+            check_baterias: { q: "¿Qué voltaje indican las características técnicas?", opts: [{ t: "Hasta 100 VCC / 240 VCA", result: "r_vmp_legal" }, { t: "Superior (Alta Tensión)", result: "r_prohibido_voltaje" }] },
+            
+            // Resto de ramas
+            vel_hasta_45: { q: "Velocidad 25-45 km/h. ¿Tiene sillín?", opts: [{ t: "Sí", next: "check_potencia_45" }, { t: "No", result: "r_prohibido" }] },
+            check_potencia_45: { q: "Verificación de Potencia / Cilindrada:", opts: [{ t: "≤ 50cc o ≤ 4000 W", next: "ruedas_4000w" }, { t: "≤ 50cc o 4001 W - 6000 W", next: "ruedas_6000w" }, { t: "> 50cc o > 6000 W", next: "ruedas_heavy" }] },
+            ruedas_4000w: { q: "Potencia Baja (≤4kW). ¿Cuántas ruedas tiene?", opts: [{ t: "2 Ruedas", result: "r_l1e_b" }, { t: "3 Ruedas", result: "r_l2e" }, { t: "4 Ruedas", result: "r_l6e" }] },
+            ruedas_6000w: { q: "Potencia Media (4-6kW). ¿Cuántas ruedas tiene?", opts: [{ t: "2 Ruedas", result: "r_l3e" }, { t: "3 Ruedas", next: "check_tipo_3_ruedas" }, { t: "4 Ruedas", result: "r_l6e" }] },
+            ruedas_heavy: { q: "Potencia Alta (>6kW). ¿Cuántas ruedas tiene?", opts: [{ t: "2 Ruedas", result: "r_l3e" }, { t: "3 Ruedas", next: "check_tipo_3_ruedas" }, { t: "4 Ruedas", result: "r_l7e" }] },
+            vel_mas_45: { q: "Velocidad > 45 km/h. ¿Tiene sillín?", opts: [{ t: "Sí", next: "ruedas_mas_45" }, { t: "No", result: "r_prohibido" }] },
+            ruedas_mas_45: { q: "Alta Velocidad. ¿Cuántas ruedas tiene?", opts: [{ t: "2 Ruedas", result: "r_l3e" }, { t: "3 Ruedas", next: "check_tipo_3_ruedas" }, { t: "4 Ruedas", result: "r_l7e" }] },
+            check_tipo_3_ruedas: { q: "Vehículo 3 ruedas. ¿Disposición de las ruedas?", opts: [{ t: "Simétricas (Triciclo en eje)", result: "r_l5e" }, { t: "Asimétricas (Moto con sidecar)", result: "r_l4e" }] },
+            check_altura_sillin: { q: "¿Cuál es la altura del sillín (punto R)?", opts: [{ t: "54 cm o más", next: "check_potencia_45" }, { t: "Menos de 54 cm", next: "check_baterias" }] }
+        },
+
+        historyStack: [],
+
+        dom: { qArea: document.getElementById('question-area'), modal: document.getElementById('result-modal'), btnBackMain: document.getElementById('btn-back-main') },
+
+        renderStep: function(key) {
+            const step = this.steps[key];
+            const d = this.dom;
+            
+            // INYECTAR HEADER DE PREGUNTA CON BOTÓN DE AYUDA
+            let html = `
+                <div class="question-header">
+                    <h2 class="question-title">${step.q}</h2>
+                    <button class="help-btn-icon" onclick="document.getElementById('help-modal').style.display='flex'">?</button>
+                </div>
+                <div class="options-grid">`;
+            
+            step.opts.forEach(opt => {
+                const action = opt.result ? `app.showResult('${opt.result}')` : `app.nextStep('${key}', '${opt.next}')`;
+                html += `<button class="option-btn" onclick="${action}">${opt.t} <span>👉</span></button>`;
+            });
+            html += `</div>`;
+            d.qArea.innerHTML = html;
+            d.btnBackMain.disabled = (this.historyStack.length === 0);
+            d.btnBackMain.style.opacity = (this.historyStack.length === 0) ? "0.5" : "1";
+        },
+
+        nextStep: function(currentKey, nextKey) { this.historyStack.push(currentKey); this.renderStep(nextKey); },
+        prevStep: function() { if (this.historyStack.length > 0) { const prevKey = this.historyStack.pop(); this.renderStep(prevKey); } },
+
+        showResult: function(resultKey) {
+            const data = this.resultsDB[resultKey];
+            const m = this.dom.modal;
+            const strip = document.getElementById('modal-header-strip');
+            const box = document.getElementById('res-legal-box');
+            const btnSoa = document.getElementById('btn-soa');
+
+            strip.className = "modal-header-strip";
+            box.className = "legal-box";
+            if (data.style === "penal" || data.style === "danger") { strip.classList.add("header-danger"); box.classList.add("box-penal"); }
+            else if (data.style === "admin") { strip.classList.add("header-success"); box.classList.add("box-admin"); }
+            else { strip.classList.add("header-warning"); box.classList.add("box-info"); }
+
+            document.getElementById('res-icon').innerText = data.icon;
+            document.getElementById('res-title').innerText = data.title;
+            document.getElementById('res-permiso').innerText = data.perm;
+            document.getElementById('res-seguro').innerText = data.seg;
+            document.getElementById('res-matricula').innerText = data.mat;
+            document.getElementById('res-casco').innerText = data.casco;
+            box.innerHTML = data.text;
+
+            this.currentSoaData = data.soa;
+            if (data.soa) {
+                btnSoa.style.display = 'block';
+            } else {
+                btnSoa.style.display = 'none';
+            }
+
+            m.style.display = 'flex';
+        },
+
+        showSoaInfraction: function() {
+            if(!this.currentSoaData) return;
+            if(this.currentSoaData.type === 'vmp_standard') {
+                document.getElementById('inf-note').style.display = 'block';
+            } else {
+                document.getElementById('inf-note').style.display = 'none';
+            }
+            this.switchInfractionMode('driver');
+            document.getElementById('infraction-modal').style.display = 'flex';
+        },
+
+        switchInfractionMode: function(mode) {
+            this.currentMode = mode;
+            const data = this.currentSoaData[mode];
+            const btns = document.querySelectorAll('.inf-toggle-btn');
+            
+            btns.forEach(btn => btn.classList.remove('active'));
+            if(mode === 'driver') btns[0].classList.add('active');
+            else btns[1].classList.add('active');
+
+            document.getElementById('inf-option').innerText = data.opt;
+            document.getElementById('inf-amount').innerText = data.amount + " €";
+            document.getElementById('inf-reduced').innerText = (data.amount / 2) + " €";
+            document.getElementById('inf-text').innerText = data.text;
+        },
+
+        closeModal: function() { this.dom.modal.style.display = 'none'; },
+        resetApp: function() { this.closeModal(); this.historyStack = []; this.renderStep('start'); }
+    };
+</script>
+</body>
+</html>
