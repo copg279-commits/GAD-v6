@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes">
+    <title>GAD - Manual EUCARIS</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* ESTILOS GLOBALES */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0; padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh; 
+            overflow: hidden; 
+        }
+
+        /* BARRA SUPERIOR AMARILLA (VISOR) */
+        .top-bar-strip {
+            background-color: #FFD700; 
+            color: #1e3a8a;
+            display: none; /* Oculto inicio */
+            align-items: center;
+            padding: 0 10px;
+            height: 50px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 100;
+            flex-shrink: 0;
+            font-weight: 800;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .top-back-btn {
+            background-color: #1e3a8a;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 15px;
+            border-radius: 4px;
+            height: 34px;
+            display: flex; align-items: center;
+            text-decoration: none;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* LOGO */
+        header.logo-header {
+            background-color: #1e40af;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 40;
+            flex-shrink: 0;
+        }
+
+        .logo-container {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #1e40af;
+            display: flex;
+            align-items: center; justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .scroll-container {
+            flex-grow: 1;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content-wrapper {
+            width: 100%;
+            max-width: 900px;
+            margin: 0.5rem auto;
+            padding: 0 10px;
+            box-sizing: border-box;
+            flex-grow: 1;
+        }
+
+        /* VISOR DE DOCUMENTOS (IFRAME) */
+        #docViewer {
+            position: fixed;
+            top: 50px; 
+            left: 0;
+            width: 100%;
+            height: calc(100dvh - 50px);
+            background: white;
+            z-index: 200;
+            display: none; 
+            flex-direction: column;
+        }
+
+        #docViewer iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* --- MODO HORIZONTAL (LANDSCAPE) --- */
+        /* Al girar, ocultamos la barra amarilla para ganar espacio */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .top-bar-strip {
+                display: none !important; 
+            }
+            #docViewer {
+                top: 0 !important;
+                height: 100dvh !important;
+            }
+            /* Mostramos botón flotante para poder salir */
+            #floatingCloseBtn {
+                display: flex !important;
+            }
+        }
+
+        /* Botón flotante para cerrar en horizontal */
+        #floatingCloseBtn {
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(220, 38, 38, 0.6);
+            color: white;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px solid white;
+        }
+
+        .card-gad {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .country-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        @media (min-width: 640px) {
+            .country-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .country-btn {
+            background-color: white;
+            border: 1px solid #d1d5db;
+            color: #1f2937;
+            padding: 10px 5px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            min-height: 90px;
+            position: relative;
+        }
+
+        .country-btn:active { transform: scale(0.98); background-color: #eff6ff; }
+
+        .flag-img {
+            width: 32px;
+            height: auto;
+            border-radius: 4px;
+            margin: 6px 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        .status-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            width: 90%;
+            text-align: center;
+            display: none; 
+            margin-top: 4px;
+        }
+        .status-complete { color: #065f46; background-color: #d1fae5; border: 1px solid #34d399; } 
+        .status-basic { color: #92400e; background-color: #fef3c7; border: 1px solid #fcd34d; } 
+        .status-nodata { color: #991b1b; background-color: #fee2e2; border: 1px solid #f87171; } 
+
+        body.edit-mode .country-btn {
+            border: 2px dashed #f59e0b;
+            background-color: #fffbeb;
+        }
+        
+        .edit-icon-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background-color: #f59e0b;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 50; 
+            border: 2px solid white;
+            cursor: pointer;
+        }
+        body.edit-mode .edit-icon-btn { display: flex; }
+
+        .cloud-indicator {
+            position: absolute; top: 2px; left: 2px;
+            font-size: 0.6rem; color: #10b981; 
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background: white; padding: 1.5rem; border-radius: 0.75rem;
+            width: 90%; max-width: 400px;
+            border-top: 5px solid #1e40af;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="topBar" class="top-bar-strip">
+        <button onclick="smartBack()" class="top-back-btn">
+            <i class="fas fa-arrow-left mr-2"></i> <span>VOLVER MENÚ</span>
+        </button>
+        <span class="font-bold text-xs uppercase tracking-widest ml-auto text-blue-900">VISOR GAD</span>
+    </div>
+
+    <div id="floatingCloseBtn" onclick="smartBack()">
+        <i class="fas fa-times"></i>
+    </div>
+
+    <div id="docViewer">
+        <iframe id="docFrame" src=""></iframe>
+    </div>
+
+    <div id="mainInterface" class="scroll-container">
+        
+        <header class="logo-header">
+            <div class="logo-container">
+                <img src="logogad.png" alt="Logo GAD" class="w-full h-full object-cover block" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'color:white; font-weight:bold; font-size:30px;\'>GAD</span>'">
+            </div>
+        </header>
+
+        <div class="main-content-wrapper">
+            
+            <div class="card-gad">
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center border-b pb-2 mb-2">
+                        <h2 class="text-lg font-bold text-blue-900 uppercase leading-none">
+                            <i class="fas fa-passport mr-1"></i> Manual Eucaris
+                        </h2>
+                        
+                        <button id="soaToggleBtn" onclick="toggleSoa()" class="bg-gray-200 text-gray-600 text-xs font-bold py-2 px-3 rounded shadow hover:bg-gray-300 transition-colors flex items-center">
+                            <i class="fas fa-eye mr-2"></i> VERIFICAR SOA
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 items-center">
+                        <div class="relative w-full">
+                            <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                            <input type="text" id="searchInput" placeholder="Buscar país..." 
+                                class="w-full pl-9 pr-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-800 text-sm uppercase font-bold">
+                        </div>
+
+                        <div class="flex items-center bg-gray-100 p-1.5 rounded border border-gray-300 shrink-0">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="editModeToggle" class="sr-only peer">
+                                <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-yellow-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="countryContainer" class="country-grid pb-12"></div>
+            
+            <div id="connectionStatus" class="text-center text-[10px] text-gray-400 mt-4 mb-8">
+                Iniciando...
+            </div>
+
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 class="text-lg font-bold text-blue-900 mb-2">Editar Enlace</h3>
+            <p id="authWarning" class="hidden text-xs text-red-600 mb-2 font-bold bg-red-100 p-2 rounded">
+                <i class="fas fa-exclamation-triangle"></i> ERROR: Sin sesión. No se guardará.
+            </p>
+            <p class="text-xs text-gray-500 mb-4 bg-blue-50 p-2 rounded border border-blue-200">
+                <i class="fas fa-link"></i> <b>INSTRUCCIÓN:</b> Pega el código de "Insertar" de OneDrive o el enlace de Drive.
+            </p>
+            
+            <input type="hidden" id="editIndex">
+            
+            <label class="block text-xs font-bold text-gray-700 mb-1">PAÍS</label>
+            <input type="text" id="editName" class="w-full border p-2 rounded mb-3 bg-gray-100 text-sm font-bold text-blue-900" readonly>
+            
+            <label class="block text-xs font-bold text-gray-700 mb-1">ESTADO SOA</label>
+            <select id="editStatus" class="w-full border p-2 rounded mb-3 text-sm bg-white">
+                <option value="nodata">SIN DATOS (Rojo)</option>
+                <option value="basic">BÁSICO (Ambar)</option>
+                <option value="complete">COMPLETO (Verde)</option>
+            </select>
+
+            <label class="block text-xs font-bold text-gray-700 mb-1">CÓDIGO / ENLACE</label>
+            <textarea id="editUrl" rows="4" class="w-full border p-2 rounded mb-4 text-xs font-mono text-gray-600" placeholder='Pega aquí... Ej: <iframe src="...'> </textarea>
+
+            <div class="flex gap-2">
+                <button onclick="closeModal()" class="flex-1 bg-gray-300 py-2 rounded font-bold text-sm text-gray-700">Cancelar</button>
+                <button onclick="saveEdit()" class="flex-1 bg-blue-800 text-white py-2 rounded font-bold text-sm hover:bg-blue-900">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA6EDUJ2dG50DphB-dF6GLi3P2IlW8lDz4",
+  authDomain: "gad-alicante-v3.firebaseapp.com",
+  databaseURL: "https://gad-alicante-v3-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gad-alicante-v3",
+  storageBucket: "gad-alicante-v3.firebasestorage.app",
+  messagingSenderId: "906986258369",
+  appId: "1:906986258369:web:21a7ea29a33b5f395e3940",
+  measurementId: "G-Q0E3H1996K"
+};
+
+        let app, db, auth;
+        let isFirebaseActive = false;
+        let currentUser = null;
+        let isViewingDoc = false;
+
+        const defaultCountries = [
+            { name: "ALEMANIA (D)", iso: "de", defStatus: "nodata" }, 
+            { name: "AUSTRIA (A)", iso: "at", defStatus: "basic" },
+            { name: "BÉLGICA (B)", iso: "be", defStatus: "basic" }, 
+            { name: "BULGARIA (BG)", iso: "bg", defStatus: "nodata" },
+            { name: "CHIPRE (CY)", iso: "cy", defStatus: "complete" }, 
+            { name: "CROACIA (HR)", iso: "hr", defStatus: "complete" },
+            { name: "DINAMARCA (DK)", iso: "dk", defStatus: "basic" }, 
+            { name: "ESLOVAQUIA (SK)", iso: "sk", defStatus: "nodata" },
+            { name: "ESLOVENIA (SLO)", iso: "si", defStatus: "nodata" }, 
+            { name: "ESPAÑA (E)", iso: "es", defStatus: "basic" },
+            { name: "ESTONIA (EST)", iso: "ee", defStatus: "nodata" }, 
+            { name: "FINLANDIA (FIN)", iso: "fi", defStatus: "basic" },
+            { name: "FRANCIA (F)", iso: "fr", defStatus: "nodata" }, 
+            { name: "GRECIA (GR)", iso: "gr", defStatus: "nodata" },
+            { name: "HOLANDA (NL)", iso: "nl", defStatus: "basic" }, 
+            { name: "HUNGRÍA (H)", iso: "hu", defStatus: "nodata" },
+            { name: "IRLANDA (IRL)", iso: "ie", defStatus: "nodata" }, 
+            { name: "ITALIA (I)", iso: "it", defStatus: "basic" },
+            { name: "LETONIA (LV)", iso: "lv", defStatus: "complete" }, 
+            { name: "LITUANIA (LT)", iso: "lt", defStatus: "complete" },
+            { name: "LUXEMBURGO (L)", iso: "lu", defStatus: "nodata" }, 
+            { name: "MALTA (MT)", iso: "mt", defStatus: "complete" },
+            { name: "POLONIA (PL)", iso: "pl", defStatus: "complete" }, 
+            { name: "PORTUGAL (P)", iso: "pt", defStatus: "nodata" },
+            { name: "CHEQUIA (CZ)", iso: "cz", defStatus: "nodata" }, 
+            { name: "RUMANÍA (RO)", iso: "ro", defStatus: "nodata" },
+            { name: "SUECIA (S)", iso: "se", defStatus: "basic" }
+        ];
+
+        let countriesData = {}; 
+        let isEditMode = false;
+        let showSoa = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+            renderCountries();
+            document.getElementById('searchInput').addEventListener('input', (e) => renderCountries(e.target.value));
+            document.getElementById('editModeToggle').addEventListener('change', toggleEditMode);
+        });
+
+        function initFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                auth = firebase.auth();
+                isFirebaseActive = true;
+                
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('connectionStatus').innerHTML = `<span class="text-green-600 font-bold"><i class="fas fa-wifi"></i> Conectado</span>`;
+                        listenToCloudData();
+                    } else {
+                        currentUser = null;
+                        document.getElementById('connectionStatus').innerHTML = '<span class="text-gray-400">Modo Local (Lectura)</span>';
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        function listenToCloudData() {
+            if(!isFirebaseActive) return;
+            db.ref('Eucaris').on('value', (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    countriesData = val; 
+                    renderCountries(document.getElementById('searchInput').value);
+                }
+            });
+        }
+
+        function renderCountries(filterText = '') {
+            const container = document.getElementById('countryContainer');
+            container.innerHTML = '';
+            
+            defaultCountries.forEach((country) => {
+                if (filterText && !country.name.toLowerCase().includes(filterText.toLowerCase())) return;
+                
+                const firebaseKey = country.name;
+                const cloudEntry = countriesData[firebaseKey] || {};
+                const status = cloudEntry.status || country.defStatus;
+                const url = cloudEntry.url || '#';
+                
+                const btn = document.createElement('div');
+                btn.className = 'country-btn';
+                
+                let statusClass = 'status-nodata';
+                let statusText = 'SIN DATOS';
+                if (status === 'basic') { statusClass = 'status-basic'; statusText = 'BÁSICO'; }
+                if (status === 'complete') { statusClass = 'status-complete'; statusText = 'COMPLETO'; }
+
+                let html = `
+                    <span class="text-xs font-bold uppercase text-gray-800 leading-tight">${country.name}</span>
+                    <img src="https://flagcdn.com/w80/${country.iso}.png" class="flag-img" alt="Flag">
+                `;
+
+                if(url && url !== '#') {
+                    html += `<i class="fas fa-cloud cloud-indicator" style="display:block"></i>`;
+                }
+
+                if (showSoa) {
+                    html += `<span class="status-badge ${statusClass}" style="display:block">${statusText}</span>`;
+                }
+
+                if (isEditMode) {
+                    const hasLink = url && url !== '#';
+                    html += `<span class="text-[9px] mt-1 ${hasLink ? 'text-green-600 font-bold' : 'text-red-400'}">${hasLink ? 'ENLAZADO' : 'SIN ENLACE'}</span>`;
+                    
+                    const editIcon = document.createElement('div');
+                    editIcon.className = 'edit-icon-btn';
+                    editIcon.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+                    editIcon.onclick = (e) => {
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        openEditModal(country, firebaseKey, url, status);
+                    };
+                    btn.appendChild(editIcon);
+                }
+
+                btn.onclick = () => handleCountryClick(url);
+                btn.insertAdjacentHTML('afterbegin', html);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleCountryClick(url) {
+            if (isEditMode) return; 
+            if (url && url !== '#' && url.trim() !== '') {
+                openViewer(url);
+            } else {
+                alert('Documento no disponible. Añade el enlace en modo edición.');
+            }
+        }
+
+        function openViewer(url) {
+            document.getElementById('topBar').style.display = 'flex';
+            document.getElementById('mainInterface').style.display = 'none';
+            document.getElementById('docViewer').style.display = 'flex';
+            document.getElementById('docFrame').src = url;
+            isViewingDoc = true;
+        }
+
+        function smartBack() {
+            if (isViewingDoc) {
+                document.getElementById('topBar').style.display = 'none';
+                document.getElementById('floatingCloseBtn').style.setProperty('display', 'none', 'important');
+                document.getElementById('docFrame').src = ''; 
+                document.getElementById('docViewer').style.display = 'none';
+                document.getElementById('mainInterface').style.display = 'flex';
+                isViewingDoc = false;
+            } else {
+                window.location.href = 'index.html'; 
+            }
+        }
+
+        function openEditModal(country, key, url, status) {
+            if(!currentUser) alert("Aviso: No estás logueado. No se guardará en la nube.");
+            document.getElementById('editIndex').value = key; 
+            document.getElementById('editName').value = country.name;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editUrl').value = url === '#' ? '' : url;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('editModal').classList.remove('active'); }
+
+        function saveEdit() {
+            const key = document.getElementById('editIndex').value;
+            const newStatus = document.getElementById('editStatus').value;
+            let rawUrl = document.getElementById('editUrl').value.trim();
+            let finalUrl = rawUrl;
+
+            // --- LÓGICA DE GOOGLE DRIVE (Convierte a Preview) ---
+            if (rawUrl.includes("docs.google.com") && rawUrl.includes("/presentation/d/")) {
+                try {
+                    let presIdMatch = rawUrl.match(/\/d\/([a-zA-Z0-9\-_]+)/);
+                    let slideIdMatch = rawUrl.match(/(id\.[a-zA-Z0-9\.\-_]+)/);
+                    if (presIdMatch && presIdMatch[1]) {
+                        finalUrl = `https://docs.google.com/presentation/d/${presIdMatch[1]}/preview`;
+                        if (slideIdMatch && slideIdMatch[1]) {
+                            finalUrl += `?slide=${slideIdMatch[1]}`;
+                        }
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            // --- LÓGICA DE ONEDRIVE (EXTRAER DE INSERTAR) ---
+            // Si el usuario pega el código entero <iframe src="..."> extraemos solo la URL
+            if (rawUrl.includes("<iframe") && rawUrl.includes("src=")) {
+                try {
+                    // Extraemos lo que hay dentro de src="..."
+                    let srcMatch = rawUrl.match(/src="([^"]+)"/);
+                    if (srcMatch && srcMatch[1]) {
+                        finalUrl = srcMatch[1]; // Guardamos solo la URL limpia
+                    }
+                } catch (e) { console.error("Error extrayendo URL OneDrive:", e); }
+            }
+
+            if (isFirebaseActive && currentUser) {
+                db.ref('Eucaris/' + key).set({
+                    url: finalUrl || '#',
+                    status: newStatus
+                }).then(() => {
+                    closeModal();
+                }).catch(e => {
+                    alert("Error Firebase: " + e.message);
+                });
+            } else {
+                alert("ERROR: No hay sesión activa.");
+            }
+        }
+
+        function toggleSoa() {
+            showSoa = !showSoa;
+            const btn = document.getElementById('soaToggleBtn');
+            if (showSoa) {
+                btn.classList.remove('bg-gray-200', 'text-gray-600');
+                btn.classList.add('bg-yellow-400', 'text-blue-900');
+                btn.innerHTML = '<i class="fas fa-eye-slash mr-2"></i> OCULTAR SOA';
+            } else {
+                btn.classList.add('bg-gray-200', 'text-gray-600');
+                btn.classList.remove('bg-yellow-400', 'text-blue-900');
+                btn.innerHTML = '<i class="fas fa-eye mr-2"></i> VERIFICAR SOA';
+            }
+            renderCountries(document.getElementById('searchInput').value);
+        }
+
+        function toggleEditMode(e) {
+            isEditMode = e.target.checked;
+            document.body.classList.toggle('edit-mode', isEditMode);
+            renderCountries(document.getElementById('searchInput').value);
+        }
+    </script>
+</body>
+</html>
