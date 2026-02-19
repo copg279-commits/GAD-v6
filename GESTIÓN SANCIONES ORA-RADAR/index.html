@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GAD | Gestión Unificada ORA-RADAR v2025</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body class="mode-ora">
+
+    <header class="header-main">
+<div class="header-logo-container"><img src="assets/logoora.png" alt="Logo Izq"></div>        
+        <div class="header-center">
+            <h1 id="main-t"><i class="fas fa-file-invoice-dollar"></i> Listado de denuncias ORA</h1>
+            <div class="mode-selector">
+                <button class="mode-btn active" id="b-ora" onclick="setMode('ORA')">ORA</button>
+                <button class="mode-btn" id="b-radar" onclick="setMode('RADAR')">RADAR</button>
+            </div>
+        </div>
+
+<div class="header-logo-container"><img src="assets/logogad.png" alt="Logo Der"></div>    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <aside class="panel">
+                <h3><i class="fas fa-filter"></i> Filtros y Gestión</h3>
+                <input type="text" id="search-input" placeholder="Buscar matrícula..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px; font-size:1em;">
+                
+                <button onclick="undo()" class="btn btn-dark"><i class="fas fa-undo"></i> Deshacer Cambio</button>
+                <button onclick="document.getElementById('legend-panel').classList.add('visible')" class="btn btn-purple"><i class="fas fa-book"></i> Manual de Ayuda</button>
+
+                <div style="border-top:1px solid #eee; padding-top:20px; margin-top:10px;">
+                    <label style="font-size:0.75em; font-weight:800; color:#9ca3af; display:block; margin-bottom:8px; letter-spacing:1px;">ESTADO</label>
+                    <button onclick="setFilter('all')" class="btn btn-primary"><i class="fas fa-list"></i> Ver Todos</button>
+                    <button onclick="setFilter('pending')" class="btn btn-warning"><i class="fas fa-hourglass-half"></i> Sin Revisar</button>
+                    <button onclick="setFilter('reincident')" class="btn btn-danger"><i class="fas fa-exclamation-triangle"></i> Reincidentes</button>
+                    <button onclick="setFilter('eurocop')" class="btn btn-dark" style="background:#f59e0b"><i class="fas fa-search"></i> Sin Datos (Eurocop)</button>
+                    <button onclick="setFilter('notified')" class="btn btn-success"><i class="fas fa-check-circle"></i> Notificados</button>
+
+                    <label style="font-size:0.75em; font-weight:800; color:#9ca3af; margin-top:20px; display:block; margin-bottom:8px; letter-spacing:1px;">ORDENACIÓN</label>
+                    <button onclick="setSort('date')" class="btn btn-dark"><i class="fas fa-calendar-alt"></i> Fecha Reciente</button>
+                    <button onclick="setSort('plate')" class="btn btn-dark"><i class="fas fa-sort-alpha-down"></i> Matrícula (A-Z)</button>
+                    <button onclick="setSort('count')" class="btn btn-dark"><i class="fas fa-sort-numeric-down-alt"></i> Nº Infracciones</button>
+                </div>
+
+                <div id="drop-zone" style="margin-top:20px;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size:2.5em; margin-bottom:10px;"></i>
+                    <p style="font-size:0.9em; font-weight:bold; margin:0;">SOLTAR EXCEL AQUÍ</p>
+                    <p style="font-size:0.75em; opacity:0.7; margin:5px 0 0 0;">(Solo admite archivos .xls, .xlsx)</p>
+                </div>
+                <input type="file" id="file-input" style="display:none;" accept=".xls,.xlsx">
+
+                <div style="margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
+                    <label style="font-size:0.75em; font-weight:800; color:#9ca3af; display:block; margin-bottom:8px; letter-spacing:1px;">AÑADIR MANUALMENTE</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="manual-plate" placeholder="Ej: 1234ABC" style="flex:1; padding:10px; border-radius:6px; border:1px solid #ddd; font-size:0.9em; text-transform:uppercase;">
+                        <button onclick="addManualPlate()" class="btn btn-success" style="width:auto; margin:0;" title="Añadir Matrícula"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <p id="manual-mode-hint" style="font-size:0.7em; color:#666; margin-top:5px;">Se añadirá como denuncia <b>ORA</b></p>
+                </div>
+
+                <button onclick="clearDB()" class="btn btn-danger" style="margin-top:25px; opacity:0.6;">🗑️ Borrar Base de Datos</button>
+            </aside>
+
+            <section>
+                <div id="stats" style="margin-bottom:15px; font-weight:bold; font-size:1em; color:#4b5563; background:white; padding:12px 20px; border-radius:10px; border:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                    Cargando...
+                </div>
+                <div id="list-container"></div>
+            </section>
+        </div>
+    </main>
+
+    <div id="legend-panel">
+        <div style="background: white; padding: 20px 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: sticky; top:0; z-index:10; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin:0; color: #1e3a8a;"><i class="fas fa-book-open"></i> Guía de Usuario GAD</h2>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('legend-content-area').contentEditable='true'; document.getElementById('save-help-btn').style.display='inline-block'" class="btn btn-warning" style="width:auto; margin:0;">Editar Texto</button>
+                <button id="save-help-btn" onclick="saveHelp()" class="btn btn-success" style="width:auto; margin:0; display:none;">Guardar Cambios</button>
+                <button onclick="document.getElementById('legend-panel').classList.remove('visible')" class="btn btn-danger" style="width:auto; margin:0;">Cerrar Ayuda</button>
+            </div>
+        </div>
+        
+        <div id="legend-content-area" class="help-container">
+        </div>
+    </div>
+
+    <div id="modal-overlay"></div>
+    <div id="notif-modal" class="custom-modal">
+        <div class="modal-content-scrollable">
+            <h3 style="margin-top:0; color:var(--primary-ora); border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:20px;">
+                <i class="fas fa-paper-plane"></i> Datos de Notificación
+            </h3>
+            <div class="form-group"><label>Nombre Completo</label><input type="text" id="m-nombre" placeholder="Ej: Juan Pérez..."></div>
+            <div class="form-group"><label>DOI (DNI / NIE / Pasaporte)</label><input type="text" id="m-doi" placeholder="Ej: 12345678A"></div>
+            <div class="form-group"><label>Dirección</label><input type="text" id="m-dir" placeholder="Calle, Número, Piso..."></div>
+            <div class="form-group"><label>Localidad</label><input type="text" id="m-loc" placeholder="Ej: Alicante"></div>
+            <div class="form-group"><label>Fecha de Nacimiento</label><input type="date" id="m-fec"></div>
+            <div class="form-group"><label>Teléfono</label><input type="text" id="m-tel" placeholder="Ej: 600123456"></div>
+            <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px; padding-top:20px; border-top:1px solid #eee;">
+                <button onclick="closeModal('notif-modal')" class="btn btn-dark" style="width:auto; margin:0">Cancelar</button>
+                <button onclick="saveAndSend()" class="btn btn-success" style="width:auto; margin:0"><i class="fas fa-save"></i> Guardar y Notificar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-vehicle-modal" class="custom-modal">
+        <div class="modal-content-scrollable">
+            <h3 style="margin-top:0; color:#3498db; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:20px;">
+                <i class="fas fa-car"></i> Editar Datos del Vehículo
+            </h3>
+            <p style="font-size:0.9em; color:#666; margin-bottom:20px; background:#eff6ff; padding:10px; border-radius:6px; border-left:4px solid #3498db;">
+                <i class="fas fa-info-circle"></i> Los cambios en Marca/Modelo se aplicarán a <strong>todo el historial</strong> de esta matrícula.
+            </p>
+            <div class="form-group">
+                <label>Matrícula</label>
+                <input type="text" id="v-matricula" readonly style="background:#f3f4f6; font-weight:900; letter-spacing:2px; text-align:center; color:#374151;">
+            </div>
+            <div class="form-group">
+                <label>Marca</label>
+                <input type="text" id="v-marca" placeholder="Ej: SEAT, FORD...">
+            </div>
+            <div class="form-group">
+                <label>Modelo</label>
+                <input type="text" id="v-modelo" placeholder="Ej: IBIZA, FOCUS...">
+            </div>
+            
+            <div style="margin-top:30px; display:flex; justify-content:flex-end; gap:10px; padding-top:20px; border-top:1px solid #eee;">
+                <button onclick="closeModal('edit-vehicle-modal')" class="btn btn-dark" style="width:auto; margin:0">Cancelar</button>
+                <button onclick="saveVehicleData()" class="btn btn-success" style="width:auto; margin:0"><i class="fas fa-save"></i> Actualizar Vehículo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
