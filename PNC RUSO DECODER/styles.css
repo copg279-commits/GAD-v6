@@ -36,51 +36,20 @@ body {
 /* ========================================== */
 /* HEADER Y LOGOS                             */
 /* ========================================== */
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 10px;
-}
-
+.app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 10px; }
 .header-logo-container { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; }
 .header-logo { max-width: 100%; max-height: 100%; object-fit: contain; }
 
 #logo-gad { transform: scale(1.25); }
 
-h1 { 
-    font-size: 1.15rem; 
-    color: var(--secondary-color); 
-    text-align: center; 
-    flex: 1; 
-    margin: 0 5px; 
-    white-space: nowrap; 
-    overflow: hidden;
-}
-
+h1 { font-size: 1.15rem; color: var(--secondary-color); text-align: center; flex: 1; margin: 0 5px; white-space: nowrap; overflow: hidden; }
 #status { text-align: center; color: #00d2d3; margin-bottom: 10px; font-weight: bold; font-size: 0.9rem; }
 
 /* ========================================== */
 /* BOTONES Y CONTROLES PRINCIPALES            */
 /* ========================================== */
 .controls { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-
-button, .file-upload-label, .action-btn, .copy-btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    transition: opacity 0.2s;
-    text-decoration: none;
-    display: block;
-}
-
+button, .file-upload-label, .action-btn, .copy-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; text-align: center; transition: opacity 0.2s; text-decoration: none; display: block; }
 button:hover, .file-upload-label:hover { opacity: 0.9; }
 
 #startCamera { background-color: var(--secondary-color); color: white; }
@@ -89,13 +58,12 @@ button:hover, .file-upload-label:hover { opacity: 0.9; }
 .copy-btn { background-color: #00d2d3; color: #000; margin-top: 15px; }
 
 /* ========================================== */
-/* CÁMARA Y RECORTADOR                        */
+/* CÁMARA EN VIVO (Mantiene su centrado original) */
 /* ========================================== */
-.video-wrapper, .cropper-container {
+.video-wrapper {
     position: relative;
     width: 100%;
-    flex-grow: 1; 
-    max-height: 35vh; 
+    height: 35vh; /* Altura máxima estricta */
     margin-bottom: 10px;
     border-radius: 8px;
     overflow: hidden;
@@ -117,6 +85,33 @@ video { width: 100%; height: 100%; object-fit: cover; display: block; transform-
     pointer-events: none;
 }
 
+/* ========================================== */
+/* RECORTADOR DE IMAGEN (El parche del error) */
+/* ========================================== */
+.cropper-container {
+    width: 100%;
+    /* NO usamos display flex ni altura aquí para no romper la imagen ni el botón inferior */
+    margin-bottom: 10px;
+}
+
+.img-container {
+    width: 100%;
+    height: 35vh; /* Le damos la altura estricta a la caja de la imagen */
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    display: block; /* CLAVE: Fuerza a la foto a ajustarse entera sin recortes mágicos */
+}
+
+#imageToCrop {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* ========================================== */
+/* CONTROLES EXTRA                            */
+/* ========================================== */
 .camera-controls { background: #2c2c2c; padding: 10px; border-radius: 8px; margin-bottom: 5px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .control-group { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 2px; }
 .control-group label { font-size: 0.85rem; color: #ccc; width: 100%; text-align: center; }
@@ -125,44 +120,15 @@ video { width: 100%; height: 100%; object-fit: cover; display: block; transform-
 /* ========================================== */
 /* RESULTADOS Y TARJETA                       */
 /* ========================================== */
-.result-box { 
-    background: #222; 
-    padding: 15px 8px; 
-    border-radius: 8px; 
-    border: 1px solid #444; 
-    flex-grow: 1; 
-    display: block; 
-}
+.result-box { background: #222; padding: 15px 8px; border-radius: 8px; border: 1px solid #444; flex-grow: 1; display: block; }
 .data-label { font-size: 0.85rem; color: #aaa; margin-top: 15px; margin-bottom: 5px; }
 .data-content { background: #111; padding: 12px; border-radius: 6px; font-family: monospace; word-break: break-all; border: 1px solid #333; }
 
 .dl-card-container { display: flex; justify-content: center; margin-bottom: 5px; width: 100%; }
+.dl-card { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); border-radius: 12px; width: 100%; max-width: 500px; padding: 10px 8px 30px 8px; color: #222; font-family: Arial, sans-serif; position: relative; border: 2px solid #b0c4de; transition: all 0.3s ease; }
 
-/* ESTILOS BASE DE LA TARJETA VIRTUAL */
-.dl-card { 
-    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); 
-    border-radius: 12px; 
-    width: 100%; 
-    max-width: 500px; 
-    padding: 10px 8px 30px 8px; /* Padding inferior extra para la alerta */
-    color: #222; 
-    font-family: Arial, sans-serif; 
-    position: relative; /* Clave para poner la pegatina dentro */
-    border: 2px solid #b0c4de; /* Borde estándar */
-    transition: all 0.3s ease;
-}
-
-/* MARCO VERDE SI ES CORRECTO */
-.dl-card.valid-card {
-    border-color: #2ecc71;
-    box-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
-}
-
-/* MARCO ROJO SI ES SOSPECHOSO */
-.dl-card.invalid-card {
-    border-color: #e74c3c;
-    box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
-}
+.dl-card.valid-card { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); }
+.dl-card.invalid-card { border-color: #e74c3c; box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); }
 
 .dl-header { display: flex; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #8ba4c9; padding-bottom: 6px; }
 .dl-rus { color: #8a2be2; border: 1px solid #8a2be2; border-radius: 50%; padding: 2px 5px; font-size: 0.7rem; font-weight: bold; margin-right: 10px; }
@@ -176,31 +142,9 @@ video { width: 100%; height: 100%; object-fit: cover; display: block; transform-
 .dl-row { display: flex; gap: 12px; }
 .dl-row .dl-field { white-space: nowrap; }
 
-/* PEGATINAS DE VALIDACIÓN */
-.validation-badge {
-    display: none; /* Ocultas por defecto */
-    position: absolute;
-    bottom: 5px;
-    right: 10px;
-    font-weight: bold;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-}
-
-.valid-card .validation-badge.valid {
-    display: block;
-    background: rgba(46, 204, 113, 0.2);
-    color: #27ae60;
-    border: 1px solid #2ecc71;
-}
-
-.invalid-card .validation-badge.invalid {
-    display: block;
-    background: rgba(231, 76, 60, 0.2);
-    color: #c0392b;
-    border: 1px solid #e74c3c;
-}
+.validation-badge { display: none; position: absolute; bottom: 5px; right: 10px; font-weight: bold; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; }
+.valid-card .validation-badge.valid { display: block; background: rgba(46, 204, 113, 0.2); color: #27ae60; border: 1px solid #2ecc71; }
+.invalid-card .validation-badge.invalid { display: block; background: rgba(231, 76, 60, 0.2); color: #c0392b; border: 1px solid #e74c3c; }
 
 /* ========================================== */
 /* VENTANAS EMERGENTES (MODALES)              */
