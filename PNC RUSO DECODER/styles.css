@@ -1,7 +1,6 @@
 :root {
     --bg-color: #121212;
     --surface-color: #1e1e1e;
-    /* Nuevos colores de neón */
     --neon-cyan: #00f7ff;
     --neon-red: #ff0000;
     --neon-green: #00ff00;
@@ -10,28 +9,35 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body {
+    /* Restauramos el scroll natural para evitar recortes en pantallas pequeñas */
+    overflow-x: hidden;
+    overflow-y: auto; 
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
-    /* Color de texto general más claro para contraste */
     color: #e0e0e0;
     display: flex;
     justify-content: center;
     padding: 5px;
-    min-height: 100vh;
+    min-height: 100vh; 
+    min-height: 100dvh; 
 }
 
 .container {
     background-color: var(--surface-color);
-    padding: 15px 12px;
+    /* LA MAGIA: 75px de padding inferior para que el botón "VOLVER" no tape el footer */
+    padding: 12px 10px 75px 10px; 
     border-radius: 15px;
-    /* Sombra más pronunciada y oscura para el contenedor principal */
     box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     width: 100%;
     max-width: 600px;
     display: flex;
     flex-direction: column;
     min-height: calc(100vh - 10px);
+    min-height: calc(100dvh - 10px); 
     justify-content: flex-start;
     border: 1px solid #333;
 }
@@ -39,196 +45,84 @@ body {
 /* ========================================== */
 /* HEADER Y LOGOS                             */
 /* ========================================== */
-.app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 12px; }
+.app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #333; padding-bottom: 8px; }
 .header-logo-container { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; }
 .header-logo { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
 #logo-gad { transform: scale(1.25); }
 
-h1 {
-    font-size: 1.2rem;
-    /* Título con efecto de neón morado/azul */
-    color: var(--neon-cyan);
-    text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
-    text-align: center;
-    flex: 1;
-    margin: 0 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-#status { text-align: center; color: var(--neon-cyan); margin-bottom: 15px; font-weight: bold; font-size: 0.95rem; text-shadow: 0 0 5px rgba(0, 247, 255, 0.3); }
+h1 { font-size: 1.2rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 247, 255, 0.5); text-align: center; flex: 1; margin: 0 5px; white-space: nowrap; overflow: hidden; font-weight: bold; letter-spacing: 1px; }
+#status { text-align: center; color: var(--neon-cyan); margin-bottom: 10px; font-weight: bold; font-size: 0.95rem; text-shadow: 0 0 5px rgba(0, 247, 255, 0.3); }
 
 /* ========================================== */
-/* NUEVOS ESTILOS DE BOTONES "DARK TECH"      */
+/* BOTONES "DARK TECH"                        */
 /* ========================================== */
-.controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
+.controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 
-/* Estilo base para todos los botones */
 button, .file-upload-label, .action-btn, .copy-btn, #nativeAppBtn {
-    width: 100%;
-    padding: 14px;
-    border: 2px solid; /* El color del borde se define en cada tipo */
-    border-radius: 12px; /* Bordes redondeados, la forma exacta de la imagen requeriría imágenes de fondo */
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-    background: linear-gradient(145deg, #2a2a2a, #1a1a1a); /* Fondo degradado oscuro */
-    color: #fff;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    width: 100%; padding: 14px; border: 2px solid; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; display: block;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a); color: #fff; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s ease; position: relative; overflow: hidden;
 }
 
-/* Efecto Hover General: aumenta el brillo */
-button:hover, .file-upload-label:hover, .action-btn:hover, .copy-btn:hover, #nativeAppBtn:hover {
-    filter: brightness(1.2);
-    transform: translateY(-1px);
-}
+button:hover, .file-upload-label:hover, .action-btn:hover, .copy-btn:hover, #nativeAppBtn:hover { filter: brightness(1.2); transform: translateY(-1px); }
 
-/* --- Botones Cian (Cámara, Subir, App Externa) --- */
-#startCamera, .file-upload-label, #showAppMenuBtn {
-    border-color: var(--neon-cyan);
-    color: var(--neon-cyan);
-    box-shadow: 0 0 10px rgba(0, 247, 255, 0.3), inset 0 0 5px rgba(0, 247, 255, 0.2);
-    text-shadow: 0 0 5px rgba(0, 247, 255, 0.5);
-}
-#startCamera:hover, .file-upload-label:hover, #showAppMenuBtn:hover {
-    box-shadow: 0 0 20px rgba(0, 247, 255, 0.6), inset 0 0 10px rgba(0, 247, 255, 0.4);
-}
+#startCamera, .file-upload-label, #showAppMenuBtn { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 247, 255, 0.3), inset 0 0 5px rgba(0, 247, 255, 0.2); text-shadow: 0 0 5px rgba(0, 247, 255, 0.5); }
+#startCamera:hover, .file-upload-label:hover, #showAppMenuBtn:hover { box-shadow: 0 0 20px rgba(0, 247, 255, 0.6), inset 0 0 10px rgba(0, 247, 255, 0.4); }
 
-/* --- Botón Rojo (Limpiar) --- */
-#clearBtn {
-    border-color: var(--neon-red);
-    color: var(--neon-red);
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3), inset 0 0 5px rgba(255, 0, 0, 0.2);
-    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
-    margin-bottom: 15px; /* Un poco más de margen para separarlo */
-}
-#clearBtn:hover {
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.4);
-}
+#clearBtn { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 0, 0, 0.3), inset 0 0 5px rgba(255, 0, 0, 0.2); text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); margin-bottom: 10px; }
+#clearBtn:hover { box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.4); }
 
-/* --- Botón Naranja (Pegar) --- */
-#smartPasteBtn {
-    border-color: var(--neon-orange);
-    color: var(--neon-orange);
-    box-shadow: 0 0 10px rgba(255, 153, 0, 0.3), inset 0 0 5px rgba(255, 153, 0, 0.2);
-    text-shadow: 0 0 5px rgba(255, 153, 0, 0.5);
-}
-#smartPasteBtn:hover {
-    box-shadow: 0 0 20px rgba(255, 153, 0, 0.6), inset 0 0 10px rgba(255, 153, 0, 0.4);
-}
+#smartPasteBtn { border-color: var(--neon-orange); color: var(--neon-orange); box-shadow: 0 0 10px rgba(255, 153, 0, 0.3), inset 0 0 5px rgba(255, 153, 0, 0.2); text-shadow: 0 0 5px rgba(255, 153, 0, 0.5); }
+#smartPasteBtn:hover { box-shadow: 0 0 20px rgba(255, 153, 0, 0.6), inset 0 0 10px rgba(255, 153, 0, 0.4); }
 
-/* --- Botones Verdes (Abrir App, Copiar, Capturar, Confirmar) --- */
-#nativeAppBtn, .copy-btn, .action-btn {
-    border-color: var(--neon-green);
-    color: var(--neon-green);
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3), inset 0 0 5px rgba(0, 255, 0, 0.2);
-    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-    margin-top: 10px;
-}
-#nativeAppBtn:hover, .copy-btn:hover, .action-btn:hover {
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6), inset 0 0 10px rgba(0, 255, 0, 0.4);
-}
+#nativeAppBtn, .copy-btn, .action-btn { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(0, 255, 0, 0.3), inset 0 0 5px rgba(0, 255, 0, 0.2); text-shadow: 0 0 5px rgba(0, 255, 0, 0.5); margin-top: 10px; }
+#nativeAppBtn:hover, .copy-btn:hover, .action-btn:hover { box-shadow: 0 0 20px rgba(0, 255, 0, 0.6), inset 0 0 10px rgba(0, 255, 0, 0.4); }
 
 /* ========================================== */
-/* CÁMARA EN VIVO                             */
+/* CÁMARA Y RECORTADOR                        */
 /* ========================================== */
-.video-wrapper {
-    position: relative;
-    width: 100%;
-    height: 35vh;
-    margin-bottom: 12px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* Borde brillante para el contenedor de video */
-    border: 2px solid #333;
-    box-shadow: 0 0 15px rgba(0, 247, 255, 0.1);
+.video-wrapper { 
+    position: relative; 
+    width: 100%; 
+    height: 220px; 
+    margin-bottom: 10px; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    background: #000; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    border: 2px solid #333; 
+    box-shadow: 0 0 15px rgba(0, 247, 255, 0.1); 
 }
-
 video { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: center; }
+.scanner-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid var(--neon-green); box-shadow: 0 0 15px var(--neon-green), inset 0 0 5px var(--neon-green); pointer-events: none; }
 
-.scanner-guide {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 2px solid var(--neon-green); /* Guía verde neón */
-    box-shadow: 0 0 15px var(--neon-green), inset 0 0 5px var(--neon-green);
-    pointer-events: none;
-}
-
-/* ========================================== */
-/* RECORTADOR DE IMAGEN                       */
-/* ========================================== */
-.cropper-container { width: 100%; margin-bottom: 12px; }
-.img-container {
-    width: 100%;
-    height: 35vh;
-    background: #000;
-    border-radius: 12px;
-    overflow: hidden;
-    display: block;
-    border: 2px solid #333;
-    box-shadow: 0 0 15px rgba(0, 247, 255, 0.1);
+.cropper-container { width: 100%; margin-bottom: 10px; }
+.img-container { 
+    width: 100%; 
+    height: 220px; 
+    background: #000; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    display: block; 
+    border: 2px solid #333; 
+    box-shadow: 0 0 15px rgba(0, 247, 255, 0.1); 
 }
 #imageToCrop { display: block; max-width: 100%; max-height: 100%; }
 
-/* ========================================== */
-/* CONTROLES EXTRA (Sliders)                  */
-/* ========================================== */
-.camera-controls {
-    background: #252525; /* Fondo un poco más claro */
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-    border: 1px solid #333;
-}
-.control-group { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 4px; }
-.control-group label { font-size: 0.9rem; color: #aaa; width: 100%; text-align: center; }
-/* Estilo básico para los sliders, se pueden personalizar más si se desea */
+.camera-controls { background: #252525; padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center; border: 1px solid #333; }
+.control-group { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 2px; }
+.control-group label { font-size: 0.85rem; color: #aaa; width: 100%; text-align: center; }
 .control-group input[type="range"] { width: 95%; height: 20px; accent-color: var(--neon-cyan); }
 
 /* ========================================== */
 /* RESULTADOS Y TARJETA                       */
 /* ========================================== */
-.result-box {
-    background: #252525;
-    padding: 15px 10px;
-    border-radius: 12px;
-    border: 1px solid #333;
-    flex-grow: 1;
-    display: block;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-}
+.result-box { background: #252525; padding: 15px 10px; border-radius: 12px; border: 1px solid #333; display: block; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); margin-bottom: 10px; }
 .data-label { font-size: 0.9rem; color: var(--neon-cyan); margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
-.data-content {
-    background: #151515;
-    padding: 12px;
-    border-radius: 8px;
-    font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada más técnica */
-    word-break: break-all;
-    border: 1px solid #333;
-    color: #0f0; /* Texto verde estilo terminal */
-    text-shadow: 0 0 2px rgba(0, 255, 0, 0.5);
-}
+.data-content { background: #151515; padding: 12px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; word-break: break-all; border: 1px solid #333; color: #0f0; text-shadow: 0 0 2px rgba(0, 255, 0, 0.5); }
 
 .dl-card-container { display: flex; justify-content: center; margin-bottom: 10px; width: 100%; }
-/* La tarjeta mantiene su estilo original ya que es una representación física */
 .dl-card { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); border-radius: 12px; width: 100%; max-width: 500px; padding: 10px 8px 30px 8px; color: #222; font-family: Arial, sans-serif; position: relative; border: 2px solid #b0c4de; transition: all 0.3s ease; }
 .dl-card.valid-card { border-color: #2ecc71; box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); }
 .dl-card.invalid-card { border-color: #e74c3c; box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); }
@@ -248,29 +142,27 @@ video { width: 100%; height: 100%; object-fit: cover; display: block; transform-
 .invalid-card .validation-badge.invalid { display: block; background: rgba(231, 76, 60, 0.2); color: #c0392b; border: 1px solid #e74c3c; }
 
 /* ========================================== */
-/* VENTANAS EMERGENTES (MODALES)              */
+/* MODALES                                    */
 /* ========================================== */
 .modal { display: none !important; position: fixed !important; z-index: 9999 !important; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
 .modal.show { display: block !important; }
-.modal-content {
-    background-color: #252525; /* Fondo oscuro */
-    margin: 25% auto;
-    padding: 20px;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-    box-shadow: 0 0 30px rgba(0, 247, 255, 0.2); /* Sombra cian */
-    border: 2px solid var(--neon-cyan); /* Borde cian */
-    color: #fff;
-}
+.modal-content { background-color: #252525; margin: 25% auto; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; position: relative; box-shadow: 0 0 30px rgba(0, 247, 255, 0.2); border: 2px solid var(--neon-cyan); color: #fff; }
 .modal-content h3 { color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 247, 255, 0.5); }
 .modal-content p { color: #ccc; }
-.modal-content select {
-    background-color: #1a1a1a;
-    color: var(--neon-cyan);
-    border: 1px solid var(--neon-cyan);
-    box-shadow: inset 0 0 5px rgba(0, 247, 255, 0.2);
-}
+.modal-content select { background-color: #1a1a1a; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); box-shadow: inset 0 0 5px rgba(0, 247, 255, 0.2); }
 .close-btn { color: var(--neon-cyan); float: right; font-size: 28px; font-weight: bold; cursor: pointer; position: absolute; top: 10px; right: 15px; text-shadow: 0 0 5px rgba(0, 247, 255, 0.5); }
 .close-btn:hover, .close-btn:focus { color: #fff; }
+
+/* ========================================== */
+/* FOOTER ADAPTADO                            */
+/* ========================================== */
+.app-footer { 
+    margin-top: auto; 
+    padding: 10px 0 0 0; 
+    text-align: center; 
+    width: 100%; 
+}
+.footer-content { padding: 0 10px; }
+.footer-divider { border: none; border-top: 1px solid #444; width: 100%; max-width: 350px; margin: 0 auto 5px auto; }
+.footer-title { font-weight: bold; color: #999; font-size: 0.8rem; margin-bottom: 2px; letter-spacing: 0.5px; }
+.footer-copyright { font-size: 0.7rem; color: #666; margin-top: 5px; }
